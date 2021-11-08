@@ -1,8 +1,9 @@
 /* for standalone usage, compile with: cc -Os -Wall -Wextra -Wshadow -march=native qrpn.c -lm -o qrpn */
 
-/* this is very old code and needs to be entirely rewritten but it's too useful to discard */
+/* this is mostly old code and needs to be rewritten but it's too useful to discard */
 
-#define _GNU_SOURCE
+#define _DEFAULT_SOURCE
+#define _XOPEN_SOURCE
 #include "qrpn.h"
 
 #include <stddef.h>
@@ -65,6 +66,24 @@ static unsigned long long nchoosek(const unsigned long long n, const unsigned lo
     return n_choose_k;
 }
 
+static double tenlog(double x) {
+    return 10.0 * log10(x);
+}
+
+static double itenlog(double x) {
+    return pow(10.0, x * 0.1);
+}
+
+static double complex cpow_checked(const double complex a, const double complex b) {
+    /* cpow() cannot be trusted to have as much precision as pow() even for integer arguments that fit in 32 bits */
+
+    if (!cimag(a) && !cimag(b)) {
+        if (rint(b) == b) return __builtin_powi(a, b);
+        else return pow(a, b);
+    }
+    else return cpowl(a, b);
+}
+
 /* end simple math functions */
 
 struct named_quantity {
@@ -106,10 +125,12 @@ static const struct si_prefix si_prefixes[] = {
     { 1e27, "hella", "H" }
 };
 
-static const size_t si_prefix_count = sizeof(si_prefixes) / sizeof(si_prefixes[0]);
-
 static const int8_t units_of_time[BASEUNITS] = { 0, 0, 1, 0, 0, 0, 0 };
 static const int8_t dimensionless[BASEUNITS] = { 0, 0, 0, 0, 0, 0, 0 };
+
+#define FLAG_UNIT_ENTERS_AS_OPERAND 1
+#define FLAG_SI_BASE_UNIT 4
+#define FLAG_SI_DERIVED_UNIT 8
 
 static const struct named_quantity named_quantities[] = {
     /* si base units */
@@ -139,8 +160,9 @@ static const struct named_quantity named_quantities[] = {
 
     { .value = 1.0, .units = { -2, 1, -1, 0, 0, 0, 0 }, .name = "rayl" },
 
-    { .value = 1.0, .units = { 0, 0, -1, 0, 0, 0, 0 }, .name = "becquerel", .abrv = "Bq" },
-    { .value = 1.0, .units = { 2, 0, -2, 0, 0, 0, 0 }, .name = "gray", .abrv = "Gy" },
+    /* todo keep the print thing from displaying these */
+//    { .value = 1.0, .units = { 0, 0, -1, 0, 0, 0, 0 }, .name = "becquerel", .abrv = "Bq" },
+//    { .value = 1.0, .units = { 2, 0, -2, 0, 0, 0, 0 }, .name = "gray", .abrv = "Gy" },
 
     { .value = 100e3, { -1, 1, -2, 0, 0, 0, 0 }, .name = "bar" },
 
@@ -161,7 +183,6 @@ static const struct named_quantity named_quantities[] = {
     { .value = 3600.0, .units = { 2, 1, -2, 0, 0, 0, 0 }, .abrv = "Wh" },
     { .value = 3600.0, .units = { 0, 0, 1, 1, 0, 0, 0 }, .abrv = "Ah" },
     { .value = 1.0e-2, .units = { 2, 0, -2, 0, 0, 0, 0 }, .name = "rad" },
-
     { .value = 10e-6, .units = { 1, 1, -2, 0, 0, 0, 0 }, .name = "dyne" },
 
     { .value = 3.7e10, .units = { 0, 0, -1, 0, 0, 0, 0 }, .name = "curie", .abrv = "Ci" },
@@ -248,6 +269,658 @@ static int units_are_dimensionless(const int8_t in[BASEUNITS]) {
     return !memcmp(in, dimensionless, sizeof(int8_t[BASEUNITS]));
 }
 
+static double datestr_to_unix_seconds(const char * const datestr) {
+    int64_t seconds = 0, microseconds_after_decimal = 0;
+
+    if (strchr(datestr, 'T') && strchr(datestr, 'Z')) {
+        /* if input is a date string */
+        struct tm unixtime_struct = { 0 };
+
+        /* if input has colons and dashes, and a subsecond portion... */
+        if (strchr(datestr, '-') && strchr(datestr, ':') && strchr(datestr, '.')) {
+            const uint64_t microseconds_remainder_with_integer = strtod(datestr + 18, NULL) * 1000000;
+            microseconds_after_decimal = microseconds_remainder_with_integer % 1000000;
+            strptime(datestr, "%Y-%m-%dT%H:%M:%S.", &unixtime_struct);
+        }
+        /* if input has colons and dashes */
+        else if (strchr(datestr, '-') && strchr(datestr, ':')) strptime(datestr, "%Y-%m-%dT%H:%M:%SZ", &unixtime_struct);
+        /* if input has a subsecond portion */
+        else if (strchr(datestr, '.')) {
+            const uint64_t microseconds_remainder_with_integer = strtod(datestr + 14, NULL) * 1000000;
+            microseconds_after_decimal = microseconds_remainder_with_integer % 1000000;
+            strptime(datestr, "%Y%m%dT%H%M%S.", &unixtime_struct);
+        }
+        else
+            strptime(datestr, "%Y%m%dT%H%M%SZ", &unixtime_struct);
+
+        seconds = timegm(&unixtime_struct);
+    } else {
+        /* otherwise, input is a number */
+        char * after = NULL;
+        microseconds_after_decimal = llrint(strtod(datestr, &after) * 1000000);
+        if (after && *after != '\0')
+            fprintf(stdout, "warning: %s: ignoring \"%s\"\n", __func__, after);
+    }
+
+    return (seconds * 1000000 + microseconds_after_decimal) * 1e-6;
+}
+
+static int evaluate_unit(struct quantity stack[static QRPN_STACK_SIZE_MAX], int S, const char * const token, const int exponent_sign) {
+    const char * slash = strchr(token, '/');
+    if (slash && exponent_sign < 0) return QRPN_ERROR_TOKEN_UNRECOGNIZED;
+
+    const char * const carat = strrchr(token, '^');
+    const size_t bytes_before_carat = carat ? (size_t)(carat - token) : (slash ?  (size_t)(slash - token) : strlen(token));
+    const long long unit_exponent = exponent_sign * (carat ? strtoll(carat + 1, NULL, 10) : 1);
+
+    const struct named_quantity * quantity = NULL;
+    const struct si_prefix * prefix = NULL;
+
+    /* loop over all known units and prefixes looking for a match */
+    for (const struct named_quantity * possible_quantity = named_quantities; !quantity && possible_quantity < named_quantities + named_quantity_count; possible_quantity++)
+        /* loop over [full name, abbreviation, alt spelling] of each unit. this is a bit of a mess */
+        for (int ipass = 0; !quantity && ipass < 3; ipass++) {
+            const char * const unit_name = 2 == ipass ? possible_quantity->alt_spelling : 1 == ipass ? possible_quantity->abrv : possible_quantity->name;
+            if (!unit_name) continue;
+
+            /* get number of bytes in unit name because we're gonna need it many times */
+            const size_t unit_len = strlen(unit_name);
+
+            if (bytes_before_carat < unit_len || memcmp(token + bytes_before_carat - unit_len, unit_name, unit_len)) continue;
+
+            const size_t bytes_before_unit = bytes_before_carat - unit_len;
+
+            prefix = NULL;
+
+            /* loop over known si prefixes */
+            for (const struct si_prefix * possible_prefix = si_prefixes; !prefix && possible_prefix < si_prefixes + sizeof(si_prefixes) / sizeof(si_prefixes[0]); possible_prefix++) {
+                /* if looking for SI unit abbreviations, admit SI prefix abbreviations */
+                const char * const prefix_name = 1 == ipass ? possible_prefix->abrv : possible_prefix->name;
+                const size_t prefix_len = prefix_name ? strlen(prefix_name) : 0;
+
+                if (bytes_before_unit == prefix_len && !memcmp(token, prefix_name, bytes_before_unit))
+                    prefix = possible_prefix;
+            }
+
+            /* if there were bytes before the unit but they didn't match any known prefix, then dont treat as a unit */
+            if (!bytes_before_unit || prefix)
+                quantity = possible_quantity;
+        }
+
+    /* not finding anything above is only an error if there was both a numerator and denominator */
+    if (!quantity) return slash ? QRPN_ERROR_TOKEN_UNRECOGNIZED : QRPN_NOT_A_UNIT;
+
+    if (quantity->flags & FLAG_UNIT_ENTERS_AS_OPERAND) {
+        if (S >= QRPN_STACK_SIZE_MAX) return QRPN_ERROR_TOO_MUCH_STACK;
+        S++;
+        stack[S - 1] = (struct quantity) { .value = 1 };
+    }
+
+    if (!S) return QRPN_ERROR_NOT_ENOUGH_STACK;
+
+    int units_out[BASEUNITS];
+    for (size_t iu = 0; iu < BASEUNITS; iu++) {
+        units_out[iu] = stack[S - 1].units[iu] + quantity->units[iu] * unit_exponent;
+        if (units_out[iu] > INT8_MAX || units_out[iu] < INT8_MIN) return QRPN_ERROR_DIMENSION_OVERFLOW;
+    }
+
+    for (size_t iu = 0; iu < BASEUNITS; iu++)
+        stack[S - 1].units[iu] = units_out[iu];
+
+    stack[S - 1].value *= pow(prefix ? prefix->scale * quantity->value : quantity->value, unit_exponent);
+
+    if (slash) return evaluate_unit(stack, S, slash + 1, -exponent_sign);
+    else return S;
+}
+
+static int evaluate_one_argument_must_be_unitless(struct quantity * const stack, int S, double complex (* op)(double complex)) {
+    if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
+    if (!units_are_dimensionless(stack[S - 1].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
+
+    stack[S - 1].value = op(stack[S - 1].value);
+    return S;
+}
+
+static int evaluate_one_argument_must_be_unitless_real(struct quantity * const stack, int S, double (* op)(double)) {
+    if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
+    if (!units_are_dimensionless(stack[S - 1].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
+
+    stack[S - 1].value = op(stack[S - 1].value);
+    return S;
+}
+
+static int evaluate_one_argument_must_be_unitless_real_nonnegative(struct quantity * const stack, int S, double (* op)(double)) {
+    if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
+    if (!units_are_dimensionless(stack[S - 1].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
+    if (creal(stack[S - 1].value) < 0 || cimag(stack[S - 1].value)) return QRPN_ERROR_DOMAIN;
+
+    stack[S - 1].value = op(stack[S - 1].value);
+    return S;
+}
+
+static int evaluate_literal(struct quantity * stack, int S, const char * const token) {
+    const int unit_ret = evaluate_unit(stack, S, token, 1);
+
+    /* if evaluate unit either errored or succeeded, we're done... */
+    if (unit_ret != QRPN_NOT_A_UNIT) return unit_ret;
+
+    /* otherwise, token was not a unit name, parse it as a simple literal */
+    struct quantity tmp = { 0 };
+    double d = 0, m = 0, s = 0;
+
+    if (strpbrk(token + 1, "d°") && sscanf(token, "%lf%*[d°]%lf%*[m']%lf%*[s\"]", &d, &m, &s)) {
+        const double leading = strtod(token, NULL);
+        tmp.value = copysign(fabs(d) + m / 60.0 + s / 3600.0, leading) * M_PI / 180.0;
+    }
+    else if (strpbrk(token, "T") && strpbrk(token, "Z")) {
+        tmp.value = datestr_to_unix_seconds(token);
+        tmp.units[2] = 1;
+    }
+    else if (!strcmp(token, "pi"))
+        tmp.value = M_PI;
+    else if (!strcmp(token, "-pi"))
+        tmp.value = -M_PI;
+    else if (!strcmp(token, "i"))
+        tmp.value = I;
+    else if (!strcmp(token, "-i"))
+        tmp.value = -I;
+    else {
+        char * endptr = NULL;
+        tmp.value = strtod(token, &endptr);
+        if (!strcmp(endptr, "i"))
+            tmp.value *= I;
+        else if (endptr == token)
+            return QRPN_ERROR_TOKEN_UNRECOGNIZED;
+        else if (endptr[0] != '\0' && endptr[1] == '\0') {
+            double prefix_scale = 1.0;
+            /* only allow k, M, G to be used in this position */
+            if ('k' == endptr[0]) prefix_scale = 1e3;
+            else if ('M' == endptr[0]) prefix_scale = 1e6;
+            else if ('G' == endptr[0]) prefix_scale = 1e9;
+
+            /* special case: trailing 'f' from floating point literals copied and pasted from C code should be ignored */
+            else if ('f' == endptr[0]) prefix_scale = 1.0;
+            else return QRPN_ERROR_TOKEN_UNRECOGNIZED;
+
+            tmp.value *= prefix_scale;
+        }
+    }
+
+    if (S >= QRPN_STACK_SIZE_MAX) return QRPN_ERROR_TOO_MUCH_STACK;
+    stack[S] = tmp;
+    return S + 1;
+}
+
+int qrpn_evaluate_token(struct quantity * const stack, int S, const char * const token) {
+    if (!strcmp(token, "mul") || !strcmp(token, "*")) {
+        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        /* calculate and validate output units */
+        int units_out[BASEUNITS];
+        for (size_t iu = 0; iu < BASEUNITS; iu++) {
+            units_out[iu] = stack[S - 2].units[iu] + stack[S - 1].units[iu];
+            if (units_out[iu] > INT8_MAX || units_out[iu] < INT8_MIN) return QRPN_ERROR_DIMENSION_OVERFLOW;
+        }
+
+        /* note that we perform all possible validation before we mutate any state */
+        stack[S - 2].value *= stack[S - 1].value;
+
+        for (size_t iu = 0; iu < BASEUNITS; iu++)
+            stack[S - 2].units[iu] = units_out[iu];
+
+        return S - 1;
+    }
+    else if (!strcmp(token, "div") || !strcmp(token, "/")) {
+        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        int units_out[BASEUNITS];
+        for (size_t iu = 0; iu < BASEUNITS; iu++) {
+            units_out[iu] = stack[S - 2].units[iu] - stack[S - 1].units[iu];
+            if (units_out[iu] > INT8_MAX || units_out[iu] < INT8_MIN) return QRPN_ERROR_DIMENSION_OVERFLOW;
+        }
+
+        stack[S - 2].value /= stack[S - 1].value;
+
+        for (size_t iu = 0; iu < BASEUNITS; iu++)
+            stack[S - 2].units[iu] = units_out[iu];
+
+        return S - 1;
+    }
+    else if (!strcmp(token, "idiv")) {
+        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
+
+        if (!units_are_dimensionless(stack[S - 1].units) || !units_are_dimensionless(stack[S - 2].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
+
+        const long long a = llrint(stack[S - 2].value);
+        const long long b = llrint(stack[S - 1].value);
+        if (!b) return QRPN_ERROR_DOMAIN;
+        const long long c = a / b;
+        stack[S - 2].value = c;
+
+        return S - 1;
+    }
+    else if (!strcmp(token, "add") || !strcmp(token, "+")) {
+        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        if (!units_are_equivalent(stack[S - 2].units, stack[S - 1].units)) return QRPN_ERROR_INCONSISTENT_UNITS;
+        stack[S - 2].value += stack[S - 1].value;
+        return S - 1;
+    }
+    else if (!strcmp(token, "sub") || !strcmp(token, "-")) {
+        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        if (!units_are_equivalent(stack[S - 2].units, stack[S - 1].units)) return QRPN_ERROR_INCONSISTENT_UNITS;
+        stack[S - 2].value -= stack[S - 1].value;
+        return S - 1;
+    }
+    else if (!strcmp(token, "mod") || !strcmp(token, "%")) {
+        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        if (!units_are_equivalent(stack[S - 2].units, stack[S - 1].units)) return QRPN_ERROR_INCONSISTENT_UNITS;
+        stack[S - 2].value = fmod(stack[S - 2].value, stack[S - 1].value);
+        return S - 1;
+    }
+    else if (!strcmp(token, "hypot")) {
+        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        if (!units_are_equivalent(stack[S - 2].units, stack[S - 1].units)) return QRPN_ERROR_INCONSISTENT_UNITS;
+        stack[S - 2].value = hypot(stack[S - 2].value, stack[S - 1].value);
+        return S - 1;
+    }
+    else if (!strcmp(token, "atan2")) {
+        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        if (!units_are_equivalent(stack[S - 2].units, stack[S - 1].units)) return QRPN_ERROR_INCONSISTENT_UNITS;
+        stack[S - 2].value = atan2(stack[S - 2].value, stack[S - 1].value);
+        memset(stack[S - 2].units, 0, sizeof(int8_t[BASEUNITS]));
+        return S - 1;
+    }
+    else if (!strcmp(token, "rcp")) {
+        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
+
+        for (size_t iu = 0; iu < BASEUNITS; iu++)
+            if (stack[S - 1].units[iu] < -INT8_MAX)
+                return QRPN_ERROR_DIMENSION_OVERFLOW;
+
+        stack[S - 1].value = 1.0 / stack[S - 1].value;
+        for (size_t iu = 0; iu < BASEUNITS; iu++) stack[S - 1].units[iu] *= -1;
+        return S;
+    }
+    else if (!strcmp(token, "chs")) {
+        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        stack[S - 1].value *= -1;
+
+        /* always choose positive imaginary side of negative real line because [1] [chs] [sqrt] is pretty common */
+        if (__imag__ stack[S - 1].value == -0)
+            __imag__ stack[S - 1].value = 0;
+        return S;
+    }
+    else if (!strcmp(token, "choose")) {
+        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        if (!units_are_equivalent(stack[S - 2].units, stack[S - 1].units)) return QRPN_ERROR_INCONSISTENT_UNITS;
+
+        const unsigned long long n = (unsigned long long)llrint(stack[S - 2].value);
+        const unsigned long long k = (unsigned long long)llrint(stack[S - 1].value);
+        if ((double)n != stack[S - 2].value ||
+            (double)k != stack[S - 1].value) return QRPN_ERROR_MUST_BE_INTEGER;
+        stack[S - 2].value = nchoosek(n, k);
+
+        return S - 1;
+    }
+    else if (!strcmp(token, "gcd")) {
+        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        if (!units_are_dimensionless(stack[S - 1].units) || !units_are_dimensionless(stack[S - 2].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
+
+        const unsigned long long a = (unsigned long long)llrint(stack[S - 2].value);
+        const unsigned long long b = (unsigned long long)lrint(stack[S - 1].value);
+        if ((double)a != stack[S - 2].value ||
+            (double)b != stack[S - 1].value) return QRPN_ERROR_MUST_BE_INTEGER;
+        stack[S - 2].value = gcd(a, b);
+        return S - 1;
+    }
+    else if (!strcmp(token, "lcm")) {
+        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        if (!units_are_dimensionless(stack[S - 1].units) || !units_are_dimensionless(stack[S - 2].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
+
+        const unsigned long long a = (unsigned long long)llrint(stack[S - 2].value);
+        const unsigned long long b = (unsigned long long)lrint(stack[S - 1].value);
+        if ((double)a != stack[S - 2].value ||
+            (double)b != stack[S - 1].value) return QRPN_ERROR_MUST_BE_INTEGER;
+
+        stack[S - 2].value = a * b / gcd(a, b);
+        return S - 1;
+    }
+    else if (!strcmp(token, "isprime")) {
+        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        if (creal(stack[S - 1].value) < 0 || cimag(stack[S - 1].value)) return QRPN_ERROR_DOMAIN;
+        if (!units_are_dimensionless(stack[S - 1].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
+        const unsigned long long x = (unsigned long long)llrint(stack[S - 1].value);
+        if ((double)x != (double)creal(stack[S - 1].value)) {
+            fprintf(stdout, "%s: %.17g %.17g\n", __func__, (double)x, (double)creal(stack[S - 1].value));
+            return QRPN_ERROR_MUST_BE_INTEGER;
+        }
+        if (x < 2) stack[S - 1].value = 0;
+        else {
+            char isprime = 1;
+            for (unsigned long long y = 2; y * y <= x; y++) {
+                if (!(x % y)) {
+                    isprime = 0;
+                    break;
+                }
+            }
+            stack[S - 1].value = isprime;
+        }
+
+        return S;
+    }
+    else if (!strcmp(token, "swap")) {
+        struct quantity tmp;
+        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        tmp = stack[S - 1];
+        stack[S - 1] = stack[S - 2];
+        stack[S - 2] = tmp;
+        return S;
+    }
+    else if (!strcmp(token, "drop")) {
+        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        return S - 1;
+    }
+    else if (!strcmp(token, "dup")) {
+        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        if (S >= QRPN_STACK_SIZE_MAX) return QRPN_ERROR_TOO_MUCH_STACK;
+        stack[S] = stack[S - 1];
+        return S + 1;
+    }
+    else if (!strcmp(token, "over")) {
+        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        if (S >= QRPN_STACK_SIZE_MAX) return QRPN_ERROR_TOO_MUCH_STACK;
+        stack[S] = stack[S - 2];
+        return S + 1;
+    }
+    else if (!strcmp(token, "and")) {
+        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        if (!units_are_dimensionless(stack[S - 1].units) || !units_are_dimensionless(stack[S - 2].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
+
+        stack[S - 2].value = (!!stack[S - 2].value) && (!!stack[S - 1].value);
+        return S - 1;
+    }
+    else if (!strcmp(token, "or")) {
+        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        if (!units_are_dimensionless(stack[S - 1].units) || !units_are_dimensionless(stack[S - 2].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
+
+        stack[S - 2].value = (!!stack[S - 2].value) || (!!stack[S - 1].value);
+        return S - 1;
+    }
+    else if (!strcmp(token, "not")) {
+        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        if (!units_are_dimensionless(stack[S - 1].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
+
+        stack[S - 1].value = !stack[S - 1].value;
+        return S;
+    }
+    else if (!strcmp(token, "eq")) {
+        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        if (!units_are_equivalent(stack[S - 2].units, stack[S - 1].units)) return QRPN_ERROR_INCONSISTENT_UNITS;
+
+        stack[S - 2].value = stack[S - 2].value == stack[S - 1].value;
+        memset(stack[S - 2].units, 0, sizeof(int8_t[BASEUNITS]));
+        return S - 1;
+    }
+    else if (!strcmp(token, "le") || !strcmp(token, "lt") || !strcmp(token, "ge") || !strcmp(token, "gt")) {
+        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        if (!units_are_equivalent(stack[S - 2].units, stack[S - 1].units)) return QRPN_ERROR_INCONSISTENT_UNITS;
+        if (cimag(stack[S - 1].value)) return QRPN_ERROR_DOMAIN;
+
+        if (!strcmp(token, "le")) stack[S - 2].value = creal(stack[S - 2].value) <= creal(stack[S - 1].value);
+        else if (!strcmp(token, "lt")) stack[S - 2].value = creal(stack[S - 2].value) < creal(stack[S - 1].value);
+        else if (!strcmp(token, "ge")) stack[S - 2].value = creal(stack[S - 2].value) >= creal(stack[S - 1].value);
+        else if (!strcmp(token, "gt")) stack[S - 2].value = creal(stack[S - 2].value) > creal(stack[S - 1].value);
+        memset(stack[S - 2].units, 0, sizeof(int8_t[BASEUNITS]));
+        return S - 1;
+    }
+    else if (!strcmp(token, "quadratic")) {
+        if (S < 3) return QRPN_ERROR_NOT_ENOUGH_STACK;
+
+        int units_out[BASEUNITS];
+        for (size_t iu = 0; iu < BASEUNITS; iu++) {
+            if (stack[S - 1].units[iu] != stack[S - 2].units[iu] * 2 - stack[S - 3].units[iu])
+                return QRPN_ERROR_INCONSISTENT_UNITS;
+            units_out[iu] = stack[S - 2].units[iu] - stack[S - 3].units[iu];
+            if (units_out[iu] > INT8_MAX || units_out[iu] < INT8_MIN) return QRPN_ERROR_DIMENSION_OVERFLOW;
+        }
+
+        const double complex a = stack[S - 3].value;
+        const double complex b = stack[S - 2].value;
+        const double complex c = stack[S - 1].value;
+        const double complex discriminant = b * b - 4.0 * a * c;
+
+        const double complex d = 0.5 / a;
+        const double complex e = csqrt(discriminant);
+
+        /* well-conditioned floating point method of getting roots, which avoids subtracting two nearly equal magnitude numbers */
+        const double complex r1 = __real__ e > 0 ? (-b - e) * d : (-b + e) * d;
+        const double complex r0 = c / (r1 * a);
+        stack[S - 3].value = r1;
+        stack[S - 2].value = r0;
+
+        for (size_t iu = 0; iu < BASEUNITS; iu++) {
+            stack[S - 3].units[iu] = units_out[iu];
+            stack[S - 2].units[iu] = units_out[iu];
+        }
+
+        return S - 1;
+    }
+    else if (!strcmp(token, "rot")) {
+        struct quantity tmp;
+        if (S < 3) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        tmp = stack[S - 3];
+        stack[S - 3] = stack[S - 2];
+        stack[S - 2] = stack[S - 1];
+        stack[S - 1] = tmp;
+        return S;
+    }
+    else if (!strcmp(token, "pow")) {
+        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        if (!units_are_dimensionless(stack[S - 1].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
+
+        if (units_are_dimensionless(stack[S - 2].units))
+            stack[S - 2].value = cpow_checked(stack[S - 2].value, stack[S - 1].value);
+        else {
+            const long ipowarg = lrint(stack[S - 1].value);
+            if ((double)ipowarg != stack[S - 1].value) return QRPN_ERROR_MUST_BE_INTEGER;
+
+            long long units_out[BASEUNITS];
+            for (size_t iu = 0; iu < BASEUNITS; iu++) {
+                units_out[iu] = stack[S - 2].units[iu] * ipowarg;
+                if (units_out[iu] > INT8_MAX || units_out[iu] < INT8_MIN) return QRPN_ERROR_DIMENSION_OVERFLOW;
+            }
+
+            stack[S - 2].value = cpow_checked(stack[S - 2].value, stack[S - 1].value);
+
+            for (size_t iu = 0; iu < BASEUNITS; iu++)
+                stack[S - 2].units[iu] = units_out[iu];
+        }
+        return S - 1;
+    }
+    else if (!strcmp(token, "rpow")) {
+        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        if (!units_are_dimensionless(stack[S - 1].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
+
+        if (units_are_dimensionless(stack[S - 2].units))
+            stack[S - 2].value = cpow_checked(stack[S - 2].value, 1.0 / stack[S - 1].value);
+        else {
+            const long long ipowarg = llrint(stack[S - 1].value);
+            if ((double)ipowarg != stack[S - 1].value) return QRPN_ERROR_MUST_BE_INTEGER;
+            for (size_t iu = 0; iu < BASEUNITS; iu++)
+                if ((stack[S - 2].units[iu] / ipowarg) * ipowarg != stack[S - 2].units[iu])
+                    return QRPN_ERROR_RATIONAL_NOT_IMPLEMENTED;
+            stack[S - 2].value = cpow_checked(stack[S - 2].value, 1.0 / stack[S - 1].value);
+            for (size_t iu = 0; iu < BASEUNITS; iu++)
+                stack[S - 2].units[iu] /= ipowarg;
+        }
+        return S - 1;
+    }
+    else if (!strcmp(token, "gamma")) {
+        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        if (!units_are_dimensionless(stack[S - 1].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
+        stack[S - 1].value = tgamma(stack[S - 1].value);
+        return S;
+    }
+    else if (!strcmp(token, "br")) {
+        if (S < 4) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        if (!units_are_dimensionless(stack[S - 1].units) ||
+            !units_are_dimensionless(stack[S - 2].units) ||
+            !units_are_dimensionless(stack[S - 3].units) ||
+            !units_are_dimensionless(stack[S - 4].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
+
+        const double a[2] = { stack[S - 4].value, stack[S - 3].value };
+        const double b[2] = { stack[S - 2].value, stack[S - 1].value };
+        const double d[2] = { b[0] - a[0], b[1] - a[1] };
+        double bearing = 0, range = 0;
+        if (d[0] || d[1]) {
+            /* todo */
+            const double cosa1 = cos(a[1]), cosb1 = cos(b[1]);
+            bearing = atan2( sin(d[0]) * cosb1, cosa1 * sin(b[1]) - sin(a[1]) * cosb1 * cos(d[0]) );
+            if (bearing < 0.0) bearing += 2.0 * M_PI;
+            range = ahav( hav(d[1]) + cosb1 * cosa1 * hav(d[0]) );
+        }
+        stack[S - 4].value = bearing;
+        stack[S - 3].value = range * 6371000.0;
+        stack[S - 3].units[0] = 1;
+        return S - 2;
+    }
+    else if (!strcmp(token, "travel")) {
+        if (S < 4) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        if (stack[S - 1].units[0] == 1) {
+            /* sketchy */
+            stack[S - 1].units[0] = 0;
+            stack[S - 1].value /= 6371000.0;
+        }
+
+        if (!units_are_dimensionless(stack[S - 1].units) ||
+            !units_are_dimensionless(stack[S - 2].units) ||
+            !units_are_dimensionless(stack[S - 3].units) ||
+            !units_are_dimensionless(stack[S - 4].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
+
+        /* todo */
+        const double in[2] = { stack[S - 4].value, stack[S - 3].value };
+        const double bearing = stack[S - 2].value, range = stack[S - 1].value;
+        /* range, bearing, and declination of start point */
+        const double a = range, B = bearing, c = M_PI_2 - in[1];
+        /* declination of endpoint */
+        const double b = ahav( hav(a - c) + sin(a) * sin(c) * hav(B) );
+        /* change in longitude */
+        const double A = atan2( sin(B) * sin(a) * sin(c), cos(a) - cos(c) * cos(b) );
+
+        /* endpoint longitude is start plus delta */
+        stack[S - 4].value = in[0] + A;
+        /* endpoint latitude is 90 degrees minus endpoint declination */
+        stack[S - 3].value = M_PI_2 - b;
+
+        return S - 2;
+    }
+    else if (!strcmp(token, "nextafter")) {
+        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        stack[S - 1].value = nextafter(stack[S - 1].value, DBL_MAX);
+        return S;
+    }
+    else if (!strcmp(token, "nextafterf")) {
+        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        stack[S - 1].value = nextafterf(stack[S - 1].value, FLT_MAX);
+        return S;
+    }
+    else if (!strcmp(token, "arg")) {
+        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        stack[S - 1].value = cargf(stack[S - 1].value);
+        return S;
+    }
+    else if (!strcmp(token, "real")) {
+        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        stack[S - 1].value = crealf(stack[S - 1].value);
+        return S;
+    }
+    else if (!strcmp(token, "imaginary")) {
+        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        stack[S - 1].value = cimagf(stack[S - 1].value);
+        return S;
+    }
+    else if (!strcmp(token, "hav")) return evaluate_one_argument_must_be_unitless_real(stack, S, hav);
+    else if (!strcmp(token, "crd")) return evaluate_one_argument_must_be_unitless_real(stack, S, crd);
+    else if (!strcmp(token, "exsec")) return evaluate_one_argument_must_be_unitless_real(stack, S, exsecant);
+    else if (!strcmp(token, "ahav")) return evaluate_one_argument_must_be_unitless_real(stack, S, ahav);
+    else if (!strcmp(token, "acrd")) return evaluate_one_argument_must_be_unitless_real(stack, S, acrd);
+    else if (!strcmp(token, "aexsec")) return evaluate_one_argument_must_be_unitless_real(stack, S, arcexsecant);
+    else if (!strcmp(token, "floor")) return evaluate_one_argument_must_be_unitless_real(stack, S, floor);
+    else if (!strcmp(token, "ceil")) return evaluate_one_argument_must_be_unitless_real(stack, S, ceil);
+    else if (!strcmp(token, "round")) return evaluate_one_argument_must_be_unitless_real(stack, S, round);
+    else if (!strcmp(token, "erfc")) return evaluate_one_argument_must_be_unitless_real(stack, S, erfc);
+    else if (!strcmp(token, "cos")) return evaluate_one_argument_must_be_unitless(stack, S, ccos);
+    else if (!strcmp(token, "sin")) return evaluate_one_argument_must_be_unitless(stack, S, csin);
+    else if (!strcmp(token, "tan")) return evaluate_one_argument_must_be_unitless(stack, S, ctan);
+    else if (!strcmp(token, "tanh")) return evaluate_one_argument_must_be_unitless(stack, S, ctanh);
+    else if (!strcmp(token, "acos")) return evaluate_one_argument_must_be_unitless(stack, S, cacos);
+    else if (!strcmp(token, "asin")) return evaluate_one_argument_must_be_unitless(stack, S, casin);
+    else if (!strcmp(token, "atan")) return evaluate_one_argument_must_be_unitless(stack, S, catan);
+    else if (!strcmp(token, "exp")) return evaluate_one_argument_must_be_unitless(stack, S, cexp);
+    else if (!strcmp(token, "log")) return evaluate_one_argument_must_be_unitless(stack, S, clog);
+    else if (!strcmp(token, "log2")) return evaluate_one_argument_must_be_unitless_real_nonnegative(stack, S, log2);
+    else if (!strcmp(token, "log10")) return evaluate_one_argument_must_be_unitless_real_nonnegative(stack, S, log10);
+    else if (!strcmp(token, "tenlog")) return evaluate_one_argument_must_be_unitless_real_nonnegative(stack, S, tenlog);
+    else if (!strcmp(token, "itenlog")) return evaluate_one_argument_must_be_unitless_real_nonnegative(stack, S, itenlog);
+    else if (!strcmp(token, "square")) {
+        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
+
+        for (size_t iu = 0; iu < BASEUNITS; iu++)
+            if (stack[S - 1].units[iu] * 2 > INT8_MAX || stack[S - 1].units[iu] * 2 < INT8_MIN)
+                return QRPN_ERROR_DIMENSION_OVERFLOW;
+
+        stack[S - 1].value = stack[S - 1].value * stack[S - 1].value;
+        for (size_t iu = 0; iu < BASEUNITS; iu++)
+            stack[S - 1].units[iu] *= 2;
+        return S;
+    }
+    else if (!strcmp(token, "sqrt")) {
+        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        for (size_t iu = 0; iu < BASEUNITS; iu++)
+            if ((stack[S - 1].units[iu] / 2) * 2 != stack[S - 1].units[iu])
+                return QRPN_ERROR_RATIONAL_NOT_IMPLEMENTED;
+
+        stack[S - 1].value = csqrt(stack[S - 1].value);
+        for (size_t iu = 0; iu < BASEUNITS; iu++)
+            stack[S - 1].units[iu] /= 2;
+        return S;
+    }
+    else if (!strcmp(token, "date")) {
+        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        if (!units_are_equivalent(stack[S - 1].units, units_of_time)) return QRPN_ERROR_INCONSISTENT_UNITS;
+        /* year, month, day, hour, minute, second */
+        time_t unixtime = floor(stack[S - 1].value);
+        const double remainder = stack[S - 1].value - unixtime;
+        struct tm unixtime_struct;
+        gmtime_r(&unixtime, &unixtime_struct);
+        if (S + 5 > QRPN_STACK_SIZE_MAX) return QRPN_ERROR_TOO_MUCH_STACK;
+        S += 5;
+        memset(stack + S - 6, 0, sizeof(struct quantity) * 6);
+        stack[S - 6].value = unixtime_struct.tm_year + 1900;
+        stack[S - 5].value = unixtime_struct.tm_mon + 1;
+        stack[S - 4].value = unixtime_struct.tm_mday;
+        stack[S - 3].value = unixtime_struct.tm_hour;
+        stack[S - 2].value = unixtime_struct.tm_min;
+        stack[S - 1].value = unixtime_struct.tm_sec + remainder;
+        return S;
+    }
+    else if (!strcmp(token, "abs")) {
+        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        stack[S - 1].value = cabs(stack[S - 1].value);
+        return S;
+    }
+    else if (!strcmp(token, "sum")) {
+        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        while (S > 1) {
+            if (!units_are_equivalent(stack[S - 2].units, stack[S - 1].units)) return QRPN_ERROR_INCONSISTENT_UNITS;
+
+            stack[S - 2].value += stack[S - 1].value;
+            S--;
+        }
+        return S;
+    }
+    else
+        return evaluate_literal(stack, S, token);
+}
+
 static void fprintf_value(FILE * fh, const double complex value) {
     if (creal(value) >= 1e6 && !cimag(value))
         fprintf(fh, "%.15g", creal(value));
@@ -259,7 +932,6 @@ static void fprintf_value(FILE * fh, const double complex value) {
             fprintf(fh, "-i");
         else
             fprintf(fh, "%gi", cimag(value));
-
     } else {
         fprintf(fh, "%g", creal(value));
 
@@ -300,7 +972,6 @@ static void fprintf_quantity_si(FILE * fh, const struct quantity quantity) {
                 fprintf_value(fh, quantity.value / named->value);
 
                 fprintf(fh, " %s", named->name ? named->name : named->abrv);
-
                 if (1 != exponent) fprintf(fh, "^%d", exponent);
 
                 return;
@@ -333,10 +1004,9 @@ void fprintf_quantity(FILE * fh, const struct quantity quantity) {
     return fprintf_quantity_si(fh, quantity);
 }
 
-void fprintf_stack(FILE * fh, struct quantity * stack, const size_t S) {
-    if (!S)
-        fprintf(stdout, "[stack is empty]");
-    for (size_t is = 0; is < S; is++) {
+void fprintf_stack(FILE * fh, struct quantity * stack, const int S) {
+    if (!S) fprintf(stdout, "[stack is empty]");
+    else for (int is = 0; is < S; is++) {
         if (S > 1) fprintf(fh, "[");
         fprintf_quantity(fh, stack[is]);
         if (S > 1) fprintf(fh, "]");
@@ -344,44 +1014,16 @@ void fprintf_stack(FILE * fh, struct quantity * stack, const size_t S) {
     }
 }
 
-static double datestr_to_unix_seconds(const char * const datestr) {
-    int64_t seconds = 0, microseconds_after_decimal = 0;
+int qrpn_try_token(const struct quantity stack[static QRPN_STACK_SIZE_MAX], const int S, const char * const token) {
+    /* ideally we would have a strong guarantee that qrpn_evaluate_token would not mutate the input if it would result in an error */
+    struct quantity stack_copy[QRPN_STACK_SIZE_MAX];
+    memcpy(stack_copy, stack, sizeof(struct quantity) * S);
 
-    if (strchr(datestr, 'T') && strchr(datestr, 'Z')) {
-        /* if input is a date string */
-        struct tm unixtime_struct = { 0 };
-
-        /* if input has colons and dashes, and a subsecond portion... */
-        if (strchr(datestr, '-') && strchr(datestr, ':') && strchr(datestr, '.')) {
-            const uint64_t microseconds_remainder_with_integer = strtod(datestr + 18, NULL) * 1000000;
-            microseconds_after_decimal = microseconds_remainder_with_integer % 1000000;
-            strptime(datestr, "%Y-%m-%dT%H:%M:%S.", &unixtime_struct);
-        }
-        /* if input has colons and dashes */
-        else if (strchr(datestr, '-') && strchr(datestr, ':')) strptime(datestr, "%Y-%m-%dT%H:%M:%SZ", &unixtime_struct);
-        /* if input has a subsecond portion */
-        else if (strchr(datestr, '.')) {
-            const uint64_t microseconds_remainder_with_integer = strtod(datestr + 14, NULL) * 1000000;
-            microseconds_after_decimal = microseconds_remainder_with_integer % 1000000;
-            strptime(datestr, "%Y%m%dT%H%M%S.", &unixtime_struct);
-        }
-        else
-            strptime(datestr, "%Y%m%dT%H%M%SZ", &unixtime_struct);
-
-        seconds = timegm(&unixtime_struct);
-    } else {
-        /* otherwise, input is a number */
-        char * after = NULL;
-        microseconds_after_decimal = llrint(strtod(datestr, &after) * 1000000);
-        if (after && *after != '\0')
-            fprintf(stdout, "warning: %s: ignoring \"%s\"\n", __func__, after);
-    }
-
-    return (seconds * 1000000 + microseconds_after_decimal) * 1e-6;
+    return qrpn_evaluate_token(stack_copy, S, token);
 }
 
-char * qrpn_error_string(const int status) {
-    if (!status) return "success";
+char * qrpn_strerror(const int status) {
+    if (status >= 0) return "success";
     else if (QRPN_ERROR_NOT_ENOUGH_STACK == status) return "not enough args";
     else if (QRPN_ERROR_INCONSISTENT_UNITS == status) return "inconsistent units";
     else if (QRPN_ERROR_MUST_BE_INTEGER == status) return "arg must be integer";
@@ -390,678 +1032,150 @@ char * qrpn_error_string(const int status) {
     else if (QRPN_ERROR_RATIONAL_NOT_IMPLEMENTED == status) return "noninteger units";
     else if (QRPN_ERROR_DOMAIN == status) return "domain error";
     else if (QRPN_ERROR_DIMENSION_OVERFLOW == status) return "dimension overflow";
+    else if (QRPN_ERROR_TOO_MUCH_STACK == status) return "insufficient stack space";
+    else if (QRPN_ERROR_UNMATCHED_CONTROL_STATEMENT == status) return "unmatched control statement";
     else return "undefined error";
 }
 
-static int qrpn_evaluate_unit(struct quantity ** stack_p, size_t * S_p, const char * const token, const int exponent_sign) {
-    const char * slash = strchr(token, '/');
+enum control_statement { ELSE_OR_ENDIF, ENDIF, UNTIL_OR_WHILE, REPEAT };
 
-    /* super sketchy */
-    if (slash) {
-        if (strrchr(token, '/') != slash)
-            return QRPN_ERROR_TOKEN_UNRECOGNIZED;
-
-        /* if numerator and denominator both exist, recursively call this function on each of them after adding ^-1 to denominator */
-        char * numerator = strdup(token);
-        numerator[slash - token] = '\0';
-        const int numerator_status = qrpn_evaluate_unit(stack_p, S_p, numerator, exponent_sign);
-
-        free(numerator);
-
-        if (numerator_status != QRPN_WAS_A_UNIT && numerator != QRPN_NOERR) return numerator_status;
-
-        const char * denominator = slash + 1;
-        const int denominator_status = qrpn_evaluate_unit(stack_p, S_p, denominator, -exponent_sign);
-
-        if (denominator_status != QRPN_WAS_A_UNIT && denominator_status != QRPN_NOERR) return denominator_status;
-
-        return (numerator_status == QRPN_WAS_A_UNIT) && (denominator_status == QRPN_WAS_A_UNIT) ? QRPN_WAS_A_UNIT : QRPN_NOERR;
-    }
-
-    size_t S = *S_p;
-    struct quantity * stack = *stack_p;
-
-    const char * const carat = strrchr(token, '^');
-    const size_t bytes_before_carat = carat ? (size_t)(carat - token) : (token ? strlen(token) : 0);
-    const long long unit_exponent = exponent_sign * (carat ? strtoll(carat + 1, NULL, 10) : 1);
-
-    /* loop over all known units */
-    const struct named_quantity * quantity;
-    for (quantity = named_quantities; quantity < named_quantities + named_quantity_count; quantity++) {
-        int ipass;
-        /* loop over [full name, abbreviation, alt spelling] of each unit */
-        for (ipass = 0; ipass < 3; ipass++) {
-            const char * const unit_name = 2 == ipass ? quantity->alt_spelling : 1 == ipass ? quantity->abrv : quantity->name;
-            if (!unit_name) continue;
-
-            /* get number of bytes in unit name because we're gonna need it many times */
-            const size_t unit_len = strlen(unit_name);
-
-            /* if number of bytes in input token is enough, and the last portion of the token matches the unit name... */
-            if (bytes_before_carat >= unit_len && !memcmp(token + bytes_before_carat - unit_len, unit_name, unit_len)) {
-                const size_t bytes_before_unit = bytes_before_carat - unit_len;
-
-                double prefix_scale = 1.0;
-                const struct si_prefix * prefix;
-                /* loop over known for si prefixes */
-                for (prefix = si_prefixes; prefix < si_prefixes + si_prefix_count; prefix++) {
-                    /* if looking for SI unit abbreviations, admit SI prefix abbreviations */
-                    const char * const prefix_name = 1 == ipass ? prefix->abrv : prefix->name;
-
-                    const size_t prefix_len = prefix_name ? strlen(prefix_name) : 0;
-                    if (bytes_before_unit == prefix_len && !memcmp(token, prefix_name, bytes_before_unit)) {
-                        prefix_scale = prefix->scale;
-                        break;
-                    }
-                }
-
-                /* if there were bytes before the unit but they didn't match any known prefix, then dont treat as a unit */
-                if (bytes_before_unit && prefix == si_prefixes + si_prefix_count)
-                    continue;
-
-                if (quantity->flags & FLAG_UNIT_ENTERS_AS_OPERAND) {
-                    S++;
-                    stack = realloc(stack, sizeof(struct quantity) * S);
-                    stack[S - 1] = (struct quantity) { .value = 1 };
-                }
-
-                if (!S) return QRPN_ERROR_NOT_ENOUGH_STACK;
-
-                for (size_t iu = 0; iu < BASEUNITS; iu++)
-                    if (stack[S - 1].units[iu] + unit_exponent > INT8_MAX ||
-                        stack[S - 1].units[iu] + unit_exponent < INT8_MIN)
-                        return QRPN_ERROR_DIMENSION_OVERFLOW;
-
-                for (size_t iu = 0; iu < BASEUNITS; iu++)
-                    stack[S - 1].units[iu] += unit_exponent * quantity->units[iu];
-
-                stack[S - 1].value *= pow(prefix_scale * quantity->value, unit_exponent);
-                stack[S - 1].flags = 0;
-                break;
-            }
+const char ** find_matching_control_statement(const char ** tp, const enum control_statement looking_for) {
+    for (const char * token; (token = *tp); ) {
+        if (!strcmp(token, "until") || !strcmp(token, "while")) {
+            if (looking_for == UNTIL_OR_WHILE) return tp;
+            else return NULL;
         }
-        if (ipass < 3) break;
+        else if (!strcmp(token, "repeat")) {
+            if (looking_for == REPEAT) return tp;
+            else return NULL;
+        }
+        else if (!strcmp(token, "else") || !strcmp(token, "endif")) {
+            if (looking_for == ELSE_OR_ENDIF || looking_for == ENDIF) return tp;
+            else return NULL;
+        }
+        else if (!strcmp(token, "if")) {
+            const char ** tpc = find_matching_control_statement(tp + 1, ELSE_OR_ENDIF);
+            if (!tpc) return NULL;
+            else if (!strcmp(*tpc, "else")) {
+                tpc = find_matching_control_statement(tpc + 1, ENDIF);
+                if (!tpc) return NULL;
+            }
+            tp = tpc + 1;
+        }
+        else if (!strcmp(token, "begin")) {
+            const char ** tpc = find_matching_control_statement(tp + 1, UNTIL_OR_WHILE);
+            if (!tpc) return NULL;
+            else if (!strcmp(*tpc, "while")) {
+                tpc = find_matching_control_statement(tpc + 1, REPEAT);
+                if (!tpc) return NULL;
+            }
+            tp = tpc + 1;
+        }
+        else tp++;
     }
-
-    *stack_p = stack;
-    *S_p = S;
-
-    return (quantity < named_quantities + named_quantity_count ? QRPN_WAS_A_UNIT : QRPN_NOERR);
+    return NULL;
 }
 
-int qrpn_evaluate_token(struct quantity ** stack_p, size_t * S_p, const char * const token) {
-    size_t S = *S_p;
-    struct quantity * stack = *stack_p;
-
-    if (!strcmp(token, "mul") || !strcmp(token, "*")) {
-        /* note we always validate first before mutating the stack */
-        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
-
-        /* calculate and validate output units */
-        int units_out[BASEUNITS];
-        for (size_t iu = 0; iu < BASEUNITS; iu++) {
-            units_out[iu] = stack[S - 2].units[iu] + stack[S - 1].units[iu];
-            if (units_out[iu] > INT8_MAX || units_out[iu] < INT8_MIN) return QRPN_ERROR_DIMENSION_OVERFLOW;
+int qrpn_evaluate_tokens(struct quantity * const stack, int S, const char ** const tokens, const char return_on_block_end) {
+    for (const char ** tp = tokens, * token; (token = *tp); ) {
+        if (!strcmp(token, "else") || !strcmp(token, "endif") || !strcmp(token, "until") || !strcmp(token, "while") || !strcmp(token, "repeat")) {
+            if (return_on_block_end) return S;
+            else return QRPN_ERROR_UNMATCHED_CONTROL_STATEMENT;
         }
+        else if (!strcmp(token, "begin")) {
+            const char ** tp_until_or_while = find_matching_control_statement(tp + 1, UNTIL_OR_WHILE);
+            if (!tp_until_or_while) return QRPN_ERROR_UNMATCHED_CONTROL_STATEMENT;
+            else if (!strcmp(*tp_until_or_while, "while")) {
+                const char ** tp_while = tp_until_or_while;
+                const char ** tp_repeat = find_matching_control_statement(tp_while + 1, REPEAT);
+                if (!tp_repeat) return QRPN_ERROR_UNMATCHED_CONTROL_STATEMENT;
 
-        /* note that we perform all possible validation before we mutate any state */
-        stack[S - 2].value *= stack[S - 1].value;
+                while (1) {
+                    S = qrpn_evaluate_tokens(stack, S, tp + 1, 1);
+                    if (S < 0) return S;
 
-        for (size_t iu = 0; iu < BASEUNITS; iu++)
-            stack[S - 2].units[iu] = units_out[iu];
+                    if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
+                    if (!units_are_dimensionless(stack[S - 1].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
 
-        S--;
-    }
-    else if (!strcmp(token, "div") || !strcmp(token, "/")) {
-        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
+                    S--;
+                    if (!stack[S].value) break;
 
-        int units_out[BASEUNITS];
-        for (size_t iu = 0; iu < BASEUNITS; iu++) {
-            units_out[iu] = stack[S - 2].units[iu] - stack[S - 1].units[iu];
-            if (units_out[iu] > INT8_MAX || units_out[iu] < INT8_MIN) return QRPN_ERROR_DIMENSION_OVERFLOW;
-        }
+                    S = qrpn_evaluate_tokens(stack, S, tp_while + 1, 1);
+                }
 
-        stack[S - 2].value /= stack[S - 1].value;
-
-        for (size_t iu = 0; iu < BASEUNITS; iu++)
-            stack[S - 2].units[iu] = units_out[iu];
-
-        S--;
-    }
-
-    else if (!strcmp(token, "rcp")) {
-        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
-
-        for (size_t iu = 0; iu < BASEUNITS; iu++)
-            if (stack[S - 1].units[iu] < -INT8_MAX)
-                return QRPN_ERROR_DIMENSION_OVERFLOW;
-
-        stack[S - 1].flags = 0;
-        stack[S - 1].value = 1.0 / stack[S - 1].value;
-        for (size_t iu = 0; iu < BASEUNITS; iu++) stack[S - 1].units[iu] *= -1;
-    }
-    else if (!strcmp(token, "chs")) {
-        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        stack[S - 1].value *= -1;
-
-        /* always choose positive imaginary side of negative real line because [1] [chs] [sqrt] is pretty common */
-        if (__imag__ stack[S - 1].value == -0)
-            __imag__ stack[S - 1].value = 0;
-    }
-    else if (!strcmp(token, "idiv")) {
-        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
-
-        if (!units_are_dimensionless(stack[S - 1].units) || !units_are_dimensionless(stack[S - 2].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
-
-        const long long a = llrint(stack[S - 2].value);
-        const long long b = llrint(stack[S - 1].value);
-        if (!b) return QRPN_ERROR_DOMAIN;
-        const long long c = a / b;
-        stack[S - 2].value = c;
-
-        S--;
-    }
-    else if (!strcmp(token, "add") || !strcmp(token, "+") ||
-             !strcmp(token, "sub") || !strcmp(token, "-") ||
-             !strcmp(token, "mod") || !strcmp(token, "%")) {
-        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        if (!units_are_equivalent(stack[S - 2].units, stack[S - 1].units)) return QRPN_ERROR_INCONSISTENT_UNITS;
-
-        if (!strcmp(token, "add") || !strcmp(token, "+"))
-            stack[S - 2].value += stack[S - 1].value;
-        else if (!strcmp(token, "sub") || !strcmp(token, "-"))
-            stack[S - 2].value -= stack[S - 1].value;
-        else if (!strcmp(token, "mod") || !strcmp(token, "%"))
-            stack[S - 2].value = fmod(stack[S - 2].value, stack[S - 1].value);
-
-        S--;
-    }
-    else if (!strcmp(token, "hypot")) {
-        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        if (!units_are_equivalent(stack[S - 2].units, stack[S - 1].units)) return QRPN_ERROR_INCONSISTENT_UNITS;
-        stack[S - 2].flags = 0;
-        stack[S - 2].value = hypot(stack[S - 2].value, stack[S - 1].value);
-
-        S--;
-    }
-    else if (!strcmp(token, "atan2")) {
-        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        if (!units_are_equivalent(stack[S - 2].units, stack[S - 1].units)) return QRPN_ERROR_INCONSISTENT_UNITS;
-        stack[S - 2].value = atan2(stack[S - 2].value, stack[S - 1].value);
-        memset(stack[S - 2].units, 0, sizeof(int8_t[BASEUNITS]));
-
-        S--;
-    }
-    else if (!strcmp(token, "choose")) {
-        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        if (!units_are_equivalent(stack[S - 2].units, stack[S - 1].units)) return QRPN_ERROR_INCONSISTENT_UNITS;
-
-        const unsigned long long n = (unsigned long long)llrint(stack[S - 2].value);
-        const unsigned long long k = (unsigned long long)llrint(stack[S - 1].value);
-        if ((double)n != stack[S - 2].value ||
-            (double)k != stack[S - 1].value) return QRPN_ERROR_MUST_BE_INTEGER;
-        stack[S - 2].flags = 0;
-        stack[S - 2].value = nchoosek(n, k);
-
-        S--;
-    }
-    else if (!strcmp(token, "gcd") || !strcmp(token, "lcm")) {
-        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        if (!units_are_dimensionless(stack[S - 1].units) || !units_are_dimensionless(stack[S - 2].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
-
-        const unsigned long long a = (unsigned long long)llrint(stack[S - 2].value);
-        const unsigned long long b = (unsigned long long)lrint(stack[S - 1].value);
-        if ((double)a != stack[S - 2].value ||
-            (double)b != stack[S - 1].value) return QRPN_ERROR_MUST_BE_INTEGER;
-        stack[S - 2].flags = 0;
-        if (!strcmp(token, "lcm"))
-            stack[S - 2].value = a * b / gcd(a, b);
-        else
-            stack[S - 2].value = gcd(a, b);
-
-        S--;
-    }
-    else if (!strcmp(token, "swap")) {
-        struct quantity tmp;
-        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        tmp = stack[S - 1];
-        stack[S - 1] = stack[S - 2];
-        stack[S - 2] = tmp;
-    }
-    else if (!strcmp(token, "drop")) {
-        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        S--;
-    }
-    else if (!strcmp(token, "dup")) {
-        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        S++;
-        stack = realloc(stack, sizeof(struct quantity) * S);
-        stack[S - 1] = stack[S - 2];
-    }
-    else if (!strcmp(token, "over")) {
-        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        S++;
-        stack = realloc(stack, sizeof(struct quantity) * S);
-        stack[S - 1] = stack[S - 3];
-    }
-    else if (!strcmp(token, "quadratic")) {
-        if (S < 3) return QRPN_ERROR_NOT_ENOUGH_STACK;
-
-        int units_out[BASEUNITS];
-        for (size_t iu = 0; iu < BASEUNITS; iu++) {
-            if (stack[S - 1].units[iu] != stack[S - 2].units[iu] * 2 - stack[S - 3].units[iu])
-                return QRPN_ERROR_INCONSISTENT_UNITS;
-            units_out[iu] = stack[S - 2].units[iu] - stack[S - 3].units[iu];
-            if (units_out[iu] > INT8_MAX || units_out[iu] < INT8_MIN) return QRPN_ERROR_DIMENSION_OVERFLOW;
-        }
-
-        const double complex a = stack[S - 3].value;
-        const double complex b = stack[S - 2].value;
-        const double complex c = stack[S - 1].value;
-        const double complex discriminant = b * b - 4.0 * a * c;
-
-        const double complex d = 0.5 / a;
-        const double complex e = csqrt(discriminant);
-
-        /* well-conditioned floating point method of getting roots, which avoids subtracting two nearly equal magnitude numbers */
-        const double complex r1 = __real__ e > 0 ? (-b - e) * d : (-b + e) * d;
-        const double complex r0 = c / (r1 * a);
-        stack[S - 3].value = r1;
-        stack[S - 2].value = r0;
-
-        for (size_t iu = 0; iu < BASEUNITS; iu++) {
-            stack[S - 3].units[iu] = units_out[iu];
-            stack[S - 2].units[iu] = units_out[iu];
-        }
-
-        S--;
-    }
-    else if (!strcmp(token, "rot")) {
-        struct quantity tmp;
-        if (S < 3) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        stack = realloc(stack, sizeof(struct quantity) * S);
-        tmp = stack[S - 3];
-        stack[S - 3] = stack[S - 2];
-        stack[S - 2] = stack[S - 1];
-        stack[S - 1] = tmp;
-    }
-    else if (!strcmp(token, "pow")) {
-        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        if (!units_are_dimensionless(stack[S - 1].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
-
-        if (units_are_dimensionless(stack[S - 2].units))
-            stack[S - 2].value = cpow(stack[S - 2].value, stack[S - 1].value);
-        else {
-            const long ipowarg = lrint(stack[S - 1].value);
-            if ((double)ipowarg != stack[S - 1].value) return QRPN_ERROR_MUST_BE_INTEGER;
-
-            long long units_out[BASEUNITS];
-            for (size_t iu = 0; iu < BASEUNITS; iu++) {
-                units_out[iu] = stack[S - 2].units[iu] * ipowarg;
-                if (units_out[iu] > INT8_MAX || units_out[iu] < INT8_MIN) return QRPN_ERROR_DIMENSION_OVERFLOW;
+                tp = tp_repeat + 1;
             }
-
-            stack[S - 2].value = cpow(stack[S - 2].value, stack[S - 1].value);
-            for (size_t iu = 0; iu < BASEUNITS; iu++)
-                stack[S - 2].units[iu] = units_out[iu];
-        }
-        stack[S - 2].flags = 0;
-        S--;
-    }
-    else if (!strcmp(token, "rpow")) {
-        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        if (!units_are_dimensionless(stack[S - 1].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
-
-        if (units_are_dimensionless(stack[S - 2].units))
-            stack[S - 2].value = cpow(stack[S - 2].value, 1.0 / stack[S - 1].value);
-        else {
-            const long long ipowarg = llrint(stack[S - 1].value);
-            if ((double)ipowarg != stack[S - 1].value) return QRPN_ERROR_MUST_BE_INTEGER;
-            for (size_t iu = 0; iu < BASEUNITS; iu++)
-                if ((stack[S - 2].units[iu] / ipowarg) * ipowarg != stack[S - 2].units[iu])
-                    return QRPN_ERROR_RATIONAL_NOT_IMPLEMENTED;
-            stack[S - 2].value = cpow(stack[S - 2].value, 1.0 / stack[S - 1].value);
-            for (size_t iu = 0; iu < BASEUNITS; iu++)
-                stack[S - 2].units[iu] /= ipowarg;
-        }
-        stack[S - 2].flags = 0;
-        S--;
-    }
-    else if (!strcmp(token, "gamma")) {
-        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        if (!units_are_dimensionless(stack[S - 1].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
-        stack[S - 1].value = tgamma(stack[S - 1].value);
-        stack[S - 1].flags = 0;
-    }
-
-    else if (!strcmp(token, "br")) {
-        if (S < 4) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        if (!units_are_dimensionless(stack[S - 1].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
-        if (!units_are_dimensionless(stack[S - 2].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
-        if (!units_are_dimensionless(stack[S - 3].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
-        if (!units_are_dimensionless(stack[S - 4].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
-
-        {
-            const double a[2] = { stack[S - 4].value, stack[S - 3].value };
-            const double b[2] = { stack[S - 2].value, stack[S - 1].value };
-            const double d[2] = { b[0] - a[0], b[1] - a[1] };
-            double bearing, range;
-            if (0 == d[0] && 0 == d[1]) {
-                bearing = 0;
-                range = 0;
-            } else {
-                const double cosa1 = cos(a[1]), cosb1 = cos(b[1]);
-                bearing = atan2( sin(d[0]) * cosb1, cosa1 * sin(b[1]) - sin(a[1]) * cosb1 * cos(d[0]) );
-                if (bearing < 0.0) bearing += 2.0 * M_PI;
-                range = ahav( hav(d[1]) + cosb1 * cosa1 * hav(d[0]) );
-            }
-            stack[S - 4].value = bearing;
-            stack[S - 3].value = range * 6371000.0;
-            stack[S - 3].units[0] = 1;
-        }
-
-        S -= 2;
-    }
-    else if (!strcmp(token, "travel")) {
-        if (S < 4) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        if (stack[S - 1].units[0] == 1) {
-            stack[S - 1].units[0] = 0;
-            stack[S - 1].value /= 6371000.0;
-        }
-
-        if (!units_are_dimensionless(stack[S - 1].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
-        if (!units_are_dimensionless(stack[S - 2].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
-        if (!units_are_dimensionless(stack[S - 3].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
-        if (!units_are_dimensionless(stack[S - 4].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
-        {
-            const double in[2] = { stack[S - 4].value, stack[S - 3].value };
-            const double bearing = stack[S - 2].value, range = stack[S - 1].value;
-            /* range, bearing, and declination of start point */
-            const double a = range, B = bearing, c = M_PI_2 - in[1];
-            /* declination of endpoint */
-            const double b = ahav( hav(a - c) + sin(a) * sin(c) * hav(B) );
-            /* change in longitude */
-            const double A = atan2( sin(B) * sin(a) * sin(c), cos(a) - cos(c) * cos(b) );
-
-            /* endpoint longitude is start plus delta */
-            stack[S - 4].value = in[0] + A;
-            /* endpoint latitude is 90 degrees minus endpoint declination */
-            stack[S - 3].value = M_PI_2 - b;
-        }
-
-        S -= 2;
-    }
-    else if (!strcmp(token, "nextafter")) {
-        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        stack[S - 1].value = nextafter(stack[S - 1].value, DBL_MAX);
-    }
-    else if (!strcmp(token, "nextafterf")) {
-        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        stack[S - 1].value = nextafterf(stack[S - 1].value, FLT_MAX);
-    }
-    else if (!strcmp(token, "arg")) {
-        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        stack[S - 1].value = cargf(stack[S - 1].value);
-    }
-    else if (!strcmp(token, "real")) {
-        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        stack[S - 1].value = crealf(stack[S - 1].value);
-    }
-    else if (!strcmp(token, "imaginary")) {
-        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        stack[S - 1].value = cimagf(stack[S - 1].value);
-    }
-    else if (!strcmp(token, "cos") ||
-             !strcmp(token, "sin") ||
-             !strcmp(token, "tan") ||
-             !strcmp(token, "tanh") ||
-             !strcmp(token, "hav") ||
-             !strcmp(token, "crd") ||
-             !strcmp(token, "exsec")) {
-        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        if (!units_are_dimensionless(stack[S - 1].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
-
-        if (!strcmp(token, "cos"))
-            stack[S - 1].value = ccos(stack[S - 1].value);
-        else if (!strcmp(token, "sin"))
-            stack[S - 1].value = csin(stack[S - 1].value);
-        else if (!strcmp(token, "tan"))
-            stack[S - 1].value = ctan(stack[S - 1].value);
-        else if (!strcmp(token, "tanh"))
-            stack[S - 1].value = ctanh(stack[S - 1].value);
-        else if (!strcmp(token, "hav"))
-            stack[S - 1].value = hav(stack[S - 1].value);
-        else if (!strcmp(token, "crd"))
-            stack[S - 1].value = crd(stack[S - 1].value);
-        else if (!strcmp(token, "exsec"))
-            stack[S - 1].value = exsecant(stack[S - 1].value);;
-    }
-    else if (!strcmp(token, "acos") ||
-             !strcmp(token, "asin") ||
-             !strcmp(token, "atan") ||
-             !strcmp(token, "ahav") ||
-             !strcmp(token, "acrd") ||
-             !strcmp(token, "aexsec")) {
-        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        if (!units_are_dimensionless(stack[S - 1].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
-
-        if (!strcmp(token, "acos"))
-            stack[S - 1].value = cacos(stack[S - 1].value);
-        else if (!strcmp(token, "asin"))
-            stack[S - 1].value = casin(stack[S - 1].value);
-        else if (!strcmp(token, "atan"))
-            stack[S - 1].value = catan(stack[S - 1].value);
-        else if (!strcmp(token, "ahav"))
-            stack[S - 1].value = ahav(stack[S - 1].value);
-        else if (!strcmp(token, "acrd"))
-            stack[S - 1].value = acrd(stack[S - 1].value);
-        else if (!strcmp(token, "aexsec"))
-            stack[S - 1].value = arcexsecant(stack[S - 1].value);
-    }
-
-    else if (!strcmp(token, "exp") ||
-             !strcmp(token, "log") ||
-             !strcmp(token, "log2") ||
-             !strcmp(token, "log10") ||
-             !strcmp(token, "tenlog") ||
-             !strcmp(token, "itenlog") ||
-             !strcmp(token, "floor") ||
-             !strcmp(token, "round") ||
-             !strcmp(token, "ceil") ||
-             !strcmp(token, "erfc")
-             ) {
-
-        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        if (!units_are_dimensionless(stack[S - 1].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
-        stack[S - 1].flags = 0;
-
-        if (!strcmp(token, "exp"))
-            stack[S - 1].value = cexp(stack[S - 1].value);
-        else if (!strcmp(token, "log"))
-            stack[S - 1].value = clog(stack[S - 1].value);
-        else if (!strcmp(token, "log2")) {
-            if (creal(stack[S - 1].value) < 0) return QRPN_ERROR_DOMAIN;
-            stack[S - 1].value = log2(stack[S - 1].value);
-        }
-        else if (!strcmp(token, "log10")) {
-            if (creal(stack[S - 1].value) < 0) return QRPN_ERROR_DOMAIN;
-            stack[S - 1].value = log10(stack[S - 1].value);
-        }
-        else if (!strcmp(token, "tenlog")) {
-            if (creal(stack[S - 1].value) < 0 || cimag(stack[S - 1].value)) return QRPN_ERROR_DOMAIN;
-            stack[S - 1].value = 10.0 * log10(stack[S - 1].value);
-        }
-        else if (!strcmp(token, "itenlog")) {
-            if (cimag(stack[S - 1].value)) return QRPN_ERROR_DOMAIN;
-            stack[S - 1].value = pow(10.0, stack[S - 1].value / 10.0);
-        }
-        else if (!strcmp(token, "floor"))
-            stack[S - 1].value = floor(stack[S - 1].value);
-        else if (!strcmp(token, "ceil"))
-            stack[S - 1].value = ceil(stack[S - 1].value);
-        else if (!strcmp(token, "round"))
-            stack[S - 1].value = llrint(stack[S - 1].value);
-        else if (!strcmp(token, "erfc"))
-            stack[S - 1].value = erfc(stack[S - 1].value);
-    }
-
-    else if (!strcmp(token, "square")) {
-        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
-
-        for (size_t iu = 0; iu < BASEUNITS; iu++)
-            if (stack[S - 1].units[iu] * 2 > INT8_MAX || stack[S - 1].units[iu] * 2 < INT8_MIN)
-                return QRPN_ERROR_DIMENSION_OVERFLOW;
-
-        stack[S - 1].flags = 0;
-        stack[S - 1].value = stack[S - 1].value * stack[S - 1].value;
-        for (size_t iu = 0; iu < BASEUNITS; iu++)
-            stack[S - 1].units[iu] *= 2;
-    }
-
-    else if (!strcmp(token, "sqrt")) {
-        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        for (size_t iu = 0; iu < BASEUNITS; iu++)
-            if ((stack[S - 1].units[iu] / 2) * 2 != stack[S - 1].units[iu])
-                return QRPN_ERROR_RATIONAL_NOT_IMPLEMENTED;
-
-        stack[S - 1].flags = 0;
-        stack[S - 1].value = csqrt(stack[S - 1].value);
-        for (size_t iu = 0; iu < BASEUNITS; iu++)
-            stack[S - 1].units[iu] /= 2;
-    }
-
-    else if (!strcmp(token, "date")) {
-        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        if (!units_are_equivalent(stack[S - 1].units, units_of_time)) return QRPN_ERROR_INCONSISTENT_UNITS;
-        /* year, month, day, hour, minute, second */
-        time_t unixtime = floor(stack[S - 1].value);
-        const double remainder = stack[S - 1].value - unixtime;
-        struct tm unixtime_struct;
-        gmtime_r(&unixtime, &unixtime_struct);
-        S += 5;
-        stack = realloc(stack, sizeof(struct quantity) * S);
-        memset(stack + S - 6, 0, sizeof(struct quantity) * 6);
-        stack[S - 6].value = unixtime_struct.tm_year + 1900;
-        stack[S - 5].value = unixtime_struct.tm_mon + 1;
-        stack[S - 4].value = unixtime_struct.tm_mday;
-        stack[S - 3].value = unixtime_struct.tm_hour;
-        stack[S - 2].value = unixtime_struct.tm_min;
-        stack[S - 1].value = unixtime_struct.tm_sec + remainder;
-    }
-
-    else if (!strcmp(token, "abs")) {
-        if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        stack[S - 1].value = cabs(stack[S - 1].value);
-    }
-    else if (!strcmp(token, "sum")) {
-        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        while (S > 1) {
-            if (!units_are_equivalent(stack[S - 2].units, stack[S - 1].units)) return QRPN_ERROR_INCONSISTENT_UNITS;
-
-            stack[S - 2].value += stack[S - 1].value;
-            S--;
-        }
-    }
-    else {
-        const int unit_ret = qrpn_evaluate_unit(&stack, &S, token, 1);
-
-        if (QRPN_NOERR != unit_ret && QRPN_WAS_A_UNIT != unit_ret)
-            return unit_ret;
-
-        else if (QRPN_NOERR == unit_ret) {
-            /* token was not a unit name */
-            struct quantity tmp = { 0 };
-            double d = 0, m = 0, s = 0;
-
-            if (strpbrk(token + 1, "d°") && sscanf(token, "%lf%*[d°]%lf%*[m']%lf%*[s\"]", &d, &m, &s)) {
-                const double leading = strtod(token, NULL);
-                tmp.value = copysign(fabs(d) + m / 60.0 + s / 3600.0, leading) * M_PI / 180.0;
-            }
-            else if (strpbrk(token, "T") && strpbrk(token, "Z")) {
-                tmp.value = datestr_to_unix_seconds(token);
-                tmp.units[2] = 1;
-            }
-            else if (!strcmp(token, "pi")) {
-                tmp.value = M_PI;
-            }
-            else if (!strcmp(token, "-pi")) {
-                tmp.value = -M_PI;
-            }
-            else if (!strcmp(token, "i"))
-                tmp.value = I;
-            else if (!strcmp(token, "-i"))
-                tmp.value = -I;
             else {
-                char * endptr = NULL;
-                tmp.value = strtod(token, &endptr);
-                if (!strcmp(endptr, "i"))
-                    tmp.value *= I;
-                else if (endptr == token)
-                    return QRPN_ERROR_TOKEN_UNRECOGNIZED;
-                else if (endptr[0] != '\0' && endptr[1] == '\0') {
-                    double prefix_scale = 1.0;
-                    /* only allow k, M, G to be used in this position */
-                    if ('k' == endptr[0]) prefix_scale = 1e3;
-                    else if ('M' == endptr[0]) prefix_scale = 1e6;
-                    else if ('G' == endptr[0]) prefix_scale = 1e9;
+                const char ** tp_until = tp_until_or_while;
 
-                    /* special case: trailing 'f' from floating point literals copied and pasted from C code should be ignored */
-                    else if ('f' == endptr[0]) prefix_scale = 1.0;
-                    else return QRPN_ERROR_TOKEN_UNRECOGNIZED;
+                do {
+                    S = qrpn_evaluate_tokens(stack, S, tp + 1, 1);
+                    if (S < 0) return S;
 
-                    tmp.value *= prefix_scale;
-                }
+                    if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
+                    if (!units_are_dimensionless(stack[S - 1].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
+
+                    S--;
+                } while (!stack[S].value);
+
+                tp = tp_until + 1;
             }
+        }
+        else if (!strcmp(token, "if")) {
+            if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
+            if (!units_are_dimensionless(stack[S - 1].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
 
-            S++;
-            stack = realloc(stack, sizeof(struct quantity) * S);
-            stack[S - 1] = tmp;
+            const char ** tp_else_or_endif = find_matching_control_statement(tp + 1, ELSE_OR_ENDIF);
+            const char ** tp_else = NULL, ** tp_endif;
+
+            if (!tp_else_or_endif) return QRPN_ERROR_UNMATCHED_CONTROL_STATEMENT;
+            else if (!strcmp(*tp_else_or_endif, "else")) {
+                tp_else = tp_else_or_endif;
+                tp_endif = find_matching_control_statement(tp_else + 1, ENDIF);
+                if (!tp_endif) return QRPN_ERROR_UNMATCHED_CONTROL_STATEMENT;
+            }
+            else tp_endif = tp_else_or_endif;
+
+            S--;
+
+            if (stack[S].value)
+                S = qrpn_evaluate_tokens(stack, S, tp + 1, 1);
+            else if (tp_else)
+                S = qrpn_evaluate_tokens(stack, S, tp_else + 1, 1);
+
+            tp = tp_endif + 1;
+        }
+        else {
+            S = qrpn_evaluate_token(stack, S, token);
+            if (S < 0) return S;
+
+            tp++;
         }
     }
-
-    *stack_p = stack;
-    *S_p = S;
-
-    return 0;
-}
-
-int qrpn_try_token(const struct quantity * const stack, const size_t S, const char * const token) {
-    size_t S_copy = S;
-
-    /* ideally we would have a strong guarantee that qrpn_evaluate_token would not mutate the input if it would result in an error */
-    struct quantity * stack_copy = malloc(sizeof(struct quantity) * S);
-    memcpy(stack_copy, stack, sizeof(struct quantity) * S);
-
-    const int status = qrpn_evaluate_token(&stack_copy, &S_copy, token);
-    free(stack_copy);
-    return status;
+    return S;
 }
 
 #include <unistd.h>
 
 /* if no other main() is linked, this one will be, and provides a simple command line interface */
-__attribute((weak)) int main(const int argc, char ** const argv) {
+__attribute((weak)) int main(const int argc, const char ** const argv) {
     if (isatty(STDIN_FILENO) && argc < 2) {
         /* never reached */
         fprintf(stdout, "%s: Evaluates an RPN expression with units\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
-    struct quantity * stack = NULL;
-    size_t S = 0;
+    struct quantity stack[QRPN_STACK_SIZE_MAX];
 
-    for (char ** next_token = argv + 1; next_token < argv + argc; next_token++) {
-        const int status = qrpn_evaluate_token(&stack, &S, *next_token);
-        if (status) {
-            fprintf(stdout, "error: %s\n", qrpn_error_string(status));
-            exit(EXIT_FAILURE);
-        }
+    int S = qrpn_evaluate_tokens(stack, 0, argv + 1, 0);
+
+    if (S < 0) {
+        fprintf(stdout, "error: %s\n", qrpn_strerror(S));
+        exit(EXIT_FAILURE);
     }
 
     fprintf_stack(stdout, stack, S);
     fprintf(stdout, "\n");
-
-    free(stack);
 
     return 0;
 }
