@@ -222,7 +222,7 @@ static const struct named_quantity named_quantities[] = {
     { .value = 0.514444444, .units = { 1, 0, -1, 0, 0, 0, 0 }, .name = "knot", .abrv = "kt", },
     { .value = 1609.34, .units = { 1, 0, 0, 0, 0, 0, 0 }, .name = "mile" },
     { .value = 1609.34 / 3600, .units = { 1, 0, -1, 0, 0, 0, 0 }, .abrv = "mph" },
-    { .value = 86400.0 * 365.242, .units = { 0, 0, 1, 0, 0, 0, 0 }, .name = "year", .abrv = "a" },
+    { .value = 86400.0 * 365.2425, .units = { 0, 0, 1, 0, 0, 0, 0 }, .name = "year", .abrv = "a" },
     { .value = 1852.0 * 3, .units = { 1, 0, 0, 0, 0, 0, 0 }, .name = "league" },
     { .value = 9.8066, .units = { 1, 0, -2, 0, 0, 0, 0 }, .name = "g" },
     { .value = 0.01, .units = { 1, 0, -2, 0, 0, 0, 0 }, .name = "gal", .abrv = "Gal" },
@@ -316,7 +316,7 @@ static double datestr_to_unix_seconds(const char * const datestr) {
         char * after = NULL;
         microseconds_after_decimal = llrint(strtod(datestr, &after) * 1000000);
         if (after && *after != '\0')
-            fprintf(stdout, "warning: %s: ignoring \"%s\"\n", __func__, after);
+            fprintf(stderr, "warning: %s: ignoring \"%s\"\n", __func__, after);
     }
 
     return (seconds * 1000000 + microseconds_after_decimal) * 1e-6;
@@ -335,7 +335,7 @@ static int evaluate_unit(struct quantity stack[static QRPN_STACK_SIZE_MAX], int 
 
     /* loop over all known units and prefixes looking for a match */
     for (const struct named_quantity * possible_quantity = named_quantities; !quantity && possible_quantity < named_quantities + named_quantity_count; possible_quantity++)
-        /* loop over [full name, abbreviation, alt spelling] of each unit. this is a bit of a mess */
+    /* loop over [full name, abbreviation, alt spelling] of each unit. this is a bit of a mess */
         for (int ipass = 0; !quantity && ipass < 3; ipass++) {
             const char * const unit_name = 2 == ipass ? possible_quantity->alt_spelling : 1 == ipass ? possible_quantity->abrv : possible_quantity->name;
             if (!unit_name) continue;
@@ -365,7 +365,7 @@ static int evaluate_unit(struct quantity stack[static QRPN_STACK_SIZE_MAX], int 
         }
 
     /* not finding anything above is only an error if there was both a numerator and denominator */
-    if (!quantity) return slash ? QRPN_ERROR_TOKEN_UNRECOGNIZED : QRPN_NOT_A_UNIT;
+    if (!quantity) return QRPN_ERROR_TOKEN_UNRECOGNIZED;
 
     if (quantity->flags & FLAG_UNIT_ENTERS_AS_OPERAND) {
         if (S >= QRPN_STACK_SIZE_MAX) return QRPN_ERROR_TOO_MUCH_STACK;
@@ -391,55 +391,55 @@ static int evaluate_unit(struct quantity stack[static QRPN_STACK_SIZE_MAX], int 
 }
 
 static int evaluate_literal(struct quantity * stack, int S, const char * const token) {
-    const int unit_ret = evaluate_unit(stack, S, token, 1);
-
-    /* if evaluate unit either errored or succeeded, we're done... */
-    if (unit_ret != QRPN_NOT_A_UNIT) return unit_ret;
-
-    /* otherwise, token was not a unit name, parse it as a simple literal */
     struct quantity tmp = { 0 };
-    double d = 0, m = 0, s = 0;
 
-    if (strpbrk(token + 1, "d°") && sscanf(token, "%lf%*[d°]%lf%*[m']%lf%*[s\"]", &d, &m, &s)) {
-        const double leading = strtod(token, NULL);
-        tmp.value = copysign(fabs(d) + m / 60.0 + s / 3600.0, leading) * M_PI / 180.0;
-    }
-    else if (strpbrk(token, "T") && strpbrk(token, "Z")) {
-        tmp.value = datestr_to_unix_seconds(token);
-        tmp.units[2] = 1;
-    }
-    else if (!strcmp(token, "pi"))
-        tmp.value = M_PI;
-    else if (!strcmp(token, "-pi"))
-        tmp.value = -M_PI;
-    else if (!strcmp(token, "i"))
-        tmp.value = I;
-    else if (!strcmp(token, "-i"))
-        tmp.value = -I;
-    else {
-        char * endptr = NULL;
-        const double dv = strtod(token, &endptr);
-        if (fabs(dv) >= (double)(1ULL << 53)) {
-            const long long llv = strtoll(token, NULL, 10);
-            if ((long long)dv != llv) return QRPN_ERROR_INEXACT_LITERAL;
+    char * endptr = NULL;
+    const double dv = strtod(token, &endptr);
+
+    if (endptr == token) {
+        if (!strcmp(token, "pi"))
+            tmp.value = M_PI;
+        else if (!strcmp(token, "-pi"))
+            tmp.value = -M_PI;
+        else if (!strcmp(token, "i"))
+            tmp.value = I;
+        else if (!strcmp(token, "-i"))
+            tmp.value = -I;
+        else return evaluate_unit(stack, S, token, 1);
+    } else {
+        /* otherwise, token was not a unit name, parse it as a simple literal */
+        double d = 0, m = 0, s = 0;
+
+        if (strpbrk(token + 1, "d°") && sscanf(token, "%lf%*[d°]%lf%*[m']%lf%*[s\"]", &d, &m, &s))
+            tmp.value = copysign(fabs(d) + m / 60.0 + s / 3600.0, d) * M_PI / 180.0;
+        else if (strpbrk(token, "T") && strpbrk(token, "Z")) {
+            tmp.value = datestr_to_unix_seconds(token);
+            tmp.units[2] = 1;
         }
-        tmp.value = dv;
-        if (!strcmp(endptr, "i"))
-            tmp.value *= I;
-        else if (endptr == token)
-            return QRPN_ERROR_TOKEN_UNRECOGNIZED;
-        else if (endptr[0] != '\0' && endptr[1] == '\0') {
-            double prefix_scale = 1.0;
-            /* only allow k, M, G to be used in this position */
-            if ('k' == endptr[0]) prefix_scale = 1e3;
-            else if ('M' == endptr[0]) prefix_scale = 1e6;
-            else if ('G' == endptr[0]) prefix_scale = 1e9;
+        else {
+            if (fabs(dv) >= (double)(1ULL << 53)) {
+                const long long llv = strtoll(token, NULL, 10);
+                if ((long long)dv != llv) return QRPN_ERROR_INEXACT_LITERAL;
+            }
+            tmp.value = dv;
 
-            /* special case: trailing 'f' from floating point literals copied and pasted from C code should be ignored */
-            else if ('f' == endptr[0]) prefix_scale = 1.0;
-            else return QRPN_ERROR_TOKEN_UNRECOGNIZED;
+            if (!strcmp(endptr, "i"))
+                tmp.value *= I;
+            else if (endptr == token)
+                return evaluate_unit(stack, S, token, 1);
+            else if (endptr[0] != '\0' && endptr[1] == '\0') {
+                double prefix_scale = 1.0;
+                /* only allow k, M, G to be used in this position */
+                if ('k' == endptr[0]) prefix_scale = 1e3;
+                else if ('M' == endptr[0]) prefix_scale = 1e6;
+                else if ('G' == endptr[0]) prefix_scale = 1e9;
 
-            tmp.value *= prefix_scale;
+                /* special case: trailing 'f' from floating point literals copied and pasted from C code should be ignored */
+                else if ('f' == endptr[0]) prefix_scale = 1.0;
+                else return QRPN_ERROR_TOKEN_UNRECOGNIZED;
+
+                tmp.value *= prefix_scale;
+            }
         }
     }
 
@@ -959,8 +959,8 @@ int qrpn_evaluate_token(struct quantity * const stack, int S, const char * const
     }
     else if (!strcmp(token, "print")) {
         if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        fprintf_quantity(stdout, stack[S - 1]);
-        fprintf(stdout, "\n");
+        fprintf_quantity(stderr, stack[S - 1]);
+        fprintf(stderr, "\n");
         return S;
     }
     else
@@ -1222,7 +1222,7 @@ int qrpn_try_string(const struct quantity stack[static QRPN_STACK_SIZE_MAX], con
 __attribute((weak)) int main(const int argc, const char ** const argv) {
     if (isatty(STDIN_FILENO) && argc < 2) {
         /* never reached */
-        fprintf(stdout, "%s: Evaluates an RPN expression with units\n", argv[0]);
+        fprintf(stderr, "%s: Evaluates an RPN expression with units\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
@@ -1231,7 +1231,7 @@ __attribute((weak)) int main(const int argc, const char ** const argv) {
     int S = qrpn_evaluate_tokens(stack, 0, argv + 1, 0);
 
     if (S < 0) {
-        fprintf(stdout, "error: %s\n", qrpn_strerror(S));
+        fprintf(stderr, "error: %s\n", qrpn_strerror(S));
         exit(EXIT_FAILURE);
     }
 
