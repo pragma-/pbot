@@ -19,6 +19,10 @@ int qrpn_evaluate_token(struct quantity * stack, int S, const char * const token
 
 /* same, but operate on a temporary copy of the input and do not mutate the original */
 int qrpn_try_token(const struct quantity stack[static QRPN_STACK_SIZE_MAX], const int S, const char * const token);
+int qrpn_try_string(const struct quantity stack[static QRPN_STACK_SIZE_MAX], const int S, const char * const string);
+
+int qrpn_evaluate_string(struct quantity * const stack, int S, const char * string);
+
 
 /* given the value returned from a function above, return a pointer to a string literal */
 char * qrpn_strerror(const int status);
@@ -27,15 +31,17 @@ char * qrpn_strerror(const int status);
 void fprintf_stack(FILE * fh, struct quantity * stack, const int S);
 void fprintf_quantity(FILE * fh, const struct quantity quantity);
 
-/* status codes returned by qrpn_evaluate_token */
-#define QRPN_ERROR_NOT_ENOUGH_STACK -1
-#define QRPN_ERROR_INCONSISTENT_UNITS -2
-#define QRPN_ERROR_MUST_BE_INTEGER -3
-#define QRPN_ERROR_TOKEN_UNRECOGNIZED -4
-#define QRPN_ERROR_RATIONAL_NOT_IMPLEMENTED -5
-#define QRPN_ERROR_MUST_BE_UNITLESS -6
-#define QRPN_ERROR_DOMAIN -7
-#define QRPN_ERROR_DIMENSION_OVERFLOW -8
-#define QRPN_ERROR_TOO_MUCH_STACK -9
-#define QRPN_ERROR_UNMATCHED_CONTROL_STATEMENT -10
-#define QRPN_NOT_A_UNIT -11
+#define QRPN_ERROR_TOKEN_UNRECOGNIZED -1
+#define QRPN_ERROR_NOT_ENOUGH_STACK -2
+#define QRPN_ERROR_INCONSISTENT_UNITS -3
+#define QRPN_ERROR_MUST_BE_INTEGER -4
+#define QRPN_ERROR_MUST_BE_UNITLESS -5
+#define QRPN_ERROR_MUST_BE_REAL -6
+#define QRPN_ERROR_MUST_BE_NONNEGATIVE -7
+#define QRPN_ERROR_RATIONAL_NOT_IMPLEMENTED -8
+#define QRPN_ERROR_DOMAIN -9
+#define QRPN_ERROR_DIMENSION_OVERFLOW -10
+#define QRPN_ERROR_TOO_MUCH_STACK -11
+#define QRPN_ERROR_UNMATCHED_CONTROL_STATEMENT -12
+#define QRPN_ERROR_INEXACT_LITERAL -13
+#define QRPN_NOT_A_UNIT -14
