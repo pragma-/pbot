@@ -93,7 +93,8 @@ static unsigned long long ceil_isqrt(unsigned long long n) {
 }
 
 static int isprime(const unsigned long long n) {
-    if (n < 2 || !(n % 2)) return 0;
+    if (2 == n) return 1;
+    else if (1 == n || !(n % 2)) return 0;
 
     const unsigned long long stop = ceil_isqrt(n);
 
@@ -417,10 +418,6 @@ static int evaluate_literal(struct quantity * stack, int S, const char * const t
             tmp.units[2] = 1;
         }
         else {
-            if (fabs(dv) >= (double)(1ULL << 53)) {
-                const long long llv = strtoll(token, NULL, 10);
-                if ((long long)dv != llv) return QRPN_ERROR_INEXACT_LITERAL;
-            }
             tmp.value = dv;
 
             if (!strcmp(endptr, "i"))
@@ -898,7 +895,7 @@ int qrpn_evaluate_token(struct quantity * const stack, int S, const char * const
     else if (!strcmp(token, "log2")) return evaluate_one_argument_must_be_unitless_real_nonnegative(stack, S, log2);
     else if (!strcmp(token, "log10")) return evaluate_one_argument_must_be_unitless_real_nonnegative(stack, S, log10);
     else if (!strcmp(token, "tenlog")) return evaluate_one_argument_must_be_unitless_real_nonnegative(stack, S, tenlog);
-    else if (!strcmp(token, "itenlog")) return evaluate_one_argument_must_be_unitless_real_nonnegative(stack, S, itenlog);
+    else if (!strcmp(token, "itenlog")) return evaluate_one_argument_must_be_unitless_real(stack, S, itenlog);
     else if (!strcmp(token, "square")) {
         if (S < 1) return QRPN_ERROR_NOT_ENOUGH_STACK;
 
