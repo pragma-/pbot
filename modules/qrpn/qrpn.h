@@ -44,4 +44,3 @@ void fprintf_quantity(FILE * fh, const struct quantity quantity);
 #define QRPN_ERROR_TOO_MUCH_STACK -11
 #define QRPN_ERROR_UNMATCHED_CONTROL_STATEMENT -12
 #define QRPN_ERROR_INEXACT_LITERAL -13
-#define QRPN_NOT_A_UNIT -14
