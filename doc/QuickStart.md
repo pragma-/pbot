@@ -82,11 +82,11 @@ After git-cloning (or unpacking the ZIP archives) you should have a directory na
 Name | Description
 --- | ---
 [`Plang/`](https://github.com/pragma-/Plang) | Plang scripting language
+[`applets/`](../applets) | External command-line executables invokable as PBot commands
 [`bin/`](../bin) | PBot executables (e.g., [`bin/pbot`](../bin/pbot))
 [`data/`](../data) | Default data-directory
 [`doc/`](../doc) | Helpful documentation
 [`lib/`](../lib) | PBot source tree
-[`applets/`](../applets) | External command-line executables invokable as PBot commands
 [`updates/`](../updates) | Migration scripts run automatically by PBot after updates that modify data structures
 [`cpanfile`](../cpanfile) | CPAN dependencies file
 
