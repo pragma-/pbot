@@ -37,7 +37,7 @@
   * [Commands](#commands)
   * [Factoids](#factoids)
   * [Plugins](#plugins)
-  * [Modules](#modules)
+  * [Applets](#applets)
 <!-- md-toc-end -->
 
 ## Installation
@@ -86,7 +86,7 @@ Name | Description
 [`data/`](../data) | Default data-directory
 [`doc/`](../doc) | Helpful documentation
 [`lib/`](../lib) | PBot source tree
-[`modules/`](../modules) | External command-line executables invokable as PBot commands
+[`applets/`](../applets) | External command-line executables invokable as PBot commands
 [`updates/`](../updates) | Migration scripts run automatically by PBot after updates that modify data structures
 [`cpanfile`](../cpanfile) | CPAN dependencies file
 
@@ -152,7 +152,7 @@ The CPAN modules may be installed with (assuming you do not need Windows support
     $ cpanm -n --installdeps . --with-all-features --without-feature=compiler_vm_win32
 
 If you want to install the bare minimum CPAN modules required for PBot's core functionality,
-you can use the following command. But be aware that several plugins and modules may not
+you can use the following command. But be aware that several plugins and applets may not
 function.
 
     $ cpanm -n --installdeps .
@@ -282,7 +282,7 @@ the PBot STDIN interface.
 #### Overriding directories
 You may override PBot's default directory locations via the command-line.
 
-    $ pbot data_dir=/path/to/data modules_dir=/path/to/modules
+    $ pbot data_dir=/path/to/data applets_dir=/path/to/applets
 
 #### Overriding registry
 You may override any of your Registry values via the command-line. Any overrides made will be
@@ -480,8 +480,8 @@ Currently loaded plugins may be listed with the `pluglist` command.
 
 For more information, see the [Plugins documentation](Plugins.md).
 
-### Modules
-Modules are external command-line executable programs and scripts that can be
+### Applets
+Applets are external command-line executable programs and scripts that can be
 loaded as PBot commands.
 
 Suppose you have the [Qalculate!](https://qalculate.github.io/) command-line
@@ -491,9 +491,9 @@ shell script containing:
     #!/bin/sh
     qalc "$*"
 
-And let's call it `qalc.sh` and put it in PBot's `modules/` directory.
+And let's call it `qalc.sh` and put it in PBot's `applets/` directory.
 
-Then you can use the PBot [`load`](Admin.md#load) command to load the `modules/qalc.sh` script as the `qalc` command:
+Then you can use the PBot [`load`](Admin.md#load) command to load the `applets/qalc.sh` script as the `qalc` command:
 
     !load qalc qalc.sh
 
@@ -502,4 +502,4 @@ Now you have a [Qalculate!](https://qalculate.github.io/) calculator in PBot!
     <pragma-> !qalc 2 * 2
        <PBot> 2 * 2 = 4
 
-For more information, see the [Modules documentation](Modules.md).
+For more information, see the [Applets documentation](Applets.md).

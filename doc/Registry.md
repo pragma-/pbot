@@ -189,8 +189,9 @@ general.daemon | Run PBot in daemon mode. Closes stdin and stdout, writes only t
 general.deop_timeout | Time-out, in seconds, before PBot deops itself after being opped. | 300
 general.default_ban_timeout | Default timeout for bans. | 24 hours
 general.default_mute_timeout | Default timeout for mutes. | 24 hours
-general.module_dir | Path to PBot `modules/` directory. |
-general.module_repo | URL to source code of PBot modules; used in `factinfo` | https://github.com/pragma-/pbot/tree/master/modules
+general.applet_dir | Path to PBot `applets/` directory. |
+general.applet_repo | URL to source code of PBot applets; used in `factinfo` | https://github.com/pragma-/pbot/tree/master/applets
+general.applet_timeout | Duration, in seconds, of how long applets may run before being killed | 30
 general.no_dehighlight_nicks | If set to at true value then  when outputting text PBot will not convert nicks to text that avoids triggering IRC client nick-highlighting | not defined
 general.paste_ratelimit | How often, in seconds, between pastes to web paste-sites. |
 general.send_who_on_join | When joining a channel, send the `WHO` command to get detailed information about who is present, and to check for ban-evasions. | 1

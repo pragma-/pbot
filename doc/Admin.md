@@ -47,10 +47,10 @@
   * [checkmute](#checkmute)
   * [invite](#invite)
   * [kick](#kick)
-* [Module-management](#module-management)
+* [Applet-management](#applet-management)
   * [load](#load)
   * [unload](#unload)
-  * [Listing modules](#listing-modules)
+  * [Listing applets](#listing-applets)
 * [Plugin-management](#plugin-management)
   * [plug](#plug)
   * [unplug](#unplug)
@@ -541,30 +541,30 @@ Removes a user from the channel. `<nick>` can be a comma-separated list of multi
 Usage from channel:   `kick <nick> [reason]`
 From private message: `kick <channel> <nick> [reason]`
 
-## Module-management
-Note that modules are "reloaded" each time they are executed. There is no need to `refresh` after editing a module.
+## Applet-management
+Note that applets are "reloaded" each time they are executed. There is no need to `refresh` after editing an applet.
 
 ### load
-This command loads a module in `$data_dir/modules/` as a PBot command. It is
-equivalent to `factadd`ing a new keyword and then setting its `type` to `module`.
+This command loads an applet as a PBot command. It is equivalent to `factadd`ing a new keyword and then setting
+its `type` to `applet`.
 
-Usage: `load <keyword> <module>`
+Usage: `load <keyword> <applet>`
 
-For example, to load `$data_dir/modules/qalc.sh` as the `qalc` command:
+For example, to load `applets/qalc.sh` as the `qalc` command:
 
     <pragma-> !load qalc qalc.sh
 
 ### unload
-This command unloads a module. It is equivalent to deleting the factoid keyword
-the module was loaded as.
+This command unloads an applet. It is equivalent to deleting the factoid keyword
+the applet was loaded as.
 
 Usage: `unload <keyword>`
 
-### Listing modules
-To list the loaded modules, use the `list modules` command. This is not an admin command, but
+### Listing applets
+To list the loaded applets, use the `list applets` command. This is not an admin command, but
 it is included here for completeness.
 
-Usage: `list modules`
+Usage: `list applets`
 
 ## Plugin-management
 ### plug
@@ -808,7 +808,7 @@ Exports specified list to HTML file in `$data_dir`.
 Usage:  `export <factoids|quotegrabs>`
 
 ### refresh
-Refreshes/reloads PBot core modules and plugins (not the command-line modules since those are executed/loaded each time they are invoked).
+Refreshes/reloads PBot core modules and plugins (not the command-line applets since those are executed/loaded each time they are invoked).
 
 For example, suppose you edit some PBot source file, be it a core file such as PBot/Factoids.pm or
 a Plugin such as Plugins/Wttr.pm. Rather than shut the bot down and restart it, you can simply use

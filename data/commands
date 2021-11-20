@@ -1,6 +1,6 @@
 {
    "$metadata$" : {
-      "name" : "Command metadata",
+      "name" : "Commands",
       "update_version" : 3503
    },
    "actiontrigger" : {
@@ -301,7 +301,7 @@
       "requires_cap" : 0
    },
    "load" : {
-      "help" : "This command loads a module as a PBot command. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#load",
+      "help" : "This command loads an applet as a PBot command. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#load",
       "requires_cap" : 1
    },
    "login" : {
@@ -468,7 +468,7 @@
       "requires_cap" : 1
    },
    "unload" : {
-      "help" : "Unloads a module and removes its associated command. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#unload",
+      "help" : "Unloads an applet and removes its associated command. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#unload",
       "requires_cap" : 1
    },
    "unmute" : {

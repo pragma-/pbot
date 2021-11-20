@@ -83,21 +83,21 @@ sub cmd_date {
         return "No timezone set or user account does not exist.";
     }
 
-    # execute `date_module`
+    # execute `date_applet`
     my $newcontext = {
         from         => $context->{from},
         nick         => $context->{nick},
         user         => $context->{user},
         host         => $context->{host},
         hostmask     => $context->{hostmask},
-        command      => "date_module $timezone",
+        command      => "date_applet $timezone",
         root_channel => $context->{from},
-        root_keyword => "date_module",
-        keyword      => "date_module",
+        root_keyword => "date_applet",
+        keyword      => "date_applet",
         arguments    => "$timezone"
     };
 
-    $self->{pbot}->{modules}->execute_module($newcontext);
+    $self->{pbot}->{applets}->execute_applet($newcontext);
 }
 
 1;

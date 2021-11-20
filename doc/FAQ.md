@@ -95,7 +95,7 @@ If your command is registered by a plugin, use the [`cmdset`](Admin.md#cmdset) c
 to set the `preserve_whitespace` [command metadata](Admin.md#command-metadata-list) to
 control this behavior.
 
-If your command is a command-line module, use the [`factset`](Factoids.md#factset) command
+If your command is a command-line applet, use the [`factset`](Factoids.md#factset) command
 to set the `preserve_whitespace` [factoid metadata](Factoids.md#factoid-metadata-list) instead.
 
 ## How do I change my password?

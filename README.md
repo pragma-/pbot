@@ -20,7 +20,7 @@ PBot is a pragmatic IRCv3 Bot written in Perl
       * [Factoids](#factoids)
       * [Code factoids](#code-factoids)
       * [Plugins](#plugins)
-      * [Modules](#modules)
+      * [Applets](#applets)
       * [Functions](#functions)
       * [Scripting interface](#scripting-interface)
     * [Virtual machine to safely execute user-submitted code](#virtual-machine-to-safely-execute-user-submitted-code)
@@ -243,8 +243,8 @@ Plugin | Description
 [Connect4](lib/PBot/Plugin/Connect4.pm) | The classic Connect-4 game.
 [Spinach](lib/PBot/Plugin/Spinach.pm) | An advanced multiplayer Trivia game engine with a twist! A question is shown. Everybody privately submits a false answer. All false answers and the true answer is shown. Everybody tries to guess the true answer. Points are gained when people pick your false answer!
 
-#### Modules
-Modules are external command-line executable programs and scripts that can be
+#### Applets
+Applets are external command-line executable programs and scripts that can be
 loaded as PBot commands.
 
 Suppose you have the [Qalculate!](https://qalculate.github.io/) command-line
@@ -254,7 +254,7 @@ shell script containing:
     #!/bin/sh
     qalc "$*"
 
-And let's call it `qalc.sh` and put it in PBot's `modules/` directory.
+And let's call it `qalc.sh` and put it in PBot's `applets/` directory.
 
 Then you can load it with the [`load`](doc/Admin.md#load) command.
 
@@ -265,20 +265,20 @@ Now you have a [Qalculate!](https://qalculate.github.io/) calculator in PBot!
     <pragma-> !qalc 2 * 2
        <PBot> 2 * 2 = 4
 
-These are just some of the modules PBot comes with; there are several more:
+These are just some of the applets PBot comes with; there are several more:
 
-Module | Description
+Applet | Description
 --- | ---
-[C-to-English translator](modules/c2english) | Translates C code to natural English sentences.
-[C precedence analyzer](modules/paren) | Adds parentheses to C code to demonstrate precedence.
-[C Jeopardy! game](modules/cjeopardy) | C programming trivia game based on the Jeopardy! TV game show.
-[C Standard citations](modules/c11std.pl) | Cite specified sections/paragraphs from the C standard.
-[Virtual machine](modules/compiler_vm) | Executes arbitrary code and commands within a virtual machine.
-[dict.org Dictionary](modules/dict.org.pl) | Interface to dict.org for definitions, translations, acronyms, etc.
-[Urban Dictionary](modules/urban) | Search Urban Dictionary for definitions.
-[Manpages](modules/man.pl) | Display a concise formatting of manual pages (designed for C functions)
+[C-to-English translator](applets/c2english) | Translates C code to natural English sentences.
+[C precedence analyzer](applets/paren) | Adds parentheses to C code to demonstrate precedence.
+[C Jeopardy! game](applets/cjeopardy) | C programming trivia game based on the Jeopardy! TV game show.
+[C Standard citations](applets/c11std.pl) | Cite specified sections/paragraphs from the C standard.
+[Virtual machine](applets/compiler_vm) | Executes arbitrary code and commands within a virtual machine.
+[dict.org Dictionary](applets/dict.org.pl) | Interface to dict.org for definitions, translations, acronyms, etc.
+[Urban Dictionary](applets/urban) | Search Urban Dictionary for definitions.
+[Manpages](applets/man.pl) | Display a concise formatting of manual pages (designed for C functions)
 
-For more information, see the [Modules documentation](doc/Modules.md).
+For more information, see the [Applets documentation](doc/Applets.md).
 
 #### Functions
 Functions are commands that accept input, manipulate it and then output the result. They are extremely
@@ -355,7 +355,7 @@ It can display the value of the most recent statement if there is no program out
     <pragma-> !cc sizeof (int)
        <PBot> no output: sizeof(int) = 4
 
-For more information about the C programming language plugin, see [the `cc` command in the Modules documentation.](doc/Modules.md#cc)
+For more information about the C programming language plugin, see [the `cc` command in the Applets documentation.](doc/Applets.md#cc)
 
 For more information about the virtual machine, see the [Virtual Machine documentation.](doc/VirtualMachine.md)
 

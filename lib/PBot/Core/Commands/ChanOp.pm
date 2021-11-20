@@ -638,7 +638,7 @@ sub cmd_kick {
 
     my @insults;
     if (not length $reason) {
-        if (open my $fh, '<', $self->{pbot}->{registry}->get_value('general', 'module_dir') . '/insults.txt') {
+        if (open my $fh, '<', $self->{pbot}->{registry}->get_value('general', 'applet_dir') . '/insults.txt') {
             @insults = <$fh>;
             close $fh;
             $reason = $insults[rand @insults];

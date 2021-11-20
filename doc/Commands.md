@@ -20,8 +20,8 @@
     * [Functions](#functions)
   * [Factoids](#factoids)
     * [Code Factoids](#code-factoids)
-    * [Modules](#modules)
-      * [Listing all loaded modules](#listing-all-loaded-modules)
+    * [Applets](#applets)
+      * [Listing all loaded applets](#listing-all-loaded-applets)
 * [Commands documented here](#commands-documented-here)
   * [version](#version)
   * [help](#help)
@@ -64,10 +64,10 @@
       * [banlist](Admin.md#banlist)
       * [checkban](Admin.md#checkban)
       * [checkmute](Admin.md#checkmute)
-    * [Module-management](#module-management)
+    * [Applet-management](#applet-management)
       * [load](Admin.md#load)
       * [unload](Admin.md#unload)
-      * [list modules](Admin.md#listing-modules)
+      * [list applets](Admin.md#listing-applets)
     * [Plugin-management](#plugin-management)
       * [plug](Admin.md#plug)
       * [unplug](Admin.md#unplug)
@@ -427,21 +427,21 @@ language specified by the argument following the `/code` command.
 
 For more information, see the [Code Factoid documentation.](Factoids.md#code)
 
-#### Modules
-Modules are simple stand-alone external command-line scripts and programs. Just
+#### Applets
+Applets are simple stand-alone external command-line scripts and programs. Just
 about any application that can be run in your command-line shell can be loaded as
-a PBot module.
+a PBot applet.
 
-* only bot owner can install new command-line modules
-* Modules do not have access to PBot internal API functions and data structures
+* only bot owner can install new command-line applets
+* Applets do not have access to PBot internal API functions and data structures
 
-For more information, see the [Modules documentation.](Modules.md)
+For more information, see the [Applets documentation.](Applets.md)
 
-##### Listing all loaded modules
-To list all of the currently loaded modules, use the `list modules` command.
+##### Listing all loaded applets
+To list all of the currently loaded applets, use the `list applets` command.
 
-    <pragma-> list modules
-       <PBot> Loaded modules: ago bashfaq bashpf c11std c2english c99std cdecl cfact cfaq ... etc.
+    <pragma-> list applets
+       <PBot> Loaded applets: ago bashfaq bashpf c11std c2english c99std cdecl cfact cfaq ... etc.
 
 ## Commands documented here
 These are the commands documented in this file. For commands documented in
@@ -566,10 +566,10 @@ to have the command remember your location.
 ##### [checkban](Admin.md#checkban)
 ##### [checkmute](Admin.md#checkmute)
 
-#### Module-management
+#### Applet-management
 ##### [load](Admin.md#load)
 ##### [unload](Admin.md#unload)
-##### [list modules](Admin.md#listing-modules)
+##### [list applets](Admin.md#listing-applets)
 
 #### Plugin-management
 ##### [plug](Admin.md#plug)

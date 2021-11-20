@@ -20,6 +20,6 @@ use PBot::Core;
 
 PBot::Core->new(
     data_dir   => "$RealBin/../data",
-    module_dir => "$RealBin/../modules",
+    applet_dir => "$RealBin/../applets",
     update_dir => "$RealBin/../updates",
 )->start;

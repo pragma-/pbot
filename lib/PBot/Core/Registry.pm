@@ -39,7 +39,7 @@ sub initialize {
 
     # add default registry items
     $self->add_default('text', 'general', 'data_dir',      $conf{data_dir});
-    $self->add_default('text', 'general', 'module_dir',    $conf{module_dir});
+    $self->add_default('text', 'general', 'applet_dir',    $conf{applet_dir});
     $self->add_default('text', 'general', 'update_dir',    $conf{update_dir});
 
     # bot trigger
@@ -74,7 +74,7 @@ sub initialize {
 
     # update important paths
     $self->set('general', 'data_dir',   'value', $conf{data_dir},   0, 1);
-    $self->set('general', 'module_dir', 'value', $conf{module_dir}, 0, 1);
+    $self->set('general', 'applet_dir', 'value', $conf{applet_dir}, 0, 1);
     $self->set('general', 'update_dir', 'value', $conf{update_dir}, 0, 1);
 
     # override registry entries with command-line arguments, if any

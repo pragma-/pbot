@@ -25,6 +25,7 @@ use Carp ();
 use PBot::Core::Logger;
 use PBot::Core::AntiFlood;
 use PBot::Core::AntiSpam;
+use PBot::Core::Applets;
 use PBot::Core::BanList;
 use PBot::Core::BlackList;
 use PBot::Core::Capabilities;
@@ -42,7 +43,6 @@ use PBot::Core::IRC;
 use PBot::Core::IRCHandlers;
 use PBot::Core::LagChecker;
 use PBot::Core::MessageHistory;
-use PBot::Core::Modules;
 use PBot::Core::NickList;
 use PBot::Core::Plugins;
 use PBot::Core::ProcessManager;
@@ -82,13 +82,13 @@ sub initialize {
 
     # process command-line arguments for path and registry overrides
     foreach my $arg (@ARGV) {
-        if ($arg =~ m/^-?(?:general\.)?((?:data|module|update)_dir)=(.*)$/) {
+        if ($arg =~ m/^-?(?:general\.)?((?:data|applet|update)_dir)=(.*)$/) {
             # check command-line arguments for directory overrides
             my $override = $1;
             my $value    = $2;
             $value =~ s/[\\\/]$//; # strip trailing directory separator
             $conf{data_dir}    = $value if $override eq 'data_dir';
-            $conf{module_dir}  = $value if $override eq 'module_dir';
+            $conf{applet_dir}  = $value if $override eq 'applet_dir';
             $conf{update_dir}  = $value if $override eq 'update_dir';
         } else {
             # check command-line arguments for registry overrides
@@ -112,7 +112,7 @@ sub initialize {
     }
 
     # make sure the paths exist
-    foreach my $path (qw/data_dir module_dir update_dir/) {
+    foreach my $path (qw/data_dir applet_dir update_dir/) {
         if (not -d $conf{$path}) {
             print STDERR "$path path ($conf{$path}) does not exist; aborting.\n";
             exit;
@@ -142,7 +142,7 @@ sub initialize {
     $self->{logger}->log("Args: @ARGV\n") if @ARGV;
 
     # log configured paths
-    $self->{logger}->log("module_dir: $conf{module_dir}\n");
+    $self->{logger}->log("applet_dir: $conf{applet_dir}\n");
     $self->{logger}->log("  data_dir: $conf{data_dir}\n");
     $self->{logger}->log("update_dir: $conf{update_dir}\n");
 
@@ -180,6 +180,7 @@ sub initialize {
     $self->{users}            = PBot::Core::Users->new(pbot => $self, filename => "$conf{data_dir}/users", %conf);
     $self->{antiflood}        = PBot::Core::AntiFlood->new(pbot => $self, %conf);
     $self->{antispam}         = PBot::Core::AntiSpam->new(pbot => $self, %conf);
+    $self->{applets}          = PBot::Core::Applets->new(pbot => $self, %conf);
     $self->{banlist}          = PBot::Core::BanList->new(pbot => $self, %conf);
     $self->{blacklist}        = PBot::Core::BlackList->new(pbot => $self, filename => "$conf{data_dir}/blacklist", %conf);
     $self->{channels}         = PBot::Core::Channels->new(pbot => $self, filename => "$conf{data_dir}/channels", %conf);
@@ -193,7 +194,6 @@ sub initialize {
     $self->{interpreter}      = PBot::Core::Interpreter->new(pbot => $self, %conf);
     $self->{lagchecker}       = PBot::Core::LagChecker->new(pbot => $self, %conf);
     $self->{messagehistory}   = PBot::Core::MessageHistory->new(pbot => $self, filename => "$conf{data_dir}/message_history.sqlite3", %conf);
-    $self->{modules}          = PBot::Core::Modules->new(pbot => $self, %conf);
     $self->{nicklist}         = PBot::Core::NickList->new(pbot => $self, %conf);
     $self->{parsedate}        = PBot::Core::Utils::ParseDate->new(pbot => $self, %conf);
     $self->{plugins}          = PBot::Core::Plugins->new(pbot => $self, %conf);

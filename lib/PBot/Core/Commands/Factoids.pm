@@ -43,8 +43,8 @@ our %factoid_metadata_capabilities = (
 sub initialize {
     my ($self, %conf) = @_;
 
-    $self->{pbot}->{registry}->add_default('text', 'general', 'module_repo', $conf{module_repo}
-        // 'https://github.com/pragma-/pbot/blob/master/modules/');
+    $self->{pbot}->{registry}->add_default('text', 'general', 'applet_repo', $conf{applet_repo}
+        // 'https://github.com/pragma-/pbot/blob/master/applets/');
 
     $self->{pbot}->{commands}->register(sub { $self->cmd_factadd(@_) },      "learn",      0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_factadd(@_) },      "factadd",    0);
@@ -833,7 +833,7 @@ sub cmd_factrem {
     $channel_name = 'global'            if $channel_name eq '.*';
     $trigger_name = "\"$trigger_name\"" if $trigger_name =~ / /;
 
-    if ($factoids->get_data($channel, $trigger, 'type') eq 'module') { return "/say $trigger_name is not a factoid."; }
+    if ($factoids->get_data($channel, $trigger, 'type') eq 'applet') { return "/say $trigger_name is not a factoid."; }
 
     if ($channel =~ /^#/ and $from_chan =~ /^#/ and lc $channel ne lc $from_chan) {
         return "/say $trigger_name belongs to $channel_name, but this is $from_chan. Please switch to $channel_name or use /msg to remove this factoid.";
@@ -896,7 +896,7 @@ sub cmd_factshow {
     }
 
     $result .= $factoids->get_data($channel, $trigger, 'action');
-    $result .= ' [module]' if $factoids->get_data($channel, $trigger, 'type') eq 'module';
+    $result .= ' [applet]' if $factoids->get_data($channel, $trigger, 'type') eq 'applet';
     $result = "[$channel_name] $result" if $channel ne lc $chan;
     return $result;
 }
@@ -1030,16 +1030,16 @@ sub cmd_factinfo {
           . ')';
     }
 
-    # module
-    if ($factoids->get_data($channel, $trigger, 'type') eq 'module') {
-        my $module_repo = $self->{pbot}->{registry}->get_value('general', 'module_repo');
-        $module_repo .= $factoids->get_data($channel, $trigger, 'workdir') . '/' if $factoids->exists($channel, $trigger, 'workdir');
+    # applet
+    if ($factoids->get_data($channel, $trigger, 'type') eq 'applet') {
+        my $applet_repo = $self->{pbot}->{registry}->get_value('general', 'applet_repo');
+        $applet_repo .= $factoids->get_data($channel, $trigger, 'workdir') . '/' if $factoids->exists($channel, $trigger, 'workdir');
         return
             "/say $trigger_name: Module loaded by "
           . $factoids->get_data($channel, $trigger, 'owner')
           . " for $channel_name on "
           . localtime($factoids->get_data($channel, $trigger, 'created_on'))
-          . " [$created_ago] -> $module_repo"
+          . " [$created_ago] -> $applet_repo"
           . $factoids->get_data($channel, $trigger, 'action')
           . ', used '
           . $factoids->get_data($channel, $trigger, 'ref_count')
@@ -1073,7 +1073,7 @@ sub cmd_factinfo {
           . ')';
     }
 
-    return "/say $context->{arguments} is not a factoid or a module.";
+    return "/say $context->{arguments} is not a factoid or an applet.";
 }
 
 sub cmd_factfind {

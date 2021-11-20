@@ -89,7 +89,7 @@ sub interpreter {
         unless ($strictnamespace) {
             # build list of which channels contain the keyword, keeping track of the last one and count
             foreach my $factoid ($self->{pbot}->{factoids}->{data}->{storage}->get_all("index2 = $original_keyword", 'index1', 'type')) {
-                next if $factoid->{type} ne 'text' and $factoid->{type} ne 'module';
+                next if $factoid->{type} ne 'text' and $factoid->{type} ne 'applet';
                 push @chanlist, $self->{pbot}->{factoids}->{data}->{storage}->get_data($factoid->{index1}, '_name');
                 $fwd_chan = $factoid->{index1};
                 $fwd_trig = $original_keyword;
@@ -444,11 +444,11 @@ sub handle_action {
 
     return $action if $context->{special} eq 'code-factoid';
 
-    if ($self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'type') eq 'module') {
+    if ($self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'type') eq 'applet') {
         $context->{root_keyword} = $keyword unless defined $context->{root_keyword};
         $context->{root_channel} = $channel;
 
-        my $result = $self->{pbot}->{modules}->execute_module($context);
+        my $result = $self->{pbot}->{applets}->execute_applet($context);
 
         if (defined $result && length $result) {
             return $ref_from . $result;

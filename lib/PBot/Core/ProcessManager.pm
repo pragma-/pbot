@@ -1,6 +1,6 @@
 # File: ProcessManager.pm
 #
-# Purpose: Handles forking and execution of module/subroutine processes.
+# Purpose: Handles forking and execution of applet/subroutine processes.
 # Provides commands to list running processes and to kill them.
 
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>

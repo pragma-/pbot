@@ -1,9 +1,9 @@
-# Modules
+# Applets
 
 <!-- md-toc-begin -->
 * [About](#about)
-* [Creating modules](#creating-modules)
-* [Documentation for built-in modules](#documentation-for-built-in-modules)
+* [Creating applets](#creating-applets)
+* [Documentation for built-in applets](#documentation-for-built-in-applets)
   * [cc](#cc)
     * [Usage](#usage)
     * [Supported Languages](#supported-languages)
@@ -76,15 +76,15 @@
 <!-- md-toc-end -->
 
 ## About
-Modules are external command-line executable programs and scripts that can be
+Applets are external command-line executable programs and scripts that can be
 loaded via PBot Factoids.
 
-Command arguments are passed to Module scripts/programs as command-line arguments. The
-standard output from the Module script/program is returned as the command result. The
-standard error output is stored in a file named `<module>-stderr` in the `modules/`
+Command arguments are passed to Applet scripts/programs as command-line arguments. The
+standard output from the Applet script/program is returned as the command result. The
+standard error output is stored in a file named `<applet>-stderr` in the `applets/`
 directory.
 
-## Creating modules
+## Creating applets
 Suppose you have the [Qalculate!](https://qalculate.github.io/) command-line
 program and you want to provide a PBot command for it. You can create a _very_ simple
 shell script containing:
@@ -92,24 +92,24 @@ shell script containing:
     #!/bin/sh
     qalc "$*"
 
-And let's call it `qalc.sh` and put it in PBot's `modules/` directory.
+And let's call it `qalc.sh` and put it in PBot's `applets/` directory.
 
 Then you can use the [`load`](Admin.md#load) command:
 
     !load qalc qalc.sh
 
-Note: this is equivalent to creating a factoid and setting its `type` to `module`:
+Note: this is equivalent to creating a factoid and setting its `type` to `applet`:
 
     !factadd global qalc qalc.sh
-    !factset global qalc type module
+    !factset global qalc type applet
 
 Now you have a `qalc` calculator in PBot!
 
     <pragma-> !qalc 2 * 2
        <PBot> 2 * 2 = 4
 
-## Documentation for built-in modules
-PBot comes with several Modules included. Here is the documentation for most of them.
+## Documentation for built-in applets
+PBot comes with several Applets included. Here is the documentation for most of them.
 
 ### cc
 Code compiler (and executor).  This command will compile and execute user-provided code in a number of languages, and then display the compiler and/or program output.

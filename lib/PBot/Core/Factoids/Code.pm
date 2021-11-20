@@ -1,7 +1,7 @@
 # File: Code.pm
 #
 # Purpose: Launching pad for code factoids. Configures $context as a code
-# factoid and executes the compiler-vm module.
+# factoid and executes the compiler-vm applet.
 
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
@@ -50,7 +50,7 @@ sub execute {
         $context->{nickprefix_disabled} = 0;
     }
 
-    # set up `compiler` module arguments
+    # set up `compiler` applet arguments
     my %args = (
         nick      => $context->{nick},
         channel   => $context->{from},
@@ -78,10 +78,10 @@ sub execute {
     $context->{arguments}    = $json;               # set arguments to json string as `compiler` wants
     $context->{args_utf8}    = 1;                   # arguments are utf8 encoded by encode_json
 
-    # launch the `compiler` module
-    $self->{pbot}->{modules}->execute_module($context);
+    # launch the `compiler` applet
+    $self->{pbot}->{applets}->execute_applet($context);
 
-    # return empty string since the module process reader will
+    # return empty string since the applet process reader will
     # pass the output along to the result handler
     return '';
 }

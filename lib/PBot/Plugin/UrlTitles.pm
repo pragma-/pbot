@@ -75,7 +75,7 @@ sub show_url_titles {
                 suppress_no_output => 1,
             };
 
-            $self->{pbot}->{modules}->execute_module($context);
+            $self->{pbot}->{applets}->execute_applet($context);
         }
     }
     return 0;

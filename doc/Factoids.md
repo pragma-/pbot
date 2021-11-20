@@ -105,7 +105,7 @@ If a factoid begins with `/msg <nick>` then PBot will privately message the fact
 ### /code
 Code Factoids are a special type of factoid whose text is treated as code and executed with a chosen programming language
 or interpreter. The output from code is then parsed and treated like any other factoid text. This allows anybody to add
-new and unique commands to PBot without the need for installing Plugins or modules.
+new and unique commands to PBot without the need for installing Plugins or applets.
 
 Code Factoids are executed within a virtual machine. You must install and set up a virtual machine with your operating system.
 See the [Virtual Machine](VirtualMachine.md) documentation for more information.
@@ -123,35 +123,35 @@ languages or interpreters.
 
 Name | Description
 --- | ---
-[bash](../modules/compiler_vm/languages/bash.pm) | Bourne-again Shell scripting language
-[bc](../modules/compiler_vm/languages/bc.pm) | An arbitrary precision calculator language
-[bf](../modules/compiler_vm/languages/bf.pm) | BrainFuck esoteric language
-[c11](../modules/compiler_vm/languages/c11.pm) | C programming language using GCC -std=c11
-[c89](../modules/compiler_vm/languages/c89.pm) | C programming language using GCC -std=c89
-[c99](../modules/compiler_vm/languages/c99.pm) | C programming language using GCC -std=c99
-[clang11](../modules/compiler_vm/languages/clang11.pm) | C programming language using Clang -std=c11
-[clang89](../modules/compiler_vm/languages/clang89.pm) | C programming language using Clang -std=c89
-[clang99](../modules/compiler_vm/languages/clang99.pm) | C programming language using Clang -std=c99
-[clang](../modules/compiler_vm/languages/clang.pm) | Alias for `clang11`
-[clangpp](../modules/compiler_vm/languages/clangpp.pm) | C++ programming language using Clang
-[clisp](../modules/compiler_vm/languages/clisp.pm) | Common Lisp dialect of the Lisp programming language
-[cpp](../modules/compiler_vm/languages/cpp.pm) | C++ using GCC
-[freebasic](../modules/compiler_vm/languages/freebasic.pm) | FreeBasic BASIC compiler/interpreter
-[go](../modules/compiler_vm/languages/go.pm) | Golang programming language
-[haskell](../modules/compiler_vm/languages/haskell.pm) | Haskell programming language
-[java](../modules/compiler_vm/languages/java.pm) | Java programming language
-[javascript](../modules/compiler_vm/languages/javascript.pm) | JavaScript programming language
-[ksh](../modules/compiler_vm/languages/ksh.pm) | Korn shell scripting language
-[lua](../modules/compiler_vm/languages/lua.pm) | Lua programming language
-[perl](../modules/compiler_vm/languages/perl.pm) | Perl programming language
-[python3](../modules/compiler_vm/languages/python3.pm) | Python3 programming language
-[python](../modules/compiler_vm/languages/python.pm) | Python programming language
-[qbasic](../modules/compiler_vm/languages/qbasic.pm) | QuickBasic option using FreeBasic
-[ruby](../modules/compiler_vm/languages/ruby.pm) | Ruby programming language
-[scheme](../modules/compiler_vm/languages/scheme.pm) | Scheme dialect of the Lisp programming language
-[sh](../modules/compiler_vm/languages/sh.pm) | Bourne Shell scripting language
-[tcl](../modules/compiler_vm/languages/tcl.pm) | TCL scripting language
-[zsh](../modules/compiler_vm/languages/zsh.pm) | Z Shell scripting language
+[bash](../applets/compiler_vm/languages/bash.pm) | Bourne-again Shell scripting language
+[bc](../applets/compiler_vm/languages/bc.pm) | An arbitrary precision calculator language
+[bf](../applets/compiler_vm/languages/bf.pm) | BrainFuck esoteric language
+[c11](../applets/compiler_vm/languages/c11.pm) | C programming language using GCC -std=c11
+[c89](../applets/compiler_vm/languages/c89.pm) | C programming language using GCC -std=c89
+[c99](../applets/compiler_vm/languages/c99.pm) | C programming language using GCC -std=c99
+[clang11](../applets/compiler_vm/languages/clang11.pm) | C programming language using Clang -std=c11
+[clang89](../applets/compiler_vm/languages/clang89.pm) | C programming language using Clang -std=c89
+[clang99](../applets/compiler_vm/languages/clang99.pm) | C programming language using Clang -std=c99
+[clang](../applets/compiler_vm/languages/clang.pm) | Alias for `clang11`
+[clangpp](../applets/compiler_vm/languages/clangpp.pm) | C++ programming language using Clang
+[clisp](../applets/compiler_vm/languages/clisp.pm) | Common Lisp dialect of the Lisp programming language
+[cpp](../applets/compiler_vm/languages/cpp.pm) | C++ using GCC
+[freebasic](../applets/compiler_vm/languages/freebasic.pm) | FreeBasic BASIC compiler/interpreter
+[go](../applets/compiler_vm/languages/go.pm) | Golang programming language
+[haskell](../applets/compiler_vm/languages/haskell.pm) | Haskell programming language
+[java](../applets/compiler_vm/languages/java.pm) | Java programming language
+[javascript](../applets/compiler_vm/languages/javascript.pm) | JavaScript programming language
+[ksh](../applets/compiler_vm/languages/ksh.pm) | Korn shell scripting language
+[lua](../applets/compiler_vm/languages/lua.pm) | Lua programming language
+[perl](../applets/compiler_vm/languages/perl.pm) | Perl programming language
+[python3](../applets/compiler_vm/languages/python3.pm) | Python3 programming language
+[python](../applets/compiler_vm/languages/python.pm) | Python programming language
+[qbasic](../applets/compiler_vm/languages/qbasic.pm) | QuickBasic option using FreeBasic
+[ruby](../applets/compiler_vm/languages/ruby.pm) | Ruby programming language
+[scheme](../applets/compiler_vm/languages/scheme.pm) | Scheme dialect of the Lisp programming language
+[sh](../applets/compiler_vm/languages/sh.pm) | Bourne Shell scripting language
+[tcl](../applets/compiler_vm/languages/tcl.pm) | TCL scripting language
+[zsh](../applets/compiler_vm/languages/zsh.pm) | Z Shell scripting language
 
 #### Special variables
 
@@ -453,7 +453,7 @@ You can use the [`factset`](#factset) command to set a special [factoid metadata
             * PBot gives orbitz a cookie.
 
 ## add_nick
-You can use the [`factset`](#factset) command to set a special [factoid metadata](#factoid-metadata) key named `add_nick` to prepend the nick of the caller to the output.  This is mostly useful for modules.
+You can use the [`factset`](#factset) command to set a special [factoid metadata](#factoid-metadata) key named `add_nick` to prepend the nick of the caller to the output.  This is mostly useful for applets.
 
 ## Channel namespaces
 Factoids added in one channel may be called/triggered in another channel or in private message, providing that the other channel doesn't already have a factoid of the same name (in which case that channel's factoid will be triggered).

@@ -169,6 +169,18 @@
       }
    },
    "general" : {
+      "applet_dir" : {
+         "type" : "text",
+         "value" : "./applets"
+      },
+      "applet_repo" : {
+         "type" : "text",
+         "value" : "https://github.com/pragma-/pbot/blob/master/applets/"
+      },
+      "applet_timeout" : {
+         "type" : "text",
+         "value" : "30"
+      },
       "autojoin_wait_for_nickserv" : {
          "type" : "text",
          "value" : "0"
@@ -204,18 +216,6 @@
       "identify_nick" : {
          "type" : "text",
          "value" : "nickserv"
-      },
-      "module_dir" : {
-         "type" : "text",
-         "value" : "./modules"
-      },
-      "module_repo" : {
-         "type" : "text",
-         "value" : "https://github.com/pragma-/pbot/blob/master/modules/"
-      },
-      "module_timeout" : {
-         "type" : "text",
-         "value" : "30"
       },
       "op_command" : {
          "type" : "text",

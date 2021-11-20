@@ -75,16 +75,16 @@ sub cmd_list {
     my ($self, $context) = @_;
     my $text;
 
-    my $usage = 'Usage: list <modules|commands>';
+    my $usage = 'Usage: list <applets|commands>';
 
     return $usage if not length $context->{arguments};
 
-    if ($context->{arguments} =~ /^modules$/i) {
-        $text = 'Loaded modules: ';
+    if ($context->{arguments} =~ /^applets$/i) {
+        $text = 'Loaded applets: ';
         foreach my $channel (sort $self->{pbot}->{factoids}->{data}->{storage}->get_keys) {
             foreach my $command (sort $self->{pbot}->{factoids}->{data}->{storage}->get_keys($channel)) {
                 next if $command eq '_name';
-                if ($self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $command, 'type') eq 'module') {
+                if ($self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $command, 'type') eq 'applet') {
                     $text .= $self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $command, '_name') . ' ';
                 }
             }
