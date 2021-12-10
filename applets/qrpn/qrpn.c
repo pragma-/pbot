@@ -397,7 +397,8 @@ static int evaluate_literal(struct quantity * stack, int S, const char * const t
     char * endptr = NULL;
     const double dv = strtod(token, &endptr);
 
-    if (endptr == token) {
+    /* check for special things or units if endptr doesn't move OR if the first character is not number-like (necessary to differentiate "nan" from "nano*") */
+    if (endptr == token || token[0] >= 'A') {
         if (!strcmp(token, "pi"))
             tmp.value = M_PI;
         else if (!strcmp(token, "-pi"))
@@ -406,6 +407,8 @@ static int evaluate_literal(struct quantity * stack, int S, const char * const t
             tmp.value = I;
         else if (!strcmp(token, "-i"))
             tmp.value = -I;
+        else if (!strcmp(token, "nan"))
+            tmp.value = NAN;
         else return evaluate_unit(stack, S, token, 1);
     } else {
         /* otherwise, token was not a unit name, parse it as a simple literal */
@@ -653,6 +656,30 @@ int qrpn_evaluate_token(struct quantity * const stack, int S, const char * const
         stack[S] = stack[S - 4];
         stack[S + 1] = stack[S - 3];
         return S + 2;
+    }
+    else if (!strcmp(token, "pick")) {
+        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        if (!units_are_dimensionless(stack[S - 1].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
+        if (cimag(stack[S - 1].value)) return QRPN_ERROR_MUST_BE_REAL;
+        if (creal(stack[S - 1].value) < 0) return QRPN_ERROR_MUST_BE_NONNEGATIVE;
+        const long arg = lrint(creal(stack[S - 1].value));
+        if (S < 2 + arg) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        stack[S - 1] = stack[S - arg - 2];
+        return S;
+    }
+    else if (!strcmp(token, "roll")) {
+        if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        if (!units_are_dimensionless(stack[S - 1].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
+        if (cimag(stack[S - 1].value)) return QRPN_ERROR_MUST_BE_REAL;
+        if (creal(stack[S - 1].value) < 0) return QRPN_ERROR_MUST_BE_NONNEGATIVE;
+        const long arg = lrint(creal(stack[S - 1].value));
+        /* "2 roll" is equivalent to "rot" and requires 3 things on stack AFTER decrementing it by one */
+        /* assuming arg is 2, we are going to rotate S - 4, S - 3, and S - 2 */
+        if (S < 2 + arg) return QRPN_ERROR_NOT_ENOUGH_STACK;
+        const struct quantity tmp = stack[S - arg - 2];
+        memmove(stack + S - arg - 2, stack + S - arg - 1, sizeof(struct quantity) * arg);
+        stack[S - 2] = tmp;
+        return S - 1;
     }
     else if (!strcmp(token, "and")) {
         if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
@@ -966,7 +993,7 @@ int qrpn_evaluate_token(struct quantity * const stack, int S, const char * const
 
 static void fprintf_value(FILE * fh, const double complex value) {
     if (fabs(creal(value)) >= 1e6 && !cimag(value))
-        fprintf(fh, "%.18g", creal(value));
+        fprintf(fh, "%.16g", creal(value));
 
     else if ((!creal(value) && cimag(value)) || fabs(creal(value)) * 1e14 < fabs(cimag(value))) {
         if (1.0 == cimag(value))
@@ -1022,7 +1049,7 @@ static void fprintf_quantity_si(FILE * fh, const struct quantity quantity) {
         }
 
     /* if we get here we're just looping through the SI base units */
-    return fprintf_quantity_si_base(fh, quantity);
+    fprintf_quantity_si_base(fh, quantity);
 }
 
 void fprintf_quantity(FILE * fh, const struct quantity quantity) {
@@ -1044,7 +1071,7 @@ void fprintf_quantity(FILE * fh, const struct quantity quantity) {
             return;
         }
 
-    return fprintf_quantity_si(fh, quantity);
+    fprintf_quantity_si(fh, quantity);
 }
 
 void fprintf_stack(FILE * fh, struct quantity * stack, const int S) {
