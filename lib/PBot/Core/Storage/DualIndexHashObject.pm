@@ -389,7 +389,7 @@ sub add {
 sub remove {
     my ($self, $primary_index, $secondary_index, $data_index, $dont_save) = @_;
     my $lc_primary_index   = lc $primary_index;
-    my $lc_secondary_index = lc $secondary_index;
+    my $lc_secondary_index = lc $secondary_index if defined $secondary_index;
 
     if (not exists $self->{hash}->{$lc_primary_index}) {
         my $result = "$self->{name}: $primary_index not found; similiar matches: ";
