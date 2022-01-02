@@ -85,7 +85,7 @@ sub cmd_remove {
     $self->{pbot}->{event_queue}->dequeue_event("unmute $context->{arguments} .*");
 
     # TODO: ignores, etc?
-    return $self->{storage}->remove($context->{arguments});
+    return $self->{pbot}->{channels}->{storage}->remove($context->{arguments});
 }
 
 sub cmd_list {
