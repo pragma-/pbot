@@ -21,7 +21,7 @@ sub initialize {
     # require all the Plang .pm modules for Module::Refresh
     require "$path/Interpreter.pm";
     require "$path/AstInterpreter.pm";
-    require "$path/Grammar.pm"; # FIXME: Module::Refresh doesn't like this one
+    require "$path/ParseRules.pm"; # FIXME: Module::Refresh doesn't like this one
     require "$path/Parser.pm";
     require "$path/Lexer.pm";
     require "$path/Types.pm";
