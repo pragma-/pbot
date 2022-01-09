@@ -19,7 +19,7 @@ sub cmd_help {
     my ($self, $context) = @_;
 
     if (not length $context->{arguments}) {
-        return "For general help, see <https://github.com/pragma-/pbot/tree/master/doc>. For help about a specific command or factoid, use `help <keyword> [channel]`.";
+        return "For general help, see <https://github.com/pragma-/pbot/tree/master/doc>. For help about a specific command or fact, use `help <keyword> [channel]`.";
     }
 
     my $keyword = lc $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
