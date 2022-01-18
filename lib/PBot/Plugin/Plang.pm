@@ -93,6 +93,7 @@ sub unload {
     my $self = shift;
     $self->{pbot}->{commands}->unregister('plang');
     $self->{pbot}->{commands}->unregister('plangrepl');
+    delete $INC{"Plang/Interpreter.pm"};
 }
 
 sub cmd_plang {
@@ -114,7 +115,7 @@ sub cmd_plang {
 
     if (my $exception = $@) {
         $exception = $self->{plang}->{interpreter}->output_value($exception);
-        $self->{output} .= "Run-time error: unhandled exception: $exception";
+        $self->{output} .= $exception;
     }
 
     # return the output
