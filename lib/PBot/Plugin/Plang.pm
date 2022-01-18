@@ -14,18 +14,10 @@ use PBot::Imports;
 sub initialize {
     my ($self, %conf) = @_;
 
-    # load Plang modules
+    # load Plang module
     my $path = $self->{pbot}->{registry}->get_value('general', 'plang_dir') // 'Plang';
     unshift @INC, "$path/lib" if not grep { $_ eq "$path/lib" } @INC;
-
-    # require all the Plang .pm modules for Module::Refresh
     require "$path/Interpreter.pm";
-    require "$path/AstInterpreter.pm";
-    require "$path/ParseRules.pm"; # FIXME: Module::Refresh doesn't like this one
-    require "$path/Parser.pm";
-    require "$path/Lexer.pm";
-    require "$path/Types.pm";
-    require "$path/Validator.pm";
 
     # regset plang.debug <AST,VARS,FUNCS,etc>
     # Plugin must be reloaded for this value to take effect.
@@ -120,8 +112,9 @@ sub cmd_plang {
         }
     };
 
-    if ($@) {
-        $self->{output} .= $@;
+    if (my $exception = $@) {
+        $exception = $self->{plang}->{interpreter}->output_value($exception);
+        $self->{output} .= "Run-time error: unhandled exception: $exception";
     }
 
     # return the output
@@ -143,8 +136,9 @@ sub cmd_plangrepl {
         $self->{output} .= $self->{plang}->{interpreter}->output_value($result, repl => 1) if defined $result->[1];
     };
 
-    if ($@) {
-        $self->{output} .= $@;
+    if (my $exception = $@) {
+        $exception = $self->{plang}->{interpreter}->output_value($exception);
+        $self->{output} .= "Run-time error: unhandled exception: $exception";
     }
 
     # return the output
