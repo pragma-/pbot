@@ -92,7 +92,7 @@ Add your user (or the `pbot-vm` user) to the `libvirt` group.
 
     host$ sudo adduser $USER libvirt
 
-Log out and then log back in for the new group to take effect on your user.
+Log out and then log back in for the new group to take effect.
 
 #### Download Linux ISO
 Download a preferred Linux ISO. For this guide, we'll use Fedora Stable. Why?
@@ -157,7 +157,9 @@ channel is healthy.
 
 Now we need to restart the virtual machine itself so it loads the new serial device configuration.
 Switch back to the virtual machine window. Once the virtual machine has rebooted, log in as `root`
-and shut the virtual machine down with `shutdown now -h`.
+and shut the virtual machine down with:
+
+     guest$ shutdown now -h
 
 Once the machine has shutdown, bring it right back up with the following commands on the host:
 
@@ -189,7 +191,7 @@ The `rsync` command isn't installed with a Fedora minimal install, but `scp` is 
 `192.168.100.42` below with your own local IP address; `user` with the user account that has the
 PBot directory; and `pbot` with the path to the directory.
 
-    guest$ scp -r user@192.168.100.42:~/pbot/applets/pbot-vm/guest .
+    guest$ scp -r user@192.168.100.42:~/pbot/applets/compiler_vm/guest .
 
 Once that's done, run the following command:
 
@@ -228,7 +230,7 @@ under [Set up serial ports](#set-up-serial-ports) and that your network configur
 access.
 
 Let's make sure the PBot VM Guest is listening for and can execute commands. The `vm-exec` command
-in the `applets/pbot-vm/host/bin` directory allows you to send commands from the shell.
+in the `applets/compiler_vm/host/bin` directory allows you to send commands from the shell.
 
     host$ vm-exec -lang=sh echo hello world
 
@@ -258,7 +260,7 @@ virtual machine will continue running in the background until it is manually shu
 
 ## Start PBot VM Host
 To start the PBot VM Host server, execute the `vm-server` script in the
-`applets/pbot_vm/host/bin` directory on the host.
+`applets/compiler_vm/host/bin` directory on the host.
 
     host$ vm-server
 
