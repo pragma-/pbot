@@ -1,0 +1,2 @@
+virsh attach-device --config pbot-vm serial-2.xml
+virsh attach-device --config pbot-vm serial-3.xml

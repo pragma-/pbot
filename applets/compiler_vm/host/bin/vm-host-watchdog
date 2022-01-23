@@ -1,0 +1,44 @@
+#!/usr/bin/env perl
+
+# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-License-Identifier: MIT
+
+use warnings;
+use strict;
+
+use Proc::ProcessTable;
+use IO::Socket;
+
+my $SLEEP      = 15;
+my $MAX_PCTCPU = 25;
+my $QEMU       = 'qemu-system-x86';
+my $DOMAIN     = 'pbot-vm';
+
+my $last_pctcpu = 0;
+
+sub reset_vm {
+  print "Resetting vm\n";
+  system("virsh snapshot-revert $DOMAIN 1");
+  print "Reset vm\n";
+}
+
+while (1) {
+  my $t = Proc::ProcessTable->new(enable_ttys => 0);
+
+  foreach my $p (@{$t->table}) {
+    if ($p->fname eq $QEMU and $p->cmndline =~ m/guest=\Q$DOMAIN\E/) {
+      # $p->pctcpu never updates? so we use top instead.
+      my $pctcpu = `top -b -n 1 -p $p->{pid} | tail -n 1 | awk '{print \$9}'`;
+      $pctcpu =~ s/^\s+|\s+$//g;
+      print scalar localtime, " :: Got $DOMAIN qemu pid: $p; using $pctcpu cpu\n" if $pctcpu > 0;
+
+      if ($pctcpu >= $last_pctcpu and $last_pctcpu >= $MAX_PCTCPU) {
+        reset_vm;
+        $last_pctcpu = 0;
+      } else {
+        $last_pctcpu = $pctcpu;
+      }
+    }
+  }
+  sleep $SLEEP;
+}

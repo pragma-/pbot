@@ -1,0 +1,51 @@
+#!/usr/bin/env perl
+
+# File: vm-client
+#
+# Purpose: Interfaces with the PBot virtual machine server hosted at
+# PeerAddr/PeerPort defined below. This allows us to host instances of
+# virtual machines on remote servers.
+#
+# This script is intended to be installed to PBot's applets directory
+# and attached to a PBot command such as `cc`.
+
+# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-License-Identifier: MIT
+
+# TODO: extend to take a list of server/ports to cycle for load-balancing
+
+use warnings;
+use strict;
+
+use IO::Socket;
+
+my $sock = IO::Socket::INET->new(
+    PeerAddr => '127.0.0.1',
+    PeerPort => 9000,
+    Proto => 'tcp',
+);
+
+if (not defined $sock) {
+    print "Fatal error compiling: $!; try again later\n";
+    die $!;
+}
+
+my $nick    = shift @ARGV;
+my $channel = shift @ARGV;
+my $code    = join '', @ARGV;
+
+my $lang = "c11";
+
+if ($code =~ s/-lang=([^ ]+)//) {
+    $lang = lc $1;
+}
+
+print $sock "compile:$nick:$channel:$lang\n";
+print $sock "$code\n";
+print $sock "compile:end\n";
+
+while (my $line = <$sock>) {
+    print "$line";
+}
+
+close $sock;
