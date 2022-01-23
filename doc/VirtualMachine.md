@@ -6,13 +6,13 @@
   * [Prerequisites](#prerequisites)
     * [CPU Virtualization Technology](#cpu-virtualization-technology)
     * [KVM](#kvm)
-    * [libvirt](#libvirt)
+    * [libvirt and QEMU](#libvirt-and-qemu)
     * [Make a pbot-vm user or directory](#make-a-pbot-vm-user-or-directory)
     * [Add libvirt group to your user](#add-libvirt-group-to-your-user)
     * [Download Linux ISO](#download-linux-iso)
-  * [Creating a new virtual machine](#creating-a-new-virtual-machine)
-    * [Installing Linux in the virtual machine](#installing-linux-in-the-virtual-machine)
-    * [Configuring virtual machine for PBot](#configuring-virtual-machine-for-pbot)
+  * [Create a new virtual machine](#create-a-new-virtual-machine)
+    * [Install Linux in the virtual machine](#install-linux-in-the-virtual-machine)
+    * [Configure virtual machine for PBot](#configure-virtual-machine-for-pbot)
     * [Set up serial ports](#set-up-serial-ports)
     * [Install Perl](#install-perl)
     * [Install PBot VM Guest](#install-pbot-vm-guest)
@@ -43,6 +43,9 @@ Some quick terminology:
  * host: your physical Linux system hosting the virtual machine
  * guest: the Linux system installed inside the virtual machine
 
+The commands below will be prefixed with `host$` or `guest$` to reflect where
+the command should be executed.
+
 ## Initial virtual machine set-up
 These steps need to be done only once during the first-time set-up.
 
@@ -50,7 +53,7 @@ These steps need to be done only once during the first-time set-up.
 #### CPU Virtualization Technology
 Ensure CPU Virtualization Technology is enabled in your motherboard BIOS.
 
-    $ egrep '(vmx|svm)' /proc/cpuinfo
+    host$ egrep '(vmx|svm)' /proc/cpuinfo
 
 If you see your CPUs listed with `vmx` or `svm` flags, you're good to go.
 Otherwise, consult your motherboard manual to see how to enable VT.
@@ -58,17 +61,17 @@ Otherwise, consult your motherboard manual to see how to enable VT.
 #### KVM
 Ensure KVM is set up and loaded.
 
-    $ kvm-ok
+    host$ kvm-ok
     INFO: /dev/kvm exists
     KVM acceleration can be used
 
 If you see the above, everything's set up. Otherwise, consult your operating
 system manual or KVM manual to install and load KVM.
 
-#### libvirt
-Ensure libvirt is installed and ready.
+#### libvirt and QEMU
+Ensure libvirt and QEMU are installed and ready.
 
-    $ virsh version --daemon
+    host$ virsh version --daemon
     Compiled against library: libvirt 7.6.0
     Using library: libvirt 7.6.0
     Using API: QEMU 7.6.0
@@ -82,19 +85,18 @@ On Ubuntu: `sudo apt install qemu-kvm libvirt-daemon-system`
 
 #### Make a pbot-vm user or directory
 You can either make a new user account or make a new directory in your current user account.
-In either case, name it `pbot-vm` so we'll have one place for the install ISO file and the
-virtual machine disk and snapshot files.
+In either case, name it `pbot-vm` so we'll have a home for the virtual machine.
 
 #### Add libvirt group to your user
-Add your user or the `pbot-vm` user to the `libvirt` group.
+Add your user (or the `pbot-vm` user) to the `libvirt` group.
 
-    $ sudo adduser $USER libvirt
+    host$ sudo adduser $USER libvirt
 
 Log out and then log back in for the new group to take effect on your user.
 
 #### Download Linux ISO
-Download a preferred Linux ISO. For this guide, we'll use Fedora. Why? I'm
-using Fedora Rawhide for my PBot VM because I want convenient and reliable
+Download a preferred Linux ISO. For this guide, we'll use Fedora Stable. Why?
+I'm using Fedora Rawhide for my PBot VM because I want convenient and reliable
 access to the latest bleeding-edge versions of software.
 
 I recommend using the Fedora Stable net-installer for this guide unless you
@@ -104,11 +106,14 @@ the minimal install option without a graphical desktop.
 https://download.fedoraproject.org/pub/fedora/linux/releases/35/Server/x86_64/iso/Fedora-Server-netinst-x86_64-35-1.2.iso
 is the Fedora Stable net-installer ISO used in this guide.
 
-### Creating a new virtual machine
-To create a new virtual machine we'll use the `virt-install` command. First, ensure you are
-the `pbot-vm` user or that you have changed your current working directory to `pbot-vm`.
+### Create a new virtual machine
+To create a new virtual machine we'll use the `virt-install` command.
 
-    $ virt-install --name=pbot-vm --disk=size=12,cache=none,driver.io=native,snapshot=external,path=vm.qcow2 --cpu=host --os-variant=fedora34 --graphics=spice,gl.enable=yes --video=virtio --location=Fedora-Server-netinst-x86_64-35-1.2.iso
+* First, ensure you are the `pbot-vm` user or that you have changed your current working directory to `pbot-vm`. The Linux ISO downloaded earlier should be present in this location.
+
+Execute the following command:
+
+    host$ virt-install --name=pbot-vm --disk=size=12,cache=none,driver.io=native,snapshot=external,path=vm.qcow2 --cpu=host --os-variant=fedora34 --graphics=spice,gl.enable=yes --video=virtio --location=Fedora-Server-netinst-x86_64-35-1.2.iso
 
 If you are installing over an X-forwarded SSH session, strip the `,gl.enable=yes`
 part. Note that `disk=size=12` will create a 12 GB sparse file. Sparse means the file
@@ -120,7 +125,7 @@ For further information about `virt-install`, read its manual page. While the ab
 give sufficient performance and compatability, there are a great many options worth investigating
 if you want to fine-tune your virtual machine.
 
-#### Installing Linux in the virtual machine
+#### Install Linux in the virtual machine
 After executing the `virt-install` command above, you should now see a window
 showing Linux booting up and launching an installer. For this guide, we'll walk
 through the Fedora 35 installer. You can adapt these steps for your own distribution
@@ -135,87 +140,88 @@ of choice.
 Installation will need to download about 328 RPMs consisting of about 425 MB. It'll take 5 minutes to an hour or longer
 depending on your hardware and network configuration.
 
-#### Configuring virtual machine for PBot
+#### Configure virtual machine for PBot
 Once the install finishes, click the `Reboot` button in the Fedora installer in the virtual machine window.
 
 #### Set up serial ports
 Now, while the virtual machine is rebooting, switch to a terminal on your host system. Go into the
-`pbot-vm/host/devices` directory and run the `add-serials` script. Feel free to look inside. It will add
-the `serial-2.xml` and `serial-3.xml` files to the configuration for the `pbot-vm` libvirt machine.
+`pbot-vm/host/devices` directory and run the `add-serials` script. It will add the `serial-2.xml` and
+`serial-3.xml` files to the configuration for the `pbot-vm` libvirt machine.
 
-This will enable and connect the `/dev/ttyS1` and `/dev/ttyS2` serial ports inside the virtual machine
-to TCP connections on `127.0.0.1:5555` and `127.0.0.1:5556`, respectively. `ttyS1/5555` is the data
-channel used to send commands or code to the virtual machine and to read back output. `ttyS2/5556` is
-simply a newline sent every 5 seconds, representing a heartbeat, used to ensure that the PBot communication
+This will enable and connect the `/dev/ttyS1` and `/dev/ttyS2` serial ports in the guest
+to the following TCP connections on the host: `127.0.0.1:5555` and `127.0.0.1:5556`,
+respectively. `ttyS1/5555` is the data channel used to send commands or code to the
+virtual machine and to read back output. `ttyS2/5556` is simply a newline sent every
+5 seconds, representing a heartbeat, used to ensure that the PBot communication
 channel is healthy.
 
-Once that's done, switch back to the virtual machine window. Once the virtual machine has rebooted,
-log in as `root`. Now go ahead and shut the virtual machine down with `shutdown now -h`. We need to
-restart the virtual machine itself so it loads the new serial device configuration. Once the machine
-has shutdown, bring it right back up with the following commands on the host system in the terminal
-used for `virt-install`:
+Now we need to restart the virtual machine itself so it loads the new serial device configuration.
+Switch back to the virtual machine window. Once the virtual machine has rebooted, log in as `root`
+and shut the virtual machine down with `shutdown now -h`.
 
-    $ virsh start pbot-vm
+Once the machine has shutdown, bring it right back up with the following commands on the host:
 
-Now the virtual machine will start back up in the background.
+    host$ virsh start pbot-vm
 
-    $ virt-viewer pbot-vm
+Now the virtual machine will start back up in the background. To bring up a visible window
+to access the virtual machine, execute:
 
-Now you should see the virtual machine window after a few seconds. Log in as `root` once the login
+    host$ virt-viewer pbot-vm
+
+You should see the guest window after a few seconds. Log in as `root` once the login
 prompt appears.
 
 #### Install Perl
-Now we need to install Perl inside the virtual machine. This allows us to run the PBot VM Guest
+Now we need to install Perl on the guest. This allows us to run the PBot VM Guest
 script.
 
-    $ dnf install perl-interpreter perl-lib perl-IPC-Run perl-JSON-XS perl-English
+    guest$ dnf install perl-interpreter perl-lib perl-IPC-Run perl-JSON-XS perl-English
 
 That installs the minium packages for the Perl interpreter (note we used `perl-interpreter` instead of `perl`),
-the package for the Perl `lib`, `IPC::Run`, `JSON::XS` and `English` modules.
+as well as the Perl `lib`, `IPC::Run`, `JSON::XS` and `English` modules.
 
 #### Install PBot VM Guest
 Next we install the PBot VM Guest script that fosters communication between the virtual machine guest
-and the physical host system. We'll do this inside the virtual machine guest system.
+and the physical host system. We'll do this inside the virtual machine guest system, logged on as `root`
+while in the `/root` directory. Feel free to `chdir` to `/tmp` if you prefer.
 
-The `rsync` command isn't installed in a Fedora minimal install, but `scp` is available. Replace
-`192.168.100.42` below with your own local IP address and `user` with the user account that has the
-PBot directory and `pbot` with the path to the directory.
+The `rsync` command isn't installed with a Fedora minimal install, but `scp` is available. Replace
+`192.168.100.42` below with your own local IP address; `user` with the user account that has the
+PBot directory; and `pbot` with the path to the directory.
 
-    $ scp -r user@192.168.100.42:~/pbot/applets/pbot-vm/guest .
+    guest$ scp -r user@192.168.100.42:~/pbot/applets/pbot-vm/guest .
 
 Once that's done, run the following command:
 
-    $ ./guest/bin/setup-guest
+    guest$ ./guest/bin/setup-guest
 
-Feel free to take a look inside to see what it does. It's very short. After running
-the `setup-guest` script make sure you run `source /root/.bashrc` so the environment
-changes take effect.
+After running the `setup-guest` script, we need to make the environment changes take effect:
+
+    guest$ source /root/.bashrc
 
 #### Install software
-Now you can install any languages you want to use.
-
-Python3 is already installed.
+Now we can install any software and programming languages we want to make available
+in the virtual machine. Use the `dnf search` command or your distribution's documentation
+to find packages. I will soon make available a script to install all package necessary for all
+languages supported by PBot.
 
 For the C programming language you will need at least these:
 
-    $ dnf install libubsan libasan gdb gcc clang
-
-I'll list all the packages for the others soon. You can use `dnf search <name>` to find packages
-in Fedora.
+    guest$ dnf install libubsan libasan gdb gcc clang
 
 #### Start PBot VM Guest
-We're ready to start the PBot VM Guest.
+We're ready to start the PBot VM Guest. On the guest, execute the command:
 
-    $ start-guest
+    guest$ start-guest
 
 This starts up a server to listen for incoming commands or code and to handle them. We'll leave
 this running.
 
 #### Test PBot VM Guest
-Let's make sure everything's working up to this point. There should be two open TCP ports on
-`5555` and `5556`.
+Let's make sure everything's working up to this point. On the host, there should
+be two open TCP ports on `5555` and `5556`. On the host, execute the command:
 
-    $ nc -zv 127.0.0.1 5555-5556
+    host$ nc -zv 127.0.0.1 5555-5556
 
 If it says anything other than `Connection succeeded` then make sure you have completed the steps
 under [Set up serial ports](#set-up-serial-ports) and that your network configuration is allowing
@@ -224,7 +230,7 @@ access.
 Let's make sure the PBot VM Guest is listening for and can execute commands. The `vm-exec` command
 in the `applets/pbot-vm/host/bin` directory allows you to send commands from the shell.
 
-    $ vm-exec -lang=sh echo hello world
+    host$ vm-exec -lang=sh echo hello world
 
 This should output some logging noise followed by "hello world". You can test other language modules
 by changing the `-lang=` option. I recommend testing and verifying that all of your desired language
@@ -233,13 +239,13 @@ modules are configured before going on to the next step.
 If you have multiple PBot VM Guests, or if you used a different TCP port, you can specify the
 `PBOT_VM_PORT` environment variable when executing the `vm-exec` command:
 
-    $ PBOT_VM_PORT=6666 vm-exec -lang=sh echo test
+    host$ PBOT_VM_PORT=6666 vm-exec -lang=sh echo test
 
 #### Save initial state
 Switch back to an available terminal on the physical host machine. Enter the following command
 to save a snapshot of the virtual machine waiting for incoming commands.
 
-    $ virsh snapshot-create-as pbot-vm 1
+    host$ virsh snapshot-create-as pbot-vm 1
 
 This will create a snapshot file `vm.1` next to the `vm.qcow2` disk file. If the virtual machine
 ever times-out or its heartbeat stops responding, PBot will reset the virtual machine to this
@@ -254,8 +260,13 @@ virtual machine will continue running in the background until it is manually shu
 To start the PBot VM Host server, execute the `vm-server` script in the
 `applets/pbot_vm/host/bin` directory on the host.
 
+    host$ vm-server
+
 This will start a TCP server on port `9000`. It will listen for incoming commands and
 pass them along to the virtual machine's TCP serial port.
 
 ### Test PBot
 All done. Everything is set up now. In your instance of PBot, the `sh echo hello` command should output `hello`.
+
+    <pragma-> sh echo hello
+       <PBot> hello
