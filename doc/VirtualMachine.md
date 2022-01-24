@@ -1,32 +1,5 @@
 # Virtual Machine
 
-<!-- md-toc-begin -->
-* [About](#about)
-* [Initial virtual machine set-up](#initial-virtual-machine-set-up)
-  * [Prerequisites](#prerequisites)
-    * [CPU Virtualization Technology](#cpu-virtualization-technology)
-    * [KVM](#kvm)
-    * [libvirt and QEMU](#libvirt-and-qemu)
-    * [Make a pbot-vm user or directory](#make-a-pbot-vm-user-or-directory)
-    * [Add libvirt group to your user](#add-libvirt-group-to-your-user)
-    * [Download Linux ISO](#download-linux-iso)
-  * [Create a new virtual machine](#create-a-new-virtual-machine)
-    * [Install Linux in the virtual machine](#install-linux-in-the-virtual-machine)
-    * [Configure virtual machine for PBot](#configure-virtual-machine-for-pbot)
-    * [Set up serial ports](#set-up-serial-ports)
-    * [Install Perl](#install-perl)
-    * [Install PBot VM Guest](#install-pbot-vm-guest)
-    * [Install software](#install-software)
-    * [Start PBot VM Guest](#start-pbot-vm-guest)
-    * [Test PBot VM Guest](#test-pbot-vm-guest)
-    * [Save initial state](#save-initial-state)
-  * [Initial virtual machine set-up complete](#initial-virtual-machine-set-up-complete)
-* [Start PBot VM Host](#start-pbot-vm-host)
-  * [Test PBot](#test-pbot)
-<!-- md-toc-end -->
-
-## About
-
 PBot can interact with a virtual machine to safely execute arbitrary user-submitted
 system commands and code.
 
@@ -95,7 +68,7 @@ Add your user (or the `pbot-vm` user) to the `libvirt` group.
 Log out and then log back in for the new group to take effect.
 
 #### Download Linux ISO
-Download a preferred Linux ISO. For this guide, we'll use Fedora Stable. Why?
+Download a preferred Linux ISO. For this guide, we'll use Fedora. Why?
 I'm using Fedora Rawhide for my PBot VM because I want convenient and reliable
 access to the latest bleeding-edge versions of software.
 
@@ -119,7 +92,7 @@ If you are installing over an X-forwarded SSH session, strip the `,gl.enable=yes
 part. Note that `disk=size=12` will create a 12 GB sparse file. Sparse means the file
 won't actually take up 12 GB. It will start at 0 bytes and grow as needed. You can
 use the `du` command to verify this. After a minimal Fedora install, the size will be
-approximately 1.7 GB. It will grow to about 2.5 GB with most PBot features installed.
+approximately 1.7 GB. It will grow to about 2.5 GB with all PBot features installed.
 
 For further information about `virt-install`, read its manual page. While the above command should
 give sufficient performance and compatability, there are a great many options worth investigating
@@ -145,11 +118,11 @@ Once the install finishes, click the `Reboot` button in the Fedora installer in 
 
 #### Set up serial ports
 Now, while the virtual machine is rebooting, switch to a terminal on your host system. Go into the
-`pbot-vm/host/devices` directory and run the `add-serials` script. It will add the `serial-2.xml` and
+`applets/compiler_vm/host/devices` directory and run the `add-serials` script to add the `serial-2.xml` and
 `serial-3.xml` files to the configuration for the `pbot-vm` libvirt machine.
 
-This will enable and connect the `/dev/ttyS1` and `/dev/ttyS2` serial ports in the guest
-to the following TCP connections on the host: `127.0.0.1:5555` and `127.0.0.1:5556`,
+This will enable the `/dev/ttyS1` and `/dev/ttyS2` serial ports in the guest and connect them
+to the following TCP addresses on the host: `127.0.0.1:5555` and `127.0.0.1:5556`,
 respectively. `ttyS1/5555` is the data channel used to send commands or code to the
 virtual machine and to read back output. `ttyS2/5556` is simply a newline sent every
 5 seconds, representing a heartbeat, used to ensure that the PBot communication
@@ -212,7 +185,7 @@ For the C programming language you will need at least these:
     guest$ dnf install libubsan libasan gdb gcc clang
 
 #### Start PBot VM Guest
-We're ready to start the PBot VM Guest. On the guest, execute the command:
+We're ready to start the PBot VM Guest. On the guest, as `root`, execute the command:
 
     guest$ start-guest
 
