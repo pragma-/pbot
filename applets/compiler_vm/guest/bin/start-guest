@@ -17,8 +17,8 @@ my $USERNAME = 'vm';   # variable for easier string interpolation
 use constant MOD_DIR   => '/usr/local/share/pbot-vm/Languages';
 use constant SERIAL    => '/dev/ttyS1';
 use constant HEARTBEAT => '/dev/ttyS2';
-use constant STDIN     => '/dev/stdin';
-use constant STDOUT    => '/dev/stdout';
+use constant INPUT     => '/dev/stdin';
+use constant OUTPUT    => '/dev/stdout';
 
 use lib MOD_DIR;
 
@@ -48,8 +48,8 @@ sub run_server {
         open($output,    '>', SERIAL)       or die $!;
         open($heartbeat, '>', HEARTBEAT)    or die $!;
     } else {
-        open($input,     '<', STDIN)        or die $!;
-        open($output,    '>', STDOUT)       or die $!;
+        open($input,     '<', INPUT)        or die $!;
+        open($output,    '>', OUTPUT)       or die $!;
     }
 
     my $date;
