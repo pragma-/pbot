@@ -1,19 +1,15 @@
 # File: cpanfile
-#
 # Purpose: Selects and installs PBot dependencies.
 #
 # Install a minimum bare-bones PBot (no Plugins or modules):
-#
 #   cpanm -n --installdeps .
 #
 # Install a fully featured PBot (without Windows compiler-vm support):
-#
 #   cpanm -n --installdeps . --with-all-features --without-feature compiler_vm_win32
 
 requires 'perl' => '5.010001';
 
 # PBot core
-
 requires 'Cache::FileCache';
 requires 'Carp';
 requires 'DateTime';
@@ -57,7 +53,6 @@ requires 'Unicode::Truncate';
 requires 're::engine::RE2';
 
 # Plugins
-
 feature ActionTrigger => sub {
     requires 'DBI';
     requires 'Time::Duration';
@@ -214,7 +209,6 @@ feature Wttr => sub {
 };
 
 # modules
-
 feature ago => sub {
     requires 'Time::Duration';
 };
