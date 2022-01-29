@@ -302,7 +302,6 @@ sub get_backtrace($context) {
 
     foreach my $output (@$console) {
         last if $output->{_type} eq RESULT;
-        #0  0x0000555555555995 in bar () at prog3.c:18\n
         $output->{_text} =~ /in (\w+) (.*) at/;
         push @backtrace, { func => $1, args => $2 };
     }
@@ -375,11 +374,6 @@ sub cmd_gdb($context, $command) {
     my $text = '';
 
     foreach my $output (@$console) {
-        if ($output->{_class} eq 'error') {
-            print_gdb_output($context, $output->{msg});
-            last;
-        }
-
         last if $output->{_type} eq RESULT;
         $text .= "$output->{_text}\n";
     }
@@ -393,11 +387,6 @@ sub cmd_ptype($context, $args) {
     my $text = '';
 
     foreach my $output (@$console) {
-        if ($output->{_class} eq 'error') {
-            print_gdb_output($context, $output->{msg});
-            last;
-        }
-
         last if $output->{_type} eq RESULT;
 
         if ($output->{_text} =~ /type\s*=\s*(.*)/) {
@@ -415,11 +404,6 @@ sub cmd_whatis($context, $args) {
     my $console = gdb_send_and_read_console($context, "whatis $args");
 
     foreach my $output (@$console) {
-        if ($output->{_class} eq 'error') {
-            print_gdb_output($context, $output->{msg});
-            next;
-        }
-
         last if $output->{_type} eq RESULT;
 
         if ($output->{_text} =~ /type\s*=\s*(.*)/) {
@@ -432,11 +416,6 @@ sub cmd_print($context, $args) {
     my $console = gdb_send_and_read_console($context, "print $args");
 
     foreach my $output (@$console) {
-        if ($output->{_class} eq 'error') {
-            print_gdb_output($context, $output->{msg});
-            next;
-        }
-
         last if $output->{_type} eq RESULT;
 
         if ($output->{_text} =~ /^\$\d+\s*=\s*(.*)/) {
@@ -652,10 +631,10 @@ sub run_program($context) {
 
 sub main {
     # first command-line argument can override file to debug
-    my $prog = $ARGV[0] // 'prog';
+    my $prog = $ARGV[0] // './prog';
 
     # start gdb and grab references to its input and output streams
-    open2(my $out, my $in, "LIBC_FATAL_STDERR=1 MALLOC_CHECK_=1 gdb -i mi3 -q -nx ./$prog");
+    open2(my $out, my $in, "LIBC_FATAL_STDERR=1 MALLOC_CHECK_=1 gdb -i mi3 -q -nx $prog");
 
     my $context = {
         gdb_output => $out,  # gdb output stream
