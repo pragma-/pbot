@@ -14,11 +14,13 @@ use JSON::XS;
 
 my $USERNAME = 'vm';   # variable for easier string interpolation
 
-use constant MOD_DIR   => '/usr/local/share/pbot-vm/Languages';
-use constant SERIAL    => '/dev/ttyS1';
-use constant HEARTBEAT => '/dev/ttyS2';
-use constant INPUT     => '/dev/stdin';
-use constant OUTPUT    => '/dev/stdout';
+use constant {
+    MOD_DIR   => '/usr/local/share/pbot-vm/Languages',
+    SERIAL    => '/dev/ttyS1',
+    HEARTBEAT => '/dev/ttyS2',
+    INPUT     => '/dev/stdin',
+    OUTPUT    => '/dev/stdout',
+};
 
 use lib MOD_DIR;
 

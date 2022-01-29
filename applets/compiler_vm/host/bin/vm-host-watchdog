@@ -1,5 +1,10 @@
 #!/usr/bin/env perl
 
+# File: vm-watchdog
+#
+# Purpose: Monitors pbot-vm cpu usage. Resets vm to snapshot if cpu exceeds
+# threshold limits.
+
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 

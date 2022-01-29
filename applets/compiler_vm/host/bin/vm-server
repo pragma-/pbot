@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-# File: compiler_server.pl
+# File: vm-server
 #
 # Purpose: The compiler server manages the guest virtual machine state and
 # listens for incoming compile requests. This server can be run on any remote
@@ -219,7 +219,7 @@ sub vm_server {
                     print "Attempting compile...\n";
                     alarm 0;
 
-                    my ($ret, $result) = execute("perl bin/compiler_run.pl $line");
+                    my ($ret, $result) = execute("perl vm-exec $line");
 
                     if(not defined $ret) {
                         #print "parent continued\n";
