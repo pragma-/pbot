@@ -47,11 +47,6 @@ $args->{channel}   //= 'vm';
 $args->{lang}      //= 'c11';
 $args->{'vm-port'} //= $ENV{PBOT_VM_PORT} // SERIAL_PORT;
 
-# override vm-port with environment variable
-if ($ENV{PBOT_VM_PORT}) {
-    $args->{'vm-port'} = $ENV{PBOT_VM_PORT};
-}
-
 my $language = lc $args->{lang};
 
 eval {
