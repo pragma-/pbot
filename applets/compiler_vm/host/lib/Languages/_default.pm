@@ -23,8 +23,6 @@ use Encode;
 
 use FindBin qw($RealBin);
 
-my $EXECUTE_PORT = '3333';
-
 sub new {
   my ($class, %conf) = @_;
   my $self = bless {}, $class;
@@ -35,10 +33,10 @@ sub new {
   $self->{lang}          = $conf{lang};
   $self->{code}          = $conf{code};
   $self->{max_history}   = $conf{max_history} // 10000;
-  $self->{arguments}     = $conf{arguments};
+  $self->{arguments}     = $conf{arguments} // '';
   $self->{factoid}       = $conf{factoid};
   $self->{'persist-key'} = $conf{'persist-key'};
-  $self->{'vm-port'}     = $conf{'vm-port'} // $EXECUTE_PORT;
+  $self->{'vm-port'}     = $conf{'vm-port'};
 
   $self->{default_options} = '';
   $self->{cmdline}         = 'echo Hello, world!';

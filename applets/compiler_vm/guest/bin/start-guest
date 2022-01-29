@@ -151,15 +151,15 @@ sub run_server {
 
                 my $result = interpret(%$compile_in);
 
+                $GID = 0;
+                $UID = 0;
+
                 my $compile_out = { result => $result };
                 my $json = encode_json($compile_out);
 
                 print "Done compiling; result: [$result] [$json]\n";
                 print $output "result:$json\n";
                 print $output "result:end\n";
-
-                $( = 0;
-                $< = 0;
 
                 if ($compile_in->{'persist-key'}) {
                     system("id");

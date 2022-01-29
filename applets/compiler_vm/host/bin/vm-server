@@ -18,26 +18,25 @@ use IPC::Shareable;
 use Time::HiRes qw/gettimeofday/;
 use Encode;
 
-my $SERVER_PORT    = 9000;
-my $SERIAL_PORT    = 5555;
-my $HEARTBEAT_PORT = 5556;
-my $DOMAIN_NAME    = 'pbot-vm';
-
-my $COMPILE_TIMEOUT = 15;
+use constant {
+    SERVER_PORT     => 9000,
+    SERIAL_PORT     => 5555,
+    HEARTBEAT_PORT  => 5556,
+    DOMAIN_NAME     => 'pbot-vm',
+    COMPILE_TIMEOUT => 10,
+};
 
 sub vm_stop {
-    system("virsh shutdown $DOMAIN_NAME");
+    system('virsh shutdown ' . DOMAIN_NAME);
 }
 
 sub vm_start {
-    system("virsh start $DOMAIN_NAME");
+    system('virsh start ' . DOMAIN_NAME);
 }
 
 sub vm_reset {
     return if $ENV{NORESET};
-    #system("virsh detach-disk $DOMAIN_NAME vdb");
-    system("virsh snapshot-revert $DOMAIN_NAME 1");
-    #system("virsh attach-disk $DOMAIN_NAME --source /var/lib/libvirt/images/factdata.qcow2 --target vdb");
+    system('virsh snapshot-revert '.DOMAIN_NAME.' 1');
     print "Reset vm\n";
 }
 
@@ -64,7 +63,7 @@ sub execute {
             }
 
             local $SIG{ALRM} = sub { kill 9, $pid; die "Timed-out: $result\n"; };
-            alarm($COMPILE_TIMEOUT);
+            alarm(COMPILE_TIMEOUT);
 
             print "Reading result...\n";
             while (my $line = <$fh>) {
@@ -105,7 +104,7 @@ sub connect_to_heartbeat {
 
         $heartbeat = IO::Socket::INET->new (
             PeerAddr => '127.0.0.1',
-            PeerPort => $HEARTBEAT_PORT,
+            PeerPort => HEARTBEAT_PORT,
             Proto    => 'tcp',
             Type     => SOCK_STREAM,
         );
@@ -183,10 +182,10 @@ sub vm_server {
         # server
 
         if (not defined $server) {
-            print "Starting compiler server on port $SERVER_PORT\n";
-            $server = server_listen($SERVER_PORT);
+            print "Starting compiler server on port " . SERVER_PORT . "\n";
+            $server = server_listen(SERVER_PORT);
         } else {
-            print "Compiler server already listening on port $SERVER_PORT\n";
+            print "Compiler server already listening on port " . SERVER_PORT . "\n";
         }
 
         print "parent: running: $running\n";

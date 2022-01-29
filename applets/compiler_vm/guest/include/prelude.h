@@ -87,10 +87,11 @@ __attribute__ (( constructor )) static void printf_binary_register(void)
     register_printf_specifier('b', printf_binary_handler, printf_binary_arginfo);
 }
 
-void gdb() { __asm__(""); }
-#define dump(...)                 gdb("print " #__VA_ARGS__)
-#define print(...)                gdb("print " #__VA_ARGS__)
-#define ptype(...)                gdb("ptype " #__VA_ARGS__)
-#define trace(...)                gdb("break " #__VA_ARGS__)
-#define watch(...)                gdb("watch " #__VA_ARGS__)
+void gdb(char *cmd) { __asm__(""); }
+#define dump(...)                 gdb("print "  #__VA_ARGS__)
+#define print(...)                gdb("print "  #__VA_ARGS__)
+#define ptype(...)                gdb("ptype "  #__VA_ARGS__)
+#define whatis(...)               gdb("whatis " #__VA_ARGS__)
+#define trace(...)                gdb("break "  #__VA_ARGS__)
+#define watch(...)                gdb("watch "  #__VA_ARGS__)
 #define print_last_statement(...) gdb("print_last_statement " #__VA_ARGS__)

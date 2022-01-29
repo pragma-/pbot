@@ -1,1 +1,0 @@
-qemu-system-x86_64 -M pc -hda /home/compiler/compiler-vm-image -m 128 -monitor "tcp:127.0.0.1:4445,server,nowait" -serial "tcp:127.0.0.1:4444,server,nowait" -net nic,vlan=0 -net user,vlan=0,hostname=compiler  -boot c -loadvm 2

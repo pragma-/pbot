@@ -20,6 +20,10 @@ use JSON::XS;
 use FindBin qw($RealBin);
 use lib "$RealBin/../lib";
 
+use constant {
+    SERIAL_PORT => 5555,
+};
+
 my $json = join ' ', @ARGV;
 
 my $args = eval { decode_json $json };
@@ -34,13 +38,14 @@ if ($@) {
 }
 
 if (not exists $args->{code}) {
-    die "Missing `code` field. Usage: $0 {'code':'<code>'}\n";
+    die "Usage: $0 <code>\n";
 }
 
 # set any missing fields to default values
-$args->{nick}    //= 'vm';
-$args->{channel} //= 'vm';
-$args->{lang}    //= 'c11';
+$args->{nick}      //= 'vm';
+$args->{channel}   //= 'vm';
+$args->{lang}      //= 'c11';
+$args->{'vm-port'} //= $ENV{PBOT_VM_PORT} // SERIAL_PORT;
 
 # override vm-port with environment variable
 if ($ENV{PBOT_VM_PORT}) {
