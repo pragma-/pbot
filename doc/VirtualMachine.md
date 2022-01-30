@@ -220,6 +220,8 @@ If you have multiple PBot VM Guests, or if you used a different TCP port, you ca
 Switch back to an available terminal on the physical host machine. Enter the following command
 to save a snapshot of the virtual machine waiting for incoming commands.
 
+* Before doing this step, ensure all commands are cached by executing them at least once. For example, the `gcc` and `gdb` commands take a long time to load into memory. The initial execution may take a several long seconds to complete. Once completed, the command will be cached. Future invocations will execute significantly quicker.
+
     host$ virsh snapshot-create-as pbot-vm 1
 
 This will create a snapshot file `vm.1` next to the `vm.qcow2` disk file. If the virtual machine
