@@ -1,0 +1,5 @@
+// require admin login for all polkit actions
+// e.g. NetworkManager, shutdown, reboot, etc now require root password
+polkit.addRule(function(action, subject) {
+        return polkit.Result.AUTH_ADMIN;
+});

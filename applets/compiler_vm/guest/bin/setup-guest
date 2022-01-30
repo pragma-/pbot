@@ -1,7 +1,11 @@
 cp guest/bin/* /usr/local/bin
+
 mkdir /usr/local/share/pbot-vm/
 cp -r guest/lib/Languages/ /usr/local/share/pbot-vm/
+
 cp guest/include/prelude.h /usr/include
+
+cp guest/polkit/* /etc/polkit-1/rules.d/
 
 echo unset DEBUGINFOD_URLS >> /root/.bashrc
 echo export ASAN_OPTIONS=detect_leaks=0 >> /root/.bashrc
