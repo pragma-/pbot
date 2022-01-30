@@ -244,11 +244,13 @@ To start the PBot VM Host server, execute the `vm-server` script in the
 This will start a TCP server on port `9000`. It will listen for incoming commands and
 pass them along to the virtual machine's TCP serial port.
 
-The PBot instance is already preconfigured with commands that invoke the `applets/compiler_client.pl`
+### Test PBot
+All done. Everything is set up now.
+
+PBot is already preconfigured with commands that invoke the `applets/compiler_client.pl`
 script (a copy of `host/bin/vm-client`) to send VM commands to port `9000`.
 
-### Test PBot
-All done. Everything is set up now. In your instance of PBot, the `sh echo hello` command should output `hello`.
+In your instance of PBot, the `sh echo hello` command should output `hello`.
 
     <pragma-> sh echo hello
        <PBot> hello
