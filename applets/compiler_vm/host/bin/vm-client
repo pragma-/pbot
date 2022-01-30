@@ -18,11 +18,12 @@ use warnings;
 use strict;
 
 use IO::Socket;
+use JSON;
 
 my $sock = IO::Socket::INET->new(
     PeerAddr => '127.0.0.1',
     PeerPort => 9000,
-    Proto => 'tcp',
+    Proto    => 'tcp'
 );
 
 if (not defined $sock) {
@@ -30,22 +31,18 @@ if (not defined $sock) {
     die $!;
 }
 
-my $nick    = shift @ARGV;
-my $channel = shift @ARGV;
-my $code    = join '', @ARGV;
+my $json = join ' ', @ARGV;
+my $h    = decode_json $json;
 
-my $lang = "c11";
+my $lang = $h->{lang} // "c11";
 
-if ($code =~ s/-lang=([^ ]+)//) {
-    $lang = lc $1;
-}
+if ($h->{code} =~ s/-lang=([^ ]+)//) { $lang = lc $1; }
 
-print $sock "compile:$nick:$channel:$lang\n";
-print $sock "$code\n";
-print $sock "compile:end\n";
+$h->{lang} = $lang;
+$json = encode_json $h;
 
-while (my $line = <$sock>) {
-    print "$line";
-}
+print $sock "$json\n";
+
+while (my $line = <$sock>) { print "$line"; }
 
 close $sock;
