@@ -1,13 +1,19 @@
 cp guest/bin/* /usr/local/bin
 
-mkdir /usr/local/share/pbot-vm/
+mkdir /usr/local/share/pbot-vm/ > /dev/null
 cp -r guest/lib/Languages/ /usr/local/share/pbot-vm/
 
 cp guest/include/prelude.h /usr/include
 
 cp guest/polkit/* /etc/polkit-1/rules.d/
 
+nmcli networking off
+
 echo unset DEBUGINFOD_URLS >> /root/.bashrc
 echo export ASAN_OPTIONS=detect_leaks=0 >> /root/.bashrc
 
-echo PBot Guest VM is now set up. For changes to take effect, run this command now: source /root/.bashrc
+echo PBot Guest VM is now set up.
+echo
+echo !! Networking is now disabled. To re-enable networking run: nmcli networking on
+echo
+echo For changes to take effect, run this command now: source /root/.bashrc
