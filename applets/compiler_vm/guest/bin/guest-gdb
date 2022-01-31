@@ -211,8 +211,7 @@ sub compare_locals($old, $new) {
 
     foreach my $local (@$new) {
         my ($ident, $value) = @$local;
-        $ht{$ident} //= ''; # set non-existing key to empty string
-        if ($ht{$ident} ne $value) {
+        if (!exists $ht{$ident} || $ht{$ident} ne $value) {
             push @modified, [$ident, $value];
         }
     }
@@ -272,13 +271,13 @@ sub get_main_start_end($context) {
         # this line isn't part of main() yet
         next if $line < $start;
 
-        # blank out contents of string and char literals
+        # blank out contents of string and char literals so we don't count
+        # any braces within
         $code =~ s/(?:\"((?:\\\"|(?!\").)*)\")/'"' . ('-' x length $1) . '"'/ge;
         $code =~ s/(?:\'((?:\\\'|(?!\').)*)\')/"'" . ('-' x length $1) . "'"/ge;
 
-        while ($code =~ /(.)/g) {
-            my $char = $1;
-
+        my @chars = split //, $code;
+        foreach my $char (@chars) {
             if ($char eq '{') {
                 $braces++;
             } elsif ($char eq '}') {
@@ -441,17 +440,11 @@ sub handle_program_exit($context, $data) {
 sub handle_program_signal($context, $data) {
     my $locals = locals_to_string(get_locals($context));
 
-    my $text = "Program received signal $data->{'signal-name'}, $data->{'signal-meaning'} ";
-
-    if ($data->{frame}->{func} eq '??') {
-        $text .= "in ?? ";
-    } else {
-        $text .= "in $data->{frame}->{func} ";
-    }
-
     my $args = args_to_string($data->{frame}->{args});
 
-    $text .= "($args) ";
+    my $text = "Program received signal $data->{'signal-name'}, $data->{'signal-meaning'} ";
+
+    $text .= "in $data->{frame}->{func} ($args) ";
 
     my $line;
 
@@ -475,11 +468,14 @@ sub handle_program_signal($context, $data) {
             }
         }
 
-        $text .= "called by $trace->{func} $trace->{args} at statement: $line ";
+        $text .= "called by $trace->{func} $trace->{args} ";
+        $text .= "at statement: $line " if $line;
     }
 
     if (length $locals) {
         $text .= "<local variables: $locals>"
+    } else {
+        $text =~ s/\s+$//;
     }
 
     print_gdb_output($context, $text);
@@ -509,8 +505,6 @@ sub dispatch_gdbmi_output($context, $output) {
         LOG     , \&handle_log_stream_output,
         RESULT  , \&handle_result_output,
     );
-
-    print STDERR "dispatch: ", Dumper($output), "\n" if $debug >= 3;
 
     $dispatch{$output->{_type}}->($context, $output);
 }

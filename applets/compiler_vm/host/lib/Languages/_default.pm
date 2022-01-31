@@ -87,9 +87,8 @@ sub preprocess_code {
   my $state = NORMAL;
   my $escaped = 0;
 
-  while($self->{code} =~ m/(.)/gs) {
-    my $ch = $1;
-
+  my @chars = split //, $self->{code};
+  foreach my $ch (@chars) {
     given ($ch) {
       when ('\\') {
         if($escaped == 0) {
