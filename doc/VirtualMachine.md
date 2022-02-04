@@ -86,10 +86,9 @@ To create a new virtual machine we'll use the `virt-install` command.
 
 Execute the following command:
 
-    host$ virt-install --name=pbot-vm --disk=size=12,cache=none,driver.io=native,snapshot=external,path=vm.qcow2 --cpu=host --os-variant=fedora34 --graphics=spice,gl.enable=yes --video=virtio --location=Fedora-Server-netinst-x86_64-35-1.2.iso
+    host$ virt-install --name=pbot-vm --disk=size=12,cache=none,driver.io=native,path=vm.qcow2 --cpu=host --os-variant=fedora34 --graphics=spice --video=virtio --location=Fedora-Server-netinst-x86_64-35-1.2.iso
 
-If you are installing over an X-forwarded SSH session, strip the `,gl.enable=yes`
-part. Note that `disk=size=12` will create a 12 GB sparse file. Sparse means the file
+Note that `disk=size=12` will create a 12 GB sparse file. Sparse means the file
 won't actually take up 12 GB. It will start at 0 bytes and grow as needed. You can
 use the `du` command to verify this. After a minimal Fedora install, the size will be
 approximately 1.7 GB. It will grow to about 2.5 GB with all PBot features installed.
@@ -146,6 +145,16 @@ to access the virtual machine, execute:
 You should see the guest window after a few seconds. Log in as `root` once the login
 prompt appears.
 
+#### Install software
+Now we can install any software and programming languages we want to make available
+in the virtual machine. Use the `dnf search` command or your distribution's documentation
+to find packages. I will soon make available a script to install all package necessary for all
+languages supported by PBot.
+
+For the C programming language you will need at least these:
+
+    guest$ dnf install libubsan libasan gdb gcc clang
+
 #### Install Perl
 Now we need to install Perl on the guest. This allows us to run the PBot VM Guest
 script.
@@ -173,16 +182,6 @@ Once that's done, run the following command:
 After running the `setup-guest` script, we need to make the environment changes take effect:
 
     guest$ source /root/.bashrc
-
-#### Install software
-Now we can install any software and programming languages we want to make available
-in the virtual machine. Use the `dnf search` command or your distribution's documentation
-to find packages. I will soon make available a script to install all package necessary for all
-languages supported by PBot.
-
-For the C programming language you will need at least these:
-
-    guest$ dnf install libubsan libasan gdb gcc clang
 
 #### Start PBot VM Guest
 We're ready to start the PBot VM Guest. On the guest, as `root`, execute the command:
