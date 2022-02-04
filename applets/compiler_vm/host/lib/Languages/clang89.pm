@@ -17,7 +17,7 @@ sub initialize {
   $self->{default_options} = '-Wextra -Wall -Wno-unused -pedantic -Wfloat-equal -Wshadow -std=c89 -lm -Wfatal-errors -fsanitize=integer,undefined,alignment';
   $self->{options_paste}   = '-fcaret-diagnostics';
   $self->{options_nopaste} = '-fno-caret-diagnostics';
-  $self->{cmdline}         = 'clang -ggdb -g3 $sourcefile $options -o $execfile';
+  $self->{cmdline}         = 'clang -gdwarf-2 -g3 $sourcefile $options -o $execfile';
 
   $self->{prelude} = <<'END';
 #define _XOPEN_SOURCE 9001

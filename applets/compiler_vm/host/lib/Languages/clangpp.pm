@@ -18,7 +18,7 @@ sub initialize {
   $self->{default_options} = '-std=c++14 -Wextra -Wall -Wno-unused -pedantic -Wfloat-equal -Wshadow -lm -Wfatal-errors -fsanitize=alignment,undefined';
   $self->{options_paste}   = '-fcaret-diagnostics';
   $self->{options_nopaste} = '-fno-caret-diagnostics';
-  $self->{cmdline}         = 'clang++-3.7 -I/usr/include/x86_64-linux-gnu/c++/5/ -ggdb -g3 $sourcefile $options -o $execfile';
+  $self->{cmdline}         = 'clang++-3.7 -I/usr/include/x86_64-linux-gnu/c++/5/ -gdwarf-2 -g3 $sourcefile $options -o $execfile';
 
   $self->{prelude} = <<'END';
 #if 0
