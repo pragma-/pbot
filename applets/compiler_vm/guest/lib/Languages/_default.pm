@@ -9,85 +9,91 @@ use warnings;
 use strict;
 
 use IPC::Run qw/run timeout/;
+
 use Data::Dumper;
 
+$Data::Dumper::Terse    = 1;
+$Data::Dumper::Sortkeys = 1;
+$Data::Dumper::Useqq    = 1;
+
 sub new {
-  my ($class, %conf) = @_;
-  my $self = bless {}, $class;
+    my ($class, %conf) = @_;
+    my $self = bless {}, $class;
 
-  $self->{debug}         = $conf{debug} // 0;
-  $self->{sourcefile}    = $conf{sourcefile};
-  $self->{execfile}      = $conf{execfile};
-  $self->{code}          = $conf{code};
-  $self->{cmdline}       = $conf{cmdline};
-  $self->{input}         = $conf{input};
-  $self->{date}          = $conf{date};
-  $self->{arguments}     = $conf{arguments};
-  $self->{factoid}       = $conf{factoid};
-  $self->{'persist-key'} = $conf{'persist-key'};
+    $self->{debug}         = $conf{debug} // 0;
+    $self->{sourcefile}    = $conf{sourcefile};
+    $self->{execfile}      = $conf{execfile};
+    $self->{code}          = $conf{code};
+    $self->{cmdline}       = $conf{cmdline};
+    $self->{input}         = $conf{input};
+    $self->{date}          = $conf{date};
+    $self->{arguments}     = $conf{arguments};
+    $self->{factoid}       = $conf{factoid};
+    $self->{'persist-key'} = $conf{'persist-key'};
 
-  $self->initialize(%conf);
-  return $self;
+    $self->initialize(%conf);
+    return $self;
 }
 
 sub initialize {
-  my ($self, %conf) = @_;
+    my ($self, %conf) = @_;
 }
 
 sub preprocess {
-  my $self = shift;
+    my $self = shift;
 
-  open(my $fh, '>', $self->{sourcefile}) or die $!;
-  binmode($fh, ':utf8');
-  print $fh $self->{code} . "\n";
-  close $fh;
+    open(my $fh, '>', $self->{sourcefile}) or die $!;
+    binmode($fh, ':utf8');
+    print $fh $self->{code} . "\n";
+    close $fh;
 
-  print "Executing [$self->{cmdline}] with args [$self->{arguments}]\n";
+    my $quoted_args = '';
 
-  my @args = $self->split_line($self->{arguments}, strip_quotes => 1, preserve_escapes => 0);
+    if (length $self->{arguments}) {
+        my @args = $self->split_line($self->{arguments}, strip_quotes => 1, preserve_escapes => 0);
 
-  my $quoted_args = '';
+        foreach my $arg (@args) {
+            $arg =~ s/'/'"'"'/g;
+            $quoted_args .= "'$arg' ";
+        }
+    }
 
-  foreach my $arg (@args) {
-      $arg =~ s/'/'"'"'/g;
-      $quoted_args .= "'$arg' ";
-  }
+    $self->{input} = "ulimit -f 2000; ulimit -t 8; ulimit -u 200; $self->{cmdline} $quoted_args";
 
-  $self->{input} = "ulimit -f 2000; ulimit -t 8; ulimit -u 200; $self->{cmdline} $quoted_args";
+    my ($retval, $stdout, $stderr) = $self->execute(60, $self->{input}, '/bin/sh');
 
-  my ($retval, $stdout, $stderr) = $self->execute(60, $self->{input}, '/bin/sh');
-
-  $self->{output} = $stderr;
-  $self->{output} .= ' ' if length $self->{output};
-  $self->{output} .= $stdout;
-  $self->{error}  = $retval;
+    $self->{output} = $stderr;
+    $self->{output} .= ' ' if length $self->{output};
+    $self->{output} .= $stdout;
+    $self->{error}  = $retval;
 }
 
-sub postprocess {
-  my $self = shift;
-}
+sub postprocess {}
 
 sub execute {
-  my ($self, $timeout, $stdin, @cmdline) = @_;
+    my ($self, $timeout, $stdin, @cmdline) = @_;
 
-  $stdin //= '';
-  print "execute($timeout) [$stdin] ", Dumper \@cmdline, "\n";
+    $stdin //= '';
 
-  my ($exitval, $stdout, $stderr) = eval {
-    my ($stdout, $stderr);
-    run \@cmdline, \$stdin, \$stdout, \$stderr, timeout($timeout);
-    my $exitval = $? >> 8;
+    print "execute ($timeout) [$stdin] @cmdline\n";
+
+    my ($exitval, $stdout, $stderr) = eval {
+        my ($stdout, $stderr);
+        run \@cmdline, \$stdin, \$stdout, \$stderr, timeout($timeout);
+        my $exitval = $? >> 8;
+        return ($exitval, $stdout, $stderr);
+    };
+
+    if (my $exception = $@) {
+        $exception = "[Timed-out]" if $exception =~ m/timeout on timer/;
+        ($exitval, $stdout, $stderr) = (-1, '', $exception);
+    }
+
+    $Data::Dumper::Indent = 0;
+    print "exitval $exitval stderr [", Dumper($stderr), "] stdout [", Dumper($stdout), "]\n";
+    $Data::Dumper::Indent = 1;
+
     return ($exitval, $stdout, $stderr);
-  };
-
-  if ($@) {
-    my $error = $@;
-    $error = "[Timed-out]" if $error =~ m/timeout on timer/;
-    ($exitval, $stdout, $stderr) = (-1, '', $error);
-  }
-
-  print "exitval $exitval stdout [$stdout]\nstderr [$stderr]\n";
-  return ($exitval, $stdout, $stderr);
 }
 
 # splits line into quoted arguments while preserving quotes.
@@ -96,111 +102,111 @@ sub execute {
 # handles unbalanced quotes gracefully by treating them as
 # part of the argument they were found within.
 sub split_line {
-  my ($self, $line, %opts) = @_;
+    my ($self, $line, %opts) = @_;
 
-  my %default_opts = (
-    strip_quotes => 0,
-    keep_spaces => 0,
-    preserve_escapes => 1,
-  );
+    my %default_opts = (
+        strip_quotes => 0,
+        keep_spaces => 0,
+        preserve_escapes => 1,
+    );
 
-  %opts = (%default_opts, %opts);
+    %opts = (%default_opts, %opts);
 
-  my @chars = split //, $line;
+    my @chars = split //, $line;
 
-  my @args;
-  my $escaped = 0;
-  my $quote;
-  my $token = '';
-  my $ch = ' ';
-  my $last_ch;
-  my $next_ch;
-  my $i = 0;
-  my $pos;
-  my $ignore_quote = 0;
-  my $spaces = 0;
+    my @args;
+    my $escaped = 0;
+    my $quote;
+    my $token = '';
+    my $ch = ' ';
+    my $last_ch;
+    my $next_ch;
+    my $i = 0;
+    my $pos;
+    my $ignore_quote = 0;
+    my $spaces = 0;
 
-  while (1) {
-    $last_ch = $ch;
+    while (1) {
+        $last_ch = $ch;
 
-    if ($i >= @chars) {
-      if (defined $quote) {
-        # reached end, but unbalanced quote... reset to beginning of quote and ignore it
-        $i = $pos;
-        $ignore_quote = 1;
-        $quote = undef;
-        $last_ch = ' ';
-        $token = '';
-      } else {
-        # add final token and exit
-        push @args, $token if length $token;
-        last;
-      }
-    }
+        if ($i >= @chars) {
+            if (defined $quote) {
+                # reached end, but unbalanced quote... reset to beginning of quote and ignore it
+                $i = $pos;
+                $ignore_quote = 1;
+                $quote = undef;
+                $last_ch = ' ';
+                $token = '';
+            } else {
+                # add final token and exit
+                push @args, $token if length $token;
+                last;
+            }
+        }
 
-    $ch = $chars[$i++];
-    $next_ch = $chars[$i];
+        $ch = $chars[$i++];
+        $next_ch = $chars[$i];
 
-    $spaces = 0 if $ch ne ' ';
+        $spaces = 0 if $ch ne ' ';
 
-    if ($escaped) {
-      if ($opts{preserve_escapes}) {
-        $token .= "\\$ch";
-      } else {
+        if ($escaped) {
+            if ($opts{preserve_escapes}) {
+                $token .= "\\$ch";
+            } else {
+                $token .= $ch;
+            }
+            $escaped = 0;
+            next;
+        }
+
+        if ($ch eq '\\') {
+            $escaped = 1;
+            next;
+        }
+
+        if (defined $quote) {
+            if ($ch eq $quote and (not defined $next_ch or $next_ch =~ /[\s,:;})\].+=]/)) {
+                # closing quote
+                $token .= $ch unless $opts{strip_quotes};
+                push @args, $token;
+                $quote = undef;
+                $token = '';
+            } else {
+                # still within quoted argument
+                $token .= $ch;
+            }
+            next;
+        }
+
+        if (($last_ch =~ /[\s:{(\[.+=]/) and not defined $quote and ($ch eq "'" or $ch eq '"')) {
+            if ($ignore_quote) {
+                # treat unbalanced quote as part of this argument
+                $token .= $ch;
+                $ignore_quote = 0;
+            } else {
+                # begin potential quoted argument
+                $pos = $i - 1;
+                $quote = $ch;
+                $token .= $ch unless $opts{strip_quotes};
+            }
+            next;
+        }
+
+        if ($ch eq ' ') {
+            if (++$spaces > 1 and $opts{keep_spaces}) {
+                $token .= $ch;
+                next;
+            } else {
+                push @args, $token if length $token;
+                $token = '';
+                next;
+            }
+        }
+
         $token .= $ch;
-      }
-      $escaped = 0;
-      next;
     }
 
-    if ($ch eq '\\') {
-      $escaped = 1;
-      next;
-    }
-
-    if (defined $quote) {
-      if ($ch eq $quote and (not defined $next_ch or $next_ch =~ /[\s,:;})\].+=]/)) {
-        # closing quote
-        $token .= $ch unless $opts{strip_quotes};
-        push @args, $token;
-        $quote = undef;
-        $token = '';
-      } else {
-        # still within quoted argument
-        $token .= $ch;
-      }
-      next;
-    }
-
-    if (($last_ch =~ /[\s:{(\[.+=]/) and not defined $quote and ($ch eq "'" or $ch eq '"')) {
-      if ($ignore_quote) {
-        # treat unbalanced quote as part of this argument
-        $token .= $ch;
-        $ignore_quote = 0;
-      } else {
-        # begin potential quoted argument
-        $pos = $i - 1;
-        $quote = $ch;
-        $token .= $ch unless $opts{strip_quotes};
-      }
-      next;
-    }
-
-    if ($ch eq ' ') {
-      if (++$spaces > 1 and $opts{keep_spaces}) {
-        $token .= $ch;
-        next;
-      } else {
-        push @args, $token if length $token;
-        $token = '';
-        next;
-      }
-    }
-
-    $token .= $ch;
-  }
-
-  return @args;
+    return @args;
 }
 
 1;

@@ -12,10 +12,8 @@ use parent '_default';
 sub preprocess {
   my $self = shift;
 
-  my $input = $self->{input};
-  $input = "" if not defined $input;
+  my $input = $self->{input} // '';
 
-  print "writing input [$input]\n";
   open(my $fh, '>', '.input');
   print $fh "$input\n";
   close $fh;

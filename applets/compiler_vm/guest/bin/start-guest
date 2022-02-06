@@ -11,6 +11,7 @@ use English;
 use Encode;
 use File::Basename;
 use JSON::XS;
+use Data::Dumper;
 
 my $USERNAME = 'vm';   # variable for easier string interpolation
 
@@ -22,11 +23,11 @@ use constant {
     OUTPUT    => '/dev/stdout',
 };
 
+my $USE_LOCAL = $ENV{'CC_LOCAL'} // 0;
+
 use lib MOD_DIR;
 
 my %languages;
-
-my $USE_LOCAL = $ENV{'CC_LOCAL'};
 
 sub load_modules {
     my @files = glob MOD_DIR . "/*.pm";
@@ -42,7 +43,7 @@ sub load_modules {
 sub run_server {
     my ($input, $output, $heartbeat);
 
-    if(not defined $USE_LOCAL or $USE_LOCAL == 0) {
+    if (not $USE_LOCAL) {
         # set serial to 115200 baud instead of 9600
         system('stty -F ' . SERIAL . ' 115200');
 
@@ -65,15 +66,14 @@ sub run_server {
     my $pid = fork;
     die "Fork failed: $!" if not defined $pid;
 
-    if($pid == 0) {
-        my $buffer = "";
-        my $length = 4096;
+    if ($pid == 0) {
+        my $buffer = '';
         my $line;
         my $total_read = 0;
 
         while (1) {
             print "Waiting for input...\n";
-            my $ret = sysread($input, my $buf, $length);
+            my $ret = sysread($input, my $buf, 16384);
 
             if (not defined $ret) {
                 print "Error reading: $!\n";
@@ -83,7 +83,7 @@ sub run_server {
             $total_read += $ret;
 
             if ($ret == 0) {
-                print "input  ded?\n";
+                print "Input closed; exiting...\n";
                 print "got buffer [$buffer]\n";
                 exit;
             }
@@ -92,29 +92,25 @@ sub run_server {
             print "read $ret bytes [$total_read so far] [$buf]\n";
             $buffer.= $buf;
 
-            if ($buffer =~ s/\s*:end:\s*$//m) {
-                $line = $buffer;
-                $buffer = "";
-                $total_read = 0;
-            } else {
-                next;
-            }
+            next if $buffer !~ s/\s*:end:\s*$//m;
 
+            $line = $buffer;
             chomp $line;
+
+            $buffer = '';
+            $total_read = 0;
+
+            $line = encode('UTF-8', $line);
 
             print "-" x 40, "\n";
             print "Got [$line]\n";
 
-            $line = encode('UTF-8', $line);
             my $compile_in = decode_json($line);
 
-            $compile_in->{arguments} //= '';
-            $compile_in->{input} //= '';
-
-            print "Attempting compile [$compile_in->{lang}] ...\n";
-
-            use Data::Dumper;
             print Dumper $compile_in;
+
+            $compile_in->{arguments} //= '';
+            $compile_in->{input}     //= '';
 
             my $pid = fork;
 
@@ -125,6 +121,7 @@ sub run_server {
 
             if ($pid == 0) {
                 my ($uid, $gid, $home) = (getpwnam $USERNAME)[2, 3, 7];
+
                 if (not $uid and not $gid) {
                     print "Could not find user $USERNAME: $!\n";
                     exit;
@@ -153,15 +150,19 @@ sub run_server {
                 $EGID = "$gid $gid";
                 $EUID = $UID = $uid;
 
+                chdir("/home/$USERNAME");
+
                 my $result = interpret(%$compile_in);
 
                 $GID = 0;
                 $UID = 0;
 
                 my $compile_out = { result => $result };
+
                 my $json = encode_json($compile_out);
 
-                print "Done compiling; result: [$result] [$json]\n";
+                print "Done compiling: $json\n";
+
                 print $output "result:$json\n";
                 print $output "result:end\n";
 
@@ -175,9 +176,12 @@ sub run_server {
                 exit;
             } else {
                 waitpid $pid, 0;
+
+                # kill any left-over processes started by $USERNAME
+                system("pkill -u $USERNAME");
             }
 
-            if(not defined $USE_LOCAL or $USE_LOCAL == 0) {
+            if (not $USE_LOCAL) {
                 print "=" x 40, "\n";
                 next;
             } else {
@@ -201,17 +205,11 @@ sub interpret {
 
     $h{lang} = '_default' if not exists $languages{$h{lang}};
 
-    chdir("/home/$USERNAME");
-
     my $mod = $h{lang}->new(%h);
 
     $mod->preprocess;
 
-    #    print "after preprocess: ", Dumper $mod, "\n";
-
     $mod->postprocess if not $mod->{error} and not $mod->{done};
-
-    # print "after postprocess: ", Dumper $mod, "\n";
 
     if (exists $mod->{no_output} or not length $mod->{output}) {
         if ($h{factoid}) {
