@@ -20,8 +20,6 @@ sub preprocess {
   print $fh "$input\n";
   close $fh;
 
-  $self->execute(10, undef, 'date', '-s', "\@$self->{date}");
-
   my @cmd = $self->split_line($self->{cmdline}, strip_quotes => 1, preserve_escapes => 0);
 
   if ($self->{code} =~ m/print_last_statement\(.*\);$/m) {
@@ -78,15 +76,26 @@ sub postprocess {
   }
 
   print "Executing gdb\n";
-  my @args = $self->split_line($self->{arguments}, strip_quotes => 1, preserve_escapes => 0);
   my ($exitval, $stdout, $stderr);
+
+  my $ulimits = "ulimit -f 2000; ulimit -t 8; ulimit -u 200";
+
+  my @args = $self->split_line($self->{arguments}, strip_quotes => 1, preserve_escapes => 0);
+
+  my $quoted_args = '';
+
+  foreach my $arg (@args) {
+      $arg =~ s/'/'"'"'/g;
+      $quoted_args .= "'$arg' ";
+  }
 
   if ($self->{cmdline} =~ /-fsanitize=(?:[^ ]+,)?address/) {
       # leak sanitizer doesn't work under ptrace/gdb
       # ASAN_OPTIONS=strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1
-      ($exitval, $stdout, $stderr) = $self->execute(60, undef, './prog', @args);
+      ($exitval, $stdout, $stderr) = $self->execute(60, "$ulimits; ./prog $quoted_args\n", '/bin/sh');
   } else {
-      ($exitval, $stdout, $stderr) = $self->execute(60, undef, 'guest-gdb', @args);
+      my $input = "$ulimits; guest-gdb ./prog $quoted_args";
+      ($exitval, $stdout, $stderr) = $self->execute(60, $input, '/bin/sh');
   }
 
   my $result = $stderr;

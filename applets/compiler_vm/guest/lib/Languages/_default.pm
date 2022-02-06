@@ -8,9 +8,6 @@ package _default;
 use warnings;
 use strict;
 
-use feature "switch";
-no if $] >= 5.018, warnings => "experimental::smartmatch";
-
 use IPC::Run qw/run timeout/;
 use Data::Dumper;
 
@@ -45,13 +42,21 @@ sub preprocess {
   print $fh $self->{code} . "\n";
   close $fh;
 
-  $self->execute(10, undef, 'date', '-s', "\@$self->{date}");
-
   print "Executing [$self->{cmdline}] with args [$self->{arguments}]\n";
-  my @cmdline = $self->split_line($self->{cmdline}, strip_quotes => 1, preserve_escapes => 0);
-  push @cmdline, $self->split_line($self->{arguments}, strip_quotes => 1, preserve_escapes => 0);
 
-  my ($retval, $stdout, $stderr) = $self->execute(60, $self->{input}, @cmdline);
+  my @args = $self->split_line($self->{arguments}, strip_quotes => 1, preserve_escapes => 0);
+
+  my $quoted_args = '';
+
+  foreach my $arg (@args) {
+      $arg =~ s/'/'"'"'/g;
+      $quoted_args .= "'$arg' ";
+  }
+
+  $self->{input} = "ulimit -f 2000; ulimit -t 8; ulimit -u 200; $self->{cmdline} $quoted_args";
+
+  my ($retval, $stdout, $stderr) = $self->execute(60, $self->{input}, '/bin/sh');
+
   $self->{output} = $stderr;
   $self->{output} .= ' ' if length $self->{output};
   $self->{output} .= $stdout;

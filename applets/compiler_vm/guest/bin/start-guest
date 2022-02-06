@@ -143,6 +143,8 @@ sub run_server {
                 system("rm -rf /home/$USERNAME/prog*");
                 system("pkill -u $USERNAME");
 
+                system("date -s \@$compile_in->{date}");
+
                 $ENV{USER} = $USERNAME;
                 $ENV{LOGNAME} = $USERNAME;
                 $ENV{HOME} = $home;
@@ -205,11 +207,11 @@ sub interpret {
 
     $mod->preprocess;
 
-    print "after preprocess: ", Dumper $mod, "\n";
+    #    print "after preprocess: ", Dumper $mod, "\n";
 
     $mod->postprocess if not $mod->{error} and not $mod->{done};
 
-    print "after postprocess: ", Dumper $mod, "\n";
+    # print "after postprocess: ", Dumper $mod, "\n";
 
     if (exists $mod->{no_output} or not length $mod->{output}) {
         if ($h{factoid}) {

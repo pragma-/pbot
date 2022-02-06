@@ -350,7 +350,7 @@ sub dispatch_user_command($context, $command) {
         'dump'   => \&cmd_print,
 
         # special PBot command
-        'print_last_statement' => \&cmd_print,
+        'print_last_statement' => \&cmd_print_last_statement,
     );
 
     $command = unescape($command);
@@ -419,6 +419,22 @@ sub cmd_print($context, $args) {
 
         if ($output->{_text} =~ /^\$\d+\s*=\s*(.*)/) {
             print_gdb_output($context, "$args = $1");
+        }
+    }
+}
+
+sub cmd_print_last_statement($context, $args) {
+    # invoke the last statement
+    my $console = gdb_send_and_read_console($context, "print $args");
+
+    # don't print last statement if there was program output
+    return if -s OUTPUT_FILENAME;
+
+    foreach my $output (@$console) {
+        last if $output->{_type} eq RESULT;
+
+        if ($output->{_text} =~ /^\$\d+\s*=\s*(.*)/) {
+            print_gdb_output($context, "no output: $args = $1");
         }
     }
 }
@@ -625,7 +641,7 @@ sub run_program($context) {
 
 sub main {
     # first command-line argument can override file to debug
-    my $prog = $ARGV[0] // './prog';
+    my $prog = shift @ARGV // './prog';
 
     # start gdb and grab references to its input and output streams
     open2(my $out, my $in, "LIBC_FATAL_STDERR=1 MALLOC_CHECK_=1 gdb -i mi3 -q -nx $prog");

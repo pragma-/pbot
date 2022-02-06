@@ -1,6 +1,6 @@
 cp guest/bin/* /usr/local/bin
 
-mkdir /usr/local/share/pbot-vm/ > /dev/null
+mkdir -p /usr/local/share/pbot-vm/
 cp -r guest/lib/Languages/ /usr/local/share/pbot-vm/
 
 cp guest/include/prelude.h /usr/include
@@ -9,8 +9,11 @@ cp guest/polkit/* /etc/polkit-1/rules.d/
 
 nmcli networking off
 
-echo unset DEBUGINFOD_URLS >> /root/.bashrc
-echo export ASAN_OPTIONS=detect_leaks=0 >> /root/.bashrc
+if ! grep -qF "pbot-vm" /root/.bashrc; then
+  echo '# pbot-vm' >> /root/.bashrc
+  echo unset DEBUGINFOD_URLS >> /root/.bashrc
+  echo export ASAN_OPTIONS=detect_leaks=0 >> /root/.bashrc
+fi
 
 echo PBot Guest VM is now set up.
 echo
