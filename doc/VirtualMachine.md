@@ -250,7 +250,7 @@ the heartbeat port `5556` to ensure the PBot VM Guest is alive.
 You may override any of the defaults by setting environment variables.
 
 Environment variable | Default value | Description
---- | ---
+--- | --- | ---
 PBOTVM_DOMAIN | `pbot-vm` | The libvirt domain identifier
 PBOTVM_SERVER | `9000` | `vm-server` port for incoming `vm-client` commands
 PBOTVM_SERIAL | `5555` | TCP port for serial communication
