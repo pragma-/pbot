@@ -127,6 +127,10 @@ virtual machine and to read back output. `ttyS2/5556` is simply a newline sent e
 5 seconds, representing a heartbeat, used to ensure that the PBot communication
 channel is healthy.
 
+If you want to change the serial ports or the TCP ports, execute the command
+`virsh edit pbot-vm` on the host. This will open the `pbot-vm` XML configuration
+in your default system editor. Find the `<serial>` tags and edit their attributes.
+
 Now we need to restart the virtual machine itself so it loads the new serial device configuration.
 Switch back to the virtual machine window. Once the virtual machine has rebooted, log in as `root`
 and shut the virtual machine down with:
@@ -211,9 +215,9 @@ by changing the `-lang=` option. I recommend testing and verifying that all of y
 modules are configured before going on to the next step.
 
 If you have multiple PBot VM Guests, or if you used a different TCP port, you can specify the
-`PBOT_VM_PORT` environment variable when executing the `vm-exec` command:
+`PBOTVM_SERIAL` environment variable when executing the `vm-exec` command:
 
-    host$ PBOT_VM_PORT=6666 vm-exec -lang=sh echo test
+    host$ PBOTVM_SERIAL=7777 vm-exec -lang=sh echo test
 
 #### Save initial state
 Switch back to an available terminal on the physical host machine. Enter the following command
@@ -225,9 +229,8 @@ to save a snapshot of the virtual machine waiting for incoming commands.
 
     host$ virsh snapshot-create-as pbot-vm 1
 
-This will create a snapshot file `vm.1` next to the `vm.qcow2` disk file. If the virtual machine
-ever times-out or its heartbeat stops responding, PBot will reset the virtual machine to this
-saved snapshot.
+If the virtual machine ever times-out or its heartbeat stops responding, PBot
+will revert the virtual machine to this saved snapshot.
 
 ### Initial virtual machine set-up complete
 This concludes the initial one-time set-up. You can close the `virt-viewer` window. The
@@ -241,7 +244,23 @@ To start the PBot VM Host server, execute the `vm-server` script in the
     host$ vm-server
 
 This will start a TCP server on port `9000`. It will listen for incoming commands and
-pass them along to the virtual machine's TCP serial port.
+pass them along to the virtual machine's TCP serial port `5555`. It will also monitor
+the heartbeat port `5556` to ensure the PBot VM Guest is alive.
+
+You may override any of the defaults by setting environment variables.
+
+Environment variable | Default value | Description
+--- | ---
+PBOTVM_DOMAIN | `pbot-vm` | The libvirt domain identifier
+PBOTVM_SERVER | `9000` | `vm-server` port for incoming `vm-client` commands
+PBOTVM_SERIAL | `5555` | TCP port for serial communication
+PBOTVM_HEART  | `5556` | TCP port for heartbeats
+PBOTVM_TIMEOUT | `10` | Duration before command times out (in seconds)
+PBOTVM_NOREVERT | not set | If set then the VM will not revert to previous snapshot
+
+For example, to use `other-vm` with a longer `30` second timeout, on different serial and heartbeat ports:
+
+    host$ PBOTVM_DOMAIN="other-vm" PBOTVM_SERVER=9001 PBOTVM_SERIAL=7777 PBOTVM_HEART=7778 PBOTVM_TIMEOUT=30 ./vm-server
 
 ### Test PBot
 All done. Everything is set up now.

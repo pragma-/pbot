@@ -21,7 +21,7 @@ use FindBin qw($RealBin);
 use lib "$RealBin/../lib";
 
 use constant {
-    SERIAL_PORT => 5555,
+    SERIAL_PORT => $ENV{PBOTVM_SERIAL} // 4445,
 };
 
 my $json = join ' ', @ARGV;
@@ -45,7 +45,7 @@ if (not exists $args->{code}) {
 $args->{nick}      //= 'vm';
 $args->{channel}   //= 'vm';
 $args->{lang}      //= 'c11';
-$args->{'vm-port'} //= $ENV{PBOT_VM_PORT} // SERIAL_PORT;
+$args->{'vm-port'} //= SERIAL_PORT;
 
 my $language = lc $args->{lang};
 

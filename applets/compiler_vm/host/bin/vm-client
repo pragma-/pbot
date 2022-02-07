@@ -18,11 +18,15 @@ use warnings;
 use strict;
 
 use IO::Socket;
-use JSON;
+use JSON::XS;
+
+use constant {
+    SERVER_PORT => $ENV{PBOTVM_SERVER} // 9000,
+};
 
 my $sock = IO::Socket::INET->new(
     PeerAddr => '127.0.0.1',
-    PeerPort => 9000,
+    PeerPort => SERVER_PORT,
     Proto    => 'tcp'
 );
 
