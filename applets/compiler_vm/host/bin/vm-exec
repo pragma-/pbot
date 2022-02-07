@@ -3,10 +3,10 @@
 # File: vm-exec
 #
 # Purpose: Process and send commands to the PBot virtual machine on the
-# default TCP port (5555). Use the PBOT_VM_PORT environment variable to
-# override the port. E.g., to use port 6666 instead:
+# default TCP port (5555). Use the PBOTVM_SERIAL environment variable to
+# override the port. E.g., to use port 7777 instead:
 #
-# $ PBOT_VM_PORT=6666 vm-exec -lang=sh echo test
+# $ PBOTVM_SERIAL=7777 vm-exec -lang=sh echo test
 
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
