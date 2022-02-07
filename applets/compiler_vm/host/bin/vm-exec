@@ -21,7 +21,7 @@ use FindBin qw($RealBin);
 use lib "$RealBin/../lib";
 
 use constant {
-    SERIAL_PORT => $ENV{PBOTVM_SERIAL} // 4445,
+    SERIAL_PORT => $ENV{PBOTVM_SERIAL} // 5555,
 };
 
 my $json = join ' ', @ARGV;
