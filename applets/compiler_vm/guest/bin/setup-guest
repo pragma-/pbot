@@ -1,14 +1,30 @@
+#!/bin/sh
+
+# File: setup-guest
+#
+# Purpose: Sets up PBot VM Guest. Copies necessary files to the appropriate
+# location, sets up environment variables and various configuration details.
+
+# SPDX-FileCopyrightText: 2022 Pragmatic Software <pragma78@gmail.com>
+# SPDX-License-Identifier: MIT
+
+# copy executable scripts
 cp guest/bin/* /usr/local/bin
 
+# language support
 mkdir -p /usr/local/share/pbot-vm/
 cp -r guest/lib/Languages/ /usr/local/share/pbot-vm/
 
+# C support and GDB integration
 cp guest/include/prelude.h /usr/include
 
+# require root password for polkit actions
 cp guest/polkit/* /etc/polkit-1/rules.d/
 
+# disable networking
 nmcli networking off
 
+# set environment variables
 if ! grep -qF "pbot-vm" /root/.bashrc; then
   echo '# pbot-vm' >> /root/.bashrc
   echo unset DEBUGINFOD_URLS >> /root/.bashrc
