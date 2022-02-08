@@ -310,7 +310,7 @@ sub get_backtrace($context) {
 
 # returns the source line at a given line number
 sub get_lineno($context, $lineno) {
-    my $console = gdb_send_and_read_console($context, "list $lineno,$lineno");
+    my $console = gdb_send_and_read_console($context, "list $lineno,$lineno", 0);
 
     my $line;
 
@@ -465,8 +465,9 @@ sub handle_program_signal($context, $data) {
     my $line;
 
     if (exists $data->{frame}->{line}) {
-        $line = get_lineno($context, $data->{frame}->{line});
-        $text .= "at statement: $line ";
+        if ($line = get_lineno($context, $data->{frame}->{line})) {
+            $text .= "at statement: $line ";
+        }
     }
 
     my $backtrace = get_backtrace($context);
@@ -484,7 +485,7 @@ sub handle_program_signal($context, $data) {
             }
         }
 
-        $text .= "called by $trace->{func} $trace->{args} ";
+        $text .= "called by $trace->{func} $trace->{args} " if $trace->{func};
         $text .= "at statement: $line " if $line;
     }
 
