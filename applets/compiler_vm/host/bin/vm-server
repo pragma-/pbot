@@ -37,12 +37,10 @@ sub vm_revert() {
     print "Reverted.\n";
 }
 
-sub execute($cmdline) {
-    print "execute ($cmdline)\n";
+sub execute($command) {
+    print "execute ($command)\n";
 
-    my @list = split / /, $cmdline;
-
-    my $pid = open(my $fh, '-|', @list);
+    my $pid = open(my $fh, '-|', split / /, $command);
 
     if (not defined $pid) {
         print "Couldn't fork: $!\n";
@@ -60,7 +58,6 @@ sub execute($cmdline) {
         }
 
         my $ret = $? >> 8;
-        print "result ($ret, $result)\n";
         return ($ret, $result);
     };
 
@@ -68,12 +65,12 @@ sub execute($cmdline) {
     alarm 0;
 
     if (my $exception = $@) {
-        print "Got exception [$exception]\n";
-
+        # handle time-out exception
         if ($exception =~ /Timed-out: (.*)/) {
             return (-13, "[Timed-out] $1");
         }
 
+        # propagate unhandled exception
         die $exception;
     }
 
@@ -116,131 +113,127 @@ sub server_listen($port) {
         Reuse     => 1,
     );
     die "Can't setup server: $!" unless $server;
-    print "[Server $0 accepting clients at :$port]\n";
+    print "Server $0 accepting clients at :$port\n";
     return $server;
 }
 
+sub handle_client($client, $heartbeat) {
+    my ($timed_out, $killed) = (0, 0);
+
+    eval {
+        # give client 5 seconds to send a line
+        local $SIG{ALRM} = sub { die "Client I/O timed-out\n"; };
+        alarm 5;
+
+        while (my $line = <$client>) {
+            $line =~ s/[\r\n]+$//;
+            next if $line =~ m/^\s*$/;
+
+            # give client 5 more seconds
+            alarm 5;
+
+            print "Read [$line]\n";
+
+            if (time - $heartbeat > 5) {
+                print "Lost heartbeat, ignoring compile attempt.\n";
+                print $client "Recovering from previous snippet, try again soon.\n";
+                last;
+            }
+
+            # disable client time-out
+            alarm 0;
+
+            my ($ret, $result) = execute("perl vm-exec $line");
+
+            $result =~ s/\s+$//;
+            print "Ret: $ret; result: [$result]\n";
+
+            if ($result =~ m/\[Killed\]$/) {
+                $killed = 1;
+                $ret = -14;
+            }
+
+            if ($ret == -13 && $result =~ m/\[Timed-out\]/) {
+                $timed_out = 1;
+            }
+
+            print $client $result . "\n";
+            last;
+        }
+    };
+
+    # print client time-out exception
+    print "$@" if $@;
+
+    alarm 0;
+    close $client;
+
+    print "timed out: $timed_out; killed: $killed\n";
+    return $timed_out || $killed;
+}
+
+use constant SUCCESS => 0;
+
+sub do_heartbeat() {
+    tie my $heartbeat, 'IPC::Shareable', { key => 'heartbeat' };
+    tie my $running,   'IPC::Shareable', { key => 'running'   };
+
+    my $heartbeat_monitor = connect_to_heartbeat() || die "No heartbeat.\n";
+
+    while ($running and <$heartbeat_monitor>) {
+        $heartbeat = time;
+    }
+
+    $heartbeat = 0;
+    exit;
+}
+
+sub do_server() {
+    tie my $heartbeat, 'IPC::Shareable', { key => 'heartbeat' };
+    tie my $running,   'IPC::Shareable', { key => 'running'   };
+
+    print "Starting PBot VM Server on port " . SERVER_PORT . "\n";
+    my $server = eval { server_listen(SERVER_PORT) };
+
+    if ($@) {
+        print STDERR $@;
+        $running = 0;
+        return;
+    }
+
+    while ($running and my $client = $server->accept) {
+        $client->autoflush(1);
+        my $hostinfo = gethostbyaddr($client->peeraddr);
+
+        print '-' x 20, "\n";
+        printf "Connect from %s at %s\n", $client->peerhost, scalar localtime;
+
+        if (handle_client($client, $heartbeat) != SUCCESS) {
+            vm_revert();
+        }
+    }
+
+    print "Shutting down server.\n";
+}
+
 sub main() {
-    my $heartbeat;
-    my $running;
+    tie my $heartbeat, 'IPC::Shareable', { key => 'heartbeat', create => 1, destroy => 1 };
+    tie my $running,   'IPC::Shareable', { key => 'running',   create => 1, destroy => 1 };
 
-    tie $heartbeat, 'IPC::Shareable', 'dat1', { create => 1 };
-    tie $running,   'IPC::Shareable', 'dat2', { create => 1 };
-
-    $running = 1;
+    $running   = 1;
     $heartbeat = 0;
 
     my $heartbeat_pid = fork // die "Heartbeat fork failed: $!";
 
     if ($heartbeat_pid == 0) {
-        # heartbeat
-
-        tie $heartbeat, 'IPC::Shareable', 'dat1', { create => 1 };
-        tie $running,   'IPC::Shareable', 'dat2', { create => 1 };
-
-        my $heartbeat_monitor = connect_to_heartbeat() || die "Could not start heartbeat.\n";
-
-        print "heartbeat: running: $running\n";
-
-        while ($running and <$heartbeat_monitor>) {
-            $heartbeat = time;
-        }
-
-        print "Stopping heartbeat...\n";
-        $heartbeat = 0;
-        exit;
+        do_heartbeat();
     } else {
-        # server
-
-        print "Starting compiler server on port " . SERVER_PORT . "\n";
-        my $server = eval { server_listen(SERVER_PORT) };
-
-        if ($@) {
-            print STDERR $@;
-            $running = 0;
-        }
-
-        print "server: running: $running\n";
-
-        while ($running and my $client = $server->accept) {
-            $client->autoflush(1);
-            my $hostinfo = gethostbyaddr($client->peeraddr);
-
-            print '-' x 20, "\n";
-            printf "[Connect from %s at %s]\n", $client->peerhost, scalar localtime;
-
-            my ($timed_out, $killed) = (0, 0);
-
-            eval {
-                # give client 5 seconds to send a line
-                local $SIG{ALRM} = sub { die 'client I/O timed-out'; };
-                alarm 5;
-
-                while (my $line = <$client>) {
-                    $line =~ s/[\r\n]+$//;
-                    next if $line =~ m/^\s*$/;
-
-                    # give client 5 more seconds
-                    alarm 5;
-
-                    print "got: [$line]\n";
-
-                    if (time - $heartbeat > 5) {
-                        print "Lost heartbeat, ignoring compile attempt.\n";
-                        print $client "Recovering from previous snippet, try again soon.\n";
-                        last;
-                    }
-
-                    print "Attempting compile...\n";
-
-                    # disable client time-out
-                    alarm 0;
-
-                    my ($ret, $result) = execute("perl vm-exec $line");
-
-                    if(not defined $ret) {
-                        #print "parent continued\n";
-                        print "parent continued [$result]\n";
-                        $timed_out = 1 if $result == 243 or $result == -13; # -13 == 243
-                        $killed = 1 if $result == 242 or $result == -14; # -14 = 242
-                        last;
-                    }
-
-                    $result =~ s/\s+$//;
-                    print "Ret: $ret; result: [$result]\n";
-
-                    if($result =~ m/\[Killed\]$/) {
-                        print "Process was killed\n";
-                        $killed = 1;
-                    }
-
-                    print $client $result . "\n";
-
-                    $ret = -14 if $killed;
-
-                    last;
-                }
-
-                alarm 0;
-            };
-
-            alarm 0;
-            close $client;
-
-            if (my $exception = $@) {
-                print "Got exception: $@\n";
-            }
-
-            print "timed out: $timed_out; killed: $killed\n";
-            next unless $timed_out || $killed;
-
-            vm_revert();
-        }
-
-        print "Shutting down server.\n";
+        do_server();
     }
 
+    print "Waiting for heart to stop...\n";
     waitpid($heartbeat_pid, 0);
+    print "Heart stopped.\n";
 }
 
 main();
