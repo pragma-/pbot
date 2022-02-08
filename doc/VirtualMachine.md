@@ -86,7 +86,7 @@ To create a new virtual machine we'll use the `virt-install` command.
 
 Execute the following command:
 
-    host$ virt-install --name=pbot-vm --disk=size=12,driver.io=native,path=vm.qcow2 --cpu=host --os-variant=fedora34 --graphics=spice --video=virtio --location=Fedora-Server-netinst-x86_64-35-1.2.iso
+    host$ virt-install --name=pbot-vm --disk=size=12,path=vm.qcow2 --cpu=host --os-variant=fedora34 --graphics=spice --video=virtio --location=Fedora-Server-netinst-x86_64-35-1.2.iso
 
 Note that `disk=size=12` will create a 12 GB sparse file. Sparse means the file
 won't actually take up 12 GB. It will start at 0 bytes and grow as needed. You can
