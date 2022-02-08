@@ -2,12 +2,11 @@
 
 # File: vm-client
 #
-# Purpose: Interfaces with the PBot virtual machine server hosted at
-# PeerAddr/PeerPort defined below. This allows us to host instances of
-# virtual machines on remote servers.
+# Purpose: Interfaces with the PBot virtual machine server hosted by
+# `vm-server` at PeerAddr/PeerPort defined below. This allows us to
+# host instances of virtual machines on remote servers.
 #
-# This script is intended to be installed to PBot's applets directory
-# and attached to a PBot command such as `cc`.
+# This script is intended to be attached to a PBot command such as `cc`.
 
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
@@ -18,7 +17,6 @@ use warnings;
 use strict;
 
 use IO::Socket;
-use JSON::XS;
 
 use constant {
     SERVER_PORT => $ENV{PBOTVM_SERVER} // 9000,
@@ -31,22 +29,10 @@ my $sock = IO::Socket::INET->new(
 );
 
 if (not defined $sock) {
-    print "Fatal error compiling: $!; try again later\n";
+    print "Fatal error: $!; try again later\n";
     die $!;
 }
 
-my $json = join ' ', @ARGV;
-my $h    = decode_json $json;
-
-my $lang = $h->{lang} // "c11";
-
-if ($h->{code} =~ s/-lang=([^ ]+)//) { $lang = lc $1; }
-
-$h->{lang} = $lang;
-$json = encode_json $h;
-
-print $sock "$json\n";
-
-while (my $line = <$sock>) { print "$line"; }
-
+print $sock "@ARGV\n";
+while (my $line = <$sock>) { print $line; }
 close $sock;

@@ -25,29 +25,33 @@ use constant {
 };
 
 my $json = join ' ', @ARGV;
-
-my $args = eval { decode_json $json };
+my $data = eval { decode_json $json };
 
 if ($@) {
     # wasn't JSON; make structure manually
-    if ($json =~ s/^-lang=([^ ]+)//) {
-      $args = { lang => $1, code => $json };
+    if ($json =~ s/^-lang=([^ ]+)\s+//) {
+      $data = { lang => $1, code => $json };
     } else {
-      $args = { code => $json };
+      $data = { code => $json };
     }
 }
 
-if (not exists $args->{code}) {
+if (not exists $data->{code}) {
     die "Usage: $0 <code>\n";
 }
 
 # set any missing fields to default values
-$args->{nick}      //= 'vm';
-$args->{channel}   //= 'vm';
-$args->{lang}      //= 'c11';
-$args->{'vm-port'} //= SERIAL_PORT;
+$data->{nick}      //= 'vm';
+$data->{channel}   //= 'vm';
+$data->{lang}      //= 'c11';
+$data->{'vm-port'} //= SERIAL_PORT;
 
-my $language = lc $args->{lang};
+# parse -lang option
+if ($data->{code} =~ s/^-lang=([^ ]+)\s+//) {
+    $data->{lang} = $1;
+}
+
+my $language = lc $data->{lang};
 
 eval {
     require "Languages/$language.pm";
@@ -80,16 +84,16 @@ eval {
     }
 };
 
-if (not length $args->{code}) {
-    if (exists $args->{usage}) {
-        print "$args->{usage}\n";
+if (not length $data->{code}) {
+    if (exists $data->{usage}) {
+        print "$data->{usage}\n";
     } else {
         print "Usage: cc [-lang=<language>] [-info] [-paste] [-args \"command-line arguments\"] [compiler/language options] <code> [-stdin <stdin input>]\n";
     }
     exit;
 }
 
-my $lang = "Languages::$language"->new(%{$args});
+my $lang = "Languages::$language"->new(%$data);
 
 $lang->{local} = $ENV{CC_LOCAL};
 
