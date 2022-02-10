@@ -330,6 +330,7 @@ sub execute {
         print STDERR "Connecting to remote VM port $self->{'vm-port'}\n";
         $vm = IO::Socket::INET->new(PeerAddr => '127.0.0.1', PeerPort => $self->{'vm-port'}, Proto => 'tcp', Type => SOCK_STREAM);
         die "Could not create connection to VM: $!" unless $vm;
+        print STDERR "Connected to VM.\n";
         $vm_output = $vm;
     }
 

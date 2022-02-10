@@ -2,16 +2,14 @@
 
 # File: vm-client
 #
-# Purpose: Interfaces with the PBot virtual machine server hosted by
-# `vm-server` at PeerAddr/PeerPort defined below. This allows us to
-# host instances of virtual machines on remote servers.
+# Purpose: Interfaces with the PBot VM Host server hosted by `vm-server`
+# at PeerAddr/PeerPort defined below. This allows us to host instances
+# of virtual machines on remote servers.
 #
-# This script is intended to be attached to a PBot command such as `cc`.
+# This script is intended to be invoked by a PBot command such as `cc`.
 
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
-
-# TODO: extend to take a list of server/ports to cycle for load-balancing
 
 use warnings;
 use strict;
@@ -22,6 +20,7 @@ use constant {
     SERVER_PORT => $ENV{PBOTVM_SERVER} // 9000,
 };
 
+# TODO: extend to take a list of server/ports to cycle for load-balancing
 my $sock = IO::Socket::INET->new(
     PeerAddr => '127.0.0.1',
     PeerPort => SERVER_PORT,

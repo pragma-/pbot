@@ -2,10 +2,10 @@
 
 # File: vm-server
 #
-# Purpose: The compiler server manages the guest virtual machine state and
-# listens for incoming compile requests. This server can be run on any remote
-# machine. There can be multiple servers using different ports on the same machine.
-#
+# Purpose: The PBot Host Server manages the guest virtual machine state and
+# listens for incoming commands from vm-client. Invokes vm-exec to send
+# commands to the PBot Guest Server (guest-server).
+
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
@@ -40,6 +40,9 @@ sub vm_revert() {
 sub execute($command) {
     print "execute ($command)\n";
 
+    # to get $? from pipe
+    local $SIG{CHLD} = 'DEFAULT';
+
     my $pid = open(my $fh, '-|', split / /, $command);
 
     if (not defined $pid) {
@@ -47,22 +50,22 @@ sub execute($command) {
         return (-13, "[Fatal error]");
     }
 
-    my ($ret, $result) = (0, '');
-
-    ($ret, $result) = eval {
-        local $SIG{ALRM} = sub { kill 9, $pid; die "Timed-out: $result\n"; };
+    my $result = eval {
+        my $output = '';
+        local $SIG{ALRM} = sub { kill 9, $pid; die "Timed-out: $output\n"; };
         alarm(COMPILE_TIMEOUT);
 
         while (my $line = <$fh>) {
-            $result .= $line;
+            $output .= $line;
         }
 
-        my $ret = $? >> 8;
-        return ($ret, $result);
+        return $output;
     };
 
-    close $fh;
     alarm 0;
+    close $fh;
+
+    my $ret = $? >> 8;
 
     if (my $exception = $@) {
         # handle time-out exception
@@ -104,6 +107,20 @@ sub connect_to_heartbeat() {
     return $heartbeat;
 }
 
+sub do_heartbeat() {
+    tie my $heartbeat, 'IPC::Shareable', { key => 'heartbeat' };
+    tie my $running,   'IPC::Shareable', { key => 'running'   };
+
+    while ($running) {
+        my $heartbeat_monitor = connect_to_heartbeat();
+
+        while ($running and <$heartbeat_monitor>) {
+            $heartbeat = time;
+        }
+    }
+    exit;
+}
+
 sub server_listen($port) {
     my $server = IO::Socket::INET->new (
         Proto     => 'tcp',
@@ -117,8 +134,51 @@ sub server_listen($port) {
     return $server;
 }
 
+sub do_server() {
+    tie my $heartbeat, 'IPC::Shareable', { key => 'heartbeat' };
+    tie my $running,   'IPC::Shareable', { key => 'running'   };
+
+    print "Starting PBot VM Server on port " . SERVER_PORT . "\n";
+    my $server = eval { server_listen(SERVER_PORT) };
+
+    if ($@) {
+        print STDERR $@;
+        $running = 0;
+        return;
+    }
+
+    while ($running and my $client = $server->accept) {
+        print '-' x 20, "\n";
+        my $hostinfo = gethostbyaddr($client->peeraddr);
+        print "Connect from ", $client->peerhost, " at ", scalar localtime, "\n";
+        handle_client($client, $heartbeat);
+    }
+
+    print "Shutting down server.\n";
+}
+
 sub handle_client($client, $heartbeat) {
     my ($timed_out, $killed) = (0, 0);
+
+    # we don't care about child exit status
+    local $SIG{CHLD} = 'IGNORE';
+
+    my $r = fork;
+
+    if (not defined $r) {
+        print "Could not fork to handle client: $!\n";
+        print $client "Fatal error.\n";
+        close $client;
+        return;
+    }
+
+    if ($r > 0) {
+        # nothing for parent to do with client
+        close $client;
+        return;
+    }
+
+    $client->autoflush(1);
 
     eval {
         # give client 5 seconds to send a line
@@ -132,10 +192,10 @@ sub handle_client($client, $heartbeat) {
             # give client 5 more seconds
             alarm 5;
 
-            print "Read [$line]\n";
+            print "[$$] Read [$line]\n";
 
             if (time - $heartbeat > 5) {
-                print "Lost heartbeat, ignoring compile attempt.\n";
+                print "[$$] Lost heartbeat, ignoring compile attempt.\n";
                 print $client "Recovering from previous snippet, try again soon.\n";
                 last;
             }
@@ -163,57 +223,21 @@ sub handle_client($client, $heartbeat) {
     };
 
     # print client time-out exception
-    print "$@" if $@;
+    print "[$$] $@" if $@;
 
     alarm 0;
     close $client;
 
-    print "timed out: $timed_out; killed: $killed\n";
-    return $timed_out || $killed;
-}
+    print "[$$] timed out: $timed_out; killed: $killed\n";
 
-use constant SUCCESS => 0;
-
-sub do_heartbeat() {
-    tie my $heartbeat, 'IPC::Shareable', { key => 'heartbeat' };
-    tie my $running,   'IPC::Shareable', { key => 'running'   };
-
-    my $heartbeat_monitor = connect_to_heartbeat() || die "No heartbeat.\n";
-
-    while ($running and <$heartbeat_monitor>) {
-        $heartbeat = time;
+    if ($timed_out || $killed) {
+        vm_revert();
     }
 
-    $heartbeat = 0;
+    # child done
+    print "[$$] client exiting\n";
+    print "=" x 20, "\n";
     exit;
-}
-
-sub do_server() {
-    tie my $heartbeat, 'IPC::Shareable', { key => 'heartbeat' };
-    tie my $running,   'IPC::Shareable', { key => 'running'   };
-
-    print "Starting PBot VM Server on port " . SERVER_PORT . "\n";
-    my $server = eval { server_listen(SERVER_PORT) };
-
-    if ($@) {
-        print STDERR $@;
-        $running = 0;
-        return;
-    }
-
-    while ($running and my $client = $server->accept) {
-        $client->autoflush(1);
-        my $hostinfo = gethostbyaddr($client->peeraddr);
-
-        print '-' x 20, "\n";
-        printf "Connect from %s at %s\n", $client->peerhost, scalar localtime;
-
-        if (handle_client($client, $heartbeat) != SUCCESS) {
-            vm_revert();
-        }
-    }
-
-    print "Shutting down server.\n";
 }
 
 sub main() {

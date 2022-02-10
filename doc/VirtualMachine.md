@@ -160,7 +160,7 @@ For the C programming language you will need at least these:
     guest$ dnf install libubsan libasan gdb gcc clang
 
 #### Install Perl
-Now we need to install Perl on the guest. This allows us to run the PBot VM Guest
+Now we need to install Perl on the guest. This allows us to run the PBot VM Guest server
 script.
 
     guest$ dnf install perl-interpreter perl-lib perl-IPC-Run perl-JSON-XS perl-English
@@ -169,7 +169,7 @@ That installs the minium packages for the Perl interpreter (note we used `perl-i
 as well as the Perl `lib`, `IPC::Run`, `JSON::XS` and `English` modules.
 
 #### Install PBot VM Guest
-Next we install the PBot VM Guest script that fosters communication between the virtual machine guest
+Next we install the PBot VM Guest server script that fosters communication between the virtual machine guest
 and the physical host system. We'll do this inside the virtual machine guest system, logged on as `root`
 while in the `/root` directory. Feel free to `chdir` to `/tmp` if you prefer.
 
@@ -188,9 +188,9 @@ After running the `setup-guest` script, we need to make the environment changes 
     guest$ source /root/.bashrc
 
 #### Start PBot VM Guest
-We're ready to start the PBot VM Guest. On the guest, as `root`, execute the command:
+We're ready to start the PBot VM Guest server. On the guest, as `root`, execute the command:
 
-    guest$ start-guest
+    guest$ guest-server
 
 This starts up a server to listen for incoming commands or code and to handle them. We'll leave
 this running.
@@ -205,7 +205,7 @@ If it says anything other than `Connection succeeded` then make sure you have co
 under [Set up serial ports](#set-up-serial-ports) and that your network configuration is allowing
 access.
 
-Let's make sure the PBot VM Guest is listening for and can execute commands. The `vm-exec` command
+Let's make sure the PBot VM Guest server is listening for and can execute commands. The `vm-exec` command
 in the `applets/compiler_vm/host/bin` directory allows you to send commands from the shell.
 
     host$ vm-exec -lang=sh echo hello world
@@ -245,7 +245,7 @@ To start the PBot VM Host server, execute the `vm-server` script in the
 
 This will start a TCP server on port `9000`. It will listen for incoming commands and
 pass them along to the virtual machine's TCP serial port `5555`. It will also monitor
-the heartbeat port `5556` to ensure the PBot VM Guest is alive.
+the heartbeat port `5556` to ensure the PBot VM Guest server is alive.
 
 You may override any of the defaults by setting environment variables.
 
