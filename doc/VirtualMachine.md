@@ -120,6 +120,8 @@ Now, while the virtual machine is rebooting, switch to a terminal on your host s
 `applets/compiler_vm/host/devices` directory and run the `add-serials` script to add the `serial-2.xml` and
 `serial-3.xml` files to the configuration for the `pbot-vm` libvirt machine.
 
+    host$ add-serials
+
 This will enable the `/dev/ttyS1` and `/dev/ttyS2` serial ports in the guest and connect them
 to the following TCP addresses on the host: `127.0.0.1:5555` and `127.0.0.1:5556`,
 respectively. `ttyS1/5555` is the data channel used to send commands or code to the
@@ -127,7 +129,12 @@ virtual machine and to read back output. `ttyS2/5556` is simply a newline sent e
 5 seconds, representing a heartbeat, used to ensure that the PBot communication
 channel is healthy.
 
-If you want to change the serial ports or the TCP ports, execute the command
+You may use the `PBOTVM_DOMAIN`, `PBOTVM_SERIAL` and `PBOTVM_HEART` environment variables to override
+the default values. To use ports `7777` and `7778` instead:
+
+    host$ PBOTVM_SERIAL=7777 PBOTVM_HEART=7778 add-serials
+
+If you later want to change the serial ports or the TCP ports, execute the command
 `virsh edit pbot-vm` on the host. This will open the `pbot-vm` XML configuration
 in your default system editor. Find the `<serial>` tags and edit their attributes.
 
