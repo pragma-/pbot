@@ -1,5 +1,0 @@
-<serial type='tcp'>
-    <source mode='bind' host='127.0.0.1' service='$PORT$' tls='no'/>
-    <protocol type='raw'/>
-    <target port='3'/>
-</serial>

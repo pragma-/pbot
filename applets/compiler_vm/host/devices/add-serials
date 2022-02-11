@@ -4,12 +4,23 @@ DOMAIN="${PBOTVM_DOMAIN:-pbot-vm}"
 SERIAL="${PBOTVM_SERIAL:-5555}"
 HEART="${PBOTVM_HEART:-5556}"
 
-install_serial() {
-    file=$1 port=$2
-    sed -i.1 "s/[\$]PORT[\$]/$port/" $file
-    virsh attach-device --config $DOMAIN $file
-    mv $file.1 $file
-}
+cat > serial-2.xml <<EOF
+<serial type='tcp'>
+    <source mode='bind' host='127.0.0.1' service='$SERIAL' tls='no'/>
+    <protocol type='raw'/>
+    <target port='2'/>
+</serial>
+EOF
 
-install_serial serial-2.xml $SERIAL
-install_serial serial-3.xml $HEART
+cat > serial-3.xml <<EOF
+<serial type='tcp'>
+    <source mode='bind' host='127.0.0.1' service='$HEART' tls='no'/>
+    <protocol type='raw'/>
+    <target port='3'/>
+</serial>
+EOF
+
+virsh attach-device --config $DOMAIN serial-2.xml
+virsh attach-device --config $DOMAIN serial-3.xml
+
+rm serial-[23].xml
