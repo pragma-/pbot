@@ -1,2 +1,15 @@
-virsh attach-device --config pbot-vm serial-2.xml
-virsh attach-device --config pbot-vm serial-3.xml
+#!/bin/sh
+
+DOMAIN="${PBOTVM_DOMAIN:-pbot-vm}"
+SERIAL="${PBOTVM_SERIAL:-5555}"
+HEART="${PBOTVM_HEART:-5556}"
+
+install_serial() {
+    file=$1 port=$2
+    sed -i.1 "s/[\$]PORT[\$]/$port/" $file
+    virsh attach-device --config $DOMAIN $file
+    mv $file.1 $file
+}
+
+install_serial serial-2.xml $SERIAL
+install_serial serial-3.xml $HEART
