@@ -316,7 +316,6 @@
 <!-- md-toc-end -->
 <!-- md-toc-begin -->
 * [Virtual Machine](VirtualMachine.md#virtual-machine)
-  * [About](VirtualMachine.md#about)
   * [Initial virtual machine set-up](VirtualMachine.md#initial-virtual-machine-set-up)
     * [Prerequisites](VirtualMachine.md#prerequisites)
       * [CPU Virtualization Technology](VirtualMachine.md#cpu-virtualization-technology)
@@ -327,11 +326,11 @@
       * [Download Linux ISO](VirtualMachine.md#download-linux-iso)
     * [Create a new virtual machine](VirtualMachine.md#create-a-new-virtual-machine)
       * [Install Linux in the virtual machine](VirtualMachine.md#install-linux-in-the-virtual-machine)
-      * [Configure virtual machine for PBot](VirtualMachine.md#configure-virtual-machine-for-pbot)
       * [Set up serial ports](VirtualMachine.md#set-up-serial-ports)
+      * [Reboot virtual machine](VirtualMachine.md#reboot-virtual-machine)
+      * [Install software](VirtualMachine.md#install-software)
       * [Install Perl](VirtualMachine.md#install-perl)
       * [Install PBot VM Guest](VirtualMachine.md#install-pbot-vm-guest)
-      * [Install software](VirtualMachine.md#install-software)
       * [Start PBot VM Guest](VirtualMachine.md#start-pbot-vm-guest)
       * [Test PBot VM Guest](VirtualMachine.md#test-pbot-vm-guest)
       * [Save initial state](VirtualMachine.md#save-initial-state)

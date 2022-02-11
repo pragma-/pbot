@@ -112,15 +112,12 @@ of choice.
 Installation will need to download about 328 RPMs consisting of about 425 MB. It'll take 5 minutes to an hour or longer
 depending on your hardware and network configuration.
 
-#### Configure virtual machine for PBot
-Once the install finishes, click the `Reboot` button in the Fedora installer in the virtual machine window.
-
 #### Set up serial ports
-Now, while the virtual machine is rebooting, switch to a terminal on your host system. Go into the
+While the installation is in progress, switch to a terminal on your host system. Go into the
 `applets/compiler_vm/host/devices` directory and run the `add-serials` script to add the `serial-2.xml` and
 `serial-3.xml` files to the configuration for the `pbot-vm` libvirt machine.
 
-    host$ add-serials
+    host$ ./add-serials
 
 This will enable the `/dev/ttyS1` and `/dev/ttyS2` serial ports in the guest and connect them
 to the following TCP addresses on the host: `127.0.0.1:5555` and `127.0.0.1:5556`,
@@ -132,29 +129,15 @@ channel is healthy.
 You may use the `PBOTVM_DOMAIN`, `PBOTVM_SERIAL` and `PBOTVM_HEART` environment variables to override
 the default values. To use ports `7777` and `7778` instead:
 
-    host$ PBOTVM_SERIAL=7777 PBOTVM_HEART=7778 add-serials
+    host$ PBOTVM_SERIAL=7777 PBOTVM_HEART=7778 ./add-serials
 
 If you later want to change the serial ports or the TCP ports, execute the command
 `virsh edit pbot-vm` on the host. This will open the `pbot-vm` XML configuration
 in your default system editor. Find the `<serial>` tags and edit their attributes.
 
-Now we need to restart the virtual machine itself so it loads the new serial device configuration.
-Switch back to the virtual machine window. Once the virtual machine has rebooted, log in as `root`
-and shut the virtual machine down with:
-
-     guest$ shutdown now -h
-
-Once the machine has shutdown, bring it right back up with the following commands on the host:
-
-    host$ virsh start pbot-vm
-
-Now the virtual machine will start back up in the background. To bring up a visible window
-to access the virtual machine, execute:
-
-    host$ virt-viewer pbot-vm
-
-You should see the guest window after a few seconds. Log in as `root` once the login
-prompt appears.
+#### Reboot virtual machine
+Once the Linux installation completes inside the virtual machine, click the `Reboot` button
+in the installer window. Login as `root` when the virtual machine boots back up.
 
 #### Install software
 Now we can install any software and programming languages we want to make available
