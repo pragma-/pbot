@@ -1,0 +1,10 @@
+#!/bin/sh
+
+for script in add-*
+do
+    if [ $script = 'add-all' ]; then
+        continue
+    fi
+
+    ./$script
+done

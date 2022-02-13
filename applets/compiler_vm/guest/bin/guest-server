@@ -16,208 +16,165 @@ use strict;
 use feature qw/signatures/;
 no warnings qw(experimental::signatures);
 
-use English;
-use Encode;
-use File::Basename;
-use JSON::XS;
-use Data::Dumper;
-
-my $USERNAME = 'vm';   # variable for easier string interpolation
-
 use constant {
-    MOD_DIR   => '/usr/local/share/pbot-vm/Languages',
+    USERNAME  => 'vm',
+    MOD_DIR   => '/usr/local/share/pbot-vm/',
     SERIAL    => '/dev/ttyS1',
     HEARTBEAT => '/dev/ttyS2',
     INPUT     => '/dev/stdin',
     OUTPUT    => '/dev/stdout',
+    VPORT     => $ENV{PBOTVM_VPORT} // 5555,
 };
 
 use lib MOD_DIR;
+use lib MOD_DIR . "Languages";
+
+use Guest;
+
+use File::Basename;
+use IPC::Shareable;
 
 my %languages;
 
 sub load_modules() {
-    my @files = glob MOD_DIR . "/*.pm";
+    my @files = glob MOD_DIR . "Languages/*.pm";
+
     foreach my $mod (@files){
         print "Loading module $mod\n";
+
         my $filename = basename($mod);
+
         require $filename;
+
         $filename =~ s/\.pm$//;
+
         $languages{$filename} = 1;
     }
 }
 
-sub do_server($input, $output) {
+sub vsock_server() {
+    print "Starting VSOCK server on PID $$\n";
+
+    system("socat VSOCK-LISTEN:".VPORT.",reuseaddr,fork EXEC:accept-vsock-client");
+
+    print "VSOCK server shutdown.\n";
+    exit; # exit child process
+}
+
+sub serial_server() {
+    print "Starting serial server on PID $$\n";
+
+    # set serial to 115200 baud instead of 9600
+    system('stty -F '.SERIAL.' 115200');
+
+    open(my $input,  '<', SERIAL) or die $!;
+    open(my $output, '>', SERIAL) or die $!;
+
+    tie my $running, 'IPC::Shareable', { key => 'running' };
+
     my $buffer = '';
-    my $line;
-    my $total_read = 0;
 
-    while (1) {
-        print "Waiting for input...\n";
-        my $ret = sysread($input, my $buf, 16384);
+    while ($running) {
+        my $command = Guest::read_input($input, \$buffer, 'Serial');
 
-        if (not defined $ret) {
-            print "Error reading: $!\n";
+        if (not defined $command) {
+            # recoverable error while reading, try again
             next;
         }
 
-        if ($ret == 0) {
-            print "Input closed; exiting...\n";
+        if ($command == 0) {
+            # serial closed, exit child process
             exit;
         }
 
-        $total_read += $ret;
+        if (not exists $languages{$command->{lang}}) {
+            $command->{lang} = '_default';
+        }
 
-        chomp $buf;
-        print "read $ret bytes [$total_read so far] [$buf]\n";
+        my $mod = $command->{lang}->new(%$command);
 
-        $buffer .= $buf;
+        my $result = Guest::process_command($command, $mod, USERNAME, 'Serial');
 
-        next if $buffer !~ s/\s*:end:\s*$//m;
+        if (not defined $result) {
+            $result = "[Fatal error]";
+        }
 
-        $line = $buffer;
-        chomp $line;
-
-        $buffer = '';
-        $total_read = 0;
-
-        $line = encode('UTF-8', $line);
-
-        print "-" x 40, "\n";
-        print "Got [$line]\n";
-
-        my $command = decode_json($line);
-        $command->{arguments} //= '';
-        $command->{input}     //= '';
-
-        print Dumper $command;
-        handle_command($command, $output);
+        if ($result) {
+            Guest::send_output($output, $result, 'Serial');
+            exit; # exit child process
+        }
     }
 }
 
-sub handle_command($command, $output) {
-    local $SIG{CHLD} = 'IGNORE';
-
+sub do_server() {
     my $pid = fork;
 
     if (not defined $pid) {
-        print "fork failed: $!\n";
-        next;
+        print STDERR "Could not fork server: $!\n";
+        die;
     }
 
     if ($pid == 0) {
-        my ($uid, $gid, $home) = (getpwnam $USERNAME)[2, 3, 7];
-
-        if (not $uid and not $gid) {
-            print "Could not find user $USERNAME: $!\n";
-            exit;
-        }
-
-        if ($command->{'persist-key'}) {
-            system ("rm -rf \"/home/$USERNAME/$command->{'persist-key'}\"");
-            system("mount /dev/vdb1 /root/factdata");
-            system("mkdir -p \"/root/factdata/$command->{'persist-key'}\"");
-            system("cp -R -p \"/root/factdata/$command->{'persist-key'}\" \"/home/$USERNAME/$command->{'persist-key'}\"");
-        }
-
-        system("chmod -R 755 /home/$USERNAME");
-        system("chown -R $USERNAME /home/$USERNAME");
-        system("chgrp -R $USERNAME /home/$USERNAME");
-        system("rm -rf /home/$USERNAME/prog*");
-        system("pkill -u $USERNAME");
-
-        system("date -s \@$command->{date}");
-
-        $ENV{USER} = $USERNAME;
-        $ENV{LOGNAME} = $USERNAME;
-        $ENV{HOME} = $home;
-
-        $GID = $gid;
-        $EGID = "$gid $gid";
-        $EUID = $UID = $uid;
-
-        chdir("/home/$USERNAME");
-
-        my $result = run_command(%$command);
-
-        $GID = 0;
-        $UID = 0;
-
-        my $compile_out = { result => $result };
-
-        my $json = encode_json($compile_out);
-
-        print "Done compiling: $json\n";
-
-        print $output "result:$json\n";
-        print $output "result:end\n";
-
-        if ($command->{'persist-key'}) {
-            system("cp -R -p \"/home/$USERNAME/$command->{'persist-key'}\" \"/root/factdata/$command->{'persist-key'}\"");
-            system("umount /root/factdata");
-            system ("rm -rf \"/home/$USERNAME/$command->{'persist-key'}\"");
-        }
-
-        print "=" x 40, "\n";
-
-        # kill any left-over processes started by $USERNAME
-        system("pkill -u $USERNAME");
-        print "after pkill???\n";
-        exit;
+        vsock_server();
+    } else {
+        serial_server();
     }
 }
 
-sub run_command(%command) {
-    $command{lang} = '_default' if not exists $languages{$command{lang}};
+sub do_heartbeat() {
+    open(my $heartbeat, '>', HEARTBEAT) or die $!;
 
-    my $mod = $command{lang}->new(%command);
+    tie my $running, 'IPC::Shareable', { key => 'running' };
 
-    local $SIG{CHLD} = 'DEFAULT';
+    print "Heart beating on PID $$...\n";
 
-    $mod->preprocess;
-    $mod->postprocess if not $mod->{error} and not $mod->{done};
-
-    if (exists $mod->{no_output} or not length $mod->{output}) {
-        if ($command{factoid}) {
-            $mod->{output} = '';
-        } else {
-            $mod->{output} .= "\n" if length $mod->{output};
-
-            if (not $mod->{error}) {
-                $mod->{output} .= "Success (no output).\n";
-            } else {
-                $mod->{output} .= "Exit code $mod->{error}.\n";
-            }
-        }
-    }
-
-    return $mod->{output};
-}
-
-sub do_heartbeat($heartbeat) {
-    while (1) {
+    while ($running) {
         print $heartbeat "\n";
         sleep 5;
+    }
+
+    print "Heart beat stopped.\n";
+    exit; # exit child process
+}
+
+sub install_signal_handlers() {
+    use POSIX qw(:signal_h :errno_h :sys_wait_h);
+
+    $SIG{CHLD} = \&REAPER;
+
+    sub REAPER {
+        my $pid = waitpid(-1, &WNOHANG);
+
+        if ($pid == -1) {
+            # no child waiting. Ignore it.
+        } elsif (WIFEXITED($?)) {
+            print "Process $pid exited.\n";
+        }
+
+        $SIG{CHLD} = \&REAPER; # in case of unreliable signals
     }
 }
 
 sub main() {
+    print "Starting PBot VM Guest server on PID $$\n";
+
     load_modules();
 
-    # set serial to 115200 baud instead of 9600
-    system('stty -F ' . SERIAL . ' 115200');
+    install_signal_handlers();
 
-    open(my $input,     '<', SERIAL)    or die $!;
-    open(my $output,    '>', SERIAL)    or die $!;
-    open(my $heartbeat, '>', HEARTBEAT) or die $!;
+    tie my $running, 'IPC::Shareable', { key => 'running', create => 1, destroy => 1 };
+
+    $running = 1;
 
     my $pid = fork // die "Fork failed: $!";
 
     if ($pid == 0) {
-        do_server($input, $output);
+        do_heartbeat();
     } else {
-        do_heartbeat($heartbeat);
+        do_server();
     }
+
+    print "PBot VM Guest server shutdown.\n";
 }
 
 main();

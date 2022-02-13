@@ -21,7 +21,9 @@ use FindBin qw($RealBin);
 use lib "$RealBin/../lib";
 
 use constant {
-    SERIAL_PORT => $ENV{PBOTVM_SERIAL} // 5555,
+    SERIAL => $ENV{PBOTVM_SERIAL} // 5555,
+    CID    => $ENV{PBOTVM_CID}    // 7,
+    VPORT  => $ENV{PBOTVM_VPORT}  // 5555,
 };
 
 my $json = join ' ', @ARGV;
@@ -41,10 +43,12 @@ if (not exists $data->{code}) {
 }
 
 # set any missing fields to default values
-$data->{nick}      //= 'vm';
-$data->{channel}   //= 'vm';
-$data->{lang}      //= 'c11';
-$data->{'vm-port'} //= SERIAL_PORT;
+$data->{nick}        //= 'vm';
+$data->{channel}     //= 'vm';
+$data->{lang}        //= 'c11';
+$data->{'vm-serial'} //= SERIAL;
+$data->{'vm-cid'}    //= CID;
+$data->{'vm-vport'}  //= VPORT;
 
 # parse -lang option
 if ($data->{code} =~ s/^-lang=([^ ]+)\s+//) {

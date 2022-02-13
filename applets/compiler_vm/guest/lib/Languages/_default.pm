@@ -75,7 +75,7 @@ sub execute {
 
     $stdin //= '';
 
-    print "execute ($timeout) [$stdin] @cmdline\n";
+    print STDERR "execute ($timeout) [$stdin] @cmdline\n";
 
     my ($exitval, $stdout, $stderr) = eval {
         my ($stdout, $stderr);
@@ -90,7 +90,7 @@ sub execute {
     }
 
     $Data::Dumper::Indent = 0;
-    print "exitval $exitval stderr [", Dumper($stderr), "] stdout [", Dumper($stdout), "]\n";
+    print STDERR "exitval $exitval stderr [", Dumper($stderr), "] stdout [", Dumper($stdout), "]\n";
     $Data::Dumper::Indent = 1;
 
     return ($exitval, $stdout, $stderr);

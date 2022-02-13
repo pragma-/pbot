@@ -1,0 +1,14 @@
+#!/bin/sh
+
+DOMAIN="${PBOTVM_DOMAIN:-pbot-vm}"
+CID="${PBOTVM_CID:-7}"
+
+cat > vsock.xml <<EOF
+<vsock model='virtio'>
+    <cid auto='no' address='$CID'/>
+</vsock>
+EOF
+
+virsh attach-device --config $DOMAIN vsock.xml
+
+rm vsock.xml

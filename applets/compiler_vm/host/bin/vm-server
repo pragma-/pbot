@@ -196,7 +196,7 @@ sub handle_client($client, $heartbeat) {
 
             if (time - $heartbeat > 5) {
                 print "[$$] Lost heartbeat, ignoring compile attempt.\n";
-                print $client "Recovering from previous snippet, try again soon.\n";
+                print $client "Virtual machine is resetting, try again soon.\n";
                 last;
             }
 

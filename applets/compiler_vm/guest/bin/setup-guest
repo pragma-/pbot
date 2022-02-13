@@ -11,9 +11,9 @@
 # copy executable scripts
 cp guest/bin/* /usr/local/bin
 
-# language support
+# lib and language support
 mkdir -p /usr/local/share/pbot-vm/
-cp -r guest/lib/Languages/ /usr/local/share/pbot-vm/
+cp -r guest/lib/* /usr/local/share/pbot-vm/
 
 # C support and GDB integration
 cp guest/include/prelude.h /usr/include

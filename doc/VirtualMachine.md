@@ -19,6 +19,20 @@ Some quick terminology:
 The commands below will be prefixed with `host$` or `guest$` to reflect where
 the command should be executed.
 
+Many commands can be configured with environment variables. If a variable is
+not defined, a sensible default value will be used.
+
+Environment variable | Default value | Description
+--- | --- | ---
+PBOTVM_DOMAIN | `pbot-vm` | The libvirt domain identifier
+PBOTVM_SERVER | `9000` | `vm-server` port for incoming `vm-client` commands
+PBOTVM_SERIAL | `5555` | TCP port for serial communication
+PBOTVM_HEART  | `5556` | TCP port for serial heartbeats
+PBOTVM_CID    | `7` | Context ID for VM socket (if using VSOCK)
+PBOTVM_VPORT  | `5555` | VM socket service port (if using VSOCK)
+PBOTVM_TIMEOUT | `10` | Duration before command times out (in seconds)
+PBOTVM_NOREVERT | not set | If set then the VM will not revert to previous snapshot
+
 ## Initial virtual machine set-up
 These steps need to be done only once during the first-time set-up.
 
@@ -105,7 +119,7 @@ of choice.
 
  * Click `Partition disks`. Don't change anything. Click `Done`.
  * Click `Root account`. Click `Enable root account`. Set a password. Click `Done`.
- * Click `User creation`. Create a new user. Skip Fullname and set Username to `vm`. Untick `Add to wheel` or `Set as administrator`. Untick `Require password`.
+ * Click `User creation`. Create a new user. Skip Fullname and set Username to `vm`. Untick `Add to wheel` or `Set as administrator`. Untick `Require password`. Click `Done`.
  * Wait until `Software selection` is done processing and is no longer greyed out. Click it. Change install from `Server` to `Minimal`. Click `Done`.
  * Click `Begin installation`.
 
@@ -135,6 +149,65 @@ If you later want to change the serial ports or the TCP ports, execute the comma
 `virsh edit pbot-vm` on the host. This will open the `pbot-vm` XML configuration
 in your default system editor. Find the `<serial>` tags and edit their attributes.
 
+#### Set up virtio-vsock
+VM sockets (AF_VSOCK) are a Linux-specific feature (at the time of this writing). They
+are the preferred way for PBot to communicate with the PBot VM Guest server. Serial communication
+has several limitations. See https://vmsplice.net/~stefan/stefanha-kvm-forum-2015.pdf for an excellent
+overview.
+
+To use VM sockets with QEMU and virtio-vsock, you need:
+
+* a Linux hypervisor with kernel 4.8+
+* a Linux virtual machine on that hypervisor with kernel 4.8+
+* QEMU 2.8+ on the hypervisor, running the virtual machine
+* [socat](http://www.dest-unreach.org/socat/) version 1.7.4+
+
+If you do not meet these requirements, the PBot VM will fallback to using serial communication. You may
+explicitly disable VM sockets by setting `PBOTVM_CID=0`. You can skip reading the rest of this section.
+
+If you do want to use VM sockets, read on.
+
+First, ensure the `vhost_vsock` Linux kernel module is loaded on the host:
+
+    host$ lsmod | grep vsock
+    vhost_vsock            24576  1
+    vsock                  45056  2 vmw_vsock_virtio_transport_common,vhost_vsock
+    vhost                  53248  2 vhost_vsock,vhost_net
+
+If the module is not loaded, load it with:
+
+    host$ sudo modprobe vhost_vsock
+
+Once the module is loaded, you should have the following character devices:
+
+    host$ ls -l /dev/vhost-vsock
+    crw------- 1 root root 10, 53 May  4 11:55 /dev/vhost-vsock
+    host$ ls -l /dev/vsock
+    crw-rw-rw- 1 root root 10, 54 May  4 11:55 /dev/vsock
+
+A VM sockets address is comprised of a context ID (CID) and a port; just like an IP address and TCP/UDP port.
+The CID is represented using an unsigned 32-bit integer. It identifies a given machine as either a hypervisor
+or a virtual machine. Several addresses are reserved, including 0, 1, and the maximum value for a 32-bit
+integer: 0xffffffff. The hypervisor is always assigned a CID of 2, and VMs can be assigned any CID between 3
+and 0xffffffff — 1.
+
+We must attach a `vhost-vsock-pci` device to the guest to enable VM sockets communication.
+Each VM on a hypervisor must have a unique context ID (CID). Each service within the VM must
+have a unique port. The PBot VM Guest defaults to `7` for the CID and `5555` for the port.
+
+While still in the `applets/compiler_vm/host/devices` directory, run the `add-vsock` script:
+
+    host$ ./add-vsock
+
+or to configure a different CID:
+
+    host$ PBOTVM_CID=42 ./add-vsock
+
+In the VM guest (once it reboots), there should be a `/dev/vsock` device:
+
+    guest$ ls -l /dev/vsock
+    crw-rw-rw- 1 root root 10, 55 May  4 13:21 /dev/vsock
+
 #### Reboot virtual machine
 Once the Linux installation completes inside the virtual machine, click the `Reboot` button
 in the installer window. Login as `root` when the virtual machine boots back up.
@@ -145,6 +218,10 @@ in the virtual machine. Use the `dnf search` command or your distribution's docu
 to find packages. I will soon make available a script to install all package necessary for all
 languages supported by PBot.
 
+To make use of VM sockets, install the `socat` package:
+
+    guest$ dnf install socat
+
 For the C programming language you will need at least these:
 
     guest$ dnf install libubsan libasan gdb gcc clang
@@ -153,10 +230,10 @@ For the C programming language you will need at least these:
 Now we need to install Perl on the guest. This allows us to run the PBot VM Guest server
 script.
 
-    guest$ dnf install perl-interpreter perl-lib perl-IPC-Run perl-JSON-XS perl-English
+    guest$ dnf install perl-interpreter perl-lib perl-IPC-Run perl-JSON-XS perl-English perl-IPC-Shareable
 
 That installs the minium packages for the Perl interpreter (note we used `perl-interpreter` instead of `perl`),
-as well as the Perl `lib`, `IPC::Run`, `JSON::XS` and `English` modules.
+as well as a few Perl modules.
 
 #### Install PBot VM Guest
 Next we install the PBot VM Guest server script that fosters communication between the virtual machine guest
@@ -237,18 +314,8 @@ This will start a TCP server on port `9000`. It will listen for incoming command
 pass them along to the virtual machine's TCP serial port `5555`. It will also monitor
 the heartbeat port `5556` to ensure the PBot VM Guest server is alive.
 
-You may override any of the defaults by setting environment variables.
-
-Environment variable | Default value | Description
---- | --- | ---
-PBOTVM_DOMAIN | `pbot-vm` | The libvirt domain identifier
-PBOTVM_SERVER | `9000` | `vm-server` port for incoming `vm-client` commands
-PBOTVM_SERIAL | `5555` | TCP port for serial communication
-PBOTVM_HEART  | `5556` | TCP port for heartbeats
-PBOTVM_TIMEOUT | `10` | Duration before command times out (in seconds)
-PBOTVM_NOREVERT | not set | If set then the VM will not revert to previous snapshot
-
-For example, to use `other-vm` with a longer `30` second timeout, on different serial and heartbeat ports:
+You may override any of the defaults by setting environment variables. For example, to
+use `other-vm` with a longer `30` second timeout, on different serial and heartbeat ports:
 
     host$ PBOTVM_DOMAIN="other-vm" PBOTVM_SERVER=9001 PBOTVM_SERIAL=7777 PBOTVM_HEART=7778 PBOTVM_TIMEOUT=30 ./vm-server
 

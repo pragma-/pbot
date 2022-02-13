@@ -1,0 +1,69 @@
+#!/usr/bin/env perl
+
+# File: accept-vsock-client
+#
+# Purpose: Accepts and handles a client connecting over Linux VM socket.
+
+# SPDX-FileCopyrightText: 2022 Pragmatic Software <pragma78@gmail.com>
+# SPDX-License-Identifier: MIT
+
+use 5.020;
+
+use warnings;
+use strict;
+
+use feature qw/signatures/;
+no warnings qw(experimental::signatures);
+
+use constant {
+    USERNAME => 'vm',
+    MOD_DIR  => '/usr/local/share/pbot-vm/',
+};
+
+use lib MOD_DIR;
+
+use Guest;
+
+sub accept_client() {
+    print STDERR "VSOCK accepted new connection.\n";
+
+    my $buffer = '';
+
+    while (1) {
+        my $command = Guest::read_input(*STDIN, \$buffer, 'VSOCK');
+
+        if (not defined $command) {
+            # recoverable error or waiting for more input
+            next;
+        }
+
+        if (not $command) {
+            # unrecoverable error or input closed
+            exit 1;
+        }
+
+        last;
+    }
+
+    eval { require "Languages/$command->{lang}.pm" };
+
+    if ($@) {
+        require 'Languages/_default.pm';
+        $command->{lang} = '_default';
+    }
+
+    my $mod = $command->{lang}->new(%$command);
+
+    my $result = Guest::process_command($command, $mod, USERNAME, 'VSOCK');
+
+    if (not defined $result) {
+        $result = "[Fatal error]";
+    }
+
+    if ($result) {
+        Guest::send_output(*STDOUT, $result, 'VSOCK');
+        exit; # exit child process
+    }
+}
+
+accept_client();

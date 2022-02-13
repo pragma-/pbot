@@ -36,7 +36,9 @@ sub new {
     $self->{arguments}     = $conf{arguments} // '';
     $self->{factoid}       = $conf{factoid};
     $self->{'persist-key'} = $conf{'persist-key'};
-    $self->{'vm-port'}     = $conf{'vm-port'};
+    $self->{'vm-serial'}   = $conf{'vm-serial'};
+    $self->{'vm-cid'}      = $conf{'vm-cid'};
+    $self->{'vm-vport'}    = $conf{'vm-vport'};
 
     $self->{default_options} = '';
     $self->{cmdline}         = 'echo Hello, world!';
@@ -91,13 +93,13 @@ sub preprocess_code {
     foreach my $ch (@chars) {
         given ($ch) {
             when ('\\') {
-                if($escaped == 0) {
+                if ($escaped == 0) {
                     $escaped = 1;
                     next;
                 }
             }
 
-            if($state == NORMAL) {
+            if ($state == NORMAL) {
                 when ($_ eq '"' and not $escaped) {
                     $state = DOUBLE_QUOTED;
                 }
@@ -112,13 +114,13 @@ sub preprocess_code {
                 }
             }
 
-            if($state == DOUBLE_QUOTED) {
+            if ($state == DOUBLE_QUOTED) {
                 when ($_ eq '"' and not $escaped) {
                     $state = NORMAL;
                 }
             }
 
-            if($state == SINGLE_QUOTED) {
+            if ($state == SINGLE_QUOTED) {
                 when ($_ eq "'" and not $escaped) {
                     $state = NORMAL;
                 }
@@ -151,10 +153,10 @@ sub postprocess_output {
     my $boutput = "";
     my $active_position = 0;
     $self->{output} =~ s/\n$//;
-    while($self->{output} =~ /(.)/gms) {
+    while ($self->{output} =~ /(.)/gms) {
         my $c = $1;
-        if($c eq "\b") {
-            if(--$active_position <= 0) {
+        if ($c eq "\b") {
+            if (--$active_position <= 0) {
                 $active_position = 0;
             }
             next;
@@ -237,19 +239,19 @@ sub show_output {
         exit 0;
     }
 
-    if($self->{channel} =~ m/^#/ and length $output > 22 and open LOG, "< $RealBin/../history/$self->{channel}-$self->{lang}.last-output") {
+    if ($self->{channel} =~ m/^#/ and length $output > 22 and open LOG, "< $RealBin/../history/$self->{channel}-$self->{lang}.last-output") {
         my $last_output;
         my $time = <LOG>;
 
-        if(gettimeofday - $time > 60 * 4) {
+        if (gettimeofday - $time > 60 * 4) {
             close LOG;
         } else {
-            while(my $line = <LOG>) {
+            while (my $line = <LOG>) {
                 $last_output .= $line;
             }
             close LOG;
 
-            if((not $self->{factoid}) and defined $last_output and $last_output eq $output) {
+            if ((not $self->{factoid}) and defined $last_output and $last_output eq $output) {
                 print "Same output.\n";
                 exit 0;
             }
@@ -279,7 +281,7 @@ sub paste_ixio {
     my %post = ('f:1' => $text);
     my $response = $ua->post("http://ix.io", \%post);
 
-    if(not $response->is_success) {
+    if (not $response->is_success) {
         return "error pasting: " . $response->status_line;
     }
 
@@ -306,7 +308,7 @@ sub paste_0x0 {
         Content_Type => 'form-data'
     );
 
-    if(not $response->is_success) {
+    if (not $response->is_success) {
         return "error pasting: " . $response->status_line;
     }
 
@@ -316,22 +318,72 @@ sub paste_0x0 {
     return $result;
 }
 
+sub connect_vsock {
+    my ($self) = @_;
+
+    return undef if not $self->{'vm-cid'};
+
+    print STDERR "Connecting to remote VM socket CID $self->{'vm-cid'} port $self->{'vm-vport'}\n";
+
+    my $command = "socat - VSOCK-CONNECT:$self->{'vm-cid'}:$self->{'vm-vport'}";
+
+    my ($pid, $input, $output) = eval {
+        my $pid = open2(my $output, my $input, $command);
+        return ($pid, $input, $output);
+    };
+
+    if ($@) {
+        print STDERR "Failed to connect to VM socket: $@\n";
+        return undef;
+    }
+
+    if (not defined $pid) {
+        print STDERR "Failed to connect to VM socket: $!\n";
+        return undef;
+    }
+
+    return ($input, $output);
+}
+
+sub connect_serial {
+    my ($self) = @_;
+
+    print STDERR "Connecting to remote VM serial port $self->{'vm-serial'}\n";
+
+    my $vm = IO::Socket::INET->new(
+        PeerAddr => '127.0.0.1',
+        PeerPort => $self->{'vm-serial'},
+        Proto => 'tcp',
+        Type => SOCK_STREAM
+    );
+
+    # return same $vm handle for ($input, $output)
+    return ($vm, $vm);
+}
+
 sub execute {
     my ($self) = @_;
 
-    my ($vm, $vm_output, $pid);
+    my ($input, $output, $pid);
 
-    delete $self->{local};
-    if(exists $self->{local} and $self->{local} != 0) {
+    if (defined $self->{local} and $self->{local} != 0) {
         print "Using local machine instead of virtual machine\n";
-        $pid = open2($vm_output, $vm, './compiler_vm_server.pl') || die "repl failed: $@\n"; # XXX
+        $pid = open2($output, $input, './compiler_vm_server.pl') || die "repl failed: $@\n"; # XXX adapt vm-exec into local-exec
         print "Started fake-vm, pid: $pid\n";
     } else {
-        print STDERR "Connecting to remote VM port $self->{'vm-port'}\n";
-        $vm = IO::Socket::INET->new(PeerAddr => '127.0.0.1', PeerPort => $self->{'vm-port'}, Proto => 'tcp', Type => SOCK_STREAM);
-        die "Could not create connection to VM: $!" unless $vm;
+        # attempt preferred VSOCK connection
+        ($input, $output) = $self->connect_vsock();
+
+        # fallback to serial
+        if (not defined $input) {
+            ($input, $output) = $self->connect_serial();
+        }
+
+        if (not defined $input) {
+            die "Could not create connection to VM: $!";
+        }
+
         print STDERR "Connected to VM.\n";
-        $vm_output = $vm;
     }
 
     my $date = time;
@@ -414,38 +466,38 @@ sub execute {
 
     while ($chunks_sent < $length) {
         my $chunk = substr $compile_json, $chunks_sent, $chunk_size;
-        #print LOG "Sending chunk [$chunk]\n";
+
         $chunks_sent += length $chunk;
 
-        my $ret = syswrite($vm, $chunk);
+        my $ret = syswrite($input, $chunk);
 
         if (not defined $ret) {
+            print STDERR "Error sending: $!\n";
             print LOG "Error sending: $!\n";
             last;
         }
 
         if ($ret == 0) {
+            print STDERR "Sent 0 bytes. Sleep 1 sec and try again\n";
             print LOG "Sent 0 bytes. Sleep 1 sec and try again\n";
             sleep 1;
             next;
         }
 
         $sent += $ret;
-        print LOG "Sent $ret bytes, so far $sent ...\n";
     }
 
-    #print LOG "Done sending!\n";
     close LOG;
 
     my $result = "";
     my $got_result = 0;
 
-    while(my $line = <$vm_output>) {
+    while (my $line = <$output>) {
         utf8::decode($line);
         $line =~ s/[\r\n]+$//;
         last if $line =~ /^result:end$/;
 
-        if($line =~ /^result:/) {
+        if ($line =~ /^result:/) {
             $line =~ s/^result://;
             my $compile_out = decode_json($line);
             $result .= "$compile_out->{result}\n";
@@ -453,12 +505,12 @@ sub execute {
             next;
         }
 
-        if($got_result) {
+        if ($got_result) {
             $result .= "$line\n";
         }
     }
 
-    close $vm;
+    close $input;
     waitpid($pid, 0) if defined $pid;
 
     $self->{output} = $result;
@@ -555,10 +607,10 @@ sub process_interactive_edit {
     while ($subcode =~ s/^\s*(-[^ ]+)\s*//) {}
 
     my $copy_code;
-    if($subcode =~ s/^\s*copy\s+(\S+)\s*//) {
+    if ($subcode =~ s/^\s*copy\s+(\S+)\s*//) {
         my $copy = $1;
 
-        if(open LOG, "< $RealBin/../history/$copy-$self->{lang}.hist") {
+        if (open LOG, "< $RealBin/../history/$copy-$self->{lang}.hist") {
             $copy_code = <LOG>;
             close LOG;
             goto COPY_ERROR if not $copy_code;;
@@ -579,12 +631,12 @@ sub process_interactive_edit {
         $self->{copy_code} = 1;
     }
 
-    if($subcode =~ m/^\s*(?:and\s+)?(?:diff|show)\s+(\S+)\s*$/) {
+    if ($subcode =~ m/^\s*(?:and\s+)?(?:diff|show)\s+(\S+)\s*$/) {
         $self->{channel} = $1;
     }
 
-    if(open LOG, "< $RealBin/../history/$self->{channel}-$self->{lang}.hist") {
-        while(my $line = <LOG>) {
+    if (open LOG, "< $RealBin/../history/$self->{channel}-$self->{lang}.hist") {
+        while (my $line = <LOG>) {
             chomp $line;
             push @last_code, $line;
         }
@@ -593,8 +645,8 @@ sub process_interactive_edit {
 
     unshift @last_code, $copy_code if defined $copy_code;
 
-    if($subcode =~ m/^\s*(?:and\s+)?show(?:\s+\S+)?\s*$/i) {
-        if(defined $last_code[0]) {
+    if ($subcode =~ m/^\s*(?:and\s+)?show(?:\s+\S+)?\s*$/i) {
+        if (defined $last_code[0]) {
             print "$last_code[0]\n";
         } else {
             print "No recent code to show.\n"
@@ -610,9 +662,9 @@ sub process_interactive_edit {
     my $got_undo = 0;
     my $last_keyword;
 
-    while($subcode =~ s/^\s*(and)?\s*undo//) {
+    while ($subcode =~ s/^\s*(and)?\s*undo//) {
         splice @last_code, 0, 1;
-        if(not defined $last_code[0]) {
+        if (not defined $last_code[0]) {
             print "No more undos remaining.\n";
             exit 0;
         } else {
@@ -622,17 +674,17 @@ sub process_interactive_edit {
         }
     }
 
-    while(1) {
+    while (1) {
         $got_sub = 0;
 
         $subcode =~ s/^\s*and\s+'/and $last_keyword '/ if defined $last_keyword;
 
-        if($subcode =~ m/^\s*(?:and\s+)?diff\b/i) {
+        if ($subcode =~ m/^\s*(?:and\s+)?diff\b/i) {
             $got_diff = 1;
             last;
         }
 
-        if($subcode =~ m/^\s*(?:and\s+)?(again|run|paste)\b/i) {
+        if ($subcode =~ m/^\s*(?:and\s+)?(again|run|paste)\b/i) {
             $self->{got_run} = lc $1;
             $self->{only_show} = 0;
             if ($prevchange) {
@@ -643,7 +695,7 @@ sub process_interactive_edit {
             }
         }
 
-        if($subcode =~ m/^\s*(and)?\s*remove \s*([^']+)?\s*'/) {
+        if ($subcode =~ m/^\s*(and)?\s*remove \s*([^']+)?\s*'/) {
             $last_keyword = 'remove';
             my $modifier = 'first';
 
@@ -656,7 +708,7 @@ sub process_interactive_edit {
 
             my $text;
 
-            if(defined $e) {
+            if (defined $e) {
                 $text = $e;
                 $text =~ s/^'//;
                 $text =~ s/'$//;
@@ -668,7 +720,7 @@ sub process_interactive_edit {
             next;
         }
 
-        if($subcode =~ s/^\s*(and)?\s*prepend '//) {
+        if ($subcode =~ s/^\s*(and)?\s*prepend '//) {
             $last_keyword = 'prepend';
             $subcode = "'$subcode";
 
@@ -676,7 +728,7 @@ sub process_interactive_edit {
 
             my $text;
 
-            if(defined $e) {
+            if (defined $e) {
                 $text = $e;
                 $text =~ s/^'//;
                 $text =~ s/'$//;
@@ -685,7 +737,7 @@ sub process_interactive_edit {
                 $got_sub = 1;
                 $got_changes = 1;
 
-                if(not defined $prevchange) {
+                if (not defined $prevchange) {
                     print "No recent code to prepend to.\n";
                     exit 0;
                 }
@@ -700,7 +752,7 @@ sub process_interactive_edit {
             next;
         }
 
-        if($subcode =~ s/^\s*(and)?\s*append '//) {
+        if ($subcode =~ s/^\s*(and)?\s*append '//) {
             $last_keyword = 'append';
             $subcode = "'$subcode";
 
@@ -708,7 +760,7 @@ sub process_interactive_edit {
 
             my $text;
 
-            if(defined $e) {
+            if (defined $e) {
                 $text = $e;
                 $text =~ s/^'//;
                 $text =~ s/'$//;
@@ -717,7 +769,7 @@ sub process_interactive_edit {
                 $got_sub = 1;
                 $got_changes = 1;
 
-                if(not defined $prevchange) {
+                if (not defined $prevchange) {
                     print "No recent code to append to.\n";
                     exit 0;
                 }
@@ -732,7 +784,7 @@ sub process_interactive_edit {
             next;
         }
 
-        if($subcode =~ m/^\s*(and)?\s*replace\s*([^']+)?\s*'.*'\s*with\s*'.*?'/i) {
+        if ($subcode =~ m/^\s*(and)?\s*replace\s*([^']+)?\s*'.*'\s*with\s*'.*?'/i) {
             $last_keyword = 'replace';
             $got_sub = 1;
             my $modifier = 'first';
@@ -745,7 +797,7 @@ sub process_interactive_edit {
             my ($from, $to);
             my ($e, $r) = extract_delimited($subcode, "'");
 
-            if(defined $e) {
+            if (defined $e) {
                 $from = $e;
                 $from =~ s/^'//;
                 $from =~ s/'$//;
@@ -760,7 +812,7 @@ sub process_interactive_edit {
 
             ($e, $r) = extract_delimited($subcode, "'");
 
-            if(defined $e) {
+            if (defined $e) {
                 $to = $e;
                 $to =~ s/^'//;
                 $to =~ s/'$//;
@@ -795,7 +847,7 @@ sub process_interactive_edit {
             next;
         }
 
-        if($subcode =~ m/^\s*(and)?\s*s\/.*\//) {
+        if ($subcode =~ m/^\s*(and)?\s*s\/.*\//) {
             $last_keyword = undef;
             $got_sub = 1;
             $subcode =~ s/^\s*(and)?\s*s//;
@@ -803,7 +855,7 @@ sub process_interactive_edit {
             my ($regex, $to);
             my ($e, $r) = extract_delimited($subcode, '/');
 
-            if(defined $e) {
+            if (defined $e) {
                 $regex = $e;
                 $regex =~ s/^\///;
                 $regex =~ s/\/$//;
@@ -815,7 +867,7 @@ sub process_interactive_edit {
 
             ($e, $r) = extract_delimited($subcode, '/');
 
-            if(defined $e) {
+            if (defined $e) {
                 $to = $e;
                 $to =~ s/^\///;
                 $to =~ s/\/$//;
@@ -828,11 +880,11 @@ sub process_interactive_edit {
             my $suffix;
             $suffix = $1 if $subcode =~ s/^([^ ]+)//;
 
-            if(length $suffix and $suffix =~ m/[^gi]/) {
+            if (length $suffix and $suffix =~ m/[^gi]/) {
                 print "Bad regex modifier '$suffix'.  Only 'i' and 'g' are allowed.\n";
                 exit 0;
             }
-            if(defined $prevchange) {
+            if (defined $prevchange) {
                 $code = $prevchange;
             } else {
                 print "No recent code to change.\n";
@@ -842,29 +894,29 @@ sub process_interactive_edit {
             my $ret = eval {
                 my ($ret, $a, $b, $c, $d, $e, $f, $g, $h, $i, $before, $after);
 
-                if(not length $suffix) {
+                if (not length $suffix) {
                     $ret = $code =~ s|$regex|$to|;
                     ($a, $b, $c, $d, $e, $f, $g, $h, $i) = ($1, $2, $3, $4, $5, $6, $7, $8, $9);
                     $before = $`;
                     $after = $';
-                } elsif($suffix =~ /^i$/) {
+                } elsif ($suffix =~ /^i$/) {
                     $ret = $code =~ s|$regex|$to|i;
                     ($a, $b, $c, $d, $e, $f, $g, $h, $i) = ($1, $2, $3, $4, $5, $6, $7, $8, $9);
                     $before = $`;
                     $after = $';
-                } elsif($suffix =~ /^g$/) {
+                } elsif ($suffix =~ /^g$/) {
                     $ret = $code =~ s|$regex|$to|g;
                     ($a, $b, $c, $d, $e, $f, $g, $h, $i) = ($1, $2, $3, $4, $5, $6, $7, $8, $9);
                     $before = $`;
                     $after = $';
-                } elsif($suffix =~ /^ig$/ or $suffix =~ /^gi$/) {
+                } elsif ($suffix =~ /^ig$/ or $suffix =~ /^gi$/) {
                     $ret = $code =~ s|$regex|$to|gi;
                     ($a, $b, $c, $d, $e, $f, $g, $h, $i) = ($1, $2, $3, $4, $5, $6, $7, $8, $9);
                     $before = $`;
                     $after = $';
                 }
 
-                if($ret) {
+                if ($ret) {
                     $code =~ s/\$1/$a/g;
                     $code =~ s/\$2/$b/g;
                     $code =~ s/\$3/$c/g;
@@ -881,7 +933,7 @@ sub process_interactive_edit {
                 return $ret;
             };
 
-            if($@) {
+            if ($@) {
                 my $error = $@;
                 $error =~ s/ at .* line \d+\.\s*$//;
                 print "$error\n";
@@ -916,13 +968,13 @@ sub process_interactive_edit {
             my $to = $replacement->{'to'};
             my $modifier = $replacement->{'modifier'};
 
-            if(defined $previous_from) {
-                if($previous_from eq $from and $previous_modifier =~ /^\d+$/) {
+            if (defined $previous_from) {
+                if ($previous_from eq $from and $previous_modifier =~ /^\d+$/) {
                     $modifier -= $modifier - $previous_modifier;
                 }
             }
 
-            if(defined $prevchange) {
+            if (defined $prevchange) {
                 $code = $prevchange;
             } else {
                 print "No recent code to change.\n";
@@ -936,45 +988,45 @@ sub process_interactive_edit {
                 $first_char = $1 if $from =~ m/^(.)/;
                 $last_char = $1 if $from =~ m/(.)$/;
 
-                if($first_char =~ /\W/) {
+                if ($first_char =~ /\W/) {
                     $first_bound = '.?';
                 } else {
                     $first_bound = '\b';
                 }
 
-                if($last_char =~ /\W/) {
+                if ($last_char =~ /\W/) {
                     $last_bound = '.?';
                 } else {
                     $last_bound = '\b';
                 }
 
-                if($modifier eq 'all') {
-                    if($code =~ s/($first_bound)$from($last_bound)/$1$to$2/g) {
+                if ($modifier eq 'all') {
+                    if ($code =~ s/($first_bound)$from($last_bound)/$1$to$2/g) {
                         $got_change = 1;
                     }
-                } elsif($modifier eq 'last') {
-                    if($code =~ s/(.*)($first_bound)$from($last_bound)/$1$2$to$3/) {
+                } elsif ($modifier eq 'last') {
+                    if ($code =~ s/(.*)($first_bound)$from($last_bound)/$1$2$to$3/) {
                         $got_change = 1;
                     }
                 } else {
                     my $count = 0;
                     my $unescaped = $from;
                     $unescaped =~ s/\\//g;
-                    if($code =~ s/($first_bound)$from($last_bound)/if(++$count == $modifier) { "$1$to$2"; } else { "$1$unescaped$2"; }/ge) {
+                    if ($code =~ s/($first_bound)$from($last_bound)/if (++$count == $modifier) { "$1$to$2"; } else { "$1$unescaped$2"; }/ge) {
                         $got_change = 1;
                     }
                 }
                 return $got_change;
             };
 
-            if($@) {
+            if ($@) {
                 my $error = $@;
                 $error =~ s/ at .* line \d+\.\s*$//;
                 print "$error\n";
                 exit 0;
             }
 
-            if($ret) {
+            if ($ret) {
                 $got_sub = 1;
                 $got_changes = 1;
             }
@@ -984,7 +1036,7 @@ sub process_interactive_edit {
             $previous_modifier = $modifier;
         }
 
-        if(not $got_changes) {
+        if (not $got_changes) {
             print "No replacements made.\n";
             exit 0;
         }
@@ -1003,7 +1055,7 @@ sub process_interactive_edit {
     }
 
     unless (($self->{got_run} or $got_diff) and not $got_changes) {
-        if($unshift_last_code) {
+        if ($unshift_last_code) {
             unshift @last_code, $code;
         }
 
@@ -1011,7 +1063,7 @@ sub process_interactive_edit {
 
         my $i = 0;
         foreach my $line (@last_code) {
-            last if(++$i > $self->{max_history});
+            last if (++$i > $self->{max_history});
             print LOG "$line\n";
         }
 
@@ -1019,13 +1071,13 @@ sub process_interactive_edit {
     }
 
     if ($got_diff) {
-        if($#last_code < 1) {
+        if ($#last_code < 1) {
             print "Not enough recent code to diff.\n"
         } else {
             use Text::WordDiff;
             my $diff = word_diff(\$last_code[1], \$last_code[0], { STYLE => 'Diff' });
 
-            if($diff !~ /(?:<del>|<ins>)/) {
+            if ($diff !~ /(?:<del>|<ins>)/) {
                 $diff = "No difference.";
             } else {
                 $diff =~ s/<del>(.*?)(\s+)<\/del>/<del>$1<\/del>$2/g;

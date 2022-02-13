@@ -28,7 +28,7 @@ sub preprocess {
     print $fh $code . "\n";
     close $fh;
 
-    print "Executing [$self->{cmdline}] without print_last_statement\n";
+    print STDERR "Executing [$self->{cmdline}] without print_last_statement\n";
     my ($retval, $stdout, $stderr) = $self->execute(60, undef, @cmd);
     $self->{output} = $stderr;
     $self->{output} .= ' ' if length $self->{output};
@@ -41,7 +41,7 @@ sub preprocess {
       print $fh $self->{code} . "\n";
       close $fh;
 
-      print "Executing [$self->{cmdline}] with print_last_statement\n";
+      print STDERR "Executing [$self->{cmdline}] with print_last_statement\n";
       $self->execute(60, undef, @cmd);
     }
   } else {
@@ -49,7 +49,7 @@ sub preprocess {
     print $fh $self->{code} . "\n";
     close $fh;
 
-    print "Executing [$self->{cmdline}]\n";
+    print STDERR "Executing [$self->{cmdline}]\n";
     my ($retval, $stdout, $stderr) = $self->execute(60, undef, @cmd);
     $self->{output} = $stderr;
     $self->{output} .= ' ' if length $self->{output};
@@ -73,7 +73,7 @@ sub postprocess {
     $self->{output} = "[$self->{output}]\n";
   }
 
-  print "Executing gdb\n";
+  print STDERR "Executing gdb\n";
   my ($exitval, $stdout, $stderr);
 
   my $ulimits = "ulimit -f 2000; ulimit -t 8; ulimit -u 200";
