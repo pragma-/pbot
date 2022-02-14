@@ -28,9 +28,10 @@ sub accept_client() {
     print STDERR "VSOCK accepted new connection.\n";
 
     my $buffer = '';
+    my $command;
 
     while (1) {
-        my $command = Guest::read_input(*STDIN, \$buffer, 'VSOCK');
+        $command = Guest::read_input(*STDIN, \$buffer, 'VSOCK');
 
         if (not defined $command) {
             # recoverable error or waiting for more input

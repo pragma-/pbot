@@ -11,14 +11,13 @@
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
+use 5.020;
+
 use warnings;
 use strict;
 
-use File::Basename;
-use JSON::XS;
-
-use FindBin qw($RealBin);
-use lib "$RealBin/../lib";
+use feature qw(signatures);
+no warnings qw(experimental::signatures);
 
 use constant {
     SERIAL => $ENV{PBOTVM_SERIAL} // 5555,
@@ -26,86 +25,158 @@ use constant {
     VPORT  => $ENV{PBOTVM_VPORT}  // 5555,
 };
 
-my $json = join ' ', @ARGV;
-my $data = eval { decode_json $json };
+use File::Basename;
+use JSON::XS;
+use IPC::Open2;
+use IO::Socket;
 
-if ($@) {
-    # wasn't JSON; make structure manually
-    if ($json =~ s/^-lang=([^ ]+)\s+//) {
-      $data = { lang => $1, code => $json };
-    } else {
-      $data = { code => $json };
+use FindBin qw($RealBin);
+use lib "$RealBin/../lib";
+
+sub connect_vsock($context) {
+    return undef if not $context->{'vm-cid'};
+
+    print STDERR "Connecting to remote VM socket CID $context->{'vm-cid'} port $context->{'vm-vport'}\n";
+
+    my $command = "socat - VSOCK-CONNECT:$context->{'vm-cid'}:$context->{'vm-vport'}";
+
+    my ($pid, $input, $output) = eval {
+        my $pid = open2(my $output, my $input, $command);
+        return ($pid, $input, $output);
+    };
+
+    if ($@) {
+        print STDERR "Failed to connect to VM socket: $@\n";
+        return undef;
     }
+
+    if (not defined $pid) {
+        print STDERR "Failed to connect to VM socket: $!\n";
+        return undef;
+    }
+
+    return ($input, $output);
 }
 
-if (not exists $data->{code}) {
-    die "Usage: $0 <code>\n";
+sub connect_serial($context) {
+    print STDERR "Connecting to remote VM serial port $context->{'vm-serial'}\n";
+
+    my $vm = IO::Socket::INET->new(
+        PeerAddr => '127.0.0.1',
+        PeerPort => $context->{'vm-serial'},
+        Proto => 'tcp',
+        Type => SOCK_STREAM
+    );
+
+    # return same $vm handle for ($input, $output)
+    return ($vm, $vm);
 }
 
-# set any missing fields to default values
-$data->{nick}        //= 'vm';
-$data->{channel}     //= 'vm';
-$data->{lang}        //= 'c11';
-$data->{'vm-serial'} //= SERIAL;
-$data->{'vm-cid'}    //= CID;
-$data->{'vm-vport'}  //= VPORT;
+sub connect_vm($context) {
+    my ($input, $output);
 
-# parse -lang option
-if ($data->{code} =~ s/^-lang=([^ ]+)\s+//) {
-    $data->{lang} = $1;
+    # attempt preferred VSOCK connection
+    ($input, $output) = connect_vsock($context);
+
+    # fallback to serial
+    if (not defined $input) {
+        ($input, $output) = connect_serial($context);
+    }
+
+    if (not defined $input) {
+        die "Could not create connection to VM: $!";
+    }
+
+    print STDERR "Connected to VM.\n";
+    return ($input, $output);
 }
 
-my $language = lc $data->{lang};
+sub main() {
+    my $args = join ' ', @ARGV;
 
-eval {
-    require "Languages/$language.pm";
-} or do {
-    my $found = 0;
-    my ($languages, $comma) = ('', '');
+    my $context = eval { decode_json $args };
 
-    foreach my $module (sort glob "$RealBin/../lib/Languages/*.pm") {
-        $module = basename $module;
-        $module =~ s/.pm$//;
-        next if $module =~ m/^_/;
+    if ($@) {
+        # wasn't JSON; make structure manually
+        if ($args =~ s/^-lang=([^ ]+)\s+//) {
+            $context = { lang => $1, code => $args };
+        } else {
+            $context = { code => $args };
+        }
+    }
 
-        require "Languages/$module.pm" or die $!;
-        my $mod = "Languages::$module"->new;
+    if (not exists $context->{code}) {
+        die "Usage: $0 <code>\n";
+    }
 
-        if (exists $mod->{name} and $mod->{name} eq $language) {
-            $language = $module;
-            $found = 1;
-            last;
+    # set any missing fields to default values
+    $context->{nick}        //= 'vm';
+    $context->{channel}     //= 'vm';
+    $context->{lang}        //= 'c11';
+    $context->{'vm-serial'} //= SERIAL;
+    $context->{'vm-cid'}    //= CID;
+    $context->{'vm-vport'}  //= VPORT;
+
+    # parse -lang option
+    if ($context->{code} =~ s/^-lang=([^ ]+)\s+//) {
+        $context->{lang} = $1;
+    }
+
+    my $language = lc $context->{lang};
+
+    eval {
+        require "Languages/$language.pm";
+    } or do {
+        my $found = 0;
+        my ($languages, $comma) = ('', '');
+
+        foreach my $module (sort glob "$RealBin/../lib/Languages/*.pm") {
+            $module = basename $module;
+            $module =~ s/.pm$//;
+            next if $module =~ m/^_/;
+
+            require "Languages/$module.pm" or die $!;
+            my $mod = "Languages::$module"->new;
+
+            if (exists $mod->{name} and $mod->{name} eq $language) {
+                $language = $module;
+                $found = 1;
+                last;
+            }
+
+            $module = $mod->{name} if exists $mod->{name};
+            $languages .= "$comma$module";
+            $comma = ', ';
         }
 
-        $module = $mod->{name} if exists $mod->{name};
-        $languages .= "$comma$module";
-        $comma = ', ';
-    }
+        if (not $found) {
+            print "Language '$language' is not supported.\nSupported languages are: $languages\n";
+            exit;
+        }
+    };
 
-    if (not $found) {
-        print "Language '$language' is not supported.\nSupported languages are: $languages\n";
+    if (not length $context->{code}) {
+        if (exists $context->{usage}) {
+            print "$context->{usage}\n";
+        } else {
+            print "Usage: cc [-lang=<language>] [-info] [-paste] [-args \"command-line arguments\"] [compiler/language options] <code> [-stdin <stdin input>]\n";
+        }
         exit;
     }
-};
 
-if (not length $data->{code}) {
-    if (exists $data->{usage}) {
-        print "$data->{usage}\n";
-    } else {
-        print "Usage: cc [-lang=<language>] [-info] [-paste] [-args \"command-line arguments\"] [compiler/language options] <code> [-stdin <stdin input>]\n";
-    }
-    exit;
+    my $lang = "Languages::$language"->new(%$context);
+
+    $lang->process_interactive_edit;
+    $lang->process_standard_options;
+    $lang->process_custom_options;
+    $lang->process_cmdline_options;
+    $lang->preprocess_code;
+
+    ($lang->{'vm-input'}, $lang->{'vm-output'}) = connect_vm($context);
+    $lang->execute;
+
+    $lang->postprocess_output;
+    $lang->show_output;
 }
 
-my $lang = "Languages::$language"->new(%$data);
-
-$lang->{local} = $ENV{CC_LOCAL};
-
-$lang->process_interactive_edit;
-$lang->process_standard_options;
-$lang->process_custom_options;
-$lang->process_cmdline_options;
-$lang->preprocess_code;
-$lang->execute;
-$lang->postprocess_output;
-$lang->show_output;
+main();

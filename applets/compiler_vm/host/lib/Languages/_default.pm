@@ -12,8 +12,6 @@ no if $] >= 5.018, warnings => "experimental::smartmatch";
 
 package Languages::_default;
 
-use IPC::Open2;
-use IO::Socket;
 use LWP::UserAgent;
 use Time::HiRes qw/gettimeofday/;
 use Text::Balanced qw/extract_delimited/;
@@ -318,73 +316,11 @@ sub paste_0x0 {
     return $result;
 }
 
-sub connect_vsock {
-    my ($self) = @_;
-
-    return undef if not $self->{'vm-cid'};
-
-    print STDERR "Connecting to remote VM socket CID $self->{'vm-cid'} port $self->{'vm-vport'}\n";
-
-    my $command = "socat - VSOCK-CONNECT:$self->{'vm-cid'}:$self->{'vm-vport'}";
-
-    my ($pid, $input, $output) = eval {
-        my $pid = open2(my $output, my $input, $command);
-        return ($pid, $input, $output);
-    };
-
-    if ($@) {
-        print STDERR "Failed to connect to VM socket: $@\n";
-        return undef;
-    }
-
-    if (not defined $pid) {
-        print STDERR "Failed to connect to VM socket: $!\n";
-        return undef;
-    }
-
-    return ($input, $output);
-}
-
-sub connect_serial {
-    my ($self) = @_;
-
-    print STDERR "Connecting to remote VM serial port $self->{'vm-serial'}\n";
-
-    my $vm = IO::Socket::INET->new(
-        PeerAddr => '127.0.0.1',
-        PeerPort => $self->{'vm-serial'},
-        Proto => 'tcp',
-        Type => SOCK_STREAM
-    );
-
-    # return same $vm handle for ($input, $output)
-    return ($vm, $vm);
-}
-
 sub execute {
     my ($self) = @_;
 
-    my ($input, $output, $pid);
-
-    if (defined $self->{local} and $self->{local} != 0) {
-        print "Using local machine instead of virtual machine\n";
-        $pid = open2($output, $input, './compiler_vm_server.pl') || die "repl failed: $@\n"; # XXX adapt vm-exec into local-exec
-        print "Started fake-vm, pid: $pid\n";
-    } else {
-        # attempt preferred VSOCK connection
-        ($input, $output) = $self->connect_vsock();
-
-        # fallback to serial
-        if (not defined $input) {
-            ($input, $output) = $self->connect_serial();
-        }
-
-        if (not defined $input) {
-            die "Could not create connection to VM: $!";
-        }
-
-        print STDERR "Connected to VM.\n";
-    }
+    my $input  = $self->{'vm-input'};
+    my $output = $self->{'vm-output'};
 
     my $date = time;
     my $stdin = $self->{options}->{'-stdin'};
@@ -511,7 +447,6 @@ sub execute {
     }
 
     close $input;
-    waitpid($pid, 0) if defined $pid;
 
     $self->{output} = $result;
 

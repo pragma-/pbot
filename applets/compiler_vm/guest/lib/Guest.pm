@@ -93,19 +93,22 @@ sub process_command($command, $mod, $user, $tag) {
             system("cp -R -p \"/root/factdata/$command->{'persist-key'}\" \"/home/$user/$command->{'persist-key'}\" 1>&2");
         }
 
-        system("chmod -R 755 /home/$user 1>&2");
-        system("chown -R $user /home/$user 1>&2");
-        system("chgrp -R $user /home/$user 1>&2");
-        system("rm -rf /home/$user/prog* 1>&2");
+        my $dir = "/home/$user/$$";
+
+        system("mkdir -p $dir 1>&2");
+
+        system("chmod -R 755 $dir 1>&2");
+        system("chown -R $user $dir 1>&2");
+        system("chgrp -R $user $dir 1>&2");
         system("pkill -u $user 1>&2");
 
         system("date -s \@$command->{date} 1>&2");
 
-        $ENV{USER} = $user;
+        $ENV{USER}    = $user;
         $ENV{LOGNAME} = $user;
-        $ENV{HOME} = $home;
+        $ENV{HOME}    = $home;
 
-        chdir("/home/$user");
+        chdir("/home/$user/$$");
 
         $GID = $gid;
         $EGID = "$gid $gid";
@@ -129,6 +132,7 @@ sub process_command($command, $mod, $user, $tag) {
 
         # kill any left-over processes started by $user
         system("pkill -u $user");
+        system("rm -rf /home/$user/$pid");
         return 0;
     }
 }
