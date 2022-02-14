@@ -3,10 +3,12 @@
 # File: vm-exec
 #
 # Purpose: Process and send commands to the PBot Guest server (guest-server) on
-# the default serial TCP port (5555). Use the PBOTVM_SERIAL environment variable
-# to override the port. E.g., to use port 7777 instead:
+# the default VM socket CID/port of 7/5555 or the default serial TCP port (5555).
 #
-# $ PBOTVM_SERIAL=7777 vm-exec -lang=sh echo test
+# Use the PBOTVM_CID, PBOTVM_VPORT and/or PBOTVM_SERIAL environment variables to
+# override these defaults. E.g.:
+#
+# $ PBOTVM_CID=42 PBOTVM_SERIAL=7777 vm-exec -lang=sh echo test
 
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
@@ -91,22 +93,72 @@ sub connect_vm($context) {
     return ($input, $output);
 }
 
-sub main() {
-    my $args = join ' ', @ARGV;
+sub make_context_from_args(@args_in) {
+    my $args = join ' ', @args_in;
 
     my $context = eval { decode_json $args };
 
     if ($@) {
         # wasn't JSON; make structure manually
-        if ($args =~ s/^-lang=([^ ]+)\s+//) {
-            $context = { lang => $1, code => $args };
-        } else {
-            $context = { code => $args };
+        $context = { code => $args };
+
+        # command-line usage
+        if (not length $context->{code}) {
+            die "Usage: $0 [-lang=<language>] <code>\n";
         }
     }
 
-    if (not exists $context->{code}) {
-        die "Usage: $0 <code>\n";
+    # parse -lang option
+    if ($context->{code} =~ s/^-lang=([^ ]+)\s+//) {
+        $context->{lang} = lc $1;
+    }
+
+    return $context;
+}
+
+sub load_language($context) {
+    my $language = $context->{lang};
+
+    eval {
+        require "Languages/$language.pm";
+    } or do {
+        my @languages;
+
+        foreach my $module (sort glob "$RealBin/../lib/Languages/*.pm") {
+            $module = basename $module;
+            next if $module =~ m/^_/;
+            $module =~ s/.pm$//;
+
+            require "Languages/$module.pm" or die $!;
+
+            my $mod = "Languages::$module"->new(%$context);
+
+            if (exists $mod->{name} && $mod->{name} eq $language) {
+                return $mod;
+            }
+
+            $module = $mod->{name} if exists $mod->{name};
+            push @languages, $module;
+        }
+
+        print "Language '$language' is not supported.\nSupported languages are: ", join(', ', @languages), "\n";
+        exit 1;
+    };
+
+    return "Languages::$language"->new(%$context);
+}
+
+sub main() {
+    my $context = make_context_from_args(@ARGV);
+
+    if (not length $context->{code}) {
+        if (exists $context->{usage}) {
+            print "$context->{usage}\n";
+        } else {
+            print "Usage: cc [-lang=<language>] [-info] [-paste] [-args \"command-line arguments\"] [compiler/language options] <code> [-stdin <stdin input>]\n";
+        }
+
+        exit 1;
     }
 
     # set any missing fields to default values
@@ -117,54 +169,7 @@ sub main() {
     $context->{'vm-cid'}    //= CID;
     $context->{'vm-vport'}  //= VPORT;
 
-    # parse -lang option
-    if ($context->{code} =~ s/^-lang=([^ ]+)\s+//) {
-        $context->{lang} = $1;
-    }
-
-    my $language = lc $context->{lang};
-
-    eval {
-        require "Languages/$language.pm";
-    } or do {
-        my $found = 0;
-        my ($languages, $comma) = ('', '');
-
-        foreach my $module (sort glob "$RealBin/../lib/Languages/*.pm") {
-            $module = basename $module;
-            $module =~ s/.pm$//;
-            next if $module =~ m/^_/;
-
-            require "Languages/$module.pm" or die $!;
-            my $mod = "Languages::$module"->new;
-
-            if (exists $mod->{name} and $mod->{name} eq $language) {
-                $language = $module;
-                $found = 1;
-                last;
-            }
-
-            $module = $mod->{name} if exists $mod->{name};
-            $languages .= "$comma$module";
-            $comma = ', ';
-        }
-
-        if (not $found) {
-            print "Language '$language' is not supported.\nSupported languages are: $languages\n";
-            exit;
-        }
-    };
-
-    if (not length $context->{code}) {
-        if (exists $context->{usage}) {
-            print "$context->{usage}\n";
-        } else {
-            print "Usage: cc [-lang=<language>] [-info] [-paste] [-args \"command-line arguments\"] [compiler/language options] <code> [-stdin <stdin input>]\n";
-        }
-        exit;
-    }
-
-    my $lang = "Languages::$language"->new(%$context);
+    my $lang = load_language($context);
 
     $lang->process_interactive_edit;
     $lang->process_standard_options;
