@@ -3,7 +3,7 @@
 # File: vm-exec
 #
 # Purpose: Process and send commands to the PBot Guest server (guest-server) on
-# the default VM socket CID/port of 7/5555 or the default serial TCP port (5555).
+# the default VM socket CID/port (7/5555) or the default serial TCP port (5555).
 #
 # Use the PBOTVM_CID, PBOTVM_VPORT and/or PBOTVM_SERIAL environment variables to
 # override these defaults. E.g.:
@@ -157,7 +157,6 @@ sub main() {
         } else {
             print "Usage: cc [-lang=<language>] [-info] [-paste] [-args \"command-line arguments\"] [compiler/language options] <code> [-stdin <stdin input>]\n";
         }
-
         exit 1;
     }
 
