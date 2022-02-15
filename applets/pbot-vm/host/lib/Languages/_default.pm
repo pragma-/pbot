@@ -115,7 +115,7 @@ sub process_cmdline_options($self) {
     $self->{code} = $code;
 }
 
-sub add_option($self, $option, $value) {
+sub add_option($self, $option, $value = '') {
     $self->{options_order} //= [];
     $self->{options}->{$option} = $value;
     push @{$self->{options_order}}, $option;
