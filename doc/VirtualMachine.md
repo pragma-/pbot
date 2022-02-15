@@ -128,7 +128,7 @@ depending on your hardware and network configuration.
 
 #### Set up serial ports
 While the installation is in progress, switch to a terminal on your host system. Go into the
-`applets/compiler_vm/host/devices` directory and run the `add-serials` script to add the `serial-2.xml` and
+`applets/pbot-vm/host/devices` directory and run the `add-serials` script to add the `serial-2.xml` and
 `serial-3.xml` files to the configuration for the `pbot-vm` libvirt machine.
 
     host$ ./add-serials
@@ -195,7 +195,7 @@ We must attach a `vhost-vsock-pci` device to the guest to enable VM sockets comm
 Each VM on a hypervisor must have a unique context ID (CID). Each service within the VM must
 have a unique port. The PBot VM Guest defaults to `7` for the CID and `5555` for the port.
 
-While still in the `applets/compiler_vm/host/devices` directory, run the `add-vsock` script:
+While still in the `applets/pbot-vm/host/devices` directory, run the `add-vsock` script:
 
     host$ ./add-vsock
 
@@ -238,21 +238,29 @@ as well as a few Perl modules.
 #### Install PBot VM Guest
 Next we install the PBot VM Guest server script that fosters communication between the virtual machine guest
 and the physical host system. We'll do this inside the virtual machine guest system, logged on as `root`
-while in the `/root` directory. Feel free to `chdir` to `/tmp` if you prefer.
+while in the `/tmp` directory.
+
+    guest$ chdir /tmp
 
 The `rsync` command isn't installed with a Fedora minimal install, but `scp` is available. Replace
 `192.168.100.42` below with your own local IP address; `user` with the user account that has the
 PBot directory; and `pbot` with the path to the directory.
 
-    guest$ scp -r user@192.168.100.42:~/pbot/applets/compiler_vm/guest .
+    guest$ scp -r user@192.168.100.42:~/pbot/applets/pbot-vm/guest .
 
 Once that's done, run the following command:
 
     guest$ ./guest/bin/setup-guest
 
-After running the `setup-guest` script, we need to make the environment changes take effect:
+This will install `guest-server` to `/usr/local/bin/`, set up some environment variables and
+harden the guest system. After running the `setup-guest` script, we need to make the environment
+changes take effect:
 
     guest$ source /root/.bashrc
+
+We no longer need the `/tmp/guest/` stuff. We can delete it:
+
+    guest$ rm -rf guest/
 
 #### Start PBot VM Guest
 We're ready to start the PBot VM Guest server. On the guest, as `root`, execute the command:
@@ -273,9 +281,11 @@ under [Set up serial ports](#set-up-serial-ports) and that your network configur
 access.
 
 Let's make sure the PBot VM Guest server is listening for and can execute commands. The `vm-exec` command
-in the `applets/compiler_vm/host/bin` directory allows you to send commands from the shell.
+allows you to send commands from the shell. Change your currect working directory to `applets/pbot-vm/host/bin`
+and run the `vm-exec` command:
 
-    host$ vm-exec -lang=sh echo hello world
+    host$ cd applets/pbot-vm/host/bin
+    host$ ./vm-exec -lang=sh echo hello world
 
 This should output some logging noise followed by "hello world". You can test other language modules
 by changing the `-lang=` option. I recommend testing and verifying that all of your desired language
@@ -284,7 +294,7 @@ modules are configured before going on to the next step.
 If you have multiple PBot VM Guests, or if you used a different TCP port, you can specify the
 `PBOTVM_SERIAL` environment variable when executing the `vm-exec` command:
 
-    host$ PBOTVM_SERIAL=7777 vm-exec -lang=sh echo test
+    host$ PBOTVM_SERIAL=7777 ./vm-exec -lang=sh echo test
 
 #### Save initial state
 Switch back to an available terminal on the physical host machine. Enter the following command
@@ -305,10 +315,11 @@ virtual machine will continue running in the background until it is manually shu
 `shutdown now -h` inside the VM or via `virsh shutdown pbot-vm` on the host).
 
 ## Start PBot VM Host
-To start the PBot VM Host server, execute the `vm-server` script in the
-`applets/compiler_vm/host/bin` directory on the host.
+To start the PBot VM Host server, change your current working directory to `applets/pbot-vm/host/bin`
+and execute the `vm-server` script:
 
-    host$ vm-server
+    host$ cd applets/pbot-vm/host/bin
+    host$ ./vm-server
 
 This will start a TCP server on port `9000`. It will listen for incoming commands and
 pass them along to the virtual machine's TCP serial port `5555`. It will also monitor
@@ -322,8 +333,15 @@ use `other-vm` with a longer `30` second timeout, on different serial and heartb
 ### Test PBot
 All done. Everything is set up now.
 
-PBot is already preconfigured with commands that invoke the `applets/compiler_client.pl`
-script (a copy of `host/bin/vm-client`) to send VM commands to port `9000`.
+PBot is already preconfigured with commands that invoke the `host/bin/vm-client`
+script to send VM commands to `vm-server` on the default port `9000`:
+
+     <pragma-> factshow sh
+        <PBot> [global] sh: /call cc -lang=sh
+     <pragma-> factshow cc
+        <PBot> [global] cc: /call compiler {"nick":"$nick:json","channel":"$channel:json","code":"$args:json"}
+     <pragma-> factshow compiler
+        <PBot> [global] compiler: pbot-vm/host/bin/vm-client [applet]
 
 In your instance of PBot, the `sh echo hello` command should output `hello`.
 

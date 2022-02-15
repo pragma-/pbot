@@ -327,6 +327,7 @@
     * [Create a new virtual machine](VirtualMachine.md#create-a-new-virtual-machine)
       * [Install Linux in the virtual machine](VirtualMachine.md#install-linux-in-the-virtual-machine)
       * [Set up serial ports](VirtualMachine.md#set-up-serial-ports)
+      * [Set up virtio-vsock](VirtualMachine.md#set-up-virtio-vsock)
       * [Reboot virtual machine](VirtualMachine.md#reboot-virtual-machine)
       * [Install software](VirtualMachine.md#install-software)
       * [Install Perl](VirtualMachine.md#install-perl)

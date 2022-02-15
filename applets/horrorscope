@@ -1,4 +1,0 @@
-#!/bin/sh
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
-# SPDX-License-Identifier: MIT
-~/pbot/modules/lookupbot.pl horrorscope "$*"
