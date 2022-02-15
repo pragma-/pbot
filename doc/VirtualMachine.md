@@ -339,9 +339,9 @@ script to send VM commands to `vm-server` on the default port `9000`:
      <pragma-> factshow sh
         <PBot> [global] sh: /call cc -lang=sh
      <pragma-> factshow cc
-        <PBot> [global] cc: /call compiler {"nick":"$nick:json","channel":"$channel:json","code":"$args:json"}
-     <pragma-> factshow compiler
-        <PBot> [global] compiler: pbot-vm/host/bin/vm-client [applet]
+        <PBot> [global] cc: /call vm-client {"nick":"$nick:json","channel":"$channel:json","code":"$args:json"}
+     <pragma-> factshow vm-client
+        <PBot> [global] vm-client: pbot-vm/host/bin/vm-client [applet]
 
 In your instance of PBot, the `sh echo hello` command should output `hello`.
 

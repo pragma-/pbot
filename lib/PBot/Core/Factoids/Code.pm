@@ -1,7 +1,7 @@
 # File: Code.pm
 #
 # Purpose: Launching pad for code factoids. Configures $context as a code
-# factoid and executes the compiler-vm applet.
+# factoid and executes the vm-client applet.
 
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
@@ -50,7 +50,7 @@ sub execute {
         $context->{nickprefix_disabled} = 0;
     }
 
-    # set up `compiler` applet arguments
+    # set up `vm-client` applet arguments
     my %args = (
         nick      => $context->{nick},
         channel   => $context->{from},
@@ -74,11 +74,11 @@ sub execute {
     # update context details
     $context->{special}      = 'code-factoid';      # ensure handle_result(), etc, process this as a code-factoid
     $context->{root_channel} = $context->{channel}; # override root channel to current channel
-    $context->{keyword}      = 'compiler';          # code-factoid uses `compiler` command to invoke vm
-    $context->{arguments}    = $json;               # set arguments to json string as `compiler` wants
+    $context->{keyword}      = 'vm-client';         # code-factoid uses `vm-client` command to invoke vm
+    $context->{arguments}    = $json;               # set arguments to json string as `vm-client` expects
     $context->{args_utf8}    = 1;                   # arguments are utf8 encoded by encode_json
 
-    # launch the `compiler` applet
+    # launch the `vm-client` applet
     $self->{pbot}->{applets}->execute_applet($context);
 
     # return empty string since the applet process reader will
