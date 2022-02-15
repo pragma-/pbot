@@ -1,0 +1,21 @@
+{
+   "machines" : {
+      "pbot-vm" : {
+         "serial" : 5555,
+         "heart" : 5556,
+         "cid" : 7,
+         "vport" : 5555
+      },
+      "pbot-test-vm" : {
+         "serial" : 7777,
+         "heart" : 7778,
+         "cid" : 42,
+         "vport" : 5555
+      }
+   },
+   "aliases" : {
+      "fedora-amd64" : "pbot-vm",
+      "test" : "pbot-test-vm"
+   },
+   "default-machine" : "fedora-amd64"
+}

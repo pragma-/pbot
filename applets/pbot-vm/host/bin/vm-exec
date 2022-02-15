@@ -108,9 +108,11 @@ sub make_context_from_args(@args_in) {
         }
     }
 
-    # parse -lang option
-    if ($context->{code} =~ s/^-lang=([^ ]+)\s+//) {
-        $context->{lang} = lc $1;
+    # parse options specific to vm-exec
+    while ($context->{code} =~ s/^-(lang|vm-cid|vm-vport|vm-serial|vm)=([^ ]+)\s+//) {
+        my ($option, $value) = ($1, $2);
+        print STDERR "Overriding `$option` to `$value`.\n";
+        $context->{$option} = lc $value;
     }
 
     return $context;
@@ -148,8 +150,89 @@ sub load_language($context) {
     return "Languages::$language"->new(%$context);
 }
 
+sub load_config($file) {
+    open my $fh, '<', $file or die "load config: could not open $file: $!\n";
+    local $/ = undef;
+    my $json = <$fh>;
+    close $fh;
+    return decode_json($json);
+}
+
+sub config_get_machine($config, $machine) {
+    # check if machine is an alias and update to actual machine
+    if (exists $config->{aliases}->{$machine}) {
+        $machine = $config->{aliases}->{$machine};
+    }
+
+    # return pointer to config entry
+    return $config->{machines}->{$machine};
+}
+
+sub list_machines($config) {
+    my @machines;
+
+    # quick-and-easy: just list the aliases
+    foreach my $alias (keys %{$config->{aliases}}) {
+        push @machines, $alias;
+    }
+
+    return join ', ', sort @machines;
+}
+
+sub configure_context($context, $config) {
+    if (exists $context->{vm}) {
+        # -vm option was passed, forcibly override machine
+        my $machine = $context->{vm};
+
+        # point at config entry
+        my $entry = config_get_machine($config, $machine);
+
+        if (not defined $entry) {
+            my $machines = list_machines($config);
+            print "Unknown machine '$machine'; available machines are: $machines\n";
+            exit 1;
+        }
+
+        # override values
+        $context->{'vm-serial'} = $entry->{'serial'};
+        $context->{'vm-heart'}  = $entry->{'heart'};
+        $context->{'vm-cid'}    = $entry->{'cid'};
+        $context->{'vm-vport'}  = $entry->{'vport'};
+    } else {
+        # otherwise configure any undefined values as default machine
+        my $machine = $config->{'default-machine'};
+
+        # point at config entry
+        my $entry = config_get_machine($config, $machine);
+
+        if (not defined $entry) {
+            my $machines = list_machines($config);
+            print "Unknown machine '$machine'; available machines are: $machines\n";
+            exit 1;
+        }
+
+        # update any undefined values, preserving any existing values
+        $context->{'vm-serial'} //= $entry->{'serial'};
+        $context->{'vm-heart'}  //= $entry->{'heart'};
+        $context->{'vm-cid'}    //= $entry->{'cid'};
+        $context->{'vm-vport'}  //= $entry->{'vport'};
+    }
+
+    # set any undefined values to default values
+    $context->{nick}        //= 'vm';
+    $context->{channel}     //= 'vm';
+    $context->{lang}        //= 'c11';
+    $context->{'vm-serial'} //= SERIAL;
+    $context->{'vm-cid'}    //= CID;
+    $context->{'vm-vport'}  //= VPORT;
+}
+
 sub main() {
     my $context = make_context_from_args(@ARGV);
+
+    my $config = load_config("$RealBin/../config/vm-exec.json");
+
+    configure_context($context, $config);
 
     if (not length $context->{code}) {
         if (exists $context->{usage}) {
@@ -159,14 +242,6 @@ sub main() {
         }
         exit 1;
     }
-
-    # set any missing fields to default values
-    $context->{nick}        //= 'vm';
-    $context->{channel}     //= 'vm';
-    $context->{lang}        //= 'c11';
-    $context->{'vm-serial'} //= SERIAL;
-    $context->{'vm-cid'}    //= CID;
-    $context->{'vm-vport'}  //= VPORT;
 
     my $lang = load_language($context);
 
