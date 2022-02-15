@@ -240,7 +240,7 @@ Next we install the PBot VM Guest server script that fosters communication betwe
 and the physical host system. We'll do this inside the virtual machine guest system, logged on as `root`
 while in the `/tmp` directory.
 
-    guest$ chdir /tmp
+    guest$ cd /tmp
 
 The `rsync` command isn't installed with a Fedora minimal install, but `scp` is available. Replace
 `192.168.100.42` below with your own local IP address; `user` with the user account that has the
@@ -281,7 +281,7 @@ under [Set up serial ports](#set-up-serial-ports) and that your network configur
 access.
 
 Let's make sure the PBot VM Guest server is listening for and can execute commands. The `vm-exec` command
-allows you to send commands from the shell. Change your currect working directory to `applets/pbot-vm/host/bin`
+allows you to send commands from the shell. Change your current working directory to `applets/pbot-vm/host/bin`
 and run the `vm-exec` command:
 
     host$ cd applets/pbot-vm/host/bin
