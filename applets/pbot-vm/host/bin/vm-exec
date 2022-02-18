@@ -233,7 +233,7 @@ sub main() {
     configure_context($context, $config);
 
     # load language before checking usage in order to handle -lang=? flag
-    # to list languages instea of showing a usage message
+    # to list languages instead of showing a usage message
     my $lang = load_language($context);
 
     # now check usage
