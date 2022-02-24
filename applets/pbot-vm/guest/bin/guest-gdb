@@ -144,7 +144,7 @@ sub gdb_read_result($out) {
 
 sub gdbmi_to_json($text, $makejson = 1) {
     $text =~ s/([\w-]+)=/"$1":/g if $makejson;
-    $text =~ s/\\(\d{3})/chr oct $1/ge;
+    $text =~ s/\\(\d{3})/$1 >= 0x20 ? chr oct $1 : "\\$1"/ge;
     return decode_json("{$text}");
 }
 
