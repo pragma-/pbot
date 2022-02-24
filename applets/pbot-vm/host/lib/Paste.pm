@@ -47,7 +47,7 @@ sub paste_0x0 {
 
     my $response =  $ua->post(
         "https://0x0.st",
-        [ file => [ undef, "filename", Content => $text, 'Content-Type' => 'text/plain' ] ],
+        [ file => [ undef, "filename", Content => $text, 'Content-Type' => 'text/plain; charset=utf-8' ] ],
         Content_Type => 'form-data'
     );
 

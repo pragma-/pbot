@@ -17,6 +17,7 @@ use Encode;
 use JSON::XS;
 use Getopt::Long qw(GetOptionsFromArray :config pass_through no_ignore_case no_auto_abbrev);
 use Time::HiRes qw(gettimeofday);
+use POSIX;
 
 use FindBin qw($RealBin);
 
@@ -77,6 +78,7 @@ sub process_standard_options($self) {
         $cmdline =~ s/\$execfile/$self->{execfile}/g;
         my $name = exists $self->{name} ? $self->{name} : $self->{lang};
         print "$name cmdline: $cmdline\n";
+        $self->done;
         exit;
     }
 
@@ -128,14 +130,13 @@ sub pretty_format($self, $code) {
 sub preprocess_code($self, %opts) {
     if ($self->{only_show}) {
         print "$self->{code}\n";
+        $self->done;
         exit;
     }
 
     unless($self->{got_run} and $self->{copy_code}) {
-        open LOG, ">> $RealBin/../log.txt";
-        print LOG localtime() . "\n";
-        print LOG "$self->{nick} $self->{channel}: [" . $self->{arguments} . "] " . $self->{cmdline_options} . "$self->{code}\n";
-        close LOG;
+        $self->debug("---- preprocess\n");
+        $self->debug("$self->{nick} $self->{channel}: [$self->{arguments}] $self->{cmdline_options} $self->{code}\n", 0);
     }
 
     # replace \n outside of quotes with literal newline
@@ -251,10 +252,8 @@ sub execute {
         $cmdline =~ s/\$options\s+//;
     }
 
-    open LOG, ">> $RealBin/../log.txt";
-    print LOG "---------------------executing---------------------------------------------------\n";
-    print LOG localtime() . "\n";
-    print LOG "$cmdline\n$stdin\n$pretty_code\n";
+    $self->debug("---- executing\n");
+    $self->debug("$cmdline\n$stdin\n$pretty_code\n", 0);
 
     my $compile_in = {
         lang       => $self->{lang},
@@ -275,11 +274,11 @@ sub execute {
 
     my $length = length $compile_json;
     my $sent = 0;
-    my $chunk_max = 4096;
+    my $chunk_max = 16384;
     my $chunk_size = $length < $chunk_max ? $length : $chunk_max;
     my $chunks_sent = 0;
 
-    #print LOG "Sending $length bytes [$compile_json] to vm_server\n";
+    # $self->debug("Sending $length bytes [$compile_json] to vm_server\n");
 
     $chunk_size -= 1; # account for newline in syswrite
 
@@ -291,22 +290,21 @@ sub execute {
         my $ret = syswrite($input, $chunk);
 
         if (not defined $ret) {
-            print STDERR "Error sending: $!\n";
-            print LOG "Error sending: $!\n";
+            my $error = $!;
+            print STDERR "Error sending: $error\n";
+            $self->debug("Error sending: $error\n");
             last;
         }
 
         if ($ret == 0) {
             print STDERR "Sent 0 bytes. Sleep 1 sec and try again\n";
-            print LOG "Sent 0 bytes. Sleep 1 sec and try again\n";
+            $self->debug("Sent 0 bytes. Sleep 1 sec and try again\n");
             sleep 1;
             next;
         }
 
         $sent += $ret;
     }
-
-    close LOG;
 
     my $result = "";
     my $got_result = 0;
@@ -338,11 +336,8 @@ sub execute {
 
 sub postprocess_output($self) {
     unless($self->{got_run} and $self->{copy_code}) {
-        open LOG, ">> $RealBin/../log.txt";
-        print LOG "--------------------------post processing----------------------------------------------\n";
-        print LOG localtime() . "\n";
-        print LOG "$self->{output}\n";
-        close LOG;
+        $self->debug("---- post-processing\n");
+        $self->debug("$self->{output}\n", 0);
     }
 
     # backspace
@@ -370,12 +365,9 @@ sub show_output($self) {
     my $output = $self->{output};
 
     unless ($self->{got_run} and $self->{copy_code}) {
-        open LOG, ">> $RealBin/../log.txt";
-        print LOG "------------------------show output------------------------------------------------\n";
-        print LOG localtime() . "\n";
-        print LOG "$output\n";
-        print LOG "========================================================================\n";
-        close LOG;
+        $self->debug("---- show output\n");
+        $self->debug("$output\n", 0);
+        $self->debug("=========================\n", 0);
     }
 
     if (exists $self->{options}->{'-paste'} or (defined $self->{got_run} and $self->{got_run} eq 'paste')) {
@@ -429,37 +421,62 @@ sub show_output($self) {
         $pretty_code .= "$output\n";
         $pretty_code .= $output_closing_comment;
 
-        my $uri = $self->paste_0x0($pretty_code);
+        my $uri = paste_0x0(encode('UTF-8', $pretty_code));
         print "$uri\n";
+        $self->done;
         exit 0;
     }
 
-    if ($self->{channel} =~ m/^#/ and length $output > 22 and open LOG, "< $RealBin/../history/$self->{channel}-$self->{lang}.last-output") {
+    if ($self->{channel} =~ m/^#/ and length $output > 22 and open my $fh, '<:encoding(UTF-8)', "$RealBin/../history/$self->{channel}-$self->{lang}.last-output") {
         my $last_output;
-        my $time = <LOG>;
+        my $time = <$fh>;
 
         if (gettimeofday - $time > 60 * 4) {
-            close LOG;
+            close $fh;
         } else {
-            while (my $line = <LOG>) {
+            while (my $line = <$fh>) {
                 $last_output .= $line;
             }
-            close LOG;
+            close $fh;
 
             if ((not $self->{factoid}) and defined $last_output and $last_output eq $output) {
                 print "Same output.\n";
+                $self->done;
                 exit 0;
             }
         }
     }
 
-    print "$output\n";
+    print encode('UTF-8', "$output\n");
 
-    open LOG, "> $RealBin/../history/$self->{channel}-$self->{lang}.last-output" or die "Couldn't open $self->{channel}-$self->{lang}.last-output: $!";
+    my $file = "$RealBin/../history/$self->{channel}-$self->{lang}.last-output";
+    open my $fh, '>:encoding(UTF-8)', $file or die "Couldn't open $file: $!";
     my $now = gettimeofday;
-    print LOG "$now\n";
-    print LOG "$output";
-    close LOG;
+    print $fh "$now\n";
+    print $fh "$output";
+    close $fh;
+}
+
+sub debug($self, $text, $timestamp = 1) {
+    if (not exists $self->{logh}) {
+        open $self->{logh}, '>>:encoding(UTF-8)', "$RealBin/../log.txt" or die "Could not open log file: $!";
+    }
+
+    if ($timestamp) {
+        my ($sec, $usec) = gettimeofday;
+        my $time = strftime "%a %b %e %Y %H:%M:%S", localtime $sec;
+        $time .= sprintf ".%03d", $usec / 1000;
+        print { $self->{logh} } "$time :: $text";
+    } else {
+        print { $self->{logh} } $text;
+    }
+}
+
+sub done($self) {
+    if ($self->{logh}) {
+        close $self->{logh};
+        delete $self->{logh};
+    }
 }
 
 1;

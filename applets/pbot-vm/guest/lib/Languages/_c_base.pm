@@ -14,7 +14,7 @@ sub preprocess {
 
   my $input = $self->{input} // '';
 
-  open(my $fh, '>', '.input');
+  open(my $fh, '>:encoding(UTF-8)', '.input');
   print $fh "$input\n";
   close $fh;
 
@@ -24,7 +24,7 @@ sub preprocess {
     # remove print_last_statement wrapper in order to get warnings/errors from last statement line
     my $code = $self->{code};
     $code =~ s/print_last_statement\((.*)\);$/$1;/mg;
-    open(my $fh, '>', $self->{sourcefile}) or die $!;
+    open(my $fh, '>:encoding(UTF-8)', $self->{sourcefile}) or die $!;
     print $fh $code . "\n";
     close $fh;
 
@@ -37,7 +37,7 @@ sub preprocess {
 
     # now compile with print_last_statement intact, ignoring compile results
     if (not $self->{error}) {
-      open(my $fh, '>', $self->{sourcefile}) or die $!;
+      open(my $fh, '>:encoding(UTF-8)', $self->{sourcefile}) or die $!;
       print $fh $self->{code} . "\n";
       close $fh;
 
@@ -45,7 +45,7 @@ sub preprocess {
       $self->execute(60, undef, @cmd);
     }
   } else {
-    open(my $fh, '>', $self->{sourcefile}) or die $!;
+    open(my $fh, '>:encoding(UTF-8)', $self->{sourcefile}) or die $!;
     print $fh $self->{code} . "\n";
     close $fh;
 
@@ -64,6 +64,7 @@ sub preprocess {
 
 sub postprocess {
   my $self = shift;
+
   $self->SUPER::postprocess;
 
   # no errors compiling, but if output contains something, it must be diagnostic messages

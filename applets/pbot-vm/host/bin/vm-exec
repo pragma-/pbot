@@ -258,6 +258,7 @@ sub main() {
 
     $lang->postprocess_output;
     $lang->show_output;
+    $lang->done;
 }
 
 main();

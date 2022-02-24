@@ -21,8 +21,6 @@ use constant {
     MOD_DIR   => '/usr/local/share/pbot-vm/',
     SERIAL    => '/dev/ttyS1',
     HEARTBEAT => '/dev/ttyS2',
-    INPUT     => '/dev/stdin',
-    OUTPUT    => '/dev/stdout',
     VPORT     => $ENV{PBOTVM_VPORT} // 5555,
 };
 

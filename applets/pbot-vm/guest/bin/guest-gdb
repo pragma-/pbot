@@ -144,6 +144,7 @@ sub gdb_read_result($out) {
 
 sub gdbmi_to_json($text, $makejson = 1) {
     $text =~ s/([\w-]+)=/"$1":/g if $makejson;
+    $text =~ s/\\(\d{3})/chr oct $1/ge;
     return decode_json("{$text}");
 }
 
@@ -284,7 +285,7 @@ sub get_main_start_end($context) {
                 $braces--;
 
                 if ($braces == 0) {
-                    $end = $line;
+                    $end = $line - 1;
                     last;
                 }
             }
@@ -609,6 +610,9 @@ sub print_gdb_output($context, $text) {
 }
 
 sub perform_preamble($context) {
+    gdb_send_and_discard($context, "set charset UTF-8");
+    gdb_send_and_discard($context, "set print sevenbit-strings on");
+
     # get start and end line numbers for main() function
     my ($start, $end) = get_main_start_end($context);
 
@@ -654,7 +658,7 @@ sub main {
 
     # open OUTPUT_FILENAME file to send gdb output
     unlink OUTPUT_FILENAME;
-    open($context->{prog_output}, '>>', OUTPUT_FILENAME) or die "Could not open ".OUTPUT_FILENAME." for append: $!";
+    open($context->{prog_output}, '>>:encoding(UTF-8)', OUTPUT_FILENAME) or die "Could not open ".OUTPUT_FILENAME." for append: $!";
 
     # time-out after a few seconds
     start_timeout($context, 8);

@@ -42,8 +42,7 @@ sub initialize {
 sub preprocess {
     my $self = shift;
 
-    open(my $fh, '>', $self->{sourcefile}) or die $!;
-    binmode($fh, ':utf8');
+    open(my $fh, '>:encoding(UTF-8)', $self->{sourcefile}) or die $!;
     print $fh $self->{code} . "\n";
     close $fh;
 

@@ -56,8 +56,6 @@ sub read_input($input, $buffer, $tag) {
     $$buffer = '';
     $total_read = 0;
 
-    $line = encode('UTF-8', $line);
-
     print STDERR "-" x 40, "\n";
     print STDERR "$tag got [$line]\n";
 

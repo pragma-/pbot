@@ -88,13 +88,13 @@ sub pretty_format {
 
   $code = $self->{code} if not defined $code;
 
-  open my $fh, ">$self->{sourcefile}" or die "Couldn't write $self->{sourcefile}: $!";
+  open my $fh, '>:encoding(UTF-8)', $self->{sourcefile} or die "Couldn't write $self->{sourcefile}: $!";
   print $fh $code;
   close $fh;
 
   system("astyle", "-A3", "-UHpnfq", $self->{sourcefile});
 
-  open $fh, "<$self->{sourcefile}" or die "Couldn't read $self->{sourcefile}: $!";
+  open $fh, '<:encoding(UTF-8)', $self->{sourcefile} or die "Couldn't read $self->{sourcefile}: $!";
   $result = join '', <$fh>;
   close $fh;
 
@@ -103,6 +103,7 @@ sub pretty_format {
 
 sub preprocess_code {
   my $self = shift;
+
   $self->SUPER::preprocess_code(omit_prelude => 1);
 
   my $default_prelude = exists $self->{options}->{'-noheaders'} ? '' : $self->{prelude};
@@ -363,6 +364,7 @@ sub preprocess_code {
 
 sub postprocess_output {
   my $self = shift;
+
   $self->SUPER::postprocess_output;
 
   my $output = $self->{output};

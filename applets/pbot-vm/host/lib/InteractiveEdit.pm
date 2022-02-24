@@ -18,8 +18,6 @@ use parent qw(Exporter);
 our @EXPORT = qw(interactive_edit);
 
 sub interactive_edit($self) {
-    my (@last_code, $unshift_last_code);
-
     my $code = $self->{code};
 
     print "      code: [$code]\n" if $self->{debug};
@@ -31,22 +29,15 @@ sub interactive_edit($self) {
     if ($subcode =~ s/^\s*copy\s+(\S+)\s*//) {
         my $copy = $1;
 
-        if (open LOG, "< $RealBin/../history/$copy-$self->{lang}.hist") {
-            $copy_code = <LOG>;
-            close LOG;
-            goto COPY_ERROR if not $copy_code;;
-            chomp $copy_code;
-        } else {
-            goto COPY_ERROR;
+        my @code = load_history("$RealBin/../history/$copy-$self->{lang}.hist");
+
+        $copy_code = $code[0];
+
+        if (not defined $copy_code) {
+            print "No history for $copy.\n";
+            exit 0;
         }
 
-        goto COPY_SUCCESS;
-
-        COPY_ERROR:
-        print "No history for $copy.\n";
-        exit 0;
-
-        COPY_SUCCESS:
         $code = $copy_code;
         $self->{only_show} = 1;
         $self->{copy_code} = 1;
@@ -56,13 +47,7 @@ sub interactive_edit($self) {
         $self->{channel} = $1;
     }
 
-    if (open LOG, "< $RealBin/../history/$self->{channel}-$self->{lang}.hist") {
-        while (my $line = <LOG>) {
-            chomp $line;
-            push @last_code, $line;
-        }
-        close LOG;
-    }
+    my @last_code = load_history("$RealBin/../history/$self->{channel}-$self->{lang}.hist");
 
     unshift @last_code, $copy_code if defined $copy_code;
 
@@ -463,6 +448,8 @@ sub interactive_edit($self) {
         }
     }
 
+    my $unshift_last_code = 0;
+
     unless($got_undo and not $got_changes) {
         $unshift_last_code = 1 unless $copy_code and not $got_changes;
     }
@@ -480,15 +467,7 @@ sub interactive_edit($self) {
             unshift @last_code, $code;
         }
 
-        open LOG, "> $RealBin/../history/$self->{channel}-$self->{lang}.hist";
-
-        my $i = 0;
-        foreach my $line (@last_code) {
-            last if (++$i > $self->{max_history});
-            print LOG "$line\n";
-        }
-
-        close LOG;
+        save_history("$RealBin/../history/$self->{channel}-$self->{lang}.hist", \@last_code, $self->{max_history});
     }
 
     if ($got_diff) {
@@ -514,6 +493,36 @@ sub interactive_edit($self) {
     }
 
     $self->{code} = $code;
+}
+
+sub save_history($path, $lines, $max_lines) {
+    open my $fh, '>:encoding(UTF-8)', $path;
+    return if not $fh;
+
+    my $i = 0;
+    foreach my $line (@$lines) {
+        last if (++$i > $max_lines);
+        print $fh "$line\n";
+    }
+
+    close $fh;
+}
+
+sub load_history($path) {
+    my @lines;
+    my $fh;
+
+    if (not open $fh, '<:encoding(UTF-8)',  $path) {
+        return undef;
+    }
+
+    while (my $line = <$fh>) {
+        chomp $line;
+        push @lines, $line;
+    }
+
+    close $fh;
+    return @lines;
 }
 
 1;
