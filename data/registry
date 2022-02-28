@@ -229,14 +229,6 @@
          "type" : "text",
          "value" : "1"
       },
-      "show_url_titles_channels" : {
-         "type" : "array",
-         "value" : ".*"
-      },
-      "show_url_titles_ignore_channels" : {
-         "type" : "array",
-         "value" : "none"
-      },
       "strictnamespace" : {
          "type" : "text",
          "value" : "0"
