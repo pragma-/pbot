@@ -55,7 +55,7 @@ sub remove_process {
 }
 
 sub execute_process {
-    my ($self, $context, $subref, $timeout) = @_;
+    my ($self, $context, $subref, $timeout, $reader_subref) = @_;
 
     $timeout //= 30; # default timeout 30 seconds
 
@@ -141,7 +141,11 @@ sub execute_process {
         $self->add_process($context->{pid}, $context);
 
         # add reader handler
-        $self->{pbot}->{select_handler}->add_reader($reader, sub { $self->process_pipe_reader($context->{pid}, @_) });
+        if (defined $reader_subref) {
+            $self->{pbot}->{select_handler}->add_reader($reader, sub { $reader_subref->($context->{pid}, @_) });
+        } else {
+            $self->{pbot}->{select_handler}->add_reader($reader, sub { $self->process_pipe_reader($context->{pid}, @_) });
+        }
 
         # return empty string since reader will handle the output when child is finished
         return '';

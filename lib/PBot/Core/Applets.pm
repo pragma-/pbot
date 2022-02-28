@@ -109,7 +109,7 @@ sub launch_applet {
     }
 
     if (length $stderr) {
-        if (open(my $fh, '>>', "$applet-stderr")) {
+        if (open(my $fh, '>>:encoding(UTF-8)', "$applet-stderr")) {
             print $fh $stderr;
             close $fh;
         } else {

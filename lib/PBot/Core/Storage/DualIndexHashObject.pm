@@ -111,7 +111,7 @@ sub save {
         $self->{pbot}->{logger}->log("Saving $self->{name} to $filename\n");
 
         if (not $self->get_data('$metadata$', '$metadata$', 'update_version')) {
-            $self->add('$metadata$', '$metadata$', { update_version => PBot::VERSION::BUILD_REVISION });
+            $self->add('$metadata$', '$metadata$', { update_version => PBot::VERSION::BUILD_REVISION }, 1, 1);
         }
 
         $self->set('$metadata$', '$metadata$', 'name', $self->{name}, 1);
