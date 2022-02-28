@@ -293,7 +293,7 @@ sub show_url_titles {
         my $url = $1;
 
         $url =~ s/\W$//;
-		$url =~ s,https://mobile.twitter.com,https://twitter.com,i;
+        $url =~ s,https://mobile.twitter.com,https://twitter.com,i;
 
         if ($self->{pbot}->{antispam}->is_spam('url', $url)) {
             $self->{pbot}->{logger}->log("Ignoring spam URL $url\n");
