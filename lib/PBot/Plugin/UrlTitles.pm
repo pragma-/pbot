@@ -39,7 +39,7 @@ sub initialize {
     # can be overridden per-channel
     $self->{pbot}->{registry}->add_default('text', 'general', 'show_url_titles', $conf{show_url_titles} // 1);
 
-    # listen to these handlers
+    # handle these events
     $self->{pbot}->{event_dispatcher}->register_handler('irc.public',  sub { $self->show_url_titles(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.caction', sub { $self->show_url_titles(@_) });
 }
@@ -53,64 +53,64 @@ sub unload {
 sub is_ignored_url {
     my ($self, $url) = @_;
 
-	return 1 if $url =~ m{https?://matrix\.to}i;
-	return 1 if $url =~ m{https?://.*\.c$}i;
-	return 1 if $url =~ m{https?://.*\.h$}i;
-	return 1 if $url =~ m{https?://ibb.co/}i;
-	return 1 if $url =~ m{https?://.*onlinegdb.com}i;
-	return 1 if $url =~ m{googlesource.com/}i;
-	return 1 if $url =~ m{https?://git}i and $url !~ /commit/i and $url !~ /github.com/;
-	return 1 if $url =~ m{https://.*swissborg.com}i;
-	return 1 if $url =~ m{https://streamable.com}i;
-	return 1 if $url =~ m{https://matrix.org}i;
-	return 1 if $url =~ m{https?://coliru\..*}i;
-	return 1 if $url =~ m{localhost}i;
-	return 1 if $url =~ m{127}i;
-	return 1 if $url =~ m{192.168}i;
-	return 1 if $url =~ m{file://}i;
-	return 1 if $url =~ m{\.\.}i;
-	return 1 if $url =~ m{https?://www.irccloud.com/pastebin}i;
-	return 1 if $url =~ m{http://smuj.ca/cl}i;
-	return 1 if $url =~ m{/man\d+/}i;
-	return 1 if $url =~ m{godbolt.org}i;
-	return 1 if $url =~ m{man\.cgi}i;
-	return 1 if $url =~ m{wandbox}i;
-	return 1 if $url =~ m{ebay.com/itm}i;
-	return 1 if $url =~ m/prntscr.com/i;
-	return 1 if $url =~ m/imgbin.org/i;
-	return 1 if $url =~ m/jsfiddle.net/i;
-	return 1 if $url =~ m/port70.net/i;
-	return 1 if $url =~ m/notabug.org/i;
-	return 1 if $url =~ m/flickr.com/i;
-	return 1 if $url =~ m{www.open-std.org/jtc1/sc22/wg14/www/docs/dr}i;
-	return 1 if $url =~ m/cheezburger/i;
-	return 1 if $url =~ m/rafb.me/i;
-	return 1 if $url =~ m/rextester.com/i;
-	return 1 if $url =~ m/explosm.net/i;
-	return 1 if $url =~ m/stackoverflow.com/i;
-	return 1 if $url =~ m/scratch.mit.edu/i;
-	return 1 if $url =~ m/c-faq.com/i;
-	return 1 if $url =~ m/imgur.com/i;
-	return 1 if $url =~ m/sprunge.us/i;
-	return 1 if $url =~ m/pastebin.ws/i;
-	return 1 if $url =~ m/hastebin.com/i;
-	return 1 if $url =~ m/lmgtfy.com/i;
-	return 1 if $url =~ m/gyazo/i;
-	return 1 if $url =~ m/imagebin/i;
-	return 1 if $url =~ m/\/wiki\//i;
-	return 1 if $url =~ m!github.com/.*/tree/.*/source/.*!i;
-	return 1 if $url =~ m!github.com/.*/commits/.*!i;
-	return 1 if $url =~ m!/blob/!i;
-	return 1 if $url =~ m/wiki.osdev.org/i;
-	return 1 if $url =~ m/wikipedia.org/i;
-	return 1 if $url =~ m/fukung.net/i;
-	return 1 if $url =~ m/\/paste\//i;
-	return 1 if $url =~ m/paste\./i;
-	return 1 if $url =~ m/pastie/i;
-	return 1 if $url =~ m/ideone.com/i;
-	return 1 if $url =~ m/codepad.org/i;
-	return 1 if $url =~ m/^http\:\/\/past(e|ing)\./i;
-	return 1 if $url =~ m/past(?:e|ing).*\.(?:com|org|net|ch|ca|de|uk|info)/i;
+    return 1 if $url =~ m{https?://matrix\.to}i;
+    return 1 if $url =~ m{https?://.*\.c$}i;
+    return 1 if $url =~ m{https?://.*\.h$}i;
+    return 1 if $url =~ m{https?://ibb.co/}i;
+    return 1 if $url =~ m{https?://.*onlinegdb.com}i;
+    return 1 if $url =~ m{googlesource.com/}i;
+    return 1 if $url =~ m{https?://git}i and $url !~ /commit/i and $url !~ /github.com/;
+    return 1 if $url =~ m{https://.*swissborg.com}i;
+    return 1 if $url =~ m{https://streamable.com}i;
+    return 1 if $url =~ m{https://matrix.org}i;
+    return 1 if $url =~ m{https?://coliru\..*}i;
+    return 1 if $url =~ m{localhost}i;
+    return 1 if $url =~ m{127}i;
+    return 1 if $url =~ m{192.168}i;
+    return 1 if $url =~ m{file://}i;
+    return 1 if $url =~ m{\.\.}i;
+    return 1 if $url =~ m{https?://www.irccloud.com/pastebin}i;
+    return 1 if $url =~ m{http://smuj.ca/cl}i;
+    return 1 if $url =~ m{/man\d+/}i;
+    return 1 if $url =~ m{godbolt.org}i;
+    return 1 if $url =~ m{man\.cgi}i;
+    return 1 if $url =~ m{wandbox}i;
+    return 1 if $url =~ m{ebay.com/itm}i;
+    return 1 if $url =~ m/prntscr.com/i;
+    return 1 if $url =~ m/imgbin.org/i;
+    return 1 if $url =~ m/jsfiddle.net/i;
+    return 1 if $url =~ m/port70.net/i;
+    return 1 if $url =~ m/notabug.org/i;
+    return 1 if $url =~ m/flickr.com/i;
+    return 1 if $url =~ m{www.open-std.org/jtc1/sc22/wg14/www/docs/dr}i;
+    return 1 if $url =~ m/cheezburger/i;
+    return 1 if $url =~ m/rafb.me/i;
+    return 1 if $url =~ m/rextester.com/i;
+    return 1 if $url =~ m/explosm.net/i;
+    return 1 if $url =~ m/stackoverflow.com/i;
+    return 1 if $url =~ m/scratch.mit.edu/i;
+    return 1 if $url =~ m/c-faq.com/i;
+    return 1 if $url =~ m/imgur.com/i;
+    return 1 if $url =~ m/sprunge.us/i;
+    return 1 if $url =~ m/pastebin.ws/i;
+    return 1 if $url =~ m/hastebin.com/i;
+    return 1 if $url =~ m/lmgtfy.com/i;
+    return 1 if $url =~ m/gyazo/i;
+    return 1 if $url =~ m/imagebin/i;
+    return 1 if $url =~ m/\/wiki\//i;
+    return 1 if $url =~ m!github.com/.*/tree/.*/source/.*!i;
+    return 1 if $url =~ m!github.com/.*/commits/.*!i;
+    return 1 if $url =~ m!/blob/!i;
+    return 1 if $url =~ m/wiki.osdev.org/i;
+    return 1 if $url =~ m/wikipedia.org/i;
+    return 1 if $url =~ m/fukung.net/i;
+    return 1 if $url =~ m/\/paste\//i;
+    return 1 if $url =~ m/paste\./i;
+    return 1 if $url =~ m/pastie/i;
+    return 1 if $url =~ m/ideone.com/i;
+    return 1 if $url =~ m/codepad.org/i;
+    return 1 if $url =~ m/^http\:\/\/past(e|ing)\./i;
+    return 1 if $url =~ m/past(?:e|ing).*\.(?:com|org|net|ch|ca|de|uk|info)/i;
 
     # not ignored
     return 0;
@@ -119,26 +119,26 @@ sub is_ignored_url {
 sub is_ignored_title {
     my ($self, $title) = @_;
 
-	return 1 if $title =~ m{^Loading}i;
-	return 1 if $title =~ m{streamable}i;
-	return 1 if $title =~ m{^IBM Knowledge Center$}i;
-	return 1 if $title =~ m{Freenode head of infrastructure}i;
-	return 1 if $title =~ m/^Coliru Viewer$/i;
-	return 1 if $title =~ m/^Gerrit Code Review$/i;
-	return 1 if $title =~ m/^Public Git Hosting -/i;
-	return 1 if $title =~ m/git\/blob/i;
-	return 1 if $title =~ m/\sdiff\s/i;
-	return 1 if $title =~ m/- Google Search$/;
-	return 1 if $title =~ m/linux cross reference/i;
-	return 1 if $title =~ m/screenshot/i;
-	return 1 if $title =~ m/pastebin/i;
-	return 1 if $title =~ m/past[ea]/i;
-	return 1 if $title =~ m/^[0-9_-]+$/;
-	return 1 if $title =~ m/^Index of \S+$/;
-	return 1 if $title =~ m/(?:sign up|login)/i;
+    return 1 if $title =~ m{^Loading}i;
+    return 1 if $title =~ m{streamable}i;
+    return 1 if $title =~ m{^IBM Knowledge Center$}i;
+    return 1 if $title =~ m{Freenode head of infrastructure}i;
+    return 1 if $title =~ m/^Coliru Viewer$/i;
+    return 1 if $title =~ m/^Gerrit Code Review$/i;
+    return 1 if $title =~ m/^Public Git Hosting -/i;
+    return 1 if $title =~ m/git\/blob/i;
+    return 1 if $title =~ m/\sdiff\s/i;
+    return 1 if $title =~ m/- Google Search$/;
+    return 1 if $title =~ m/linux cross reference/i;
+    return 1 if $title =~ m/screenshot/i;
+    return 1 if $title =~ m/pastebin/i;
+    return 1 if $title =~ m/past[ea]/i;
+    return 1 if $title =~ m/^[0-9_-]+$/;
+    return 1 if $title =~ m/^Index of \S+$/;
+    return 1 if $title =~ m/(?:sign up|login)/i;
 
-	# not ignored
-	return  0;
+    # not ignored
+    return  0;
 }
 
 sub get_title {
