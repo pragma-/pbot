@@ -441,14 +441,16 @@ sub cmd_print_last_statement($context, $args) {
 }
 
 sub handle_program_exit($context, $data) {
-    my $reason = $data->{reason};
-
     if (not -s OUTPUT_FILENAME) { # -s gets size of file
         my $locals = locals_to_string($context->{locals_end});
 
         if (length $locals) {
             print_gdb_output($context, "no output: $locals");
         }
+    }
+
+    if (exists $data->{'exit-code'} && $data->{'exit-code'} != 0) {
+        $context->{'exit-code'} = oct $data->{'exit-code'};
     }
 
     _exit($context);
@@ -541,7 +543,7 @@ sub handle_exec_async_output($context, $output) {
         if ($reason eq 'breakpoint-hit') {
             handle_breakpoint_hit($context, $output);
         }
-        elsif ($reason eq 'exited-normally') {
+        elsif ($reason eq 'exited-normally' || $reason eq 'exited') {
             handle_program_exit($context, $output);
         }
         elsif ($reason eq 'signal-received') {
@@ -592,9 +594,9 @@ sub _exit($context) {
     my $output = do { local $/; <$fh> };
     close $fh;
 
-    print STDOUT "$output\n";
+    print STDOUT "$output";
 
-    exit;
+    exit ($context->{'exit-code'} // 0);
 }
 
 # send text to OUTPUT_FILENAME file

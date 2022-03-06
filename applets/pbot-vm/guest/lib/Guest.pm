@@ -150,9 +150,11 @@ sub run_command($command, $mod) {
             if (not $mod->{error}) {
                 $mod->{output} .= "Success (no output).\n";
             } else {
-                $mod->{output} .= "Exit code $mod->{error}.\n";
+                $mod->{output} .= "Exit $mod->{error}.\n";
             }
         }
+    } elsif ($mod->{error}) {
+        $mod->{output} .= " [Exit $mod->{error}]";
     }
 
     return $mod->{output};
