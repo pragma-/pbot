@@ -60,6 +60,12 @@ sub preprocess {
     if ($self->{cmdline} =~ m/--(?:version|analyze)/) {
         $self->{done} = 1;
     }
+
+    # set done instead of error to prevent "[Exit 1]" output for compiler error messages
+    if ($self->{error}) {
+        $self->{error} = 0;
+        $self->{done}  = 1;
+    }
 }
 
 sub postprocess {
