@@ -36,6 +36,7 @@ sub cmd_blacklist {
 
     given ($command) {
         when ($_ eq "list" or $_ eq "show") {
+            my $blacklist = $self->{pbot}->{blacklist}->{storage};
             my $text    = "Blacklist:\n";
             my $entries = 0;
 
@@ -66,7 +67,7 @@ sub cmd_blacklist {
             $channel = '.*' if not defined $channel;
 
             $self->{pbot}->{logger}->log("$context->{hostmask} added [$mask] to blacklist for channel [$channel]\n");
-            $self->add($channel, $mask);
+            $self->{pbot}->{blacklist}->add($channel, $mask);
             return "/say $mask blacklisted in channel $channel";
         }
 
@@ -83,7 +84,7 @@ sub cmd_blacklist {
                 return "/say $mask not found in blacklist for channel $channel (use `blacklist list` to display blacklist)";
             }
 
-            $self->remove($channel, $mask);
+            $self->{pbot}->{blacklist}->remove($channel, $mask);
             $self->{pbot}->{logger}->log("$context->{hostmask} removed $mask from blacklist for channel $channel\n");
             return "/say $mask removed from blacklist for channel $channel";
         }
