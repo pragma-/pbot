@@ -25,7 +25,7 @@ sub new {
     $self->{execfile}      = $conf{execfile};
     $self->{code}          = $conf{code};
     $self->{cmdline}       = $conf{cmdline};
-    $self->{input}         = $conf{input};
+    $self->{input}         = $conf{input} // '';
     $self->{date}          = $conf{date};
     $self->{arguments}     = $conf{arguments};
     $self->{factoid}       = $conf{factoid};
@@ -46,20 +46,23 @@ sub preprocess {
     print $fh $self->{code} . "\n";
     close $fh;
 
-    my $quoted_args = '';
+    my $quoted_args = $self->quote_args($self->{arguments});
 
-    if (length $self->{arguments}) {
-        my @args = $self->split_line($self->{arguments}, strip_quotes => 1, preserve_escapes => 0);
+    my $stdin = 'ulimit -f 2000; ulimit -t 8; ulimit -u 200; ';
 
-        foreach my $arg (@args) {
-            $arg =~ s/'/'"'"'/g;
-            $quoted_args .= "'$arg' ";
-        }
+    if (length $self->{input}) {
+        my $quoted_cmd = "$self->{cmdline} $quoted_args";
+        $quoted_cmd =~ s/'/'"'"'/g;
+
+        my $quoted_input = $self->{input};
+        $quoted_input =~ s/'/'"'"'/g;
+
+        $stdin .= "/bin/bash -c '$quoted_cmd' <<< '$quoted_input'";
+    } else {
+        $stdin .= "$self->{cmdline} $quoted_args";
     }
 
-    $self->{input} = "ulimit -f 2000; ulimit -t 8; ulimit -u 200; $self->{cmdline} $quoted_args";
-
-    my ($retval, $stdout, $stderr) = $self->execute(60, $self->{input}, '/bin/sh');
+    my ($retval, $stdout, $stderr) = $self->execute(60, $stdin, '/bin/sh');
 
     $self->{output} = $stderr;
     $self->{output} .= ' ' if length $self->{output};
@@ -206,6 +209,21 @@ sub split_line {
     }
 
     return @args;
+}
+
+sub quote_args {
+    my ($self, $text) = @_;
+
+    my @args = $self->split_line($text, strip_quotes => 1, preserve_escapes => 0);
+
+    my $quoted = '';
+
+    foreach my $arg (@args) {
+        $arg =~ s/'/'"'"'/g;
+        $quoted .= "'$arg' ";
+    }
+
+    return $quoted;
 }
 
 1;
