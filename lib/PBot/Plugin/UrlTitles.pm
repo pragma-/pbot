@@ -202,6 +202,7 @@ sub get_title {
 
     # send result back to parent
     $context->{result} = $title;
+    $context->{url}    = $url;
 }
 
 sub title_pipe_reader {
@@ -231,8 +232,9 @@ sub title_pipe_reader {
 
     # update history
     $data = {
+        url       => $context->{url},
         timestamp => time,
-        hostmask => $context->{hostmask},
+        hostmask  => $context->{hostmask},
     };
 
     $self->{history}->add($context->{from}, $title, $data, 0, 1);
