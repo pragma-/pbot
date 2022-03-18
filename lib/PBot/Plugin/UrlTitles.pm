@@ -18,8 +18,7 @@ use JSON::XS;
 
 use constant {
     TIMEOUT    => 30,
-    USER_AGENT => 'Mozilla/5.0 (compatible)',
-    MAX_SIZE   => 1024 * 200,
+    MAX_SIZE   => 1024 * 800,
 };
 
 sub initialize {
@@ -148,7 +147,15 @@ sub get_title {
 
     my $ua = LWP::UserAgent::Paranoid->new(request_timeout => TIMEOUT);
 
-    $ua->agent(USER_AGENT);
+    my $user_agent;
+
+    if ($url =~ /twitter.com/) {
+        $user_agent = 'Mozilla/5.0 (compatible; Googlebot/2.1; +https://www.google.com/bot.html)',
+    } else {
+        $user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:98.0) Gecko/20100101 Firefox/98.0';
+    }
+
+    $ua->agent($user_agent);
     $ua->max_size(MAX_SIZE);
 
     my $response = $ua->get($url);
