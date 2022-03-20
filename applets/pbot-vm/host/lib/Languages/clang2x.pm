@@ -15,8 +15,8 @@ sub initialize {
   $self->{sourcefile}      = 'prog.c';
   $self->{execfile}        = 'prog';
   $self->{default_options} = '-Wextra -Wall -Wno-unused -Wno-unused-parameter -pedantic -Wfloat-equal -Wshadow -std=c2x -lm -Wfatal-errors -fsanitize=integer,alignment,undefined -fsanitize-address-use-after-scope -fno-omit-frame-pointer';
-  $self->{options_paste}   = '-fdiagnostics-show-caret';
-  $self->{options_nopaste} = '-fno-diagnostics-show-caret';
+  $self->{options_paste}   = '-fcaret-diagnostics';
+  $self->{options_nopaste} = '-fno-caret-diagnostics';
   $self->{cmdline}         = 'clang -gdwarf-2 -g3 $sourcefile $options -o $execfile';
 
   $self->{prelude} = <<'END';

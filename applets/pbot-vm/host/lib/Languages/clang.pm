@@ -7,6 +7,6 @@ use warnings;
 use strict;
 
 package Languages::clang;
-use parent 'Languages::clang11';
+use parent 'Languages::clang2x';
 
 1;
