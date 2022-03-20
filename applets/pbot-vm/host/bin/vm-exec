@@ -219,7 +219,7 @@ sub configure_context($context, $config) {
     # set any undefined values to default values
     $context->{nick}        //= 'vm';
     $context->{channel}     //= 'vm';
-    $context->{lang}        //= 'c11';
+    $context->{lang}        //= 'c2x';
     $context->{'vm-serial'} //= SERIAL;
     $context->{'vm-cid'}    //= CID;
     $context->{'vm-vport'}  //= VPORT;
