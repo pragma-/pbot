@@ -167,13 +167,16 @@ sub cache_remove {
     if (not defined $index2) {
         # remove index1
         delete $self->{cache}->{$index1};
+        $self->dequeue_decache($index1, '.*');
     } else {
         # remove index2
         delete $self->{cache}->{$index1}->{$index2};
+        $self->dequeue_decache($index1, $index2);
 
         # remove index1 if it has no more keys left (aside from _name)
         if (not grep { $_ ne '_name' } keys %{$self->{cache}->{$index1}}) {
             delete $self->{cache}->{$index1};
+            $self->dequeue_decache($index1, '.*');
         }
     }
 }
@@ -195,6 +198,12 @@ sub enqueue_decache {
             $self->{cache}->{$index1}->{$index2}->{_name} = $name if defined $name;
         }, $timeout, "Decache $self->{name} " . ($index1 eq '.*' ? 'global' : $index1) . ".$index2"
     );
+}
+
+sub dequeue_decache {
+    my ($self, $index1, $index2) = @_;
+    my $key = ($index1 eq '.*' ? 'global' : $index1) . ".$index2";
+    $self->{pbot}->{event_queue}->dequeue("Decache $self->{name} $key");
 }
 
 sub create_metadata {
