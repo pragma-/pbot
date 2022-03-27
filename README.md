@@ -273,7 +273,7 @@ Applet | Description
 [C precedence analyzer](applets/paren) | Adds parentheses to C code to demonstrate precedence.
 [C Jeopardy! game](applets/cjeopardy) | C programming trivia game based on the Jeopardy! TV game show.
 [C Standard citations](applets/c11std.pl) | Cite specified sections/paragraphs from the C standard.
-[Virtual machine](applets/compiler_vm) | Executes arbitrary code and commands within a virtual machine.
+[Virtual machine](applets/pbot-vm) | Executes arbitrary code and commands within a virtual machine.
 [dict.org Dictionary](applets/dict.org.pl) | Interface to dict.org for definitions, translations, acronyms, etc.
 [Urban Dictionary](applets/urban) | Search Urban Dictionary for definitions.
 [Manpages](applets/man.pl) | Display a concise formatting of manual pages (designed for C functions)

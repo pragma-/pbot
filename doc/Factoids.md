@@ -123,35 +123,35 @@ languages or interpreters.
 
 Name | Description
 --- | ---
-[bash](../applets/compiler_vm/languages/bash.pm) | Bourne-again Shell scripting language
-[bc](../applets/compiler_vm/languages/bc.pm) | An arbitrary precision calculator language
-[bf](../applets/compiler_vm/languages/bf.pm) | BrainFuck esoteric language
-[c11](../applets/compiler_vm/languages/c11.pm) | C programming language using GCC -std=c11
-[c89](../applets/compiler_vm/languages/c89.pm) | C programming language using GCC -std=c89
-[c99](../applets/compiler_vm/languages/c99.pm) | C programming language using GCC -std=c99
-[clang11](../applets/compiler_vm/languages/clang11.pm) | C programming language using Clang -std=c11
-[clang89](../applets/compiler_vm/languages/clang89.pm) | C programming language using Clang -std=c89
-[clang99](../applets/compiler_vm/languages/clang99.pm) | C programming language using Clang -std=c99
-[clang](../applets/compiler_vm/languages/clang.pm) | Alias for `clang11`
-[clangpp](../applets/compiler_vm/languages/clangpp.pm) | C++ programming language using Clang
-[clisp](../applets/compiler_vm/languages/clisp.pm) | Common Lisp dialect of the Lisp programming language
-[cpp](../applets/compiler_vm/languages/cpp.pm) | C++ using GCC
-[freebasic](../applets/compiler_vm/languages/freebasic.pm) | FreeBasic BASIC compiler/interpreter
-[go](../applets/compiler_vm/languages/go.pm) | Golang programming language
-[haskell](../applets/compiler_vm/languages/haskell.pm) | Haskell programming language
-[java](../applets/compiler_vm/languages/java.pm) | Java programming language
-[javascript](../applets/compiler_vm/languages/javascript.pm) | JavaScript programming language
-[ksh](../applets/compiler_vm/languages/ksh.pm) | Korn shell scripting language
-[lua](../applets/compiler_vm/languages/lua.pm) | Lua programming language
-[perl](../applets/compiler_vm/languages/perl.pm) | Perl programming language
-[python3](../applets/compiler_vm/languages/python3.pm) | Python3 programming language
-[python](../applets/compiler_vm/languages/python.pm) | Python programming language
-[qbasic](../applets/compiler_vm/languages/qbasic.pm) | QuickBasic option using FreeBasic
-[ruby](../applets/compiler_vm/languages/ruby.pm) | Ruby programming language
-[scheme](../applets/compiler_vm/languages/scheme.pm) | Scheme dialect of the Lisp programming language
-[sh](../applets/compiler_vm/languages/sh.pm) | Bourne Shell scripting language
-[tcl](../applets/compiler_vm/languages/tcl.pm) | TCL scripting language
-[zsh](../applets/compiler_vm/languages/zsh.pm) | Z Shell scripting language
+[bash](../applets/pbot-vm/guest/lib/Languages/bash.pm) | Bourne-again Shell scripting language
+[bc](../applets/pbot-vm/guest/lib/Languages/bc.pm) | An arbitrary precision calculator language
+[bf](../applets/pbot-vm/guest/lib/Languages/bf.pm) | BrainFuck esoteric language
+[c11](../applets/pbot-vm/guest/lib/Languages/c11.pm) | C programming language using GCC -std=c11
+[c89](../applets/pbot-vm/guest/lib/Languages/c89.pm) | C programming language using GCC -std=c89
+[c99](../applets/pbot-vm/guest/lib/Languages/c99.pm) | C programming language using GCC -std=c99
+[clang11](../applets/pbot-vm/guest/lib/Languages/clang11.pm) | C programming language using Clang -std=c11
+[clang89](../applets/pbot-vm/guest/lib/Languages/clang89.pm) | C programming language using Clang -std=c89
+[clang99](../applets/pbot-vm/guest/lib/Languages/clang99.pm) | C programming language using Clang -std=c99
+[clang](../applets/pbot-vm/guest/lib/Languages/clang.pm) | Alias for `clang11`
+[clangpp](../applets/pbot-vm/guest/lib/Languages/clangpp.pm) | C++ programming language using Clang
+[clisp](../applets/pbot-vm/guest/lib/Languages/clisp.pm) | Common Lisp dialect of the Lisp programming language
+[cpp](../applets/pbot-vm/guest/lib/Languages/cpp.pm) | C++ using GCC
+[freebasic](../applets/pbot-vm/guest/lib/Languages/freebasic.pm) | FreeBasic BASIC compiler/interpreter
+[go](../applets/pbot-vm/guest/lib/Languages/go.pm) | Golang programming language
+[haskell](../applets/pbot-vm/guest/lib/Languages/haskell.pm) | Haskell programming language
+[java](../applets/pbot-vm/guest/lib/Languages/java.pm) | Java programming language
+[javascript](../applets/pbot-vm/guest/lib/Languages/javascript.pm) | JavaScript programming language
+[ksh](../applets/pbot-vm/guest/lib/Languages/ksh.pm) | Korn shell scripting language
+[lua](../applets/pbot-vm/guest/lib/Languages/lua.pm) | Lua programming language
+[perl](../applets/pbot-vm/guest/lib/Languages/perl.pm) | Perl programming language
+[python3](../applets/pbot-vm/guest/lib/Languages/python3.pm) | Python3 programming language
+[python](../applets/pbot-vm/guest/lib/Languages/python.pm) | Python programming language
+[qbasic](../applets/pbot-vm/guest/lib/Languages/qbasic.pm) | QuickBasic option using FreeBasic
+[ruby](../applets/pbot-vm/guest/lib/Languages/ruby.pm) | Ruby programming language
+[scheme](../applets/pbot-vm/guest/lib/Languages/scheme.pm) | Scheme dialect of the Lisp programming language
+[sh](../applets/pbot-vm/guest/lib/Languages/sh.pm) | Bourne Shell scripting language
+[tcl](../applets/pbot-vm/guest/lib/Languages/tcl.pm) | TCL scripting language
+[zsh](../applets/pbot-vm/guest/lib/Languages/zsh.pm) | Z Shell scripting language
 
 #### Special variables
 
