@@ -116,7 +116,7 @@ sub process_command($command, $mod, $user, $tag) {
 
         print STDERR "=" x 40, "\n";
 
-        return $result;
+        return "$result\n";
     } else {
         # wait for child to finish
         waitpid($pid, 0);
