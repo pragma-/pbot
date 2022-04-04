@@ -16,11 +16,11 @@ my $search = join ' ', @ARGV;
 
 if (not length $search) {
     print
-      "Usage: c11std [-list] [-n#] [-section <section>] [search text] -- 'section' must be in the form of X.YpZ where X and Y are section/chapter and, optionally, pZ is paragraph. If both 'section' and 'search text' are specified, then the search space will be within the specified section. You may use -n # to skip to the #th match. To list only the section numbers containing 'search text', add -list.\n";
+    "Usage: c11std [-list] [-n#] [-section <section>] [search text] [-text <regex>] -- `section` must be in the form of `X.Y[pZ]` where `X` and `Y` are section/chapter and, optionally, `pZ` is paragraph. If both `section` and `search text` are specified, then the search space will be within the specified section. Use `-n <n>` to skip to the nth match. To list only the section numbers containing 'search text', add -list. To display specific text, use `-text <regex>`.\n";
     exit 0;
 }
 
-my ($section, $paragraph, $section_specified, $paragraph_specified, $match, $list_only, $list_titles);
+my ($section, $paragraph, $section_specified, $paragraph_specified, $match, $list_only, $list_titles, $match_text);
 
 $section_specified   = 0;
 $paragraph_specified = 0;
@@ -40,8 +40,11 @@ if ($search =~ s/-section\s*([A-Z0-9\.p]+)//i or $search =~ s/\b([A-Z0-9]+\.[0-9
     $section_specified = 1;
 }
 
-if   ($search =~ s/-n\s*(\d+)//) { $match = $1; }
-else                             { $match = 1; }
+if ($search =~ s/-n\s*(\d+)//) {
+    $match = $1;
+} else {
+    $match = 1;
+}
 
 if ($search =~ s/-list//i) {
     $list_only   = 1;
@@ -51,6 +54,10 @@ if ($search =~ s/-list//i) {
 if ($search =~ s/-titles//i) {
     $list_only   = 1;
     $list_titles = 1;
+}
+
+if ($search =~ s/-text ([^ ]+)//) {
+    $match_text = $1;
 }
 
 $search =~ s/^\s+//;
@@ -214,10 +221,10 @@ if ($comma eq "") {
   print "p" . $found_paragraph if $paragraph_specified;
 =cut
 
-    print "http://www.iso-9899.info/n1570.html\#$found_section";
-    print "p" . $found_paragraph if $paragraph_specified;
-    print "\n\n";
-    print "[", $found_section_title, "]\n\n" if length $found_section_title;
+print "http://www.iso-9899.info/n1570.html\#$found_section";
+print "p" . $found_paragraph if $paragraph_specified;
+print "\n\n";
+print "[", $found_section_title, "]\n\n" if length $found_section_title;
 }
 
 $result =~ s/\s*Constraints\s*$//;
@@ -226,5 +233,36 @@ $result =~ s/\s*Description\s*$//;
 $result =~ s/\s*Returns\s*$//;
 $result =~ s/\s*Runtime-constraints\s*$//;
 $result =~ s/\s*Recommended practice\s*$//;
+
+if (length $match_text) {
+    my $match_result = $result;
+    $match_result =~ s/\s+/ /g;
+
+    my $match = eval {
+        $match_result =~ m/(.*)($match_text)(.*)/msi;
+        return [$1, $2, $3];
+    };
+
+    if ($@) {
+        print "Error in -text option: $@\n";
+        exit 1;
+    }
+
+    $result = '';
+
+    if (length $match->[0]) {
+        $result = '... ';
+    }
+
+    if (length $match->[1]) {
+        $result .= $match->[1];
+    } else {
+        $result = "No text found for `$match_text`.";
+    }
+
+    if (length $match->[2]) {
+        $result .= ' ...';
+    }
+}
 
 print "$result\n";
