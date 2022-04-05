@@ -29,6 +29,7 @@ no warnings qw(experimental::signatures);
 use IPC::Open2;
 use JSON::XS;
 use Data::Dumper;
+use Encode qw(decode encode);
 
 # set debug flag from DEBUG env or here
 my $debug = $ENV{DEBUG} // 0;
@@ -151,6 +152,13 @@ sub gdbmi_to_hash($text, $makejson = 1) {
     # (sometimes \\123, othertimes \123 and I can't be arsed to investigate
     # when and why the backslashes double up)
     $text =~ s/\\+(\d{3})/$1 >= 0x20 ? chr oct $1 : "\\\\$1"/ge;
+
+    # fix unicode
+    my $octets = decode('UTF-8', $text, Encode::FB_DEFAULT);
+    $text = encode('UTF-8', $octets, Encode::FB_CROAK);
+
+    # escape invalid JSON characters
+    $text =~ s/([\x10-\x1f])/sprintf '\\\\x{%x}', ord $1/ge;
 
     # return hashtable decoded from json
     return decode_json("{$text}");
