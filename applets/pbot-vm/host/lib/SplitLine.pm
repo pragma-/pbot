@@ -82,7 +82,7 @@ sub split_line ($line, %opts) {
         }
 
         if (defined $quote) {
-            if ($ch eq $quote and (not defined $next_ch or $next_ch =~ /[\s,:;})\].+=]/)) {
+            if ($ch eq $quote and (not defined $next_ch or $next_ch =~ /[\s,:;})\[\].+=]/)) {
                 # closing quote
                 $token .= $ch unless $opts{strip_quotes};
                 push @args, $token;
