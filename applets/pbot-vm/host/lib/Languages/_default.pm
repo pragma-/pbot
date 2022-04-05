@@ -316,6 +316,10 @@ sub execute {
 
         if ($line =~ /^result:/) {
             $line =~ s/^result://;
+
+            my $octets = decode('UTF-8', $line, sub { sprintf '\\\\x%X', shift });
+            $line = encode('UTF-8', $octets, Encode::FB_CROAK);
+
             my $compile_out = decode_json($line);
             $result .= "$compile_out->{result}\n";
             $got_result = 1;
