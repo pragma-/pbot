@@ -146,7 +146,7 @@ sub gdb_read_result($out) {
 # convert gdb/mi text to hashtable, converting to JSON first if necessary
 sub gdbmi_to_hash($text, $makejson = 1) {
     # convert to JSON first if necessary (gdb/mi is nearly JSON already!)
-    $text =~ s/([\w-]+)=/"$1":/g if $makejson;
+    $text =~ s/"(?:[^"\\]|\\.)*"(*SKIP)(*F)|([\w-]+)=/"$1":/g if $makejson;
 
     # decode gdb octal escapes
     # (sometimes \\123, othertimes \123 and I can't be arsed to investigate
@@ -161,7 +161,14 @@ sub gdbmi_to_hash($text, $makejson = 1) {
     $text =~ s/([\x10-\x1f])/sprintf '\\\\x%X', ord $1/ge;
 
     # return hashtable decoded from json
-    return decode_json("{$text}");
+    my $result = eval { decode_json("{$text}") };
+
+    if ($@) {
+        print "Error parsing GDB/MI: $@ (input: $text)\n";
+        exit 1;
+    }
+
+    return $result;
 }
 
 sub parse_gdbmi_output($line) {
