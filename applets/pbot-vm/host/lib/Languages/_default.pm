@@ -360,9 +360,30 @@ sub postprocess_output($self) {
     }
     $self->{output} = $boutput;
 
+    # bell
     my @beeps = qw/*BEEP* *BING* *DING* *DONG* *CLUNK* *BONG* *PING* *BOOP* *BLIP* *BOP* *WHIRR*/;
-
     $self->{output} =~ s/\007/$beeps[rand @beeps]/g;
+
+    # known control characters
+    my %escapes = (
+        "\e" => '<esc>',
+        "\f" => '<ff>',
+
+        # \r and \n are disabled so the bot itself processes them, e.g. when
+        # web-pasting, etc. feel free to uncomment them if you like (add them
+        # to the group in the substitution regex as well).
+
+        # "\r" => '<cr>',
+        # "\n" => '<nl>',
+
+        # \t is left alone
+    );
+
+    $self->{output} =~ s/([\e\f])/$escapes{$1}/gs;
+
+    # other unprintables
+    my %disregard = ( "\n" => 1, "\r" => 1, "\t" => 1 );
+    $self->{output} =~ s/([\x00-\x1f])/$disregard{$1} ? $1 : sprintf('\x%X', ord $1)/gse;
 }
 
 sub show_output($self) {
