@@ -1035,7 +1035,7 @@ sub cmd_factinfo {
         my $applet_repo = $self->{pbot}->{registry}->get_value('general', 'applet_repo');
         $applet_repo .= $factoids->get_data($channel, $trigger, 'workdir') . '/' if $factoids->exists($channel, $trigger, 'workdir');
         return
-            "/say $trigger_name: Module loaded by "
+            "/say $trigger_name: Applet loaded by "
           . $factoids->get_data($channel, $trigger, 'owner')
           . " for $channel_name on "
           . localtime($factoids->get_data($channel, $trigger, 'created_on'))
