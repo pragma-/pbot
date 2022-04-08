@@ -154,11 +154,11 @@ sub gdbmi_to_hash($text, $makejson = 1) {
     $text =~ s/\\+(\d{3})/$1 >= 0x20 ? chr oct $1 : "\\\\$1"/ge;
 
     # escape malformed unicode
-    my $octets = decode('UTF-8', $text, sub { sprintf '\\\\x%X', shift });
+    my $octets = decode('UTF-8', $text, sub { sprintf '\\\\x%02X', shift });
     $text = encode('UTF-8', $octets, Encode::FB_CROAK);
 
     # escape invalid JSON characters
-    $text =~ s/([\x10-\x1f])/sprintf '\\\\x%X', ord $1/ge;
+    $text =~ s/([\x10-\x1f])/sprintf '\\\\x%02X', ord $1/ge;
 
     # return hashtable decoded from json
     my $result = eval { decode_json("{$text}") };

@@ -317,7 +317,7 @@ sub execute {
         if ($line =~ /^result:/) {
             $line =~ s/^result://;
 
-            my $octets = decode('UTF-8', $line, sub { sprintf '\\\\x%X', shift });
+            my $octets = decode('UTF-8', $line, sub { sprintf '\\\\x%02X', shift });
             $line = encode('UTF-8', $octets, Encode::FB_CROAK);
 
             my $compile_out = decode_json($line);
@@ -382,8 +382,8 @@ sub postprocess_output($self) {
     $self->{output} =~ s/([\e\f])/$escapes{$1}/gs;
 
     # other unprintables
-    my %disregard = ( "\n" => 1, "\r" => 1, "\t" => 1 );
-    $self->{output} =~ s/([\x00-\x1f])/$disregard{$1} ? $1 : sprintf('\x%X', ord $1)/gse;
+    my %disregard = ( "\n" => 1, "\r" => 1, "\t" => 1, "\x03" => 1 );
+    $self->{output} =~ s/([\x00-\x1f])/$disregard{$1} ? $1 : sprintf('\x%02X', ord $1)/gse;
 }
 
 sub show_output($self) {
