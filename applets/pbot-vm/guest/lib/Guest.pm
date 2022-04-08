@@ -116,7 +116,10 @@ sub process_command($command, $mod, $user, $tag) {
 
         print STDERR "=" x 40, "\n";
 
-        return "$result\n";
+        # ensure output is newline-terminated
+        $result .= "\n" unless $result =~ /\n$/;
+
+        return $result;
     } else {
         # wait for child to finish
         waitpid($pid, 0);
