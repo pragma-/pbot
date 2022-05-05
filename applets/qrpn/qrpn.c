@@ -76,6 +76,7 @@ static unsigned long long gcd(unsigned long long a, unsigned long long b) {
 
 static unsigned long long nchoosek(const unsigned long long n, const unsigned long long k) {
     if (1 == k) return n;
+    if (k > n - k) return nchoosek(n, n - k);
     unsigned long long n_choose_k = n * (n - 1) / 2;
     for (size_t kr = 3; kr <= k; kr++)
         n_choose_k *= (n + 1 - kr) / kr;
@@ -221,8 +222,8 @@ static const struct named_quantity named_quantities[] = {
     { .value = 4.184e6, .units = { 2, 0, -2, 0, 0, 0, 0 }, .name = "TNT" },
     { .value = 1852.0, .units = { 1, 0, 0, 0, 0, 0, 0 }, .name = "nmi" },
     { .value = 0.514444444, .units = { 1, 0, -1, 0, 0, 0, 0 }, .name = "knot", .abrv = "kt", },
-    { .value = 1609.34, .units = { 1, 0, 0, 0, 0, 0, 0 }, .name = "mile" },
-    { .value = 1609.34 / 3600, .units = { 1, 0, -1, 0, 0, 0, 0 }, .abrv = "mph" },
+    { .value = 1609.344, .units = { 1, 0, 0, 0, 0, 0, 0 }, .name = "mile" },
+    { .value = 1609.344 / 3600, .units = { 1, 0, -1, 0, 0, 0, 0 }, .abrv = "mph" },
     { .value = 86400.0 * 365.2425, .units = { 0, 0, 1, 0, 0, 0, 0 }, .name = "year", .abrv = "a" },
     { .value = 1852.0 * 3, .units = { 1, 0, 0, 0, 0, 0, 0 }, .name = "league" },
     { .value = 9.8066, .units = { 1, 0, -2, 0, 0, 0, 0 }, .name = "g" },
@@ -650,13 +651,6 @@ int qrpn_evaluate_token(struct quantity * const stack, int S, const char * const
         stack[S] = stack[S - 2];
         return S + 1;
     }
-    else if (!strcmp(token, "2over")) {
-        if (S < 4) return QRPN_ERROR_NOT_ENOUGH_STACK;
-        if (S + 2 > QRPN_STACK_SIZE_MAX) return QRPN_ERROR_TOO_MUCH_STACK;
-        stack[S] = stack[S - 4];
-        stack[S + 1] = stack[S - 3];
-        return S + 2;
-    }
     else if (!strcmp(token, "pick")) {
         if (S < 2) return QRPN_ERROR_NOT_ENOUGH_STACK;
         if (!units_are_dimensionless(stack[S - 1].units)) return QRPN_ERROR_MUST_BE_UNITLESS;
@@ -673,8 +667,6 @@ int qrpn_evaluate_token(struct quantity * const stack, int S, const char * const
         if (cimag(stack[S - 1].value)) return QRPN_ERROR_MUST_BE_REAL;
         if (creal(stack[S - 1].value) < 0) return QRPN_ERROR_MUST_BE_NONNEGATIVE;
         const long arg = lrint(creal(stack[S - 1].value));
-        /* "2 roll" is equivalent to "rot" and requires 3 things on stack AFTER decrementing it by one */
-        /* assuming arg is 2, we are going to rotate S - 4, S - 3, and S - 2 */
         if (S < 2 + arg) return QRPN_ERROR_NOT_ENOUGH_STACK;
         const struct quantity tmp = stack[S - arg - 2];
         memmove(stack + S - arg - 2, stack + S - arg - 1, sizeof(struct quantity) * arg);
