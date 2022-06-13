@@ -105,7 +105,7 @@ sub cmd_plang {
     $self->{output} = "";  # collect output of the embedded Plang program
 
     eval {
-        my $result =  $self->{plang}->interpret_string($context->{arguments});
+        my $result = $self->{plang}->interpret_string($context->{arguments});
 
         # check to see if we need to append final result to output
         if (defined $result->[1]) {
@@ -114,7 +114,6 @@ sub cmd_plang {
     };
 
     if (my $exception = $@) {
-        $exception = $self->{plang}->{interpreter}->output_value($exception);
         $self->{output} .= $exception;
     }
 
