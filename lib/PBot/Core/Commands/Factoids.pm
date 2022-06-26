@@ -1078,7 +1078,7 @@ sub cmd_factinfo {
 
 sub quotemeta2 {
     my ($text) = @_;
-    $text =~ s/(?!\\)([\[\\\|(){^\$*+?.])/\\$1/g;
+    $text =~ s/(?<!\\) ([\[ \\ \| () { ^ \$ * + ? . ])/\\$1/gx;
     return $text;
 }
 
