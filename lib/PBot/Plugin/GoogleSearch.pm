@@ -38,7 +38,7 @@ sub cmd_googlesearch {
     my ($self, $context) = @_;
     return "Usage: google [-n <number of results>] query\n" if not length $context->{arguments};
 
-    my $matches = 1;
+    my $matches = 3;
     $matches = $1 if $context->{arguments} =~ s/-n\s+([0-9]+)\s*//;
     $matches = 10 if $matches > 10;
 
