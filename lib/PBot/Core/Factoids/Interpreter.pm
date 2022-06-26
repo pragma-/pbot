@@ -121,7 +121,7 @@ sub interpreter {
             my $namespace_regex = $namespace;
             if ($strictnamespace) { $namespace_regex = "(?:" . (quotemeta $namespace) . '|\\.\\*)'; }
 
-            $context->{arguments} = quotemeta($original_keyword) . " -channel $namespace_regex";
+            $context->{arguments} = "$original_keyword -channel $namespace_regex";
             my $matches = $self->{pbot}->{commands}->{modules}->{Factoids}->cmd_factfind($context);
 
             # found factfind matches

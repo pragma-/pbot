@@ -1076,6 +1076,12 @@ sub cmd_factinfo {
     return "/say $context->{arguments} is not a factoid or an applet.";
 }
 
+sub quotemeta2 {
+    my ($text) = @_;
+    $text =~ s/(?!\\)([\[\\\|(){^\$*+?.])/\\$1/g;
+    return $text;
+}
+
 sub cmd_factfind {
     my ($self, $context) = @_;
 
@@ -1141,7 +1147,7 @@ sub cmd_factfind {
             $regex = $arguments;
         } else {
             $regex = ($arguments =~ m/^\w/) ? '\b' : '\B';
-            $regex .= quotemeta $arguments;
+            $regex .= quotemeta2 $arguments;
             $regex .= ($arguments =~ m/\w$/) ? '\b' : '\B';
         }
 
