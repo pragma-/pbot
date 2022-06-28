@@ -4,6 +4,11 @@
 #
 # This was written for wiktionary.pl since Wiktionary::Parser in CPAN
 # seems to be broken and abandoned.
+#
+# Important: This uses a custom fork of wiktionaryparser which contains
+# numerous fixes. To install it use:
+#
+# pip install git+https://github.com/pragma-/WiktionaryParser
 
 # SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT

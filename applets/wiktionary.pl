@@ -18,6 +18,8 @@ use Encode;
 use Getopt::Long qw/GetOptionsFromArray/;
 use JSON;
 
+sub flatten { map { ref eq 'ARRAY' ? flatten(@$_) : $_ } @_ }
+
 binmode(STDOUT, ":utf8");
 
 @ARGV = map { decode('UTF-8', $_, 1) } @ARGV;
@@ -93,16 +95,27 @@ if (not defined $entries) {
     $cache->set($cache_id, $entries);
 }
 
-my @valid_sections = qw/definitions etymology pronunciations/;
+if ($ENV{DEBUG}) {
+    use Data::Dumper;
+    print Dumper($entries), "\n";
+}
+
+my @valid_sections = qw/definitions etymology pronunciations participle/;
 
 if (not grep { $_ eq $section } @valid_sections) {
     print "Unknown section `$section`. Available sections are: " . join(', ', sort @valid_sections) . "\n";
     exit 1;
 }
 
+my $entries_text = $section;
+
 my $total_entries_count = @$entries;
 
-my $entries_text = $section;
+if ($total_entries_count == 0) {
+    $entries_text =~ s/y$/ies/;
+    print "No $entries_text for `$term`.\n";
+    exit 1;
+}
 
 if ($num > $total_entries_count) {
     if ($total_entries_count == 1) {
@@ -159,11 +172,11 @@ for (my $i = $start; $i < $num; $i++) {
 
         foreach my $definition (@{$entry->{definitions}}) {
             $text .= "$definition->{partOfSpeech}) ";
-            $text .= join("\n\n", @{$definition->{text}}) . "\n\n";
+            $text .= join("\n\n", flatten @{$definition->{text}}) . "\n\n";
 
             if (@{$definition->{examples}}) {
                 $text .= "examples:\n\n";
-                $text .= join("\n\n", @{$definition->{examples}}) . "\n\n";
+                $text .= join("\n\n", map { $_->{text} } @{$definition->{examples}}) . "\n\n";
             }
 
         }
@@ -174,8 +187,8 @@ for (my $i = $start; $i < $num; $i++) {
 
 if (not @results) {
     $entries_text =~ s/y$/ies/;
-    print "There are no $entries_text for $term.\n";
-    exit 0;
+    print "There are no $entries_text for `$term`.\n";
+    exit 1;
 }
 
 my $total_results_count = @results;
@@ -185,8 +198,6 @@ if ($total_results_count == 1) {
 } else {
     $entries_text =~ s/y$/ies/;
 }
-
-print "$total_entries_count entries, " if $total_entries_count > 1;
 
 print "$total_results_count $entries_text for $term:\n\n";
 
