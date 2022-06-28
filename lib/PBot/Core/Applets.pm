@@ -82,7 +82,11 @@ sub launch_applet {
             $args = encode('UTF-8', $args);
         }
 
-        my @cmdline = ("./$applet", $self->{pbot}->{interpreter}->split_line($args));
+        my $strip_quotes = 1;
+
+        $strip_quotes = 0 if $self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $trigger, 'keep-quotes');
+
+        my @cmdline = ("./$applet", $self->{pbot}->{interpreter}->split_line($args, strip_quotes => $strip_quotes));
 
         my $timeout = $self->{pbot}->{registry}->get_value('general', 'applet_timeout') // 30;
 
