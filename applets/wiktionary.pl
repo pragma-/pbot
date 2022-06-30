@@ -172,13 +172,24 @@ for (my $i = $start; $i < $num; $i++) {
 
         foreach my $definition (@{$entry->{definitions}}) {
             $text .= "$definition->{partOfSpeech}) ";
-            $text .= join("\n\n", flatten @{$definition->{text}}) . "\n\n";
 
-            if (@{$definition->{examples}}) {
-                $text .= "examples:\n\n";
-                $text .= join("\n\n", map { $_->{text} } @{$definition->{examples}}) . "\n\n";
+            my $entry = -1;
+
+            foreach my $def (flatten @{$definition->{text}}) {
+                $def =~ s/^#//;
+                $text .= "$def\n";
+
+                if (@{$definition->{examples}}) {
+                    foreach my $example (@{$definition->{examples}}) {
+                        if ($example->{index} == $entry) {
+                            $text .= "  ($example->{text})\n";
+                        }
+                    }
+                }
+
+                $entry++;
+                $text .= "\n";
             }
-
         }
 
         push @results, $text if length $text;
@@ -190,16 +201,6 @@ if (not @results) {
     print "There are no $entries_text for `$term`.\n";
     exit 1;
 }
-
-my $total_results_count = @results;
-
-if ($total_results_count == 1) {
-    $entries_text =~ s/s$//;
-} else {
-    $entries_text =~ s/y$/ies/;
-}
-
-print "$total_results_count $entries_text for $term:\n\n";
 
 if ($unique) {
     my %uniq;
@@ -232,5 +233,5 @@ my $i = @results == 1 ? $num - 1 : 0;
 foreach my $result (@results) {
     $i++;
     next if not $result;
-    print "$i) $result\n\n";
+    print "$i) $result\n";
 }
