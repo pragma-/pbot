@@ -158,7 +158,7 @@ sub get_wttr {
     }
 
     if (@$options == 1 and $options->[0] eq 'default') {
-        push @$options, 'chances';
+        push @$options, ('chances', 'time');
     }
 
     foreach my $option (@$order) {
@@ -300,7 +300,7 @@ sub get_wttr {
 
             when ('cloudcover') { $result .= "Cloud cover: $c->{'cloudcover'}%;\n"; }
 
-            when ('time') { $result .= "Observation time: $c->{'localObsDateTime'};\n"; }
+            when ('time') { $result .= "Observed: $c->{'localObsDateTime'};\n"; }
 
             when ('location') {
                 if (exists $wttr->{nearest_area}) {
