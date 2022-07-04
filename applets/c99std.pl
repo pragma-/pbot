@@ -239,8 +239,12 @@ if (length $match_text) {
     $match_result =~ s/\s+/ /g;
 
     my $match = eval {
-        $match_result =~ m/(.*)($match_text)(.*)/msi;
-        return [$1, $2, $3];
+        my @matches = ($match_result =~ m/($match_text)/msp);
+        if (@matches > 1) {
+            shift @matches;
+            @matches = grep { length $_ } @matches;
+        }
+        return [${^PREMATCH}, join (' ... ', @matches), ${^POSTMATCH}];
     };
 
     if ($@) {
