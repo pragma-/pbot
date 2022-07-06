@@ -38,33 +38,7 @@ sub interpreter {
     }
 
     my $strictnamespace = $self->{pbot}->{registry}->get_value($context->{from}, 'strictnamespace');
-
     $strictnamespace //= $self->{pbot}->{registry}->get_value('general', 'strictnamespace');
-
-    # search for factoid against global channel and current channel (from unless ref_from is defined)
-    my $original_keyword = $context->{keyword};
-
-    my ($channel, $keyword) =
-      $self->{pbot}->{factoids}->{data}->find(
-          $context->{ref_from} ? $context->{ref_from} : $context->{from},
-          $context->{keyword},
-          arguments     => $context->{arguments},
-          exact_channel => 1,
-      );
-
-    # determine if we prepend [channel] to factoid output
-    if (not defined $context->{ref_from}
-            or $context->{ref_from} eq '.*'
-            or $context->{ref_from} eq $context->{from})
-    {
-        $context->{ref_from} = '';
-    }
-
-    if (defined $channel and not $channel eq '.*'
-            and not $channel eq lc $context->{from})
-    {
-        $context->{ref_from} = $channel;
-    }
 
     # factoid > nick redirection
     my $nick_regex = $self->{pbot}->{registry}->get_value('regex', 'nickname');
@@ -77,6 +51,31 @@ sub interpreter {
         } else {
             $context->{arguments} .= "> $rcpt";
         }
+    }
+
+    my $original_keyword = $context->{keyword};
+
+    # search for exact match of factoid
+    my ($channel, $keyword) =
+      $self->{pbot}->{factoids}->{data}->find(
+          $context->{ref_from} ? $context->{ref_from} : $context->{from},
+          $context->{keyword},
+          arguments     => $context->{arguments},
+          exact_channel => 1,
+          exact_trigger => 2,
+      );
+
+    # determine if we prepend [channel] to factoid output
+    if (defined $channel and $channel ne '.*'
+            and $channel ne lc $context->{from})
+    {
+        $context->{ref_from} = $channel;
+    }
+    elsif (not defined $context->{ref_from}
+            or $context->{ref_from} eq '.*'
+            or $context->{ref_from} eq $context->{from})
+    {
+        $context->{ref_from} = '';
     }
 
     # if no match found, attempt to call factoid from another channel if it exists there
@@ -96,12 +95,9 @@ sub interpreter {
             }
         }
 
-        my $ref_from = $context->{ref_from} ? "[$context->{ref_from}] " : '';
-
         # if multiple channels have this keyword, then ask user to disambiguate
         if (@chanlist> 1) {
-            return if $context->{embedded};
-            return $ref_from . "Factoid `$original_keyword` exists in " . join(', ', @chanlist) . "; use `fact <channel> $original_keyword` to choose one.";
+            return "Factoid `$original_keyword` exists in " . join(', ', @chanlist) . "; use `fact <channel> $original_keyword` to choose one.";
         }
 
         # if there's just one other channel that has this keyword, trigger that instance
@@ -113,8 +109,17 @@ sub interpreter {
             return $self->interpreter($context);
         }
 
-        # otherwise keyword hasn't been found, display similiar matches for all channels
-        else {
+        # keyword still not found, try regex factoids
+        ($channel, $keyword) =
+        $self->{pbot}->{factoids}->{data}->find(
+            $context->{ref_from} ? $context->{ref_from} : $context->{from},
+            $context->{keyword},
+            arguments     => $context->{arguments},
+            exact_channel => 1,
+        );
+
+        # no such keyword, display similiar matches for all channels
+        if (not defined $keyword) {
             my $namespace = $context->{from};
             $namespace = '.*' if $namespace !~ /^#/;
 
@@ -126,7 +131,6 @@ sub interpreter {
 
             # found factfind matches
             if ($matches !~ m/^No factoids/) {
-                return if $context->{embedded};
                 return "No such factoid '$original_keyword'; $matches";
             }
 

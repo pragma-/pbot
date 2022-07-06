@@ -149,6 +149,7 @@ sub interpreter {
     if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
         use Data::Dumper;
         $Data::Dumper::Sortkeys = 1;
+        $Data::Dumper::Indent = 2;
         $self->{pbot}->{logger}->log("Commands::interpreter\n");
         $self->{pbot}->{logger}->log(Dumper $context);
     }
