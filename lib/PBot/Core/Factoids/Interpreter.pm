@@ -343,11 +343,11 @@ sub handle_action {
             $context->{arguments}          = '';
             $context->{original_arguments} = '';
         } else {
-            # set nickprefix if args is a present nick and factoid action doesn't have $nick
-            if ($self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'type') eq 'text') {
+            # set nickprefix if args is a present nick and factoid action doesn't have $nick or $args
+            if (!$context->{nickprefix_disabled} && $self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'type') eq 'text') {
                 my $target = $self->{pbot}->{nicklist}->is_present_similar($context->{from}, $context->{arguments});
 
-                if ($target and $action !~ /\$\{?nick\b/) {
+                if ($target and $action !~ /\$\{?(?:nick|args)\b/) {
                     $context->{nickprefix}          = $target unless $context->{nickprefix_forced};
                     $context->{nickprefix_disabled} = 0;
                 }
