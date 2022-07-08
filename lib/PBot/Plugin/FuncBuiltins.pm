@@ -12,6 +12,7 @@ use PBot::Imports;
 
 use PBot::Core::Utils::Indefinite;
 
+use Lingua::EN::Tagger;
 use URI::Escape qw/uri_escape_utf8/;
 
 sub initialize {
@@ -72,6 +73,16 @@ sub initialize {
             subref => sub { $self->func_ana(@_) }
         }
     );
+    $self->{pbot}->{functions}->register(
+        'maybe-the',
+        {
+            desc   => 'prepend "the" in front of text depending on the part-of-speech of the first word in text',
+            usage  => 'maybe-the <text>',
+            subref => sub { $self->func_maybe_the(@_) }
+        }
+    );
+
+    $self->{tagger} = Lingua::EN::Tagger->new;
 }
 
 sub unload {
@@ -83,6 +94,7 @@ sub unload {
     $self->{pbot}->{functions}->unregister('unquote');
     $self->{pbot}->{functions}->unregister('uri_escape');
     $self->{pbot}->{functions}->unregister('ana');
+    $self->{pbot}->{functions}->unregister('maybe-the');
 }
 
 sub func_unquote {
@@ -141,6 +153,26 @@ sub func_ana {
         }
 
         $text = $fixed_article . $spaces . $text;
+    }
+
+    return $text;
+}
+
+sub func_maybe_the {
+    my $self = shift;
+    my $text = "@_";
+
+    my ($word) = $text =~ m/^\s*([^',.; ]+)/;
+
+    # don't prepend "the" if a proper-noun nick follows
+    if ($self->{pbot}->{nicklist}->is_present_any_channel($word)) {
+        return $text;
+    }
+
+    my $tagged = $self->{tagger}->add_tags($word);
+
+    if ($tagged !~ m/^\s*<(?:det|prps?|cd|in|nnp|to|rb|wdt|vbg)>/) {
+        $text = "the $text";
     }
 
     return $text;
