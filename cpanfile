@@ -120,6 +120,7 @@ feature Example => sub {
 
 feature FuncBuiltins => sub {
     requires 'URI::Escape';
+    requires 'Lingua::EN::Tagger';
 };
 
 feature FuncGrep => sub {
