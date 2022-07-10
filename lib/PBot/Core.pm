@@ -248,9 +248,11 @@ sub connect {
     $self->{logger}->log("Connecting to $server:$port\n");
 
     if ($self->{conn}) {
-        $self->{logger}->log("Error: already connected to $server:$port!\n");
+        $self->{logger}->log("Error: already connected to $self->{server}.\n");
         return;
     }
+
+    $self->{server} = "$server:$port";
 
     for (my $attempt = 0; $attempt < $retries; $attempt++) {
         my %config = (
