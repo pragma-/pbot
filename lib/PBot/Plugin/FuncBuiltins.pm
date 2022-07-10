@@ -117,6 +117,14 @@ sub func_title {
 sub func_ucfirst {
     my $self = shift;
     my $text = "@_";
+
+    my ($word) = $text =~ m/^\s*([^',.;: ]+)/;
+
+    # don't ucfirst on nicks
+    if ($self->{pbot}->{nicklist}->is_present_any_channel($word)) {
+        return $text;
+    }
+
     return ucfirst $text;
 }
 
@@ -162,7 +170,7 @@ sub func_maybe_the {
     my $self = shift;
     my $text = "@_";
 
-    my ($word) = $text =~ m/^\s*([^',.; ]+)/;
+    my ($word) = $text =~ m/^\s*([^',.;: ]+)/;
 
     # don't prepend "the" if a proper-noun nick follows
     if ($self->{pbot}->{nicklist}->is_present_any_channel($word)) {
@@ -171,7 +179,7 @@ sub func_maybe_the {
 
     my $tagged = $self->{tagger}->add_tags($word);
 
-    if ($tagged !~ m/^\s*<(?:det|prps?|cd|in|nnp|to|rb|wdt|vbg)>/) {
+    if ($tagged !~ m/^\s*<(?:det|prps?|cd|in|nnp|to|rb|wdt|vbg|rbr|jjr)>/) {
         $text = "the $text";
     }
 
