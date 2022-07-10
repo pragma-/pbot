@@ -10,6 +10,7 @@ package PBot::Core::Handlers::SASL;
 use PBot::Imports;
 use parent 'PBot::Core::Class';
 
+use POSIX qw/EXIT_SUCCESS EXIT_FAILURE/;
 use Encode;
 use MIME::Base64;
 
@@ -36,7 +37,7 @@ sub on_sasl_authenticate {
 
     if (not defined $password or not length $password) {
         $self->{pbot}->{logger}->log("Error: Registry entry irc.identify_password is not set.\n");
-        $self->{pbot}->exit;
+        $self->{pbot}->exit(EXIT_FAILURE);
     }
 
     $password = encode('UTF-8', "$nick\0$nick\0$password");
@@ -72,7 +73,7 @@ sub on_rpl_loggedout {
 sub on_err_nicklocked {
     my ($self, $event_type, $event) = @_;
     $self->{pbot}->{logger}->log($event->{event}->{args}->[1] . "\n");
-    $self->{pbot}->exit;
+    $self->{pbot}->exit(EXIT_FAILURE);
 }
 
 sub on_rpl_saslsuccess {
@@ -85,19 +86,19 @@ sub on_rpl_saslsuccess {
 sub on_err_saslfail {
     my ($self, $event_type, $event) = @_;
     $self->{pbot}->{logger}->log($event->{event}->{args}->[1] . "\n");
-    $self->{pbot}->exit;
+    $self->{pbot}->exit(EXIT_FAILURE);
 }
 
 sub on_err_sasltoolong {
     my ($self, $event_type, $event) = @_;
     $self->{pbot}->{logger}->log($event->{event}->{args}->[1] . "\n");
-    $self->{pbot}->exit;
+    $self->{pbot}->exit(EXIT_FAILURE);
 }
 
 sub on_err_saslaborted {
     my ($self, $event_type, $event) = @_;
     $self->{pbot}->{logger}->log($event->{event}->{args}->[1] . "\n");
-    $self->{pbot}->exit;
+    $self->{pbot}->exit(EXIT_FAILURE);
 }
 
 sub on_err_saslalready {
@@ -110,7 +111,7 @@ sub on_rpl_saslmechs {
     my ($self, $event_type, $event) = @_;
     $self->{pbot}->{logger}->log("SASL mechanism not available.\n");
     $self->{pbot}->{logger}->log("Available mechanisms are: $event->{event}->{args}->[1]\n");
-    $self->{pbot}->exit;
+    $self->{pbot}->exit(EXIT_FAILURE);
 }
 
 1;

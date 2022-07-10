@@ -209,7 +209,7 @@ sub process_line {
 
     # set $context's command output recipient field
     if ($nick_prefix) {
-        $context->{nickprefix}         = $nick_prefix;
+        $context->{nickprefix}        = $nick_prefix;
         $context->{nickprefix_forced} = 1;
     }
 

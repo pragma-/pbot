@@ -58,7 +58,7 @@ sub on_disconnect {
     my ($self, $event_type, $event) = @_;
 
     $self->{pbot}->{logger}->log("Disconnected...\n");
-    $self->{pbot}->{connected} = 0;
+    $self->{pbot}->{conn} = undef;
 
     # send pbot.disconnect to notify PBot internals
     $self->{pbot}->{event_dispatcher}->dispatch_event(

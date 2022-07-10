@@ -99,7 +99,7 @@ sub trigger_irc_debug {
 
     $self->{pbot}->{irc}->debug($newvalue);
 
-    if ($self->{pbot}->{connected}) {
+    if ($self->{pbot}->{conn}) {
         $self->{pbot}->{conn}->debug($newvalue);
     }
 }
@@ -107,7 +107,7 @@ sub trigger_irc_debug {
 sub trigger_change_botnick {
     my ($self, $section, $item, $newvalue) = @_;
 
-    if ($self->{pbot}->{connected}) {
+    if ($self->{pbot}->{conn}) {
         $self->{pbot}->{conn}->nick($newvalue)
     }
 }

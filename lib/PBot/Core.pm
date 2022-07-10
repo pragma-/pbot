@@ -58,15 +58,18 @@ use PBot::Core::Users;
 use PBot::Core::Utils::ParseDate;
 use PBot::Core::WebPaste;
 
+use POSIX qw/EXIT_FAILURE EXIT_SUCCESS/;
 use Encode;
 use File::Basename;
 
-# set standard output streams to encode as utf8
-binmode(STDOUT, ":utf8");
-binmode(STDERR, ":utf8");
+BEGIN {
+    # set standard output streams to encode as utf8
+    binmode(STDOUT, ":utf8");
+    binmode(STDERR, ":utf8");
 
-# decode command-line arguments from utf8
-@ARGV = map { decode('UTF-8', $_, 1) } @ARGV;
+    # decode command-line arguments from utf8
+    @ARGV = map { decode('UTF-8', $_, 1) } @ARGV;
+}
 
 sub new {
     my ($class, %args) = @_;
@@ -96,14 +99,14 @@ sub initialize {
 
             if (not defined $item or not defined $value) {
                 print STDERR "Fatal error: unknown argument `$arg`; arguments must be in the form of `section.key=value` or `path_dir=value` (e.g.: irc.botnick=newnick or data_dir=path)\n";
-                exit;
+                exit EXIT_FAILURE;
             }
 
             my ($section, $key) = split /\./, $item, 2;
 
             if (not defined $section or not defined $key) {
                 print STDERR "Fatal error: bad argument `$arg`; registry entries must be in the form of section.key (e.g.: irc.botnick)\n";
-                exit;
+                exit EXIT_FAILURE;
             }
 
             $section =~ s/^-//;    # remove a leading - to allow arguments like -irc.botnick due to habitual use of -args
@@ -115,14 +118,14 @@ sub initialize {
     foreach my $path (qw/data_dir applet_dir update_dir/) {
         if (not -d $conf{$path}) {
             print STDERR "$path path ($conf{$path}) does not exist; aborting.\n";
-            exit;
+            exit EXIT_FAILURE;
         }
     }
 
     # insist that data directory be copied
     if (basename($conf{data_dir}) eq 'data') {
         print STDERR "Data directory ($conf{data_dir}) cannot be named `data`. This is to ensure the directory is copied from its default location. Please follow doc/QuickStart.md.\n";
-        exit;
+        exit EXIT_FAILURE;
     }
 
     # let modules register atexit subroutines
@@ -151,9 +154,9 @@ sub initialize {
 
     # update any data files to new locations/formats
     # --- this must happen before any data files are opened! ---
-    if ($self->{updater}->update) {
+    if ($self->{updater}->update != EXIT_SUCCESS) {
         $self->{logger}->log("Update failed.\n");
-        exit 0;
+        exit EXIT_FAILURE;
     }
 
     # create capabilities so commands can add new capabilities
@@ -167,8 +170,8 @@ sub initialize {
 
     # ensure user has attempted to configure the bot
     if (not length $self->{registry}->get_value('irc', 'botnick')) {
-        $self->{logger}->log("Fatal error: IRC nickname not defined; please set registry key irc.botnick in $conf{data_dir}/registry to continue.\n");
-        exit;
+        $self->{logger}->log("Fatal error: IRC nickname not defined; please set registry key irc.botnick in $conf{data_dir}/registry to continue. See doc/QuickStart.md for more information.\n");
+        exit EXIT_FAILURE;
     }
 
     # prepare the IRC engine
@@ -234,11 +237,8 @@ sub random_nick {
 # TODO: add disconnect subroutine and connect/disconnect/reconnect commands
 sub connect {
     my ($self) = @_;
-    return if $ENV{PBOT_LOCAL};
 
-    if ($self->{connected}) {
-        # TODO: disconnect, clean-up, etc
-    }
+    return if $ENV{PBOT_LOCAL};
 
     my $server  = $self->{registry}->get_value('irc', 'server');
     my $port    = $self->{registry}->get_value('irc', 'port');
@@ -246,6 +246,11 @@ sub connect {
     my $retries = $self->{registry}->get_value('irc', 'reconnect_retries') // 10;
 
     $self->{logger}->log("Connecting to $server:$port\n");
+
+    if ($self->{conn}) {
+        $self->{logger}->log("Error: already connected to $server:$port!\n");
+        return;
+    }
 
     for (my $attempt = 0; $attempt < $retries; $attempt++) {
         my %config = (
@@ -285,7 +290,10 @@ sub connect {
         sleep $delay;
     }
 
-    $self->{connected} = 1;
+    if (!$self->{conn}) {
+        $self->{logger}->log("Max retries reached; giving up.\n");
+        $self->exit(EXIT_FAILURE);
+    }
 
     # set up IRC handlers
     $self->{irchandlers}->add_handlers;
@@ -302,7 +310,7 @@ sub register_signal_handlers {
             print $msg;
         }
         $self->atexit;
-        exit 0;
+        exit EXIT_SUCCESS;
     };
 }
 
@@ -320,7 +328,7 @@ sub atexit {
 # convenient function to exit PBot
 sub exit {
     my ($self, $exitval) = @_;
-    $exitval //= 0;
+    $exitval //= EXIT_SUCCESS;
 
     my $msg = "Exiting immediately.\n";
 
