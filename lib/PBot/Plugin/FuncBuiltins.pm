@@ -177,9 +177,14 @@ sub func_maybe_the {
         return $text;
     }
 
+    # special-case some indefinite nouns that Lingua::EN::Tagger treats as plain nouns
+    if ($word =~ m/(some|any|every|no)(thing|one|body|how|way|where|when|time|place)/i) {
+        return $text;
+    }
+
     my $tagged = $self->{tagger}->add_tags($word);
 
-    if ($tagged !~ m/^\s*<(?:det|prps?|cd|in|nnp|to|rb|wdt|vbg|rbr|jjr)>/) {
+    if ($tagged !~ m/^\s*<(?:det|prps?|cd|in|nnp|to|rb|wdt|rbr|jjr)>/) {
         $text = "the $text";
     }
 
