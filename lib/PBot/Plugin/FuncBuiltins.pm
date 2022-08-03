@@ -76,7 +76,7 @@ sub initialize {
     $self->{pbot}->{functions}->register(
         'maybe-the',
         {
-            desc   => 'prepend "the" in front of text depending on the part-of-speech of the first word in text',
+            desc   => 'prepend "the" in front of words depending on their part-of-speech',
             usage  => 'maybe-the <text>',
             subref => sub { $self->func_maybe_the(@_) }
         }
@@ -169,26 +169,35 @@ sub func_ana {
 sub func_maybe_the {
     my $self = shift;
     my $text = "@_";
+    my @words = split ' ', $text;
+    my @result;
 
-    my ($word) = $text =~ m/^\s*([^',.;: ]+)/;
+    foreach my $part (@words) {
+        my ($word) = $part =~ m/^\s*([^',.;: ]+)/;
 
-    # don't prepend "the" if a proper-noun nick follows
-    if ($self->{pbot}->{nicklist}->is_present_any_channel($word)) {
-        return $text;
+        # don't prepend "the" if a proper-noun nick follows
+        if ($self->{pbot}->{nicklist}->is_present_any_channel($word)) {
+            push @result, $part;
+            next;
+        }
+
+        # special-case some indefinite nouns that Lingua::EN::Tagger treats as plain nouns
+        if ($word =~ m/(some|any|every|no)(thing|one|body|how|way|where|when|time|place)/i) {
+            push @result, $part;
+            next;
+        }
+
+        my $tagged = $self->{tagger}->add_tags($word);
+
+        if ($tagged !~ m/^\s*<(?:det|prps?|cd|in|nnp|to|rb|wdt|rbr|jjr)>/) {
+            push @result, "the $part";
+            next;
+        }
+
+        push @result, $part;
     }
 
-    # special-case some indefinite nouns that Lingua::EN::Tagger treats as plain nouns
-    if ($word =~ m/(some|any|every|no)(thing|one|body|how|way|where|when|time|place)/i) {
-        return $text;
-    }
-
-    my $tagged = $self->{tagger}->add_tags($word);
-
-    if ($tagged !~ m/^\s*<(?:det|prps?|cd|in|nnp|to|rb|wdt|rbr|jjr)>/) {
-        $text = "the $text";
-    }
-
-    return $text;
+    return join ' ', @result;
 }
 
 1;
