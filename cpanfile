@@ -389,6 +389,7 @@ feature qalc => sub {
 };
 
 feature random_quote => sub {
+    requires 'URI::Escape';
     requires 'LWP::UserAgent::WithCache';
 };
 

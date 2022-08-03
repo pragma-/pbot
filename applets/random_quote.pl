@@ -6,6 +6,7 @@
 # Quick and dirty by :pragma
 
 use LWP::UserAgent::WithCache;
+use URI::Escape;
 
 my ($text, $t);
 
@@ -35,7 +36,7 @@ while (1) {
         my $author    = "";
 
         $arguments =~ s/\$nick/me/gi;
-        $arguments =~ s/\s/+/g;
+        $arguments = uri_escape($arguments);
 
         if ($arguments =~ m/\-\-author[\s\+]+(.*)/i) {
             $author = $1;
