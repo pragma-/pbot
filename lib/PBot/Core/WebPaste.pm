@@ -53,7 +53,7 @@ sub paste {
     %opts = (%default_opts, %opts);
 
     # word-wrap text unless no_split is set
-    $text =~ s/(.{120})\s/$1\n/g unless $opts{no_split};
+    $text =~ s/(.{150})\s/$1\n/g unless $opts{no_split};
 
     # encode paste to utf8
     $text = encode('UTF-8', $text);
