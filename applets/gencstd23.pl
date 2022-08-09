@@ -118,10 +118,8 @@ sub gen_data {
 
                 print STDERR "paragraph $p: [$t]\n" if $debug >= 3;
 
-                if ($input eq 'n1570.txt' && $this_section !~ /^(?:K.3.9.(?:2|3))/) {
-                    if ($p - $last_p != 1) {
-                        die "Paragraph diff invalid";
-                    }
+                if ($p - $last_p != 1) {
+                    die "Paragraph diff invalid" unless ($input eq 'n1570.in' && $this_section =~ /^(?:K.3.9.(?:2|3))/);
                 }
 
                 # check for footnotes
