@@ -118,7 +118,11 @@ sub gen_data {
 
                 print STDERR "paragraph $p: [$t]\n" if $debug >= 3;
 
-                if ($p - $last_p != 1) { die "Paragraph diff invalid"; }
+                if ($input eq 'n1570.txt' && $this_section !~ /^(?:K.3.9.(?:2|3))/) {
+                    if ($p - $last_p != 1) {
+                        die "Paragraph diff invalid";
+                    }
+                }
 
                 # check for footnotes
                 my @new_footnotes;
@@ -331,13 +335,10 @@ sub linkify {
 sub gen_html {
     print "<html>\n<body>\n";
 
-    my @paragraphs = sort bysection keys %sections;
-
     foreach my $section (qw/ABSTRACT. CONTENTS. FOREWORD. INTRO./) {
-        foreach my $paragraph (@paragraphs) {
+        foreach my $paragraph (sort bysection keys %sections) {
             if ($paragraph =~ m/^$section/) {
                 write_html_section($paragraph);
-                print STDERR "delete section [$paragraph]\n";
                 delete $sections{$paragraph};
             }
         }
