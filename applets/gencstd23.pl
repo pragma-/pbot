@@ -5,7 +5,9 @@
 
 # ugly and hacked together
 
-# pdftotext -layout -nopgbrk -y 75 -H 700 -W 1000 n3047.pdf n3047.txt
+# n1256: pdftotext -layout -y 75 -H 650 -W 1000 n1256.pdf n1256.in
+# n1570: pdftotext -layout -y 80 -H 650 -W 1000 n1570.pdf n1570.in
+# n3047: pdftotext -layout -y 75 -H 700 -W 1000 n3047.pdf n3047.in
 
 use warnings;
 use strict;
