@@ -10,7 +10,7 @@
     — the restrictions and limits imposed by a conforming implementation of C.
 
 
-Footnote 1) This International Standard is designed to promote the portability of C programs among a variety of
+Footnote.1) This International Standard is designed to promote the portability of C programs among a variety of
          data-processing systems. It is intended for use by implementors and programmers.
 
 2   This International Standard does not specify
@@ -319,7 +319,7 @@ Footnote 1) This International Standard is designed to promote the portability o
     minimum implementation limit.
 
 
-Footnote 2) A strictly conforming program can use conditional features (such as those in annex F) provided the
+Footnote.2) A strictly conforming program can use conditional features (such as those in annex F) provided the
          use is guarded by a #ifdef directive with the appropriate macro. For example:
                  #ifdef _ _STDC_IEC_559_ _ /* FE_UPWARD defined */
                     /* ... */
@@ -338,13 +338,13 @@ Footnote 2) A strictly conforming program can use conditional features (such as 
     program.3)
 
 
-Footnote 3) This implies that a conforming implementation reserves no identifiers other than those explicitly
+Footnote.3) This implies that a conforming implementation reserves no identifiers other than those explicitly
          reserved in this International Standard.
 
 7   A conforming program is one that is acceptable to a conforming implementation.4)
 
 
-Footnote 4) Strictly conforming programs are intended to be maximally portable among conforming
+Footnote.4) Strictly conforming programs are intended to be maximally portable among conforming
          implementations. Conforming programs may depend upon nonportable features of a conforming
          implementation.
 
@@ -427,18 +427,18 @@ Forward references: universal character names (6.4.3), lexical elements (6.4),
 preprocessing directives (6.10), trigraph sequences (5.2.1.1), external definitions (6.9).
 
 
-Footnote 5) Implementations shall behave as if these separate phases occur, even though many are typically folded
+Footnote.5) Implementations shall behave as if these separate phases occur, even though many are typically folded
           together in practice. Source files, translation units, and translated translation units need not
           necessarily be stored as files, nor need there be any one-to-one correspondence between these entities
           and any external representation. The description is conceptual only, and does not specify any
           particular implementation.
 
 
-Footnote 6) As described in 6.4, the process of dividing a source file’s characters into preprocessing tokens is
+Footnote.6) As described in 6.4, the process of dividing a source file’s characters into preprocessing tokens is
           context-dependent. For example, see the handling of < within a #include preprocessing directive.
 
 
-Footnote 7) An implementation need not convert all non-corresponding source characters to the same execution
+Footnote.7) An implementation need not convert all non-corresponding source characters to the same execution
           character.
 
 5.1.1.3 Diagnostics
@@ -450,7 +450,7 @@ Footnote 7) An implementation need not convert all non-corresponding source char
     produced in other circumstances.8)
 
 
-Footnote 8) The intent is that an implementation should identify the nature of, and where possible localize, each
+Footnote.8) The intent is that an implementation should identify the nature of, and where possible localize, each
          violation. Of course, an implementation is free to produce any number of diagnostics as long as a
          valid program is still correctly translated. It may also successfully translate an invalid program.
 
@@ -498,7 +498,7 @@ Footnote 8) The intent is that an implementation should identify the nature of, 
     or equivalent;9) or in some other implementation-defined manner.
 
 
-Footnote 9) Thus, int can be replaced by a typedef name defined as int, or the type of argv can be written as
+Footnote.9) Thus, int can be replaced by a typedef name defined as int, or the type of argv can be written as
          char ** argv, and so on.
 
 2   If they are declared, the parameters to the main function shall obey the following
@@ -536,7 +536,7 @@ Footnote 9) Thus, int can be replaced by a typedef name defined as int, or the t
     Forward references: definition of terms (7.1.1), the exit function (7.20.4.3).
 
 
-Footnote 10) In accordance with 6.2.4, the lifetimes of objects with automatic storage duration declared in main
+Footnote.10) In accordance with 6.2.4, the lifetimes of objects with automatic storage duration declared in main
         will have ended in the former case, even where they would not have in the latter.
 
 5.1.2.3 Program execution
@@ -552,7 +552,7 @@ Footnote 10) In accordance with 6.2.4, the lifetimes of objects with automatic s
     shall have taken place. (A summary of the sequence points is given in annex C.)
 
 
-Footnote 11) The IEC 60559 standard for binary floating-point arithmetic requires certain user-accessible status
+Footnote.11) The IEC 60559 standard for binary floating-point arithmetic requires certain user-accessible status
         flags and control modes. Floating-point operations implicitly set the status flags; modes affect result
         values of floating-point operations. Implementations that support such floating-point state are
         required to regard changes to it as side effects — see annex F for details. The floating-point
@@ -743,7 +743,7 @@ Footnote 11) The IEC 60559 standard for binary floating-point arithmetic require
     above is not changed.
 
 
-Footnote 12) The trigraph sequences enable the input of characters that are not defined in the Invariant Code Set as
+Footnote.12) The trigraph sequences enable the input of characters that are not defined in the Invariant Code Set as
         described in ISO/IEC 646, which is a subset of the seven-bit US ASCII code set.
 
 2   EXAMPLE 1
@@ -867,7 +867,7 @@ Footnote 12) The trigraph sequences enable the input of characters that are not 
     — 63 levels of nested structure or union definitions in a single struct-declaration-list
 
 
-Footnote 14) See ‘‘future language directions’’ (6.11.3).
+Footnote.14) See ‘‘future language directions’’ (6.11.3).
 
 5.2.4.2 Numerical limits
 
@@ -931,7 +931,7 @@ Footnote 14) See ‘‘future language directions’’ (6.11.3).
     Forward references: representations of types (6.2.6), conditional inclusion (6.10.1).
 
 
-Footnote 15) See 6.2.5.
+Footnote.15) See 6.2.5.
 
 5.2.4.2.2 Characteristics of floating types <float.h>
 
@@ -946,7 +946,7 @@ Footnote 15) See 6.2.5.
             fk       nonnegative integers less than b (the significand digits)
 
 
-Footnote 16) The floating-point model is intended to clarify the description of each floating-point characteristic and
+Footnote.16) The floating-point model is intended to clarify the description of each floating-point characteristic and
         does not require the floating-point arithmetic of the implementation to be identical.
 
 2   A floating-point number (x) is defined by the following model:
@@ -965,7 +965,7 @@ Footnote 16) The floating-point model is intended to clarify the description of 
     arithmetic operand.17)
 
 
-Footnote 17) IEC 60559:1989 specifies quiet and signaling NaNs. For implementations that do not support
+Footnote.17) IEC 60559:1989 specifies quiet and signaling NaNs. For implementations that do not support
         IEC 60559:1989, the terms quiet NaN and signaling NaN are intended to apply to encodings with
         similar behavior.
 
@@ -999,7 +999,7 @@ Footnote 17) IEC 60559:1989 specifies quiet and signaling NaNs. For implementati
     behavior.
 
 
-Footnote 18) Evaluation of FLT_ROUNDS correctly reflects any execution-time change of rounding mode through
+Footnote.18) Evaluation of FLT_ROUNDS correctly reflects any execution-time change of rounding mode through
         the function fesetround in <fenv.h>.
 
 8   Except for assignment and cast (which remove all extra range and precision), the values
@@ -1020,7 +1020,7 @@ Footnote 18) Evaluation of FLT_ROUNDS correctly reflects any execution-time chan
     behavior.
 
 
-Footnote 19) The evaluation method determines evaluation formats of expressions involving all floating types, not
+Footnote.19) The evaluation method determines evaluation formats of expressions involving all floating types, not
         just real types. For example, if FLT_EVAL_METHOD is 1, then the product of two float
         _Complex operands is represented in the double _Complex format, and its parts are evaluated to
         double.
@@ -1158,7 +1158,7 @@ Forward references:         conditional inclusion (6.10.1), complex arithmetic
 (7.20), input/output <stdio.h> (7.19), mathematics <math.h> (7.12).
 
 
-Footnote 20) The floating-point model in that standard sums powers of b from zero, so the values of the exponent
+Footnote.20) The floating-point model in that standard sums powers of b from zero, so the values of the exponent
          limits are one less than shown here.
 
 6. Language
@@ -1238,7 +1238,7 @@ Footnote 20) The floating-point model in that standard sums powers of b from zer
     three kinds of linkage: external, internal, and none.
 
 
-Footnote 21) There is no linkage between different identifiers.
+Footnote.21) There is no linkage between different identifiers.
 
 2   In the set of translation units and libraries that constitutes an entire program, each
     declaration of a particular identifier with external linkage denotes the same object or
@@ -1250,7 +1250,7 @@ Footnote 21) There is no linkage between different identifiers.
     class specifier static, the identifier has internal linkage.22)
 
 
-Footnote 22) A function declaration can contain the storage-class specifier static only if it is at file scope; see
+Footnote.22) A function declaration can contain the storage-class specifier static only if it is at file scope; see
         6.7.1.
 
 4   For an identifier declared with the storage-class specifier extern in a scope in which a
@@ -1260,7 +1260,7 @@ Footnote 22) A function declaration can contain the storage-class specifier stat
     declaration specifies no linkage, then the identifier has external linkage.
 
 
-Footnote 23) As specified in 6.2.1, the later declaration might hide the prior declaration.
+Footnote.23) As specified in 6.2.1, the later declaration might hide the prior declaration.
 
 5   If the declaration of an identifier for a function has no storage-class specifier, its linkage
     is determined exactly as if it were declared with the storage-class specifier extern. If
@@ -1305,12 +1305,12 @@ Footnote 23) As specified in 6.2.1, the later declaration might hide the prior d
     the object it points to reaches the end of its lifetime.
 
 
-Footnote 25) The term ‘‘constant address’’ means that two pointers to the object constructed at possibly different
+Footnote.25) The term ‘‘constant address’’ means that two pointers to the object constructed at possibly different
         times will compare equal. The address may be different during two different executions of the same
         program.
 
 
-Footnote 26) In the case of a volatile object, the last store need not be explicit in the program.
+Footnote.26) In the case of a volatile object, the last store need not be explicit in the program.
 
 3   An object whose identifier is declared with external or internal linkage, or with the
     storage-class specifier static has static storage duration. Its lifetime is the entire
@@ -1337,7 +1337,7 @@ Footnote 26) In the case of a volatile object, the last store need not be explic
     declarators (6.7.5.2), initialization (6.7.8).
 
 
-Footnote 27) Leaving the innermost block containing the declaration, or jumping to a point in that block or an
+Footnote.27) Leaving the innermost block containing the declaration, or jumping to a point in that block or an
         embedded block prior to the declaration, leaves the scope of the declaration.
 
 6.2.5 Types
@@ -1364,11 +1364,11 @@ Footnote 27) Leaving the innermost block containing the declaration, or jumping 
     signed integer types are collectively called signed integer types.29)
 
 
-Footnote 28) Implementation-defined keywords shall have the form of an identifier reserved for any use as
+Footnote.28) Implementation-defined keywords shall have the form of an identifier reserved for any use as
         described in 7.1.3.
 
 
-Footnote 29) Therefore, any statement in this Standard about signed integer types also applies to the extended
+Footnote.29) Therefore, any statement in this Standard about signed integer types also applies to the extended
         signed integer types.
 
 5   An object declared as type signed char occupies the same amount of storage as a
@@ -1386,7 +1386,7 @@ Footnote 29) Therefore, any statement in this Standard about signed integer type
     types.30)
 
 
-Footnote 30) Therefore, any statement in this Standard about unsigned integer types also applies to the extended
+Footnote.30) Therefore, any statement in this Standard about unsigned integer types also applies to the extended
         unsigned integer types.
 
 7    The standard signed integer types and standard unsigned integer types are collectively
@@ -1405,7 +1405,7 @@ Footnote 30) Therefore, any statement in this Standard about unsigned integer ty
      represented by the resulting type.
 
 
-Footnote 31) The same representation and alignment requirements are meant to imply interchangeability as
+Footnote.31) The same representation and alignment requirements are meant to imply interchangeability as
          arguments to functions, return values from functions, and members of unions.
 
 10   There are three real floating types, designated as float, double, and long
@@ -1414,14 +1414,14 @@ Footnote 31) The same representation and alignment requirements are meant to imp
      type long double.
 
 
-Footnote 32) See ‘‘future language directions’’ (6.11.1).
+Footnote.32) See ‘‘future language directions’’ (6.11.1).
 
 11   There are three complex types, designated as float _Complex, double
      _Complex, and long double _Complex.33) The real floating and complex types
      are collectively called the floating types.
 
 
-Footnote 33) A specification for imaginary types is in informative annex G.
+Footnote.33) A specification for imaginary types is in informative annex G.
 
 12   For each floating type there is a corresponding real type, which is always a real floating
      type. For real floating types, it is the same type. For complex types, it is the type given
@@ -1437,7 +1437,7 @@ Footnote 33) A specification for imaginary types is in informative annex G.
      types to have the same representation, they are nevertheless different types.34)
 
 
-Footnote 34) An implementation may define new keywords that provide alternative ways to designate a basic (or
+Footnote.34) An implementation may define new keywords that provide alternative ways to designate a basic (or
          any other) type; this does not violate the requirement that all basic types be different.
          Implementation-defined keywords shall have the form of an identifier reserved for any use as
          described in 7.1.3.
@@ -1447,7 +1447,7 @@ Footnote 34) An implementation may define new keywords that provide alternative 
      representation, and behavior as either signed char or unsigned char.35)
 
 
-Footnote 35) CHAR_MIN, defined in <limits.h>, will have one of the values 0 or SCHAR_MIN, and this can be
+Footnote.35) CHAR_MIN, defined in <limits.h>, will have one of the values 0 or SCHAR_MIN, and this can be
          used to distinguish the two options. Irrespective of the choice made, char is a separate type from the
          other two and is not compatible with either.
 
@@ -1491,13 +1491,13 @@ Footnote 35) CHAR_MIN, defined in <limits.h>, will have one of the values 0 or S
      These methods of constructing derived types can be applied recursively.
 
 
-Footnote 36) Since object types do not include incomplete types, an array of incomplete type cannot be constructed.
+Footnote.36) Since object types do not include incomplete types, an array of incomplete type cannot be constructed.
 
 21   Arithmetic types and pointer types are collectively called scalar types. Array and
      structure types are collectively called aggregate types.37)
 
 
-Footnote 37) Note that aggregate type does not include union type because an object with union type can only
+Footnote.37) Note that aggregate type does not include union type because an object with union type can only
          contain one member at a time.
 
 22   An array type of unknown size is an incomplete type. It is completed, for an identifier of
@@ -1526,10 +1526,10 @@ Footnote 37) Note that aggregate type does not include union type because an obj
      qualifiers (if any) of the type from which it is derived.
 
 
-Footnote 38) See 6.7.3 regarding qualified array and function types.
+Footnote.38) See 6.7.3 regarding qualified array and function types.
 
 
-Footnote 39) The same representation and alignment requirements are meant to imply interchangeability as
+Footnote.39) The same representation and alignment requirements are meant to imply interchangeability as
          arguments to functions, return values from functions, and members of unions.
 
 27   A pointer to void shall have the same representation and alignment requirements as a
@@ -1541,7 +1541,7 @@ Footnote 39) The same representation and alignment requirements are meant to imp
      representation or alignment requirements.
 
 
-Footnote 39) The same representation and alignment requirements are meant to imply interchangeability as
+Footnote.39) The same representation and alignment requirements are meant to imply interchangeability as
          arguments to functions, return values from functions, and members of unions.
 
 28   EXAMPLE 1 The type designated as ‘‘float *’’ has type ‘‘pointer to float’’. Its type category is
@@ -1570,7 +1570,7 @@ Footnote 39) The same representation and alignment requirements are meant to imp
      represented using a pure binary notation.40)
 
 
-Footnote 40) A positional representation for integers that uses the binary digits 0 and 1, in which the values
+Footnote.40) A positional representation for integers that uses the binary digits 0 and 1, in which the values
          represented by successive bits are additive, begin with 1, and are multiplied by successive integral
          powers of 2, except perhaps the bit with the highest position. (Adapted from the American National
          Dictionary for Information Processing Systems.) A byte contains CHAR_BIT bits, and the values of
@@ -1595,7 +1595,7 @@ Footnote 40) A positional representation for integers that uses the binary digit
     a trap representation.
 
 
-Footnote 41) Thus, an automatic variable can be initialized to a trap representation without causing undefined
+Footnote.41) Thus, an automatic variable can be initialized to a trap representation without causing undefined
         behavior, but the value of the variable cannot be used until a proper value is stored in it.
 
 6   When a value is stored in an object of structure or union type, including in a member
@@ -1605,7 +1605,7 @@ Footnote 41) Thus, an automatic variable can be initialized to a trap representa
     a trap representation.
 
 
-Footnote 42) Thus, for example, structure assignment need not copy any padding bits.
+Footnote.42) Thus, for example, structure assignment need not copy any padding bits.
 
 7   When a value is stored in a member of an object of union type, the bytes of the object
     representation that do not correspond to that member but do correspond to other members
@@ -1620,7 +1620,7 @@ Footnote 42) Thus, for example, structure assignment need not copy any padding b
     designators (6.3.2.1).
 
 
-Footnote 43) It is possible for objects x and y with the same effective type T to have the same value when they are
+Footnote.43) It is possible for objects x and y with the same effective type T to have the same value when they are
         accessed as objects of type T, but to have different values in other contexts. In particular, if == is
         defined for type T, then x == y does not imply that memcmp(&x, &y, sizeof (T)) == 0.
         Furthermore, x == y does not necessarily imply that x and y have the same value; other operations
@@ -1636,7 +1636,7 @@ Footnote 43) It is possible for objects x and y with the same effective type T t
     known as the value representation. The values of any padding bits are unspecified.44)
 
 
-Footnote 44) Some combinations of padding bits might generate trap representations, for example, if one padding
+Footnote.44) Some combinations of padding bits might generate trap representations, for example, if one padding
         bit is a parity bit. Regardless, no arithmetic operation on valid values can generate a trap
         representation other than as part of an exceptional condition such as an overflow, and this cannot occur
         with unsigned types. All other combinations of padding bits are alternative object representations of
@@ -1676,7 +1676,7 @@ Footnote 44) Some combinations of padding bits might generate trap representatio
     zero in that type.
 
 
-Footnote 45) Some combinations of padding bits might generate trap representations, for example, if one padding
+Footnote.45) Some combinations of padding bits might generate trap representations, for example, if one padding
         bit is a parity bit. Regardless, no arithmetic operation on valid values can generate a trap
         representation other than as part of an exceptional condition such as an overflow. All other
         combinations of padding bits are alternative object representations of the value specified by the value
@@ -1704,7 +1704,7 @@ Footnote 45) Some combinations of padding bits might generate trap representatio
     shall have the same values.
 
 
-Footnote 46) Two types need not be identical to be compatible.
+Footnote.46) Two types need not be identical to be compatible.
 
 2   All declarations that refer to the same object or function shall have compatible type;
     otherwise, the behavior is undefined.
@@ -1726,7 +1726,7 @@ Footnote 46) Two types need not be identical to be compatible.
     type.
 
 
-Footnote 47) As specified in 6.2.1, the later declaration might hide the prior declaration.
+Footnote.47) As specified in 6.2.1, the later declaration might hide the prior declaration.
 
 5   EXAMPLE        Given the following two file scope declarations:
              int f(int (*)(), double (*)[3]);
@@ -1782,7 +1782,7 @@ Footnote 47) As specified in 6.2.1, the later declaration might hide the prior d
     promotions.48) All other types are unchanged by the integer promotions.
 
 
-Footnote 48) The integer promotions are applied only: as part of the usual arithmetic conversions, to certain
+Footnote.48) The integer promotions are applied only: as part of the usual arithmetic conversions, to certain
         argument expressions, to the operands of the unary +, -, and ~ operators, and to both operands of the
         shift operators, as specified by their respective subclauses.
 
@@ -1806,7 +1806,7 @@ Footnote 48) The integer promotions are applied only: as part of the usual arith
     until the value is in the range of the new type.49)
 
 
-Footnote 49) The rules describe arithmetic on the mathematical value, not the value of a given type of expression.
+Footnote.49) The rules describe arithmetic on the mathematical value, not the value of a given type of expression.
 
 3   Otherwise, the new type is signed and the value cannot be represented in it; either the
     result is implementation-defined or an implementation-defined signal is raised.
@@ -1818,7 +1818,7 @@ Footnote 49) The rules describe arithmetic on the mathematical value, not the va
     the integral part cannot be represented by the integer type, the behavior is undefined.50)
 
 
-Footnote 50) The remaindering operation performed when a value of integer type is converted to unsigned type
+Footnote.50) The remaindering operation performed when a value of integer type is converted to unsigned type
         need not be performed when a value of real floating type is converted to unsigned type. Thus, the
         range of portable real floating values is (−1, Utype_MAX+1).
 
@@ -1895,7 +1895,7 @@ Footnote 50) The remaindering operation performed when a value of integer type i
                  corresponding to the type of the operand with signed integer type.
 
 
-Footnote 51) For example, addition of a double _Complex and a float entails just the conversion of the
+Footnote.51) For example, addition of a double _Complex and a float entails just the conversion of the
         float operand to double (and yields a double _Complex result).
 
 2   The values of floating operands and of the results of floating expressions may be
@@ -1903,7 +1903,7 @@ Footnote 51) For example, addition of a double _Complex and a float entails just
     changed thereby.52)
 
 
-Footnote 52) The cast and assignment operators are still required to perform their specified conversions as
+Footnote.52) The cast and assignment operators are still required to perform their specified conversions as
         described in 6.3.1.4 and 6.3.1.5.
 
 6.3.2 Other operands
@@ -1919,7 +1919,7 @@ Footnote 52) The cast and assignment operators are still required to perform the
     all contained aggregates or unions) with a const-qualified type.
 
 
-Footnote 53) The name ‘‘lvalue’’ comes originally from the assignment expression E1 = E2, in which the left
+Footnote.53) The name ‘‘lvalue’’ comes originally from the assignment expression E1 = E2, in which the left
         operand E1 is required to be a (modifiable) lvalue. It is perhaps better considered as representing an
         object ‘‘locator value’’. What is sometimes called ‘‘rvalue’’ is in this International Standard described
         as the ‘‘value of an expression’’.
@@ -1950,7 +1950,7 @@ Footnote 53) The name ‘‘lvalue’’ comes originally from the assignment ex
     (6.5.3.1), the sizeof operator (6.5.3.4), structure and union members (6.5.2.3).
 
 
-Footnote 54) Because this conversion does not occur, the operand of the sizeof operator remains a function
+Footnote.54) Because this conversion does not occur, the operand of the sizeof operator remains a function
         designator and violates the constraint in 6.5.3.4.
 
 6.3.2.2 void
@@ -1977,7 +1977,7 @@ Footnote 54) Because this conversion does not occur, the operand of the sizeof o
     to a pointer to any object or function.
 
 
-Footnote 55) The macro NULL is defined in <stddef.h> (and other headers) as a null pointer constant; see 7.17.
+Footnote.55) The macro NULL is defined in <stddef.h> (and other headers) as a null pointer constant; see 7.17.
 
 4   Conversion of a null pointer to another pointer type yields a null pointer of that type.
     Any two null pointers shall compare equal.
@@ -1987,7 +1987,7 @@ Footnote 55) The macro NULL is defined in <stddef.h> (and other headers) as a nu
     entity of the referenced type, and might be a trap representation.56)
 
 
-Footnote 56) The mapping functions for converting a pointer to an integer or an integer to a pointer are intended to
+Footnote.56) The mapping functions for converting a pointer to an integer or an integer to a pointer are intended to
         be consistent with the addressing structure of the execution environment.
 
 6   Any pointer type may be converted to an integer type. Except as previously specified, the
@@ -2004,7 +2004,7 @@ Footnote 56) The mapping functions for converting a pointer to an integer or an 
     to the remaining bytes of the object.
 
 
-Footnote 57) In general, the concept ‘‘correctly aligned’’ is transitive: if a pointer to type A is correctly aligned for a
+Footnote.57) In general, the concept ‘‘correctly aligned’’ is transitive: if a pointer to type A is correctly aligned for a
         pointer to type B, which in turn is correctly aligned for a pointer to type C, then a pointer to type A is
         correctly aligned for a pointer to type C.
 
@@ -2054,7 +2054,7 @@ Footnote 57) In general, the concept ‘‘correctly aligned’’ is transitive
     or string literal.
 
 
-Footnote 58) An additional category, placemarkers, is used internally in translation phase 4 (see 6.10.3.3); it cannot
+Footnote.58) An additional category, placemarkers, is used internally in translation phase 4 (see 6.10.3.3); it cannot
         occur in source files.
 
 4   If the input stream has been parsed into preprocessing tokens up to a given character, the
@@ -2102,7 +2102,7 @@ Footnote 58) An additional category, placemarkers, is used internally in transla
     specifying imaginary types.59)
 
 
-Footnote 59) One possible specification for imaginary types appears in annex G.
+Footnote.59) One possible specification for imaginary types appears in annex G.
 
 6.4.2 Identifiers
 
@@ -2139,7 +2139,7 @@ Footnote 59) One possible specification for imaginary types appears in annex G.
     names is implementation-defined.
 
 
-Footnote 60) On systems in which linkers cannot accept extended characters, an encoding of the universal character
+Footnote.60) On systems in which linkers cannot accept extended characters, an encoding of the universal character
         name may be used in forming valid external identifiers. For example, some otherwise unused
         character or sequence of characters may be used to encode the \u in a universal character name.
         Extended characters may produce a long external identifier.
@@ -2168,7 +2168,7 @@ Footnote 60) On systems in which linkers cannot accept extended characters, an e
     appeared, where function-name is the name of the lexically-enclosing function.61)
 
 
-Footnote 61) Since the name _ _func_ _ is reserved for any use by the implementation (7.1.3), if any other
+Footnote.61) Since the name _ _func_ _ is reserved for any use by the implementation (7.1.3), if any other
         identifier is explicitly declared using the name _ _func_ _, the behavior is undefined.
 
 2   This name is encoded as if the implicit declaration had been written in the source
@@ -2204,7 +2204,7 @@ Footnote 61) Since the name _ _func_ _ is reserved for any use by the implementa
     Description
 
 
-Footnote 62) The disallowed characters are the characters in the basic character set and the code positions reserved
+Footnote.62) The disallowed characters are the characters in the basic character set and the code positions reserved
         by ISO/IEC 10646 for control characters, the character DELETE, and the S-zone (reserved for use by
         UTF−16).
 
@@ -2218,7 +2218,7 @@ Footnote 62) The disallowed characters are the characters in the basic character
     (and whose eight-digit short identifier is 0000nnnn).
 
 
-Footnote 63) Short identifiers for characters were first specified in ISO/IEC 10646−1/AMD9:1997.
+Footnote.63) Short identifiers for characters were first specified in ISO/IEC 10646−1/AMD9:1997.
 
 6.4.4 Constants
 
@@ -2403,7 +2403,7 @@ Footnote 63) Short identifiers for characters were first specified in ISO/IEC 10
     rounding.64)
 
 
-Footnote 64) The specification for the library functions recommends more accurate conversion than required for
+Footnote.64) The specification for the library functions recommends more accurate conversion than required for
         floating constants (see 7.20.1.3).
 
 6.4.4.3 Enumeration constants
@@ -2487,7 +2487,7 @@ Footnote 64) The specification for the library functions recommends more accurat
      Constraints
 
 
-Footnote 65) The semantics of these characters were discussed in 5.2.2. If any other character follows a backslash,
+Footnote.65) The semantics of these characters were discussed in 5.2.2. If any other character follows a backslash,
         the result is not a token and a diagnostic is required. See ‘‘future language directions’’ (6.11.4).
 
 9    The value of an octal or hexadecimal escape sequence shall be in the range of
@@ -2582,7 +2582,7 @@ Footnote 65) The semantics of these characters were discussed in 5.2.2. If any o
     not represented in the execution character set is implementation-defined.
 
 
-Footnote 66) A character string literal need not be a string (see 7.1.1), because a null character may be embedded in
+Footnote.66) A character string literal need not be a string (see 7.1.1), because a null character may be embedded in
         it by a \0 escape sequence.
 
 6   It is unspecified whether these arrays are distinct provided their elements have the
@@ -2626,10 +2626,10 @@ Footnote 66) A character string literal need not be a string (see 7.1.1), becaus
     (6.10), statements (6.8).
 
 
-Footnote 67) These tokens are sometimes called ‘‘digraphs’’.
+Footnote.67) These tokens are sometimes called ‘‘digraphs’’.
 
 
-Footnote 68) Thus [ and <: behave differently when ‘‘stringized’’ (see 6.10.3.2), but can otherwise be freely
+Footnote.68) Thus [ and <: behave differently when ‘‘stringized’’ (see 6.10.3.2), but can otherwise be freely
         interchanged.
 
 6.4.7 Header names
@@ -2662,10 +2662,10 @@ Footnote 68) Thus [ and <: behave differently when ‘‘stringized’’ (see 6
     in implementation-defined locations within #pragma directives.70)
 
 
-Footnote 69) Thus, sequences of characters that resemble escape sequences cause undefined behavior.
+Footnote.69) Thus, sequences of characters that resemble escape sequences cause undefined behavior.
 
 
-Footnote 70) For an example of a header name preprocessing token used in a #pragma directive, see 6.10.9.
+Footnote.70) For an example of a header name preprocessing token used in a #pragma directive, see 6.10.9.
 
 4   EXAMPLE       The following sequence of characters:
              0x3<1/a.h>1e2
@@ -2712,7 +2712,7 @@ Footnote 70) For an example of a header name preprocessing token used in a #prag
     multibyte characters and to find the characters */ that terminate it.71)
 
 
-Footnote 71) Thus, /* ... */ comments do not nest.
+Footnote.71) Thus, /* ... */ comments do not nest.
 
 2   Except within a character constant, a string literal, or a comment, the characters //
     introduce a comment that includes all multibyte characters up to, but not including, the
@@ -2745,10 +2745,10 @@ Footnote 71) Thus, /* ... */ comments do not nest.
     shall be read only to determine the value to be stored.73)
 
 
-Footnote 72) A floating-point status flag is not an object and can be set more than once within an expression.
+Footnote.72) A floating-point status flag is not an object and can be set more than once within an expression.
 
 
-Footnote 73) This paragraph renders undefined statement expressions such as
+Footnote.73) This paragraph renders undefined statement expressions such as
                   i = ++i + 1;
                   a[i++] = i;
          while allowing
@@ -2760,7 +2760,7 @@ Footnote 73) This paragraph renders undefined statement expressions such as
     of subexpressions and the order in which side effects take place are both unspecified.
 
 
-Footnote 74) The syntax specifies the precedence of operators in the evaluation of an expression, which is the same
+Footnote.74) The syntax specifies the precedence of operators in the evaluation of an expression, which is the same
         as the order of the major subclauses of this subclause, highest precedence first. Thus, for example, the
         expressions allowed as the operands of the binary + operator (6.5.6) are those expressions defined in
         ~~6.5.1 through 6.5.6. The exceptions are cast expressions (6.5.4) as operands of unary operators
@@ -2791,7 +2791,7 @@ Footnote 74) The syntax specifies the precedence of operators in the evaluation 
     simply the type of the lvalue used for the access.
 
 
-Footnote 75) Allocated objects have no declared type.
+Footnote.75) Allocated objects have no declared type.
 
 7   An object shall have its stored value accessed only by an lvalue expression that has one of
     the following types:76)
@@ -2806,7 +2806,7 @@ Footnote 75) Allocated objects have no declared type.
     — a character type.
 
 
-Footnote 76) The intent of this list is to specify those circumstances in which an object may or may not be aliased.
+Footnote.76) The intent of this list is to specify those circumstances in which an object may or may not be aliased.
 
 8   A floating expression may be contracted, that is, evaluated as though it were an atomic
     operation, thereby omitting rounding errors implied by the source code and the
@@ -2816,10 +2816,10 @@ Footnote 76) The intent of this list is to specify those circumstances in which 
     Forward references: the FP_CONTRACT pragma (7.12.2), copying functions (7.21.2).
 
 
-Footnote 77) A contracted expression might also omit the raising of floating-point exceptions.
+Footnote.77) A contracted expression might also omit the raising of floating-point exceptions.
 
 
-Footnote 78) This license is specifically intended to allow implementations to exploit fast machine instructions that
+Footnote.78) This license is specifically intended to allow implementations to exploit fast machine instructions that
         combine multiple C operators. As contractions potentially undermine predictability, and can even
         decrease accuracy for containing expressions, their use needs to be well-defined and clearly
         documented.
@@ -2839,7 +2839,7 @@ Footnote 78) This license is specifically intended to allow implementations to e
     designator).79)
 
 
-Footnote 79) Thus, an undeclared identifier is a violation of the syntax.
+Footnote.79) Thus, an undeclared identifier is a violation of the syntax.
 
 3   A constant is a primary expression. Its type depends on its form and value, as detailed in
     6.4.4.
@@ -2911,7 +2911,7 @@ Footnote 79) Thus, an undeclared identifier is a violation of the syntax.
     returning void or returning an object type other than an array type.
 
 
-Footnote 80) Most often, this is the result of converting an identifier that is a function designator.
+Footnote.80) Most often, this is the result of converting an identifier that is a function designator.
 
 2   If the expression that denotes the called function has a type that includes a prototype, the
     number of arguments shall agree with the number of parameters. Each argument shall
@@ -2928,7 +2928,7 @@ Footnote 80) Most often, this is the result of converting an identifier that is 
     corresponding argument.81)
 
 
-Footnote 81) A function may change the values of its parameters, but these changes cannot affect the values of the
+Footnote.81) A function may change the values of its parameters, but these changes cannot affect the values of the
         arguments. On the other hand, it is possible to pass a pointer to an object, and the function may
         change the value of the object pointed to. A parameter declared to have array or function type is
         adjusted to have a pointer type as described in 6.9.1.
@@ -3001,7 +3001,7 @@ Footnote 81) A function may change the values of its parameters, but these chang
     the so-qualified version of the type of the designated member.
 
 
-Footnote 82) If the member used to access the contents of a union object is not the same as the member last used to
+Footnote.82) If the member used to access the contents of a union object is not the same as the member last used to
         store a value in the object, the appropriate part of the object representation of the value is reinterpreted
         as an object representation in the new type as described in 6.2.6 (a process sometimes called "type
         punning"). This might be a trap representation.
@@ -3013,7 +3013,7 @@ Footnote 82) If the member used to access the contents of a union object is not 
     member.
 
 
-Footnote 83) If &E is a valid pointer expression (where & is the ‘‘address-of ’’ operator, which generates a pointer to
+Footnote.83) If &E is a valid pointer expression (where & is the ‘‘address-of ’’ operator, which generates a pointer to
         its operand), the expression (&E)->MOS is the same as E.MOS.
 
 5   One special guarantee is made in order to simplify the use of unions: if a union contains
@@ -3120,7 +3120,7 @@ Footnote 83) If &E is a valid pointer expression (where & is the ‘‘address-o
     value is given by the initializer list.84)
 
 
-Footnote 84) Note that this differs from a cast expression. For example, a cast specifies a conversion to scalar types
+Footnote.84) Note that this differs from a cast expression. For example, a cast specifies a conversion to scalar types
         or void only, and the result of a cast expression is not an lvalue.
 
 5   If the type name specifies an array of unknown size, the size is determined by the
@@ -3138,13 +3138,13 @@ Footnote 84) Note that this differs from a cast expression. For example, a cast 
      compound literals.85)
 
 
-Footnote 85) For example, subobjects without explicit initializers are initialized to zero.
+Footnote.85) For example, subobjects without explicit initializers are initialized to zero.
 
 8    String literals, and compound literals with const-qualified types, need not designate
      distinct objects.86)
 
 
-Footnote 86) This allows implementations to share storage for string literals and constant compound literals with
+Footnote.86) This allows implementations to share storage for string literals and constant compound literals with
          the same or overlapping representations.
 
 9    EXAMPLE 1       The file scope definition
@@ -3278,7 +3278,7 @@ Footnote 86) This allows implementations to share storage for string literals an
     (6.7.2.1).
 
 
-Footnote 87) Thus, &*E is equivalent to E (even if E is a null pointer), and &(E1[E2]) to ((E1)+(E2)). It is
+Footnote.87) Thus, &*E is equivalent to E (even if E is a null pointer), and &(E1[E2]) to ((E1)+(E2)). It is
         always true that if E is a function designator or an lvalue that is a valid operand of the unary &
         operator, *&E is a function designator or an lvalue equal to E. If *P is an lvalue and T is the name of
         an object pointer type, *(T)P is an lvalue that has a type compatible with that to which T points.
@@ -3330,7 +3330,7 @@ Footnote 87) Thus, &*E is equivalent to E (even if E is a null pointer), and &(E
     including internal and trailing padding.
 
 
-Footnote 88) When applied to a parameter declared to have array or function type, the sizeof operator yields the
+Footnote.88) When applied to a parameter declared to have array or function type, the sizeof operator yields the
         size of the adjusted (pointer) type (see 6.9.1).
 
 4   The value of the result is implementation-defined, and its type (an unsigned integer type)
@@ -3387,7 +3387,7 @@ Footnote 88) When applied to a parameter declared to have array or function type
     no conversion has no effect on the type or value of an expression.
 
 
-Footnote 89) A cast does not yield an lvalue. Thus, a cast to a qualified type has the same effect as a cast to the
+Footnote.89) A cast does not yield an lvalue. Thus, a cast to a qualified type has the same effect as a cast to the
         unqualified version of the type.
 
 5   If the value of the expression is represented with greater precision or range than required
@@ -3423,7 +3423,7 @@ Footnote 89) A cast does not yield an lvalue. Thus, a cast to a qualified type h
     (a/b)*b + a%b shall equal a.
 
 
-Footnote 90) This is often called ‘‘truncation toward zero’’.
+Footnote.90) This is often called ‘‘truncation toward zero’’.
 
 6.5.6 Additive operators
 
@@ -3488,7 +3488,7 @@ Footnote 90) This is often called ‘‘truncation toward zero’’.
      expression (Q)+1 does not point to an element of the array object.91)
 
 
-Footnote 91) Another way to approach pointer arithmetic is first to convert the pointer(s) to character pointer(s): In
+Footnote.91) Another way to approach pointer arithmetic is first to convert the pointer(s) to character pointer(s): In
          this scheme the integer expression added to or subtracted from the converted pointer is first multiplied
          by the size of the object originally pointed to, and the resulting pointer is converted back to the
          original type. For pointer subtraction, the result of the difference between the character pointers is
@@ -3584,7 +3584,7 @@ Footnote 91) Another way to approach pointer arithmetic is first to convert the 
     The result has type int.
 
 
-Footnote 92) The expression a<b<c is not interpreted as in ordinary mathematics. As the syntax indicates, it
+Footnote.92) The expression a<b<c is not interpreted as in ordinary mathematics. As the syntax indicates, it
         means (a<b)<c; in other words, ‘‘if a is less than b, compare 1 to c; otherwise, compare 0 to c’’.
 
 6.5.9 Equality operators
@@ -3610,7 +3610,7 @@ Footnote 92) The expression a<b<c is not interpreted as in ordinary mathematics.
     operands, exactly one of the relations is true.
 
 
-Footnote 93) Because of the precedences, a<b == c<d is 1 whenever a<b and c<d have the same truth-value.
+Footnote.93) Because of the precedences, a<b == c<d is 1 whenever a<b and c<d have the same truth-value.
 
 4   If both of the operands have arithmetic type, the usual arithmetic conversions are
     performed. Values of complex types are equal if and only if both their real parts are equal
@@ -3631,7 +3631,7 @@ Footnote 93) Because of the precedences, a<b == c<d is 1 whenever a<b and c<d ha
     space.94)
 
 
-Footnote 94) Two objects may be adjacent in memory because they are adjacent elements of a larger array or
+Footnote.94) Two objects may be adjacent in memory because they are adjacent elements of a larger array or
         adjacent members of a structure with no padding between them, or because the implementation chose
         to place them so, even though they are unrelated. If prior invalid pointer operations (such as accesses
         outside array bounds) produced undefined behavior, subsequent comparisons also produce undefined
@@ -3756,7 +3756,7 @@ Footnote 94) Two objects may be adjacent in memory because they are adjacent ele
     the behavior is undefined.
 
 
-Footnote 95) A conditional expression does not yield an lvalue.
+Footnote.95) A conditional expression does not yield an lvalue.
 
 5   If both the second and third operands have arithmetic type, the result type that would be
     determined by the usual arithmetic conversions, were they applied to those two operands,
@@ -3836,7 +3836,7 @@ Footnote 95) A conditional expression does not yield an lvalue.
     Semantics
 
 
-Footnote 96) The asymmetric appearance of these constraints with respect to type qualifiers is due to the conversion
+Footnote.96) The asymmetric appearance of these constraints with respect to type qualifiers is due to the conversion
         (specified in 6.3.2.1) that changes lvalues to ‘‘the value of the expression’’ and thus removes any type
         qualifiers that were applied to the type category of the expression (for example, it removes const but
         not volatile from the type int volatile * const).
@@ -3912,7 +3912,7 @@ Footnote 96) The asymmetric appearance of these constraints with respect to type
     access it after the next sequence point, the behavior is undefined.
 
 
-Footnote 97) A comma operator does not yield an lvalue.
+Footnote.97) A comma operator does not yield an lvalue.
 
 3   EXAMPLE As indicated by the syntax, the comma operator (as described in this subclause) cannot
     appear in contexts where a comma is used to separate items in a list (such as arguments to functions or lists
@@ -3939,7 +3939,7 @@ Footnote 97) A comma operator does not yield an lvalue.
     evaluated.98)
 
 
-Footnote 98) The operand of a sizeof operator is usually not evaluated (6.5.3.4).
+Footnote.98) The operand of a sizeof operator is usually not evaluated (6.5.3.4).
 
 4   Each constant expression shall evaluate to a constant that is in the range of representable
     values for its type.
@@ -3958,7 +3958,7 @@ Footnote 98) The operand of a sizeof operator is usually not evaluated (6.5.3.4)
     operator.
 
 
-Footnote 99) An integer constant expression is used to specify the size of a bit-field member of a structure, the
+Footnote.99) An integer constant expression is used to specify the size of a bit-field member of a structure, the
         value of an enumeration constant, the size of an array, or the value of a case constant. Further
         constraints that apply to the integer constant expressions used in conditional-inclusion preprocessing
         directives are discussed in 6.10.1.
@@ -3991,7 +3991,7 @@ Footnote 99) An integer constant expression is used to specify the size of a bit
      Forward references: array declarators (6.7.5.2), initialization (6.7.8).
 
 
-Footnote 100) Thus, in the following initialization,
+Footnote.100) Thus, in the following initialization,
                    static int i = 2 || 1 / 0;
           the expression is a valid integer constant expression with value one.
 
@@ -4032,7 +4032,7 @@ Footnote 100) Thus, in the following initialization,
       identifier.
 
 
-Footnote 101) Function definitions have a different syntax, described in 6.9.1.
+Footnote.101) Function definitions have a different syntax, described in 6.9.1.
 
 6   The declaration specifiers consist of a sequence of specifiers that indicate the linkage,
     storage duration, and part of the type of the entities that the declarators denote. The init-
@@ -4063,7 +4063,7 @@ Footnote 101) Function definitions have a different syntax, described in 6.9.1.
     Semantics
 
 
-Footnote 102) See ‘‘future language directions’’ (6.11.5).
+Footnote.102) See ‘‘future language directions’’ (6.11.5).
 
 3   The typedef specifier is called a ‘‘storage-class specifier’’ for syntactic convenience
     only; it is discussed in 6.7.7. The meanings of the various linkages and storage durations
@@ -4074,7 +4074,7 @@ Footnote 102) See ‘‘future language directions’’ (6.11.5).
     suggestions are effective is implementation-defined.103)
 
 
-Footnote 103) The implementation may treat any register declaration simply as an auto declaration. However,
+Footnote.103) The implementation may treat any register declaration simply as an auto declaration. However,
          whether or not addressable storage is actually used, the address of any part of an object declared with
          storage-class specifier register cannot be computed, either explicitly (by use of the unary &
          operator as discussed in 6.5.3.2) or implicitly (by converting an array name to a pointer as discussed in
@@ -4144,7 +4144,7 @@ Footnote 103) The implementation may treat any register declaration simply as an
     Semantics
 
 
-Footnote 104) Freestanding implementations are not required to provide complex types.                   ∗
+Footnote.104) Freestanding implementations are not required to provide complex types.                   ∗
 
 4   Specifiers for structures, unions, and enumerations are discussed in 6.7.2.1 through
     6.7.2.3. Declarations of typedef names are discussed in 6.7.7. The characteristics of the
@@ -4216,11 +4216,11 @@ Footnote 104) Freestanding implementations are not required to provide complex t
      width is preceded by a colon.
 
 
-Footnote 105) A structure or union can not contain a member with a variably modified type because member names
+Footnote.105) A structure or union can not contain a member with a variably modified type because member names
           are not ordinary identifiers as defined in 6.2.3.
 
 
-Footnote 106) The unary & (address-of) operator cannot be applied to a bit-field object; thus, there are no pointers to
+Footnote.106) The unary & (address-of) operator cannot be applied to a bit-field object; thus, there are no pointers to
           or arrays of bit-field objects.
 
 9    A bit-field is interpreted as a signed or unsigned integer type consisting of the specified
@@ -4228,7 +4228,7 @@ Footnote 106) The unary & (address-of) operator cannot be applied to a bit-field
      _Bool, the value of the bit-field shall compare equal to the value stored.
 
 
-Footnote 107) As specified in 6.7.2 above, if the actual type specifier used is int or a typedef-name defined as int,
+Footnote.107) As specified in 6.7.2 above, if the actual type specifier used is int or a typedef-name defined as int,
           then it is implementation-defined whether the bit-field is signed or unsigned.
 
 10   An implementation may allocate any addressable storage unit large enough to hold a bit-
@@ -4245,7 +4245,7 @@ Footnote 107) As specified in 6.7.2 above, if the actual type specifier used is 
      field, if any, was placed.
 
 
-Footnote 108) An unnamed bit-field structure member is useful for padding to conform to externally imposed
+Footnote.108) An unnamed bit-field structure member is useful for padding to conform to externally imposed
           layouts.
 
 12   Each non-bit-field member of a structure or union object is aligned in an implementation-
@@ -4364,7 +4364,7 @@ Footnote 108) An unnamed bit-field structure member is useful for padding to con
     enumeration.) The enumerators of an enumeration are also known as its members.
 
 
-Footnote 109) Thus, the identifiers of enumeration constants declared in the same scope shall all be distinct from
+Footnote.109) Thus, the identifiers of enumeration constants declared in the same scope shall all be distinct from
          each other and from other identifiers declared in ordinary declarators.
 
 4   Each enumerated type shall be compatible with char, a signed integer type, or an
@@ -4374,7 +4374,7 @@ Footnote 109) Thus, the identifiers of enumeration constants declared in the sam
     declarations.
 
 
-Footnote 110) An implementation may delay the choice of which integer type until all enumeration constants have
+Footnote.110) An implementation may delay the choice of which integer type until all enumeration constants have
          been seen.
 
 5   EXAMPLE       The following fragment:
@@ -4407,7 +4407,7 @@ Footnote 110) An implementation may delay the choice of which integer type until
     of the list defining the content, and complete thereafter.
 
 
-Footnote 111) An incomplete type may only by used when the size of an object of that type is not needed. It is not
+Footnote.111) An incomplete type may only by used when the size of an object of that type is not needed. It is not
          needed, for example, when a typedef name is declared to be a specifier for a structure or union, or
          when a pointer to or a function returning a structure or union is being declared. (See incomplete types
          in 6.2.5.) The specification has to be complete before such a function is called or defined.
@@ -4427,7 +4427,7 @@ Footnote 111) An incomplete type may only by used when the size of an object of 
      also declares the identifier to be the tag of that type.
 
 
-Footnote 112) If there is no identifier, the type can, within the translation unit, only be referred to by the declaration
+Footnote.112) If there is no identifier, the type can, within the translation unit, only be referred to by the declaration
           of which it is a part. Of course, when the declaration is of a typedef name, subsequent declarations
           can make use of that typedef name to declare objects having the specified structure, union, or
           enumerated type.
@@ -4437,7 +4437,7 @@ Footnote 112) If there is no identifier, the type can, within the translation un
      specifies a structure or union type and declares the identifier as a tag of that type.113)
 
 
-Footnote 113) A similar construction with enum does not exist.
+Footnote.113) A similar construction with enum does not exist.
 
 8    If a type specifier of the form
               struct-or-union identifier
@@ -4446,7 +4446,7 @@ Footnote 113) A similar construction with enum does not exist.
      declares the identifier as the tag of that type.113)
 
 
-Footnote 113) A similar construction with enum does not exist.
+Footnote.113) A similar construction with enum does not exist.
 
 9    If a type specifier of the form
               struct-or-union identifier
@@ -4509,7 +4509,7 @@ Footnote 113) A similar construction with enum does not exist.
      are lvalues.114)
 
 
-Footnote 114) The implementation may place a const object that is not volatile in a read-only region of
+Footnote.114) The implementation may place a const object that is not volatile in a read-only region of
           storage. Moreover, the implementation need not allocate storage for such an object if its address is
           never used.
 
@@ -4523,7 +4523,7 @@ Footnote 114) The implementation may place a const object that is not volatile i
      with non-volatile-qualified type, the behavior is undefined.115)
 
 
-Footnote 115) This applies to those objects that behave as if they were defined with qualified types, even if they are
+Footnote.115) This applies to those objects that behave as if they were defined with qualified types, even if they are
           never actually defined as objects in the program (such as an object at a memory-mapped input/output
           address).
 
@@ -4536,7 +4536,7 @@ Footnote 115) This applies to those objects that behave as if they were defined 
      has volatile-qualified type is implementation-defined.
 
 
-Footnote 116) A volatile declaration may be used to describe an object corresponding to a memory-mapped
+Footnote.116) A volatile declaration may be used to describe an object corresponding to a memory-mapped
           input/output port or an object accessed by an asynchronously interrupting function. Actions on
           objects so declared shall not be ‘‘optimized out’’ by an implementation or reordered except as
           permitted by the rules for evaluating expressions.
@@ -4550,7 +4550,7 @@ Footnote 116) A volatile declaration may be used to describe an object correspon
      behavior).
 
 
-Footnote 117) For example, a statement that assigns a value returned by malloc to a single pointer establishes this
+Footnote.117) For example, a statement that assigns a value returned by malloc to a single pointer establishes this
           association between the allocated object and the pointer.
 
 8    If the specification of an array type includes any type qualifiers, the element type is so-
@@ -4558,7 +4558,7 @@ Footnote 117) For example, a statement that assigns a value returned by malloc t
      qualifiers, the behavior is undefined.118)
 
 
-Footnote 118) Both of these can occur through the use of typedefs.
+Footnote.118) Both of these can occur through the use of typedefs.
 
 9    For two qualified types to be compatible, both shall have the identically qualified version
      of a compatible type; the order of type qualifiers within a list of specifiers or qualifiers
@@ -4600,7 +4600,7 @@ Footnote 118) Both of these can occur through the use of typedefs.
      Note that ‘‘based’’ is defined only for expressions with pointer types.
 
 
-Footnote 119) In other words, E depends on the value of P itself rather than on the value of an object referenced
+Footnote.119) In other words, E depends on the value of P itself rather than on the value of an object referenced
           indirectly through P. For example, if identifier p has type (int **restrict), then the pointer
           expressions p and p+1 are based on the restricted pointer object designated by p, but the pointer
           expressions *p and p[1] are not.
@@ -4715,7 +4715,7 @@ Footnote 119) In other words, E depends on the value of P itself rather than on 
      implementation-defined.121)
 
 
-Footnote 120) By using, for example, an alternative to the usual function call mechanism, such as ‘‘inline
+Footnote.120) By using, for example, an alternative to the usual function call mechanism, such as ‘‘inline
          substitution’’. Inline substitution is not textual substitution, nor does it create a new function.
          Therefore, for example, the expansion of a macro used within the body of the function uses the
          definition it had at the point the function body appears, and not where the function is called; and
@@ -4724,7 +4724,7 @@ Footnote 120) By using, for example, an alternative to the usual function call m
          definition.
 
 
-Footnote 121) For example, an implementation might never perform inline substitution, or might only perform inline
+Footnote.121) For example, an implementation might never perform inline substitution, or might only perform inline
          substitutions to calls in the scope of an inline declaration.
 
 6    Any function with internal linkage can be an inline function. For a function with external
@@ -4739,7 +4739,7 @@ Footnote 121) For example, an implementation might never perform inline substitu
     function uses the inline definition or the external definition.122)
 
 
-Footnote 122) Since an inline definition is distinct from the corresponding external definition and from any other
+Footnote.122) Since an inline definition is distinct from the corresponding external definition and from any other
          corresponding inline definitions in other translation units, all corresponding objects with static storage
          duration are also distinct in each of the definitions.
 
@@ -4887,7 +4887,7 @@ Footnote 122) Since an inline definition is distinct from the corresponding exte
     (See 6.7.5.3 for the meaning of the optional type qualifiers and the keyword static.)
 
 
-Footnote 123) When several ‘‘array of’’ specifications are adjacent, a multidimensional array is declared.
+Footnote.123) When several ‘‘array of’’ specifications are adjacent, a multidimensional array is declared.
 
 4   If the size is not present, the array type is an incomplete type. If the size is * instead of
     being an expression, the array type is a variable length array type of unspecified size,
@@ -4897,7 +4897,7 @@ Footnote 123) When several ‘‘array of’’ specifications are adjacent, a m
     otherwise, the array type is a variable length array type.
 
 
-Footnote 124) Thus, * can be used only in function declarations that are not definitions (see 6.7.5.3).
+Footnote.124) Thus, * can be used only in function declarations that are not definitions (see 6.7.5.3).
 
 5   If the size is an expression that is not an integer constant expression: if it occurs in a
     declaration at function prototype scope, it is treated as if it were replaced by *; otherwise,
@@ -5007,7 +5007,7 @@ Footnote 124) Thus, * can be used only in function declarations that are not def
      of the parameters after the comma is supplied.125)
 
 
-Footnote 125) The macros defined in the <stdarg.h> header (7.15) may be used to access arguments that
+Footnote.125) The macros defined in the <stdarg.h> header (7.15) may be used to access arguments that
           correspond to the ellipsis.
 
 10   The special case of an unnamed parameter of type void as the only item in the list
@@ -5031,7 +5031,7 @@ Footnote 125) The macros defined in the <stdarg.h> header (7.15) may be used to 
      parameters is supplied.126)
 
 
-Footnote 126) See ‘‘future language directions’’ (6.11.6).
+Footnote.126) See ‘‘future language directions’’ (6.11.6).
 
 15   For two function types to be compatible, both shall specify compatible return types.127)
      Moreover, the parameter type lists, if both are present, shall agree in the number of
@@ -5050,7 +5050,7 @@ Footnote 126) See ‘‘future language directions’’ (6.11.6).
      is taken as having the unqualified version of its declared type.)
 
 
-Footnote 127) If both function types are ‘‘old style’’, parameter types are not compared.
+Footnote.127) If both function types are ‘‘old style’’, parameter types are not compared.
 
 16   EXAMPLE 1       The declaration
               int f(void), *fip(), (*pfi)();
@@ -5141,7 +5141,7 @@ Footnote 127) If both function types are ‘‘old style’’, parameter types 
     omits the identifier.128)
 
 
-Footnote 128) As indicated by the syntax, empty parentheses in a type name are interpreted as ‘‘function with no
+Footnote.128) As indicated by the syntax, empty parentheses in a type name are interpreted as ‘‘function with no
          parameter specification’’, rather than redundant parentheses around the omitted identifier.
 
 3   EXAMPLE        The constructions
@@ -5339,12 +5339,12 @@ Footnote 128) As indicated by the syntax, empty parentheses in a type name are i
      with the next subobject after that described by the designator.130)
 
 
-Footnote 129) If the initializer list for a subaggregate or contained union does not begin with a left brace, its
+Footnote.129) If the initializer list for a subaggregate or contained union does not begin with a left brace, its
           subobjects are initialized as usual, but the subaggregate or contained union does not become the
           current object: current objects are associated only with brace-enclosed initializer lists.
 
 
-Footnote 130) After a union member is initialized, the next object is not the next member of the union; instead, it is
+Footnote.130) After a union member is initialized, the next object is not the next member of the union; instead, it is
           the next subobject of an object containing the union.
 
 18   Each designator list begins its description with the current object associated with the
@@ -5354,7 +5354,7 @@ Footnote 130) After a union member is initialized, the next object is not the ne
      designator list is the subobject to be initialized by the following initializer.
 
 
-Footnote 131) Thus, a designator can only specify a strict subobject of the aggregate or union that is associated with
+Footnote.131) Thus, a designator can only specify a strict subobject of the aggregate or union that is associated with
           the surrounding brace pair. Note, too, that each separate designator list is independent.
 
 19   The initialization shall occur in initializer list order, each initializer provided for a
@@ -5363,7 +5363,7 @@ Footnote 131) Thus, a designator can only specify a strict subobject of the aggr
      objects that have static storage duration.
 
 
-Footnote 132) Any initializer for the subobject which is overridden and so not used to initialize that subobject might
+Footnote.132) Any initializer for the subobject which is overridden and so not used to initialize that subobject might
           not be evaluated at all.
 
 20   If the aggregate or union contains elements or members that are aggregates or unions,
@@ -5388,7 +5388,7 @@ Footnote 132) Any initializer for the subobject which is overridden and so not u
      unspecified.133)
 
 
-Footnote 133) In particular, the evaluation order need not be the same as the order of subobject initialization.
+Footnote.133) In particular, the evaluation order need not be the same as the order of subobject initialization.
 
 24   EXAMPLE 1        Provided that <complex.h> has been #included, the declarations
               int i = 3.5;
@@ -5601,7 +5601,7 @@ Footnote 133) In particular, the evaluation order need not be the same as the or
     effects.134)
 
 
-Footnote 134) Such as assignments, and function calls which have side effects.
+Footnote.134) Such as assignments, and function calls which have side effects.
 
 3   A null statement (consisting of just a semicolon) performs no operations.
 
@@ -5676,7 +5676,7 @@ Footnote 134) Such as assignments, and function calls which have side effects.
     scope of that identifier.135)
 
 
-Footnote 135) That is, the declaration either precedes the switch statement, or it follows the last case or
+Footnote.135) That is, the declaration either precedes the switch statement, or it follows the last case or
          default label associated with the switch that is in the block containing the declaration.
 
 3   The expression of each case label shall be an integer constant expression and no two of
@@ -5741,7 +5741,7 @@ Footnote 135) That is, the declaration either precedes the switch statement, or 
     whether the loop body is entered from the iteration statement or by a jump.136)
 
 
-Footnote 136) Code jumped over is not executed. In particular, the controlling expression of a for or while
+Footnote.136) Code jumped over is not executed. In particular, the controlling expression of a for or while
          statement is not evaluated before entering the loop body, nor is clause-1 of a for statement.
 
 5   An iteration statement is a block whose scope is a strict subset of the scope of its
@@ -5771,7 +5771,7 @@ Footnote 136) Code jumped over is not executed. In particular, the controlling e
     evaluated as a void expression before the first evaluation of the controlling expression.137)
 
 
-Footnote 137) Thus, clause-1 specifies initialization for the loop, possibly declaring one or more variables for use in
+Footnote.137) Thus, clause-1 specifies initialization for the loop, possibly declaring one or more variables for use in
          the loop; the controlling expression, expression-2, specifies an evaluation made before each iteration,
          such that execution of the loop continues until the expression compares equal to 0; and expression-3
          specifies an operation (such as incrementing) that is performed after each iteration.
@@ -5860,7 +5860,7 @@ Footnote 137) Thus, clause-1 specifies initialization for the loop, possibly dec
     case it is interpreted within that statement), it is equivalent to goto contin;.138)
 
 
-Footnote 138) Following the contin: label is a null statement.
+Footnote.138) Following the contin: label is a null statement.
 
 6.8.6.3 The break statement
 
@@ -5888,7 +5888,7 @@ Footnote 138) Following the contin: label is a null statement.
     converted as if by assignment to an object having the return type of the function.139)
 
 
-Footnote 139) The return statement is not an assignment. The overlap restriction of subclause 6.5.16.1 does not
+Footnote.139) The return statement is not an assignment. The overlap restriction of subclause 6.5.16.1 does not
          apply to the case of function return. The representation of floating-point values may have wider range
          or precision and is determined by FLT_EVAL_METHOD. A cast may be used to remove this extra
          range and precision.
@@ -5949,7 +5949,7 @@ Footnote 139) The return statement is not an assignment. The overlap restriction
     one.140)
 
 
-Footnote 140) Thus, if an identifier declared with external linkage is not used in an expression, there need be no
+Footnote.140) Thus, if an identifier declared with external linkage is not used in an expression, there need be no
          external definition for it.
 
 6.9.1 Function definitions
@@ -5966,7 +5966,7 @@ Footnote 140) Thus, if an identifier declared with external linkage is not used 
     have a function type, as specified by the declarator portion of the function definition.141)
 
 
-Footnote 141) The intent is that the type category in a function definition cannot be inherited from a typedef:
+Footnote.141) The intent is that the type category in a function definition cannot be inherited from a typedef:
                   typedef int F(void);                          // type F is ‘‘function with no parameters
                                                                 //                returning int’’
                   F f, g;                                       // f and g both have type compatible with F
@@ -6006,7 +6006,7 @@ Footnote 141) The intent is that the type category in a function definition cann
      described in 6.7.5.3 for a parameter type list; the resulting type shall be an object type.
 
 
-Footnote 142) See ‘‘future language directions’’ (6.11.7).
+Footnote.142) See ‘‘future language directions’’ (6.11.7).
 
 8    If a function that accepts a variable number of arguments is defined without a parameter
      type list that ends with the ellipsis notation, the behavior is undefined.
@@ -6215,7 +6215,7 @@ Footnote 142) See ‘‘future language directions’’ (6.11.7).
     intervening #undef directive with the same subject identifier), 0 if it is not.
 
 
-Footnote 144) Because the controlling constant expression is evaluated during translation phase 4, all identifiers
+Footnote.144) Because the controlling constant expression is evaluated during translation phase 4, all identifiers
          either are or are not macro names — there simply are no keywords, enumeration constants, etc.
 
 2   Each preprocessing token that remains (in the list of preprocessing tokens that will
@@ -6248,12 +6248,12 @@ Footnote 144) Because the controlling constant expression is evaluated during tr
     single-character character constant may have a negative value is implementation-defined.
 
 
-Footnote 145) Thus, on an implementation where INT_MAX is 0x7FFF and UINT_MAX is 0xFFFF, the constant
+Footnote.145) Thus, on an implementation where INT_MAX is 0x7FFF and UINT_MAX is 0xFFFF, the constant
          0x8000 is signed and positive within a #if expression even though it would be unsigned in
          translation phase 7.
 
 
-Footnote 146) Thus, the constant expression in the following #if directive and if statement is not guaranteed to
+Footnote.146) Thus, the constant expression in the following #if directive and if statement is not guaranteed to
          evaluate to the same value in these two contexts.
            #if 'z' - 'a' == 25
            if ('z' - 'a' == 25)
@@ -6277,7 +6277,7 @@ Footnote 146) Thus, the constant expression in the following #if directive and i
     integer types (7.18.1.5).
 
 
-Footnote 147) As indicated by the syntax, a preprocessing token shall not follow a #else or #endif directive
+Footnote.147) As indicated by the syntax, a preprocessing token shall not follow a #else or #endif directive
          before the terminating new-line character. However, comments may appear anywhere in a source file,
          including within a preprocessing directive.
 
@@ -6316,7 +6316,7 @@ Footnote 147) As indicated by the syntax, a preprocessing token shall not follow
     single header name preprocessing token is implementation-defined.
 
 
-Footnote 148) Note that adjacent string literals are not concatenated into a single string literal (see the translation
+Footnote.148) Note that adjacent string literals are not concatenated into a single string literal (see the translation
          phases in 5.1.1.2); thus, an expansion that results in two string literals is an invalid directive.
 
 5   The implementation shall provide unique mappings for sequences consisting of one or
@@ -6394,7 +6394,7 @@ Footnote 148) Note that adjacent string literals are not concatenated into a sin
      as specified below.
 
 
-Footnote 149) Since, by macro-replacement time, all character constants and string literals are preprocessing tokens,
+Footnote.149) Since, by macro-replacement time, all character constants and string literals are preprocessing tokens,
           not sequences possibly containing identifier-like subsequences (see 5.1.1.2, translation phases), they
           are never scanned for macro names or parameters.
 
@@ -6422,7 +6422,7 @@ Footnote 149) Since, by macro-replacement time, all character constants and stri
      preprocessing directives,150) the behavior is undefined.
 
 
-Footnote 150) Despite the name, a non-directive is a preprocessing directive.
+Footnote.150) Despite the name, a non-directive is a preprocessing directive.
 
 12   If there is a ... in the identifier-list in the macro definition, then the trailing arguments,
      including any separating comma preprocessing tokens, are merged to form a single item:
@@ -6481,7 +6481,7 @@ Footnote 150) Despite the name, a non-directive is a preprocessing directive.
     instead.151)
 
 
-Footnote 151) Placemarker preprocessing tokens do not appear in the syntax because they are temporary entities that
+Footnote.151) Placemarker preprocessing tokens do not appear in the syntax because they are temporary entities that
          exist only within translation phase 4.
 
 3   For both object-like and function-like macro invocations, before the replacement list is
@@ -6706,7 +6706,7 @@ Footnote 151) Placemarker preprocessing tokens do not appear in the syntax becau
     pragma that is not recognized by the implementation is ignored.
 
 
-Footnote 152) An implementation is not required to perform macro replacement in pragmas, but it is permitted
+Footnote.152) An implementation is not required to perform macro replacement in pragmas, but it is permitted
          except for in standard pragmas (where STDC immediately follows pragma). If the result of macro
          replacement in a non-standard pragma has the same form as a standard pragma, the behavior is still
          implementation-defined; an implementation is permitted to behave as if it were the standard pragma,
@@ -6725,7 +6725,7 @@ Footnote 152) An implementation is not required to perform macro replacement in 
     (7.6.1), the CX_LIMITED_RANGE pragma (7.3.4).
 
 
-Footnote 153) See ‘‘future language directions’’ (6.11.8).
+Footnote.153) See ‘‘future language directions’’ (6.11.8).
 
 6.10.7 Null directive
 
@@ -6760,16 +6760,16 @@ Footnote 153) See ‘‘future language directions’’ (6.11.8).
                implementation-defined valid time shall be supplied.
 
 
-Footnote 154) See ‘‘future language directions’’ (6.11.9).
+Footnote.154) See ‘‘future language directions’’ (6.11.9).
 
 
-Footnote 155) The presumed source file name and line number can be changed by the #line directive.
+Footnote.155) The presumed source file name and line number can be changed by the #line directive.
 
 
-Footnote 155) The presumed source file name and line number can be changed by the #line directive.
+Footnote.155) The presumed source file name and line number can be changed by the #line directive.
 
 
-Footnote 156) This macro was not specified in ISO/IEC 9899:1990 and was specified as 199409L in
+Footnote.156) This macro was not specified in ISO/IEC 9899:1990 and was specified as 199409L in
          ISO/IEC 9899/AMD1:1995. The intention is that this will remain an integer constant of type long
          int that is increased with each revision of this International Standard.
 
@@ -6886,7 +6886,7 @@ replacement, as in:
     may be changed by the setlocale function.
 
 
-Footnote 157) The functions that make use of the decimal-point character are the numeric conversion functions
+Footnote.157) The functions that make use of the decimal-point character are the numeric conversion functions
          (7.20.1, 7.24.4.1) and the formatted input/output functions (7.19.6, 7.24.2).
 
 3   A null wide character is a wide character with code value zero.
@@ -6904,7 +6904,7 @@ Footnote 157) The functions that make use of the decimal-point character are the
     Forward references: character handling (7.4), the setlocale function (7.11.1.1).
 
 
-Footnote 158) For state-dependent encodings, the values for MB_CUR_MAX and MB_LEN_MAX shall thus be large
+Footnote.158) For state-dependent encodings, the values for MB_CUR_MAX and MB_LEN_MAX shall thus be large
          enough to count all the bytes in any complete multibyte character plus at least one adjacent shift
          sequence of maximum length. Whether these counts provide for more than one shift sequence is the
          implementation’s choice.
@@ -6918,7 +6918,7 @@ Footnote 158) For state-dependent encodings, the values for MB_CUR_MAX and MB_LE
     include type qualifiers, unless explicitly stated otherwise.
 
 
-Footnote 159) A header is not necessarily a source file, nor are the < and > delimited sequences in header names
+Footnote.159) A header is not necessarily a source file, nor are the < and > delimited sequences in header names
          necessarily valid source file names.
 
 2   The standard headers are
@@ -6974,7 +6974,7 @@ Footnote 159) A header is not necessarily a source file, nor are the < and > del
       file scope in the same name space if any of its associated headers is included.
 
 
-Footnote 160) The list of reserved identifiers with external linkage includes errno, math_errhandling,
+Footnote.160) The list of reserved identifiers with external linkage includes errno, math_errhandling,
          setjmp, and va_end.
 
 2   No other identifiers are reserved. If the program declares or defines an identifier in a
@@ -7013,14 +7013,14 @@ Footnote 160) The list of reserved identifiers with external linkage includes er
     directives.
 
 
-Footnote 161) This means that an implementation shall provide an actual function for each library function, even if it
+Footnote.161) This means that an implementation shall provide an actual function for each library function, even if it
          also provides a macro for that function.
 
 
-Footnote 162) Such macros might not contain the sequence points that the corresponding function calls do.
+Footnote.162) Such macros might not contain the sequence points that the corresponding function calls do.
 
 
-Footnote 163) Because external identifiers and some macro names beginning with an underscore are reserved,
+Footnote.163) Because external identifiers and some macro names beginning with an underscore are reserved,
          implementations may provide special semantics for such names. For example, the identifier
          _BUILTIN_abs could be used to indicate generation of in-line code for the abs function. Thus, the
          appropriate header could specify
@@ -7043,7 +7043,7 @@ Footnote 163) Because external identifiers and some macro names beginning with a
     objects with static storage duration.164)
 
 
-Footnote 164) Thus, a signal handler cannot, in general, call standard library functions.
+Footnote.164) Thus, a signal handler cannot, in general, call standard library functions.
 
 5   EXAMPLE       The function atoi may be used in any of several ways:
     — by use of its associated header (possibly generating a macro expansion)
@@ -7103,7 +7103,7 @@ Footnote 164) Thus, a signal handler cannot, in general, call standard library f
     Returns
 
 
-Footnote 165) The message written might be of the form:
+Footnote.165) The message written might be of the form:
          Assertion failed: expression, function abc, file xyz, line nnn.
 
 3   The assert macro returns no value.
@@ -7121,7 +7121,7 @@ Footnote 165) The message written might be of the form:
     return values.
 
 
-Footnote 166) See ‘‘future library directions’’ (7.26.1).
+Footnote.166) See ‘‘future library directions’’ (7.26.1).
 
 2   The macro
              complex
@@ -7131,7 +7131,7 @@ Footnote 166) See ‘‘future library directions’’ (7.26.1).
     the imaginary unit.167)
 
 
-Footnote 167) The imaginary unit is a number i such that i 2 = −1.
+Footnote.167) The imaginary unit is a number i such that i 2 = −1.
 
 3   The macros
              imaginary
@@ -7142,7 +7142,7 @@ Footnote 167) The imaginary unit is a number i such that i 2 = −1.
     _Imaginary with the value of the imaginary unit.
 
 
-Footnote 168) A specification for imaginary types is in informative annex G.
+Footnote.168) A specification for imaginary types is in informative annex G.
 
 4   The macro
              I
@@ -7200,7 +7200,7 @@ Footnote 168) A specification for imaginary types is in informative annex G.
     undefined. The default state for the pragma is ‘‘off’’.
 
 
-Footnote 169) The purpose of the pragma is to allow the implementation to use the formulas:
+Footnote.169) The purpose of the pragma is to allow the implementation to use the formulas:
             (x + iy) × (u + iv) = (xu − yv) + i(yu + xv)
             (x + iy) / (u + iv) = [(xu + yv) + i(yu − xv)]/(u2 + v 2 )
             | x + iy | = √
@@ -7510,7 +7510,7 @@ Footnote 169) The purpose of the pragma is to allow the implementation to use th
     Returns
 
 
-Footnote 170) For a variable z of complex type, z == creal(z) + cimag(z)*I.
+Footnote.170) For a variable z of complex type, z == creal(z) + cimag(z)*I.
 
 3   The cimag functions return the imaginary part value (as a real).
 
@@ -7560,7 +7560,7 @@ Footnote 170) For a variable z of complex type, z == creal(z) + cimag(z)*I.
     Returns
 
 
-Footnote 171) For a variable z of complex type, z == creal(z) + cimag(z)*I.
+Footnote.171) For a variable z of complex type, z == creal(z) + cimag(z)*I.
 
 3   The creal functions return the real part value.
 
@@ -7572,7 +7572,7 @@ Footnote 171) For a variable z of complex type, z == creal(z) + cimag(z)*I.
     argument has any other value, the behavior is undefined.
 
 
-Footnote 172) See ‘‘future library directions’’ (7.26.2).
+Footnote.172) See ‘‘future library directions’’ (7.26.2).
 
 2   The behavior of these functions is affected by the current locale. Those functions that
     have locale-specific aspects only when not in the "C" locale are noted below.
@@ -7584,7 +7584,7 @@ Footnote 172) See ‘‘future library directions’’ (7.26.2).
     Forward references: EOF (7.19.1), localization (7.11).
 
 
-Footnote 173) In an implementation that uses the seven-bit US ASCII character set, the printing characters are those
+Footnote.173) In an implementation that uses the seven-bit US ASCII character set, the printing characters are those
          whose values lie from 0x20 (space) through 0x7E (tilde); the control characters are those whose
          values lie from 0 (NUL) through 0x1F (US), and the character 0x7F (DEL).
 
@@ -7615,7 +7615,7 @@ Footnote 173) In an implementation that uses the seven-bit US ASCII character se
     isalpha returns true only for the characters for which isupper or islower is true.
 
 
-Footnote 174) The functions islower and isupper test true or false separately for each of these additional
+Footnote.174) The functions islower and isupper test true or false separately for each of these additional
          characters; all four combinations are possible.
 
 7.4.1.3 The isblank function
@@ -7776,7 +7776,7 @@ Footnote 174) The functions islower and isupper test true or false separately fo
     errno, the behavior is undefined.
 
 
-Footnote 175) The macro errno need not be the identifier of an object. It might expand to a modifiable lvalue
+Footnote.175) The macro errno need not be the identifier of an object. It might expand to a modifiable lvalue
          resulting from a function call (for example, *errno()).
 
 3   The value of errno is zero at program startup, but is never set to zero by any library
@@ -7785,7 +7785,7 @@ Footnote 175) The macro errno need not be the identifier of an object. It might 
     description of the function in this International Standard.
 
 
-Footnote 176) Thus, a program that uses errno for error checking should set it to zero before a library function call,
+Footnote.176) Thus, a program that uses errno for error checking should set it to zero before a library function call,
          then inspect it before a subsequent library function call. Of course, a library function can save the
          value of errno on entry and then set it to zero, as long as the original value is restored if errno’s
          value is still zero just before the return.
@@ -7794,7 +7794,7 @@ Footnote 176) Thus, a program that uses errno for error checking should set it t
     letter,177) may also be specified by the implementation.
 
 
-Footnote 177) See ‘‘future library directions’’ (7.26.3).
+Footnote.177) See ‘‘future library directions’’ (7.26.3).
 
 7.6 Floating-point environment <fenv.h>
 
@@ -7808,12 +7808,12 @@ Footnote 177) See ‘‘future library directions’’ (7.26.3).
     subsequent behavior of floating-point arithmetic.
 
 
-Footnote 178) This header is designed to support the floating-point exception status flags and directed-rounding
+Footnote.178) This header is designed to support the floating-point exception status flags and directed-rounding
          control modes required by IEC 60559, and other similar floating-point state information. Also it is
          designed to facilitate code portability among all systems.
 
 
-Footnote 179) A floating-point status flag is not an object and can be set more than once within an expression.
+Footnote.179) A floating-point status flag is not an object and can be set more than once within an expression.
 
 2   Certain programming conventions support the intended model of use for the floating-
     point environment:180)
@@ -7826,7 +7826,7 @@ Footnote 179) A floating-point status flag is not an object and can be set more 
       unless its documentation promises otherwise.
 
 
-Footnote 180) With these conventions, a programmer can safely assume default floating-point control modes (or be
+Footnote.180) With these conventions, a programmer can safely assume default floating-point control modes (or be
          unaware of them). The responsibilities associated with accessing the floating-point environment fall
          on the programmer or program that does so explicitly.
 
@@ -7854,12 +7854,12 @@ Footnote 180) With these conventions, a programmer can safely assume default flo
     zero.182)
 
 
-Footnote 181) The implementation supports an exception if there are circumstances where a call to at least one of the
+Footnote.181) The implementation supports an exception if there are circumstances where a call to at least one of the
          functions in 7.6.2, using the macro as the appropriate argument, will succeed. It is not necessary for
          all the functions to succeed all the time.
 
 
-Footnote 182) The macros should be distinct powers of two.
+Footnote.182) The macros should be distinct powers of two.
 
 6   The macro
             FE_ALL_EXCEPT
@@ -7879,7 +7879,7 @@ Footnote 182) The macros should be distinct powers of two.
     nonnegative values.183)
 
 
-Footnote 183) Even though the rounding direction macros may expand to constants corresponding to the values of
+Footnote.183) Even though the rounding direction macros may expand to constants corresponding to the values of
          FLT_ROUNDS, they are not required to do so.
 
 8   The macro
@@ -7919,7 +7919,7 @@ Footnote 183) Even though the rounding direction macros may expand to constants 
     floating-point control modes have their default settings.)
 
 
-Footnote 184) The purpose of the FENV_ACCESS pragma is to allow certain optimizations that could subvert flag
+Footnote.184) The purpose of the FENV_ACCESS pragma is to allow certain optimizations that could subvert flag
          tests and mode changes (e.g., global common subexpression elimination, code motion, and constant
          folding). In general, if the state of FENV_ACCESS is ‘‘off’’, the translator can assume that default
          modes are in effect and the flags are not tested.
@@ -7943,7 +7943,7 @@ Footnote 184) The purpose of the FENV_ACCESS pragma is to allow certain optimiza
 
 
 
-Footnote 185) The side effects impose a temporal ordering that requires two evaluations of x + 1. On the other
+Footnote.185) The side effects impose a temporal ordering that requires two evaluations of x + 1. On the other
          hand, without the #pragma STDC FENV_ACCESS ON pragma, and assuming the default state is
          ‘‘off’’, just one evaluation of x + 1 would suffice.
 
@@ -7956,7 +7956,7 @@ Footnote 185) The side effects impose a temporal ordering that requires two eval
     functions is undefined.
 
 
-Footnote 186) The functions fetestexcept, feraiseexcept, and feclearexcept support the basic
+Footnote.186) The functions fetestexcept, feraiseexcept, and feclearexcept support the basic
          abstraction of flags that are either set or clear. An implementation may endow floating-point status
          flags with more information — for example, the address of the code which first raised the floating-
          point exception; the functions fegetexceptflag and fesetexceptflag deal with the full
@@ -8007,7 +8007,7 @@ Footnote 186) The functions fetestexcept, feraiseexcept, and feclearexcept suppo
     Returns
 
 
-Footnote 187) The effect is intended to be similar to that of floating-point exceptions raised by arithmetic operations.
+Footnote.187) The effect is intended to be similar to that of floating-point exceptions raised by arithmetic operations.
          Hence, enabled traps for floating-point exceptions raised by this function are taken. The specification
          in F.7.6 is in the same spirit.
 
@@ -8047,7 +8047,7 @@ Footnote 187) The effect is intended to be similar to that of floating-point exc
     Returns
 
 
-Footnote 188) This mechanism allows testing several floating-point exceptions with just one function call.
+Footnote.188) This mechanism allows testing several floating-point exceptions with just one function call.
 
 3   The fetestexcept function returns the value of the bitwise OR of the floating-point
     exception macros corresponding to the currently set floating-point exceptions included in
@@ -8153,7 +8153,7 @@ Footnote 188) This mechanism allows testing several floating-point exceptions wi
     Returns
 
 
-Footnote 189) IEC 60559 systems have a default non-stop mode, and typically at least one other mode for trap
+Footnote.189) IEC 60559 systems have a default non-stop mode, and typically at least one other mode for trap
          handling or aborting; if the system provides only the non-stop mode then installing it is trivial. For
          such systems, the feholdexcept function can be used in conjunction with the feupdateenv
          function to write routines that hide spurious floating-point exceptions from their callers.
@@ -8236,7 +8236,7 @@ Footnote 189) IEC 60559 systems have a default non-stop mode, and typically at l
     functions (7.19.6), formatted wide character input/output functions (7.24.2).
 
 
-Footnote 190) See ‘‘future library directions’’ (7.26.4).
+Footnote.190) See ‘‘future library directions’’ (7.26.4).
 
 7.8.1 Macros for format specifiers
 
@@ -8251,11 +8251,11 @@ Footnote 190) See ‘‘future library directions’’ (7.26.4).
     be used in a format string to print the value of an integer of type int_fast32_t.
 
 
-Footnote 191) C++ implementations should define these macros only when _ _STDC_FORMAT_MACROS is defined
+Footnote.191) C++ implementations should define these macros only when _ _STDC_FORMAT_MACROS is defined
          before <inttypes.h> is included.
 
 
-Footnote 192) Separate macros are given for use with fprintf and fscanf functions because, in the general case,
+Footnote.192) Separate macros are given for use with fprintf and fscanf functions because, in the general case,
          different format specifiers may be required for fprintf and fscanf, even when the type is the
          same.
 
@@ -8309,7 +8309,7 @@ Footnote 192) Separate macros are given for use with fprintf and fscanf function
     Returns
 
 
-Footnote 193) The absolute value of the most negative number cannot be represented in two’s complement.
+Footnote.193) The absolute value of the most negative number cannot be represented in two’s complement.
 
 3   The imaxabs function returns the absolute value.
 
@@ -8448,10 +8448,10 @@ Footnote 193) The absolute value of the most negative number cannot be represent
     implementation.
 
 
-Footnote 194) ISO/IEC 9945−2 specifies locale and charmap formats that may be used to specify locales for C.
+Footnote.194) ISO/IEC 9945−2 specifies locale and charmap formats that may be used to specify locales for C.
 
 
-Footnote 195) See ‘‘future library directions’’ (7.26.5).
+Footnote.195) See ‘‘future library directions’’ (7.26.5).
 
 7.11.1 Locale control
 
@@ -8476,7 +8476,7 @@ Footnote 195) See ‘‘future library directions’’ (7.26.5).
     affects the behavior of the strftime and wcsftime functions.
 
 
-Footnote 196) The only functions in 7.4 whose behavior is not affected by the current locale are isdigit and
+Footnote.196) The only functions in 7.4 whose behavior is not affected by the current locale are isdigit and
          isxdigit.
 
 3   A value of "C" for locale specifies the minimal environment for C translation; a value
@@ -8500,7 +8500,7 @@ Footnote 196) The only functions in 7.4 whose behavior is not affected by the cu
     locale is not changed.197)
 
 
-Footnote 197) The implementation shall arrange to encode in a string the various categories due to a heterogeneous
+Footnote.197) The implementation shall arrange to encode in a string the various categories due to a heterogeneous
          locale when category has the value LC_ALL.
 
 8   The pointer to string returned by the setlocale function is such that a subsequent call
@@ -8711,7 +8711,7 @@ char int_p_sep_by_space
     Integer arithmetic functions and conversion functions are discussed later.
 
 
-Footnote 198) Particularly on systems with wide expression evaluation, a <math.h> function might pass arguments
+Footnote.198) Particularly on systems with wide expression evaluation, a <math.h> function might pass arguments
          and return values in wider format than the synopsis prototype indicates.
 
 2   The types
@@ -8725,7 +8725,7 @@ Footnote 198) Particularly on systems with wide expression evaluation, a <math.h
     otherwise implementation-defined.199)
 
 
-Footnote 199) The types float_t and double_t are intended to be the implementation’s most efficient types at
+Footnote.199) The types float_t and double_t are intended to be the implementation’s most efficient types at
          least as wide as float and double, respectively. For FLT_EVAL_METHOD equal 0, 1, or 2, the
          type float_t is the narrowest type used by the implementation to evaluate floating expressions.
 
@@ -8738,7 +8738,7 @@ Footnote 199) The types float_t and double_t are intended to be the implementati
     are respectively float and long double analogs of HUGE_VAL.200)
 
 
-Footnote 200) HUGE_VAL, HUGE_VALF, and HUGE_VALL can be positive infinities in an implementation that
+Footnote.200) HUGE_VAL, HUGE_VALF, and HUGE_VALL can be positive infinities in an implementation that
          supports infinities.
 
 4   The macro
@@ -8748,7 +8748,7 @@ Footnote 200) HUGE_VAL, HUGE_VALF, and HUGE_VALL can be positive infinities in a
     translation time.201)
 
 
-Footnote 201) In this case, using INFINITY will violate the constraint in 6.4.4 and thus require a diagnostic.
+Footnote.201) In this case, using INFINITY will violate the constraint in 6.4.4 and thus require a diagnostic.
 
 5   The macro
              NAN
@@ -8777,7 +8777,7 @@ Footnote 201) In this case, using INFINITY will violate the constraint in 6.4.4 
     these macros expand to the integer constant 1.
 
 
-Footnote 202) Typically, the FP_FAST_FMA macro is defined if and only if the fma function is implemented
+Footnote.202) Typically, the FP_FAST_FMA macro is defined if and only if the fma function is implemented
          directly with a hardware multiply-add instruction. Software implementations are expected to be
          substantially slower.
 
@@ -8820,7 +8820,7 @@ Footnote 202) Typically, the FP_FAST_FMA macro is defined if and only if the fma
     MATH_ERREXCEPT is nonzero, the ‘‘invalid’’ floating-point exception is raised.
 
 
-Footnote 203) In an implementation that supports infinities, this allows an infinity as an argument to be a domain
+Footnote.203) In an implementation that supports infinities, this allows an infinity as an argument to be a domain
          error if the mathematical domain of the function does not include the infinity.
 
 3   Similarly, a range error occurs if the mathematical result of the function cannot be
@@ -8849,7 +8849,7 @@ Footnote 203) In an implementation that supports infinities, this allows an infi
     floating-point exception is raised is implementation-defined.
 
 
-Footnote 204) The term underflow here is intended to encompass both ‘‘gradual underflow’’ as in IEC 60559 and
+Footnote.204) The term underflow here is intended to encompass both ‘‘gradual underflow’’ as in IEC 60559 and
          also ‘‘flush-to-zero’’ underflow.
 
 7.12.2 The FP_CONTRACT pragma
@@ -8891,7 +8891,7 @@ Footnote 204) The term underflow here is intended to encompass both ‘‘gradua
     Returns
 
 
-Footnote 205) Since an expression can be evaluated with more range and precision than its type has, it is important to
+Footnote.205) Since an expression can be evaluated with more range and precision than its type has, it is important to
          know the type that classification is based on. For example, a normal long double value might
          become subnormal when converted to double, and zero when converted to float.
 
@@ -8949,7 +8949,7 @@ Footnote 205) Since an expression can be evaluated with more range and precision
     Returns
 
 
-Footnote 206) For the isnan macro, the type for determination does not matter unless the implementation supports
+Footnote.206) For the isnan macro, the type for determination does not matter unless the implementation supports
          NaNs in the evaluation type but not in the semantic type.
 
 3   The isnan macro returns a nonzero value if and only if its argument has a NaN value.
@@ -8981,7 +8981,7 @@ Footnote 206) For the isnan macro, the type for determination does not matter un
     Returns
 
 
-Footnote 207) The signbit macro reports the sign of all values, including infinities, zeros, and NaNs. If zero is
+Footnote.207) The signbit macro reports the sign of all values, including infinities, zeros, and NaNs. If zero is
          unsigned, it is treated as positive.
 
 3   The signbit macro returns a nonzero value if and only if the sign of its argument value
@@ -9228,7 +9228,7 @@ Footnote 207) The signbit macro reports the sign of all values, including infini
     Returns
 
 
-Footnote 208) For small magnitude x, expm1(x) is expected to be more accurate than exp(x) - 1.
+Footnote.208) For small magnitude x, expm1(x) is expected to be more accurate than exp(x) - 1.
 
 3   The expm1 functions return ex − 1.
 
@@ -9250,7 +9250,7 @@ Footnote 208) For small magnitude x, expm1(x) is expected to be more accurate th
     zero, and value equals x × 2*exp . If value is zero, both parts of the result are zero.
 
 
-Footnote 1) This International Standard is designed to promote the portability of C programs among a variety of
+Footnote.1) This International Standard is designed to promote the portability of C programs among a variety of
          data-processing systems. It is intended for use by implementors and programmers.
 
 7.12.6.5 The ilogb functions
@@ -9333,7 +9333,7 @@ Footnote 1) This International Standard is designed to promote the portability o
     Returns
 
 
-Footnote 209) For small magnitude x, log1p(x) is expected to be more accurate than log(1 + x).
+Footnote.209) For small magnitude x, log1p(x) is expected to be more accurate than log(1 + x).
 
 3   The log1p functions return loge (1 + x).
 
@@ -9722,7 +9722,7 @@ Footnote 209) For small magnitude x, log1p(x) is expected to be more accurate th
     Returns
 
 
-Footnote 210) ‘‘When y ≠ 0, the remainder r = x REM y is defined regardless of the rounding mode by the
+Footnote.210) ‘‘When y ≠ 0, the remainder r = x REM y is defined regardless of the rounding mode by the
          mathematical relation r = x − ny, where n is the integer nearest the exact value of x/y; whenever
          | n − x/y | = 1/2, then n is even. Thus, the remainder is always exact. If r = 0, its sign shall be that of
          x.’’ This definition is applicable for all implementations.
@@ -9807,7 +9807,7 @@ Footnote 210) ‘‘When y ≠ 0, the remainder r = x REM y is defined regardles
     Returns
 
 
-Footnote 211) The argument values are converted to the type of the function, even by a macro implementation of the
+Footnote.211) The argument values are converted to the type of the function, even by a macro implementation of the
          function.
 
 3   The nextafter functions return the next representable value in the specified format
@@ -9827,7 +9827,7 @@ Footnote 211) The argument values are converted to the type of the function, eve
     type of the function if x equals y.212)
 
 
-Footnote 212) The result of the nexttoward functions is determined in the type of the function, without loss of
+Footnote.212) The result of the nexttoward functions is determined in the type of the function, without loss of
          range or precision in a floating second argument.
 
 7.12.12 Maximum, minimum, and positive difference functions
@@ -9863,7 +9863,7 @@ Footnote 212) The result of the nexttoward functions is determined in the type o
     Returns
 
 
-Footnote 213) NaN arguments are treated as missing data: if one argument is a NaN and the other numeric, then the
+Footnote.213) NaN arguments are treated as missing data: if one argument is a NaN and the other numeric, then the
          fmax functions choose the numeric value. See F.9.9.2.
 
 3   The fmax functions return the maximum numeric value of their arguments.
@@ -9881,7 +9881,7 @@ Footnote 213) NaN arguments are treated as missing data: if one argument is a Na
     Returns
 
 
-Footnote 214) The fmin functions are analogous to the fmax functions in their treatment of NaNs.
+Footnote.214) The fmin functions are analogous to the fmax functions in their treatment of NaNs.
 
 3   The fmin functions return the minimum numeric value of their arguments.
 
@@ -9918,7 +9918,7 @@ Footnote 214) The fmin functions are analogous to the fmax functions in their tr
     expression of real floating type.
 
 
-Footnote 215) IEC 60559 requires that the built-in relational operators raise the ‘‘invalid’’ floating-point exception if
+Footnote.215) IEC 60559 requires that the built-in relational operators raise the ‘‘invalid’’ floating-point exception if
          the operands compare unordered, as an error indicator for programs written without consideration of
          NaNs; the result in these cases is false.
 
@@ -10073,7 +10073,7 @@ Footnote 215) IEC 60559 requires that the built-in relational operators raise th
     modified type and execution has left that scope in the interim, the behavior is undefined.
 
 
-Footnote 217) For example, by executing a return statement or because another longjmp call has caused a
+Footnote.217) For example, by executing a return statement or because another longjmp call has caused a
          transfer to a setjmp invocation in a function earlier in the set of nested calls.
 
 3   All accessible objects have values, and all other components of the abstract machine218)
@@ -10085,7 +10085,7 @@ Footnote 217) For example, by executing a return statement or because another lo
     Returns
 
 
-Footnote 218) This includes, but is not limited to, the floating-point status flags and the state of open files.
+Footnote.218) This includes, but is not limited to, the floating-point status flags and the state of open files.
 
 4   After longjmp is completed, program execution continues as if the corresponding
     invocation of the setjmp macro had just returned the value specified by val. The
@@ -10151,7 +10151,7 @@ void h(int n)
     is implementation-defined; all signal numbers shall be positive.
 
 
-Footnote 219) See ‘‘future library directions’’ (7.26.9). The names of the signal numbers reflect the following terms
+Footnote.219) See ‘‘future library directions’’ (7.26.9). The names of the signal numbers reflect the following terms
          (respectively): abort, floating-point exception, illegal instruction, interrupt, segmentation violation,
          and termination.
 
@@ -10195,7 +10195,7 @@ Footnote 219) See ‘‘future library directions’’ (7.26.9). The names of t
     value of errno is indeterminate.220)
 
 
-Footnote 220) If any signal is generated by an asynchronous signal handler, the behavior is undefined.
+Footnote.220) If any signal is generated by an asynchronous signal handler, the behavior is undefined.
 
 6   At program startup, the equivalent of
              signal(sig, SIG_IGN);
@@ -10251,7 +10251,7 @@ Footnote 220) If any signal is generated by an asynchronous signal handler, the 
     macro prior to any further reference to ap.221)
 
 
-Footnote 221) It is permitted to create a pointer to a va_list and pass that pointer to another function, in which
+Footnote.221) It is permitted to create a pointer to a va_list and pass that pointer to another function, in which
          case the original function may make further use of the original list after the other function returns.
 
 7.15.1 Variable argument list access macros
@@ -10418,7 +10418,7 @@ Footnote 221) It is permitted to create a pointer to a va_list and pass that poi
     redefine the macros bool, true, and false.222)
 
 
-Footnote 222) See ‘‘future library directions’’ (7.26.7).
+Footnote.222) See ‘‘future library directions’’ (7.26.7).
 
 7.17 Common definitions <stddef.h>
 
@@ -10463,7 +10463,7 @@ Footnote 222) See ‘‘future library directions’’ (7.26.7).
     integer types corresponding to types defined in other standard headers.
 
 
-Footnote 223) See ‘‘future library directions’’ (7.26.8).
+Footnote.223) See ‘‘future library directions’’ (7.26.8).
 
 2   Types are defined in the following categories:
     — integer types having certain exact widths;
@@ -10484,7 +10484,7 @@ Footnote 223) See ‘‘future library directions’’ (7.26.8).
     (described as ‘‘optional’’).
 
 
-Footnote 224) Some of these types may denote implementation-defined extended integer types.
+Footnote.224) Some of these types may denote implementation-defined extended integer types.
 
 7.18.1 Integer types
 
@@ -10532,7 +10532,7 @@ Footnote 224) Some of these types may denote implementation-defined extended int
     with among all integer types that have at least the specified width.
 
 
-Footnote 225) The designated type is not guaranteed to be fastest for all purposes; if the implementation has no clear
+Footnote.225) The designated type is not guaranteed to be fastest for all purposes; if the implementation has no clear
          grounds for choosing one type over another, it will simply pick some integer type satisfying the
          signedness and width requirements.
 
@@ -10576,7 +10576,7 @@ Footnote 225) The designated type is not guaranteed to be fastest for all purpos
     7.18.1.
 
 
-Footnote 226) C++ implementations should define these macros only when _ _STDC_LIMIT_MACROS is defined
+Footnote.226) C++ implementations should define these macros only when _ _STDC_LIMIT_MACROS is defined
          before <stdint.h> is included.
 
 2   Each instance of any defined macro shall be replaced by a constant expression suitable
@@ -10637,7 +10637,7 @@ Footnote 226) C++ implementations should define these macros only when _ _STDC_L
     integer types corresponding to types defined in other standard headers.
 
 
-Footnote 227) C++ implementations should define these macros only when _ _STDC_LIMIT_MACROS is defined
+Footnote.227) C++ implementations should define these macros only when _ _STDC_LIMIT_MACROS is defined
          before <stdint.h> is included.
 
 2   Each instance of these macros shall be replaced by a constant expression suitable for use
@@ -10663,7 +10663,7 @@ Footnote 227) C++ implementations should define these macros only when _ _STDC_L
        WINT_MAX                                               see below
 
 
-Footnote 228) A freestanding implementation need not provide all of these types.
+Footnote.228) A freestanding implementation need not provide all of these types.
 
 3   If sig_atomic_t (see 7.14) is defined as a signed integer type, the value of
     SIG_ATOMIC_MIN shall be no greater than −127 and the value of SIG_ATOMIC_MAX
@@ -10677,7 +10677,7 @@ Footnote 228) A freestanding implementation need not provide all of these types.
     WCHAR_MIN shall be 0 and the value of WCHAR_MAX shall be no less than 255.229)
 
 
-Footnote 229) The values WCHAR_MIN and WCHAR_MAX do not necessarily correspond to members of the extended
+Footnote.229) The values WCHAR_MIN and WCHAR_MAX do not necessarily correspond to members of the extended
          character set.
 
 5   If wint_t (see 7.24) is defined as a signed integer type, the value of WINT_MIN shall
@@ -10693,7 +10693,7 @@ Footnote 229) The values WCHAR_MIN and WCHAR_MAX do not necessarily correspond t
     7.18.1.5.
 
 
-Footnote 230) C++ implementations should define these macros only when _ _STDC_CONSTANT_MACROS is
+Footnote.230) C++ implementations should define these macros only when _ _STDC_CONSTANT_MACROS is
          defined before <stdint.h> is included.
 
 2   The argument in any instance of these macros shall be an unsuffixed integer constant (as
@@ -10777,7 +10777,7 @@ Footnote 230) C++ implementations should define these macros only when _ _STDC_C
     associated, respectively, with the standard error, input, and output streams.
 
 
-Footnote 231) If the implementation imposes no practical limit on the length of file name strings, the value of
+Footnote.231) If the implementation imposes no practical limit on the length of file name strings, the value of
          FILENAME_MAX should instead be the recommended size of an array intended to hold a file name
          string. Of course, file name string contents are subject to other system-specific constraints; therefore
          all possible strings of length FILENAME_MAX cannot be expected to be opened successfully.
@@ -10814,7 +10814,7 @@ Footnote 231) If the implementation imposes no practical limit on the length of 
     streams.232)
 
 
-Footnote 232) An implementation need not distinguish between text streams and binary streams. In such an
+Footnote.232) An implementation need not distinguish between text streams and binary streams. In such an
          implementation, there need be no new-line characters in a text stream nor any limit to the length of a
          line.
 
@@ -10846,7 +10846,7 @@ Footnote 232) An implementation need not distinguish between text streams and bi
     orientation of a stream. (A successful call to freopen removes any orientation.)233)
 
 
-Footnote 233) The three predefined streams stdin, stdout, and stderr are unoriented at program startup.
+Footnote.233) The three predefined streams stdin, stdout, and stderr are unoriented at program startup.
 
 5   Byte input/output functions shall not be applied to a wide-oriented stream and wide
     character input/output functions shall not be applied to a byte-oriented stream. The
@@ -10937,7 +10937,7 @@ Footnote 233) The three predefined streams stdin, stdout, and stderr are unorien
      — A file need not begin nor end in the initial shift state.234)
 
 
-Footnote 234) Setting the file position indicator to end-of-file, as with fseek(file, 0, SEEK_END), has
+Footnote.234) Setting the file position indicator to end-of-file, as with fseek(file, 0, SEEK_END), has
           undefined behavior for a binary stream (because of possible trailing null characters) or for any stream
           with state-dependent encoding that does not assuredly end in the initial shift state.
 
@@ -11010,7 +11010,7 @@ Footnote 234) Setting the file position indicator to end-of-file, as with fseek(
     which case if the file existed previously it is still known by its original name.
 
 
-Footnote 235) Among the reasons the implementation may cause the rename function to fail are that the file is open
+Footnote.235) Among the reasons the implementation may cause the rename function to fail are that the file is open
          or that it is necessary to copy its contents to effectuate its renaming.
 
 7.19.4.3 The tmpfile function
@@ -11049,7 +11049,7 @@ Footnote 235) Among the reasons the implementation may cause the rename function
     and thus not be suitable return values.
 
 
-Footnote 236) Files created using strings generated by the tmpnam function are temporary only in the sense that
+Footnote.236) Files created using strings generated by the tmpnam function are temporary only in the sense that
          their names should not collide with those generated by conventional naming rules for the
          implementation. It is still necessary to use the remove function to remove such files when their use
          is ended, and before program termination.
@@ -11136,7 +11136,7 @@ Footnote 236) Files created using strings generated by the tmpnam function are t
     a+b or ab+ append; open or create binary file for update, writing at end-of-file
 
 
-Footnote 237) If the string begins with one of the above sequences, the implementation might choose to ignore the
+Footnote.237) If the string begins with one of the above sequences, the implementation might choose to ignore the
          remaining characters, or it might use them to select different kinds of a file (some of which might not
          conform to the properties in 7.19.2).
 
@@ -11181,7 +11181,7 @@ Footnote 237) If the string begins with one of the above sequences, the implemen
     as in the fopen function.238)
 
 
-Footnote 238) The primary use of the freopen function is to change the file associated with a standard text stream
+Footnote.238) The primary use of the freopen function is to change the file associated with a standard text stream
          (stderr, stdin, or stdout), as those identifiers need not be modifiable lvalues to which the value
          returned by the fopen function may be assigned.
 
@@ -11236,7 +11236,7 @@ Footnote 238) The primary use of the freopen function is to change the file asso
     Returns
 
 
-Footnote 239) The buffer has to have a lifetime at least as great as the open stream, so the stream should be closed
+Footnote.239) The buffer has to have a lifetime at least as great as the open stream, so the stream should be closed
          before a buffer that has automatic storage duration is deallocated upon block exit.
 
 3   The setvbuf function returns zero on success, or nonzero if an invalid value is given
@@ -11248,7 +11248,7 @@ Footnote 239) The buffer has to have a lifetime at least as great as the open st
     actions associated with each specifier.240)
 
 
-Footnote 240) The fprintf functions perform writes to memory for the %n specifier.
+Footnote.240) The fprintf functions perform writes to memory for the %n specifier.
 
 7.19.6.1 The fprintf function
 
@@ -11292,7 +11292,7 @@ Footnote 240) The fprintf functions perform writes to memory for the %n specifie
     — A conversion specifier character that specifies the type of conversion to be applied.
 
 
-Footnote 241) Note that 0 is taken as a flag, not as the beginning of a field width.
+Footnote.241) Note that 0 is taken as a flag, not as the beginning of a field width.
 
 5   As noted above, a field width, or precision, or both, may be indicated by an asterisk. In
     this case, an int argument supplies the field width or precision. The arguments
@@ -11327,7 +11327,7 @@ Footnote 241) Note that 0 is taken as a flag, not as the beginning of a field wi
               conversions, the behavior is undefined.
 
 
-Footnote 242) The results of all floating conversions of a negative zero, and of negative values that round to zero,
+Footnote.242) The results of all floating conversions of a negative zero, and of negative values that round to zero,
          include a minus sign.
 
 7   The length modifiers and their meanings are:
@@ -11477,31 +11477,31 @@ s             If no l length modifier is present, the argument shall be a pointe
                     conversion specification shall be %%.
 
 
-Footnote 243) When applied to infinite and NaN values, the -, +, and space flag characters have their usual meaning;
+Footnote.243) When applied to infinite and NaN values, the -, +, and space flag characters have their usual meaning;
          the # and 0 flag characters have no effect.
 
 
-Footnote 244) Binary implementations can choose the hexadecimal digit to the left of the decimal-point character so
+Footnote.244) Binary implementations can choose the hexadecimal digit to the left of the decimal-point character so
          that subsequent digits align to nibble (4-bit) boundaries.
 
 
-Footnote 245) The precision p is sufficient to distinguish values of the source type if 16 p−1 > b n where b is
+Footnote.245) The precision p is sufficient to distinguish values of the source type if 16 p−1 > b n where b is
          FLT_RADIX and n is the number of base-b digits in the significand of the source type. A smaller p
          might suffice depending on the implementation’s scheme for determining the digit to the left of the
          decimal-point character.
 
 
-Footnote 246) No special provisions are made for multibyte characters.
+Footnote.246) No special provisions are made for multibyte characters.
 
 
-Footnote 247) Redundant shift sequences may result if multibyte characters have a state-dependent encoding.
+Footnote.247) Redundant shift sequences may result if multibyte characters have a state-dependent encoding.
 
 9    If a conversion specification is invalid, the behavior is undefined.248) If any argument is
      not the correct type for the corresponding conversion specification, the behavior is
      undefined.
 
 
-Footnote 248) See ‘‘future library directions’’ (7.26.9).
+Footnote.248) See ‘‘future library directions’’ (7.26.9).
 
 10   In no case does a nonexistent or small field width cause truncation of a field; if the result
      of a conversion is wider than the field width, the field is expanded to contain the
@@ -11527,7 +11527,7 @@ Footnote 248) See ‘‘future library directions’’ (7.26.9).
      Returns
 
 
-Footnote 249) For binary-to-decimal conversion, the result format’s values are the numbers representable with the
+Footnote.249) For binary-to-decimal conversion, the result format’s values are the numbers representable with the
           given format specifier. The number of significant digits is determined by the format specifier, and in
           the case of fixed-point conversion by the source value as well.
 
@@ -11624,7 +11624,7 @@ Footnote 249) For binary-to-decimal conversion, the result format’s values are
      the specification includes a [, c, or n specifier.250)
 
 
-Footnote 250) These white-space characters are not counted against a specified field width.
+Footnote.250) These white-space characters are not counted against a specified field width.
 
 9    An input item is read from the stream, unless the specification includes an n specifier. An
      input item is defined as the longest sequence of input characters which does not exceed
@@ -11635,7 +11635,7 @@ Footnote 250) These white-space characters are not counted against a specified f
      case it is an input failure.
 
 
-Footnote 251) fscanf pushes back at most one input character onto the input stream. Therefore, some sequences
+Footnote.251) fscanf pushes back at most one input character onto the input stream. Therefore, some sequences
           that are acceptable to strtod, strtol, etc., are unacceptable to fscanf.
 
 10   Except in the case of a % specifier, the input item (or, in the case of a %n directive, the
@@ -11766,24 +11766,24 @@ p   Matches an implementation-defined set of sequences, which should be the
                     complete conversion specification shall be %%.
 
 
-Footnote 252) No special provisions are made for multibyte characters in the matching rules used by the c, s, and [
+Footnote.252) No special provisions are made for multibyte characters in the matching rules used by the c, s, and [
          conversion specifiers — the extent of the input field is determined on a byte-by-byte basis. The
          resulting field is nevertheless a sequence of multibyte characters that begins in the initial shift state.
 
 
-Footnote 252) No special provisions are made for multibyte characters in the matching rules used by the c, s, and [
+Footnote.252) No special provisions are made for multibyte characters in the matching rules used by the c, s, and [
          conversion specifiers — the extent of the input field is determined on a byte-by-byte basis. The
          resulting field is nevertheless a sequence of multibyte characters that begins in the initial shift state.
 
 
-Footnote 252) No special provisions are made for multibyte characters in the matching rules used by the c, s, and [
+Footnote.252) No special provisions are made for multibyte characters in the matching rules used by the c, s, and [
          conversion specifiers — the extent of the input field is determined on a byte-by-byte basis. The
          resulting field is nevertheless a sequence of multibyte characters that begins in the initial shift state.
 
 13   If a conversion specification is invalid, the behavior is undefined.253)
 
 
-Footnote 253) See ‘‘future library directions’’ (7.26.9).
+Footnote.253) See ‘‘future library directions’’ (7.26.9).
 
 14   The conversion specifiers A, E, F, G, and X are also valid and behave the same as,
      respectively, a, e, f, g, and x.
@@ -12009,7 +12009,7 @@ Footnote 253) See ‘‘future library directions’’ (7.26.9).
     Returns
 
 
-Footnote 254) As the functions vfprintf, vfscanf, vprintf, vscanf, vsnprintf, vsprintf, and
+Footnote.254) As the functions vfprintf, vfscanf, vprintf, vscanf, vsnprintf, vsprintf, and
          vsscanf invoke the va_arg macro, the value of arg after the return is indeterminate.
 
 3   The vfprintf function returns the number of characters transmitted, or a negative
@@ -12046,7 +12046,7 @@ Footnote 254) As the functions vfprintf, vfscanf, vprintf, vscanf, vsnprintf, vs
     Returns
 
 
-Footnote 254) As the functions vfprintf, vfscanf, vprintf, vscanf, vsnprintf, vsprintf, and
+Footnote.254) As the functions vfprintf, vfscanf, vprintf, vscanf, vsnprintf, vsprintf, and
          vsscanf invoke the va_arg macro, the value of arg after the return is indeterminate.
 
 3   The vfscanf function returns the value of the macro EOF if an input failure occurs
@@ -12070,7 +12070,7 @@ Footnote 254) As the functions vfprintf, vfscanf, vprintf, vscanf, vsnprintf, vs
     Returns
 
 
-Footnote 254) As the functions vfprintf, vfscanf, vprintf, vscanf, vsnprintf, vsprintf, and
+Footnote.254) As the functions vfprintf, vfscanf, vprintf, vscanf, vsnprintf, vsprintf, and
          vsscanf invoke the va_arg macro, the value of arg after the return is indeterminate.
 
 3   The vprintf function returns the number of characters transmitted, or a negative value
@@ -12092,7 +12092,7 @@ Footnote 254) As the functions vfprintf, vfscanf, vprintf, vscanf, vsnprintf, vs
     Returns
 
 
-Footnote 254) As the functions vfprintf, vfscanf, vprintf, vscanf, vsnprintf, vsprintf, and
+Footnote.254) As the functions vfprintf, vfscanf, vprintf, vscanf, vsnprintf, vsprintf, and
          vsscanf invoke the va_arg macro, the value of arg after the return is indeterminate.
 
 3   The vscanf function returns the value of the macro EOF if an input failure occurs
@@ -12118,7 +12118,7 @@ Footnote 254) As the functions vfprintf, vfscanf, vprintf, vscanf, vsnprintf, vs
     Returns
 
 
-Footnote 254) As the functions vfprintf, vfscanf, vprintf, vscanf, vsnprintf, vsprintf, and
+Footnote.254) As the functions vfprintf, vfscanf, vprintf, vscanf, vsnprintf, vsprintf, and
          vsscanf invoke the va_arg macro, the value of arg after the return is indeterminate.
 
 3   The vsnprintf function returns the number of characters that would have been written
@@ -12144,7 +12144,7 @@ Footnote 254) As the functions vfprintf, vfscanf, vprintf, vscanf, vsnprintf, vs
     Returns
 
 
-Footnote 254) As the functions vfprintf, vfscanf, vprintf, vscanf, vsnprintf, vsprintf, and
+Footnote.254) As the functions vfprintf, vfscanf, vprintf, vscanf, vsnprintf, vsprintf, and
          vsscanf invoke the va_arg macro, the value of arg after the return is indeterminate.
 
 3   The vsprintf function returns the number of characters written in the array, not
@@ -12167,7 +12167,7 @@ Footnote 254) As the functions vfprintf, vfscanf, vprintf, vscanf, vsnprintf, vs
     Returns
 
 
-Footnote 254) As the functions vfprintf, vfscanf, vprintf, vscanf, vsnprintf, vsprintf, and
+Footnote.254) As the functions vfprintf, vfscanf, vprintf, vscanf, vsnprintf, vsprintf, and
          vsscanf invoke the va_arg macro, the value of arg after the return is indeterminate.
 
 3   The vsscanf function returns the value of the macro EOF if an input failure occurs
@@ -12197,7 +12197,7 @@ Footnote 254) As the functions vfprintf, vfscanf, vprintf, vscanf, vsnprintf, vs
     returns EOF.255)
 
 
-Footnote 255) An end-of-file and a read error can be distinguished by use of the feof and ferror functions.
+Footnote.255) An end-of-file and a read error can be distinguished by use of the feof and ferror functions.
 
 7.19.7.2 The fgets function
 
@@ -12376,7 +12376,7 @@ Footnote 255) An end-of-file and a read error can be distinguished by use of the
     Returns
 
 
-Footnote 256) See ‘‘future library directions’’ (7.26.9).
+Footnote.256) See ‘‘future library directions’’ (7.26.9).
 
 6   The ungetc function returns the character pushed back after conversion, or EOF if the
     operation fails.
@@ -12600,7 +12600,7 @@ Footnote 256) See ‘‘future library directions’’ (7.26.9).
     defines several macros.257)
 
 
-Footnote 257) See ‘‘future library directions’’ (7.26.10).
+Footnote.257) See ‘‘future library directions’’ (7.26.10).
 
 2   The types declared are size_t and wchar_t (both described in 7.17),
              div_t
@@ -12721,7 +12721,7 @@ Footnote 257) See ‘‘future library directions’’ (7.26.10).
     endptr is not a null pointer.
 
 
-Footnote 259) An implementation may use the n-char sequence to determine extra information to be represented in
+Footnote.259) An implementation may use the n-char sequence to determine extra information to be represented in
          the NaN’s significand.
 
 5   If the subject sequence has the hexadecimal form and FLT_RADIX is a power of 2, the
@@ -12753,7 +12753,7 @@ Footnote 259) An implementation may use the n-char sequence to determine extra i
      Returns
 
 
-Footnote 260) DECIMAL_DIG, defined in <float.h>, should be sufficiently large that L and U will usually round
+Footnote.260) DECIMAL_DIG, defined in <float.h>, should be sufficiently large that L and U will usually round
           to the same internal floating value, but if not will round to adjacent values.
 
 10   The functions return the converted value, if any. If no conversion could be performed,
@@ -12911,7 +12911,7 @@ Footnote 260) DECIMAL_DIG, defined in <float.h>, should be sufficiently large th
     Returns
 
 
-Footnote 261) Note that this need not be the same as the representation of floating-point zero or a null pointer
+Footnote.261) Note that this need not be the same as the representation of floating-point zero or a null pointer
          constant.
 
 3   The calloc function returns either a null pointer or a pointer to the allocated space.
@@ -13022,7 +13022,7 @@ Footnote 261) Note that this need not be the same as the representation of float
     to the registered function, the behavior is undefined.
 
 
-Footnote 262) Each function is called as many times as it was registered, and in the correct order with respect to
+Footnote.262) Each function is called as many times as it was registered, and in the correct order with respect to
          other registered functions.
 
 4   Next, all open streams with unwritten buffered data are flushed, all open streams are
@@ -13106,7 +13106,7 @@ Footnote 262) Each function is called as many times as it was registered, and in
     shall equal key.
 
 
-Footnote 263) That is, if the value passed is p, then the following expressions are always nonzero:
+Footnote.263) That is, if the value passed is p, then the following expressions are always nonzero:
                   ((char *)p - (char *)base) % size == 0
                   (char *)p >= (char *)base
                   (char *)p < (char *)base + nmemb * size
@@ -13147,7 +13147,7 @@ Footnote 263) That is, if the value passed is p, then the following expressions 
     Returns
 
 
-Footnote 264) In practice, the entire array is sorted according to the comparison function.
+Footnote.264) In practice, the entire array is sorted according to the comparison function.
 
 4   The bsearch function returns a pointer to a matching element of the array, or a null
     pointer if no match is found. If two elements compare as equal, which element is
@@ -13191,7 +13191,7 @@ Footnote 264) In practice, the entire array is sorted according to the compariso
     Returns
 
 
-Footnote 265) The absolute value of the most negative number cannot be represented in two’s complement.
+Footnote.265) The absolute value of the most negative number cannot be represented in two’s complement.
 
 3   The abs, labs, and llabs, functions return the absolute value.
 
@@ -13226,7 +13226,7 @@ Footnote 265) The absolute value of the most negative number cannot be represent
     functions to be indeterminate.
 
 
-Footnote 266) If the locale employs special bytes to change the shift state, these bytes do not produce separate wide
+Footnote.266) If the locale employs special bytes to change the shift state, these bytes do not produce separate wide
          character codes, but are grouped with an adjacent multibyte character.
 
 7.20.7.1 The mblen function
@@ -13339,7 +13339,7 @@ Footnote 266) If the locale employs special bytes to change the shift state, the
     elements modified, not including a terminating null wide character, if any.267)
 
 
-Footnote 267) The array will not be null-terminated if the value returned is n.
+Footnote.267) The array will not be null-terminated if the value returned is n.
 
 7.20.8.2 The wcstombs function
 
@@ -13367,7 +13367,7 @@ Footnote 267) The array will not be null-terminated if the value returned is n.
     any.267)
 
 
-Footnote 267) The array will not be null-terminated if the value returned is n.
+Footnote.267) The array will not be null-terminated if the value returned is n.
 
 7.21 String handling <string.h>
 
@@ -13381,7 +13381,7 @@ Footnote 267) The array will not be null-terminated if the value returned is n.
     array. If an array is accessed beyond the end of an object, the behavior is undefined.
 
 
-Footnote 268) See ‘‘future library directions’’ (7.26.11).
+Footnote.268) See ‘‘future library directions’’ (7.26.11).
 
 2   Where an argument declared as size_t n specifies the length of the array for a
     function, n can have the value zero on a call to that function. Unless explicitly stated
@@ -13458,7 +13458,7 @@ Footnote 268) See ‘‘future library directions’’ (7.26.11).
     s1.269) If copying takes place between objects that overlap, the behavior is undefined.
 
 
-Footnote 269) Thus, if there is no null character in the first n characters of the array pointed to by s2, the result will
+Footnote.269) Thus, if there is no null character in the first n characters of the array pointed to by s2, the result will
          not be null-terminated.
 
 3   If the array pointed to by s2 is a string that is shorter than n characters, null characters
@@ -13503,7 +13503,7 @@ Footnote 269) Thus, if there is no null character in the first n characters of t
     Returns
 
 
-Footnote 270) Thus, the maximum number of characters that can end up in the array pointed to by s1 is
+Footnote.270) Thus, the maximum number of characters that can end up in the array pointed to by s1 is
          strlen(s1)+n+1.
 
 3   The strncat function returns the value of s1.
@@ -13528,7 +13528,7 @@ Footnote 270) Thus, the maximum number of characters that can end up in the arra
     Returns
 
 
-Footnote 271) The contents of ‘‘holes’’ used as padding for purposes of alignment within structure objects are
+Footnote.271) The contents of ‘‘holes’’ used as padding for purposes of alignment within structure objects are
          indeterminate. Strings shorter than their allocated space and unions may also cause problems in
          comparison.
 
@@ -13817,11 +13817,11 @@ Footnote 271) The contents of ‘‘holes’’ used as padding for purposes of 
     parameters.273)
 
 
-Footnote 272) Like other function-like macros in Standard libraries, each type-generic macro can be suppressed to
+Footnote.272) Like other function-like macros in Standard libraries, each type-generic macro can be suppressed to
          make available the corresponding ordinary function.
 
 
-Footnote 273) If the type of the argument is not compatible with the type of the parameter for the selected function,
+Footnote.273) If the type of the argument is not compatible with the type of the parameter for the selected function,
          the behavior is undefined.
 
 3   Use of the macro invokes a function whose generic parameters have the corresponding
@@ -13955,7 +13955,7 @@ Footnote 273) If the type of the argument is not compatible with the type of the
     Saving Time is not in effect, and negative if the information is not available.
 
 
-Footnote 274) The range [0, 60] for tm_sec allows for a positive leap second.
+Footnote.274) The range [0, 60] for tm_sec allows for a positive leap second.
 
 7.23.2 Time manipulation functions
 
@@ -13977,7 +13977,7 @@ Footnote 274) The range [0, 60] for tm_sec allows for a positive leap second.
     returns the value (clock_t)(-1).275)
 
 
-Footnote 275) In order to measure the time spent in a program, the clock function should be called at the start of
+Footnote.275) In order to measure the time spent in a program, the clock function should be called at the start of
          the program and its return value subtracted from the value returned by subsequent calls.
 
 7.23.2.2 The difftime function
@@ -14012,7 +14012,7 @@ Footnote 275) In order to measure the time spent in a program, the clock functio
     Returns
 
 
-Footnote 276) Thus, a positive or zero value for tm_isdst causes the mktime function to presume initially that
+Footnote.276) Thus, a positive or zero value for tm_isdst causes the mktime function to presume initially that
          Daylight Saving Time, respectively, is or is not in effect for the specified time. A negative value
          causes it to attempt to determine whether Daylight Saving Time is in effect for the specified time.
 
@@ -14296,7 +14296,7 @@ Footnote 276) Thus, a positive or zero value for tm_isdst causes the mktime func
     functions.277)
 
 
-Footnote 277) See ‘‘future library directions’’ (7.26.12).
+Footnote.277) See ‘‘future library directions’’ (7.26.12).
 
 2   The types declared are wchar_t and size_t (both described in 7.17);
              mbstate_t
@@ -14312,7 +14312,7 @@ Footnote 277) See ‘‘future library directions’’ (7.26.12).
     which is declared as an incomplete structure type (the contents are described in 7.23.1).
 
 
-Footnote 278) wchar_t and wint_t can be the same integer type.
+Footnote.278) wchar_t and wint_t can be the same integer type.
 
 3   The macros defined are NULL (described in 7.17); WCHAR_MIN and WCHAR_MAX
     (described in 7.18.3); and
@@ -14324,7 +14324,7 @@ Footnote 278) wchar_t and wint_t can be the same integer type.
     of the extended character set.
 
 
-Footnote 279) The value of the macro WEOF may differ from that of EOF and need not be negative.
+Footnote.279) The value of the macro WEOF may differ from that of EOF and need not be negative.
 
 4   The functions declared are grouped as follows:
     — Functions that perform input and output of wide characters, or multibyte characters,
@@ -14345,7 +14345,7 @@ Footnote 279) The value of the macro WEOF may differ from that of EOF and need n
     point after the actions associated with each specifier.280)
 
 
-Footnote 280) The fwprintf functions perform writes to memory for the %n specifier.
+Footnote.280) The fwprintf functions perform writes to memory for the %n specifier.
 
 7.24.2.1 The fwprintf function
 
@@ -14391,7 +14391,7 @@ Footnote 280) The fwprintf functions perform writes to memory for the %n specifi
       applied.
 
 
-Footnote 281) Note that 0 is taken as a flag, not as the beginning of a field width.
+Footnote.281) Note that 0 is taken as a flag, not as the beginning of a field width.
 
 5   As noted above, a field width, or precision, or both, may be indicated by an asterisk. In
     this case, an int argument supplies the field width or precision. The arguments
@@ -14426,7 +14426,7 @@ Footnote 281) Note that 0 is taken as a flag, not as the beginning of a field wi
               conversions, the behavior is undefined.
 
 
-Footnote 282) The results of all floating conversions of a negative zero, and of negative values that round to zero,
+Footnote.282) The results of all floating conversions of a negative zero, and of negative values that round to zero,
          include a minus sign.
 
 7   The length modifiers and their meanings are:
@@ -14571,15 +14571,15 @@ p            The argument shall be a pointer to void. The value of the pointer i
                     conversion specification shall be %%.
 
 
-Footnote 283) When applied to infinite and NaN values, the -, +, and space flag wide characters have their usual
+Footnote.283) When applied to infinite and NaN values, the -, +, and space flag wide characters have their usual
          meaning; the # and 0 flag wide characters have no effect.
 
 
-Footnote 284) Binary implementations can choose the hexadecimal digit to the left of the decimal-point wide
+Footnote.284) Binary implementations can choose the hexadecimal digit to the left of the decimal-point wide
          character so that subsequent digits align to nibble (4-bit) boundaries.
 
 
-Footnote 285) The precision p is sufficient to distinguish values of the source type if 16 p−1 > b n where b is
+Footnote.285) The precision p is sufficient to distinguish values of the source type if 16 p−1 > b n where b is
          FLT_RADIX and n is the number of base-b digits in the significand of the source type. A smaller p
          might suffice depending on the implementation’s scheme for determining the digit to the left of the
          decimal-point wide character.
@@ -14589,7 +14589,7 @@ Footnote 285) The precision p is sufficient to distinguish values of the source 
      undefined.
 
 
-Footnote 286) See ‘‘future library directions’’ (7.26.12).
+Footnote.286) See ‘‘future library directions’’ (7.26.12).
 
 10   In no case does a nonexistent or small field width cause truncation of a field; if the result
      of a conversion is wider than the field width, the field is expanded to contain the
@@ -14615,7 +14615,7 @@ Footnote 286) See ‘‘future library directions’’ (7.26.12).
      Returns
 
 
-Footnote 287) For binary-to-decimal conversion, the result format’s values are the numbers representable with the
+Footnote.287) For binary-to-decimal conversion, the result format’s values are the numbers representable with the
           given format specifier. The number of significant digits is determined by the format specifier, and in
           the case of fixed-point conversion by the source value as well.
 
@@ -14692,7 +14692,7 @@ Footnote 287) For binary-to-decimal conversion, the result format’s values are
      unless the specification includes a [, c, or n specifier.288)
 
 
-Footnote 288) These white-space wide characters are not counted against a specified field width.
+Footnote.288) These white-space wide characters are not counted against a specified field width.
 
 9    An input item is read from the stream, unless the specification includes an n specifier. An
      input item is defined as the longest sequence of input wide characters which does not
@@ -14703,7 +14703,7 @@ Footnote 288) These white-space wide characters are not counted against a specif
      from the stream, in which case it is an input failure.
 
 
-Footnote 289) fwscanf pushes back at most one input wide character onto the input stream. Therefore, some
+Footnote.289) fwscanf pushes back at most one input wide character onto the input stream. Therefore, some
           sequences that are acceptable to wcstod, wcstol, etc., are unacceptable to fwscanf.
 
 10   Except in the case of a % specifier, the input item (or, in the case of a %n directive, the
@@ -14834,7 +14834,7 @@ n   No input is consumed. The corresponding argument shall be a pointer to
 13   If a conversion specification is invalid, the behavior is undefined.290)
 
 
-Footnote 290) See ‘‘future library directions’’ (7.26.12).
+Footnote.290) See ‘‘future library directions’’ (7.26.12).
 
 14   The conversion specifiers A, E, F, G, and X are also valid and behave the same as,
      respectively, a, e, f, g, and x.
@@ -14931,7 +14931,7 @@ Footnote 290) See ‘‘future library directions’’ (7.26.12).
     Returns
 
 
-Footnote 291) As the functions vfwprintf, vswprintf, vfwscanf, vwprintf, vwscanf, and vswscanf
+Footnote.291) As the functions vfwprintf, vswprintf, vfwscanf, vwprintf, vwscanf, and vswscanf
          invoke the va_arg macro, the value of arg after the return is indeterminate.
 
 3   The vfwprintf function returns the number of wide characters transmitted, or a
@@ -14971,7 +14971,7 @@ Footnote 291) As the functions vfwprintf, vswprintf, vfwscanf, vwprintf, vwscanf
     Returns
 
 
-Footnote 291) As the functions vfwprintf, vswprintf, vfwscanf, vwprintf, vwscanf, and vswscanf
+Footnote.291) As the functions vfwprintf, vswprintf, vfwscanf, vwprintf, vwscanf, and vswscanf
          invoke the va_arg macro, the value of arg after the return is indeterminate.
 
 3   The vfwscanf function returns the value of the macro EOF if an input failure occurs
@@ -14997,7 +14997,7 @@ Footnote 291) As the functions vfwprintf, vswprintf, vfwscanf, vwprintf, vwscanf
     Returns
 
 
-Footnote 291) As the functions vfwprintf, vswprintf, vfwscanf, vwprintf, vwscanf, and vswscanf
+Footnote.291) As the functions vfwprintf, vswprintf, vfwscanf, vwprintf, vwscanf, and vswscanf
          invoke the va_arg macro, the value of arg after the return is indeterminate.
 
 3   The vswprintf function returns the number of wide characters written in the array, not
@@ -15021,7 +15021,7 @@ Footnote 291) As the functions vfwprintf, vswprintf, vfwscanf, vwprintf, vwscanf
     Returns
 
 
-Footnote 291) As the functions vfwprintf, vswprintf, vfwscanf, vwprintf, vwscanf, and vswscanf
+Footnote.291) As the functions vfwprintf, vswprintf, vfwscanf, vwprintf, vwscanf, and vswscanf
          invoke the va_arg macro, the value of arg after the return is indeterminate.
 
 3   The vswscanf function returns the value of the macro EOF if an input failure occurs
@@ -15045,7 +15045,7 @@ Footnote 291) As the functions vfwprintf, vswprintf, vfwscanf, vwprintf, vwscanf
     Returns
 
 
-Footnote 291) As the functions vfwprintf, vswprintf, vfwscanf, vwprintf, vwscanf, and vswscanf
+Footnote.291) As the functions vfwprintf, vswprintf, vfwscanf, vwprintf, vwscanf, and vswscanf
          invoke the va_arg macro, the value of arg after the return is indeterminate.
 
 3   The vwprintf function returns the number of wide characters transmitted, or a negative
@@ -15067,7 +15067,7 @@ Footnote 291) As the functions vfwprintf, vswprintf, vfwscanf, vwprintf, vwscanf
     Returns
 
 
-Footnote 291) As the functions vfwprintf, vswprintf, vfwscanf, vwprintf, vwscanf, and vswscanf
+Footnote.291) As the functions vfwprintf, vswprintf, vfwscanf, vwprintf, vwscanf, and vswscanf
          invoke the va_arg macro, the value of arg after the return is indeterminate.
 
 3   The vwscanf function returns the value of the macro EOF if an input failure occurs
@@ -15129,7 +15129,7 @@ Footnote 291) As the functions vfwprintf, vswprintf, vfwscanf, vwprintf, vwscanf
     the macro EILSEQ is stored in errno and the fgetwc function returns WEOF.292)
 
 
-Footnote 292) An end-of-file and a read error can be distinguished by use of the feof and ferror functions.
+Footnote.292) An end-of-file and a read error can be distinguished by use of the feof and ferror functions.
          Also, errno will be set to EILSEQ by input/output functions only if an encoding error occurs.
 
 7.24.3.2 The fgetws function
@@ -15203,7 +15203,7 @@ Footnote 292) An end-of-file and a read error can be distinguished by use of the
     Returns
 
 
-Footnote 293) If the orientation of the stream has already been determined, fwide does not change it.
+Footnote.293) If the orientation of the stream has already been determined, fwide does not change it.
 
 3   The fwide function returns a value greater than zero if, after the call, the stream has
     wide orientation, a value less than zero if the stream has byte orientation, or zero if the
@@ -15376,13 +15376,13 @@ Footnote 293) If the orientation of the stream has already been determined, fwid
     not a null pointer.
 
 
-Footnote 294) It is unspecified whether a minus-signed sequence is converted to a negative number directly or by
+Footnote.294) It is unspecified whether a minus-signed sequence is converted to a negative number directly or by
          negating the value resulting from converting the corresponding unsigned sequence (see F.5); the two
          methods may yield different results if rounding is toward positive or negative infinity. In either case,
          the functions honor the sign of zero if floating-point arithmetic supports signed zeros.
 
 
-Footnote 295) An implementation may use the n-wchar sequence to determine extra information to be represented in
+Footnote.295) An implementation may use the n-wchar sequence to determine extra information to be represented in
          the NaN’s significand.
 
 5   If the subject sequence has the hexadecimal form and FLT_RADIX is a power of 2, the
@@ -15414,7 +15414,7 @@ Footnote 295) An implementation may use the n-wchar sequence to determine extra 
      Returns
 
 
-Footnote 296) DECIMAL_DIG, defined in <float.h>, should be sufficiently large that L and U will usually round
+Footnote.296) DECIMAL_DIG, defined in <float.h>, should be sufficiently large that L and U will usually round
           to the same internal floating value, but if not will round to adjacent values.
 
 10   The functions return the converted value, if any. If no conversion could be performed,
@@ -15527,7 +15527,7 @@ Footnote 296) DECIMAL_DIG, defined in <float.h>, should be sufficiently large th
     s1.297)
 
 
-Footnote 297) Thus, if there is no null wide character in the first n wide characters of the array pointed to by s2, the
+Footnote.297) Thus, if there is no null wide character in the first n wide characters of the array pointed to by s2, the
          result will not be null-terminated.
 
 3   If the array pointed to by s2 is a wide string that is shorter than n wide characters, null
@@ -15603,7 +15603,7 @@ Footnote 297) Thus, if there is no null wide character in the first n wide chara
     Returns
 
 
-Footnote 298) Thus, the maximum number of wide characters that can end up in the array pointed to by s1 is
+Footnote.298) Thus, the maximum number of wide characters that can end up in the array pointed to by s1 is
          wcslen(s1)+n+1.
 
 3   The wcsncat function returns the value of s1.
@@ -15941,7 +15941,7 @@ Footnote 298) Thus, the maximum number of wide characters that can end up in the
     undefined.299)
 
 
-Footnote 299) Thus, a particular mbstate_t object can be used, for example, with both the mbrtowc and
+Footnote.299) Thus, a particular mbstate_t object can be used, for example, with both the mbrtowc and
          mbsrtowcs functions as long as they are used to step sequentially through the same multibyte
          character string.
 
@@ -16071,7 +16071,7 @@ Footnote 299) Thus, a particular mbstate_t object can be used, for example, with
                  and the conversion state is unspecified.
 
 
-Footnote 300) When n has at least the value of the MB_CUR_MAX macro, this case can only occur if s points at a
+Footnote.300) When n has at least the value of the MB_CUR_MAX macro, this case can only occur if s points at a
          sequence of redundant shift sequences (for implementations with state-dependent encodings).
 
 7.24.6.3.3 The wcrtomb function
@@ -16136,7 +16136,7 @@ Footnote 300) When n has at least the value of the MB_CUR_MAX macro, this case c
     place as if by a call to the mbrtowc function.
 
 
-Footnote 301) Thus, the value of len is ignored if dst is a null pointer.
+Footnote.301) Thus, the value of len is ignored if dst is a null pointer.
 
 3   If dst is not a null pointer, the pointer object pointed to by src is assigned either a null
     pointer (if conversion stopped due to reaching a terminating null character) or the address
@@ -16173,7 +16173,7 @@ Footnote 301) Thus, the value of len is ignored if dst is a null pointer.
     function.302)
 
 
-Footnote 302) If conversion stops because a terminating null wide character has been reached, the bytes stored
+Footnote.302) If conversion stops because a terminating null wide character has been reached, the bytes stored
          include those necessary to reach the initial shift state immediately before the null byte.
 
 3   If dst is not a null pointer, the pointer object pointed to by src is assigned either a null
@@ -16196,7 +16196,7 @@ Footnote 302) If conversion stops because a terminating null wide character has 
 1   The header <wctype.h> declares three data types, one macro, and many functions.303)
 
 
-Footnote 303) See ‘‘future library directions’’ (7.26.13).
+Footnote.303) See ‘‘future library directions’’ (7.26.13).
 
 2   The types declared are
              wint_t
@@ -16246,7 +16246,7 @@ Footnote 303) See ‘‘future library directions’’ (7.26.13).
     Forward references: the wctob function (7.24.6.1.2).
 
 
-Footnote 304) For example, if the expression isalpha(wctob(wc)) evaluates to true, then the call
+Footnote.304) For example, if the expression isalpha(wctob(wc)) evaluates to true, then the call
          iswalpha(wc) also returns true. But, if the expression isgraph(wctob(wc)) evaluates to true
          (which cannot occur for wc == L' ' of course), then either iswgraph(wc) or iswprint(wc)
          && iswspace(wc) is true, but not both.
@@ -16274,7 +16274,7 @@ Footnote 304) For example, if the expression isalpha(wctob(wc)) evaluates to tru
     is true.305)
 
 
-Footnote 305) The functions iswlower and iswupper test true or false separately for each of these additional
+Footnote.305) The functions iswlower and iswupper test true or false separately for each of these additional
          wide characters; all four combinations are possible.
 
 7.25.2.1.3 The iswblank function
@@ -16320,7 +16320,7 @@ Footnote 305) The functions iswlower and iswupper test true or false separately 
     iswspace is false.306)
 
 
-Footnote 306) Note that the behavior of the iswgraph and iswpunct functions may differ from their
+Footnote.306) Note that the behavior of the iswgraph and iswpunct functions may differ from their
          corresponding functions in 7.4.1 with respect to printing, white-space, single-byte execution
          characters other than ' '.
 
@@ -16356,7 +16356,7 @@ Footnote 306) Note that the behavior of the iswgraph and iswpunct functions may 
     is true.306)
 
 
-Footnote 306) Note that the behavior of the iswgraph and iswpunct functions may differ from their
+Footnote.306) Note that the behavior of the iswgraph and iswpunct functions may differ from their
          corresponding functions in 7.4.1 with respect to printing, white-space, single-byte execution
          characters other than ' '.
 
@@ -18360,7 +18360,7 @@ F.2 Types
     Recommended practice
 
 
-Footnote 308) A non-IEC 60559 long double type is required to provide infinity and NaNs, as its values include
+Footnote.308) A non-IEC 60559 long double type is required to provide infinity and NaNs, as its values include
          all double values.
 
 2   The long double type should match an IEC 60559 extended format.
@@ -18372,7 +18372,7 @@ F.2.1 Infinities, signed zeros, and NaNs
     functions in <math.h> provide designations for IEC 60559 NaNs and infinities.
 
 
-Footnote 309) Since NaNs created by IEC 60559 operations are always quiet, quiet NaNs (along with infinities) are
+Footnote.309) Since NaNs created by IEC 60559 operations are always quiet, quiet NaNs (along with infinities) are
          sufficient for closure of the arithmetic.
 
 F.3 Operators and functions
@@ -18457,7 +18457,7 @@ F.4 Floating to integer conversion
     exception is unspecified.310)
 
 
-Footnote 310) ANSI/IEEE 854, but not IEC 60559 (ANSI/IEEE 754), directly specifies that floating-to-integer
+Footnote.310) ANSI/IEEE 854, but not IEC 60559 (ANSI/IEEE 754), directly specifies that floating-to-integer
          conversions raise the ‘‘inexact’’ floating-point exception for non-integer in-range values. In those
          cases where it matters, library functions can be used to effect such conversions with or without raising
          the ‘‘inexact’’ floating-point exception. See rint, lrint, llrint, and nearbyint in
@@ -18469,7 +18469,7 @@ F.5 Binary-decimal conversion
     DECIMAL_DIG digits and back is the identity function.311)
 
 
-Footnote 311) If the minimum-width IEC 60559 extended format (64 bits of precision) is supported,
+Footnote.311) If the minimum-width IEC 60559 extended format (64 bits of precision) is supported,
          DECIMAL_DIG shall be at least 21. If IEC 60559 double (53 bits of precision) is the widest
          IEC 60559 format supported, then DECIMAL_DIG shall be at least 17. (By contrast, LDBL_DIG and
          DBL_DIG are 18 and 15, respectively, for these formats.)
@@ -18504,7 +18504,7 @@ F.7 Floating-point environment
     implementation supports them.312)
 
 
-Footnote 312) This specification does not require dynamic rounding precision nor trap enablement modes.
+Footnote.312) This specification does not require dynamic rounding precision nor trap enablement modes.
 
 F.7.1 Environment management
 
@@ -18515,7 +18515,7 @@ F.7.1 Environment management
     which respect sequence points.313)
 
 
-Footnote 313) If the state for the FENV_ACCESS pragma is ‘‘off’’, the implementation is free to assume the floating-
+Footnote.313) If the state for the FENV_ACCESS pragma is ‘‘off’’, the implementation is free to assume the floating-
          point control modes will be the default ones and the floating-point status flags will not be tested,
          which allows certain optimizations (see F.8).
 
@@ -18532,7 +18532,7 @@ F.7.2 Translation
     proceed with the translation of the program.
 
 
-Footnote 314) As floating constants are converted to appropriate internal representations at translation time, their
+Footnote.314) As floating constants are converted to appropriate internal representations at translation time, their
          conversion is subject to default rounding modes and raises no execution-time floating-point exceptions
          (even where the state of the FENV_ACCESS pragma is ‘‘on’’). Library functions, for example
          strtod, provide execution-time conversion of numeric strings.
@@ -18556,7 +18556,7 @@ F.7.4 Constant expressions
     is ‘‘on’’).315)
 
 
-Footnote 315) Where the state for the FENV_ACCESS pragma is ‘‘on’’, results of inexact expressions like 1.0/3.0
+Footnote.315) Where the state for the FENV_ACCESS pragma is ‘‘on’’, results of inexact expressions like 1.0/3.0
          are affected by rounding modes set at execution time, and expressions such as 0.0/0.0 and
          1.0/0.0 generate execution-time floating-point exceptions. The programmer can achieve the
          efficiency of translation-time evaluation through static initialization, such as
@@ -18611,7 +18611,7 @@ F.7.5 Initialization
     their internal representations occur at translation time in all cases.
 
 
-Footnote 316) Use of float_t and double_t variables increases the likelihood of translation-time computation.
+Footnote.316) Use of float_t and double_t variables increases the likelihood of translation-time computation.
          For example, the automatic initialization
                   double_t x = 1.1e75;
          could be done at translation time, regardless of the expression evaluation method.
@@ -18697,11 +18697,11 @@ F.8.2 Expression transformations
                                              (unless rounding is downward).
 
 
-Footnote 317) Strict support for signaling NaNs — not required by this specification — would invalidate these and
+Footnote.317) Strict support for signaling NaNs — not required by this specification — would invalidate these and
          other transformations that remove arithmetic operators.
 
 
-Footnote 318) IEC 60559 prescribes a signed zero to preserve mathematical identities across certain discontinuities.
+Footnote.318) IEC 60559 prescribes a signed zero to preserve mathematical identities across certain discontinuities.
          Examples include:
             1/(1/ ± ∞) is ± ∞
          and
@@ -18766,7 +18766,7 @@ F.8.4 Constant arithmetic
     point exception when converted to the semantic type of the operation.
 
 
-Footnote 319) 0 − 0 yields −0 instead of +0 just when the rounding direction is downward.
+Footnote.319) 0 − 0 yields −0 instead of +0 just when the rounding direction is downward.
 
 F.9 Mathematics <math.h>
 
@@ -18797,7 +18797,7 @@ F.9 Mathematics <math.h>
      subnormal or zero) and suffers loss of accuracy.320)
 
 
-Footnote 320) IEC 60559 allows different definitions of underflow. They all result in the same values, but differ on
+Footnote.320) IEC 60559 allows different definitions of underflow. They all result in the same values, but differ on
           when the floating-point exception is raised.
 
 8    Whether or when library functions raise the ‘‘inexact’’ floating-point exception is
@@ -18809,7 +18809,7 @@ Footnote 320) IEC 60559 allows different definitions of underflow. They all resu
      ‘‘inexact’’ floating-point exception.
 
 
-Footnote 321) It is intended that undeserved ‘‘underflow’’ and ‘‘inexact’’ floating-point exceptions are raised only if
+Footnote.321) It is intended that undeserved ‘‘underflow’’ and ‘‘inexact’’ floating-point exceptions are raised only if
           avoiding them would be too costly.
 
 10   Whether the functions honor the rounding direction mode is implementation-defined,
@@ -18862,7 +18862,7 @@ F.9.1.4 The atan2 functions
     — atan2(±∞, +∞) returns ±π /4.
 
 
-Footnote 322) atan2(0, 0) does not raise the ‘‘invalid’’ floating-point exception, nor does atan2( y , 0) raise
+Footnote.322) atan2(0, 0) does not raise the ‘‘invalid’’ floating-point exception, nor does atan2( y , 0) raise
          the ‘‘divide-by-zero’’ floating-point exception.
 
 F.9.1.5 The cos functions
@@ -19254,7 +19254,7 @@ F.9.9.2 The fmax functions
                  isnan(y)) ? x : y; }
 
 
-Footnote 323) Ideally, fmax would be sensitive to the sign of zero, for example fmax(−0. 0,   +0. 0) would
+Footnote.323) Ideally, fmax would be sensitive to the sign of zero, for example fmax(−0. 0,   +0. 0) would
          return +0; however, implementation in software might be impractical.
 
 F.9.9.3 The fmin functions
@@ -19418,7 +19418,7 @@ G.4.2 Real and imaginary
     result is a positive zero.
 
 
-Footnote 324) See 6.3.1.2.
+Footnote.324) See 6.3.1.2.
 
 2   When a value of real type is converted to an imaginary type, the result is a positive
     imaginary zero.
@@ -19484,7 +19484,7 @@ G.5.1 Multiplicative operators
       a zero, then the result of the / operator is an infinity.
 
 
-Footnote 325) These properties are already implied for those cases covered in the tables, but are required for all cases
+Footnote.325) These properties are already implied for those cases covered in the tables, but are required for all cases
          (at least where the state for CX_LIMITED_RANGE is ‘‘off’’).
 
 5   If both operands of the * operator are complex or if the second operand of the / operator
@@ -19641,7 +19641,7 @@ G.6 Complex arithmetic <complex.h>
     manner consistent with the specifications for real functions in F.9.326)
 
 
-Footnote 326) As noted in G.3, a complex value with at least one infinite part is regarded as an infinity even if its
+Footnote.326) As noted in G.3, a complex value with at least one infinite part is regarded as an infinity even if its
          other part is a NaN.
 
 5   The functions cimag, conj, cproj, and creal are fully specified for all

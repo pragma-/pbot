@@ -15,6 +15,9 @@ my %standards = (
     C23 => 'n3047.out',
 );
 
+binmode(STDOUT, ":utf8");
+binmode(STDERR, ":utf8");
+
 @ARGV = map { decode('UTF-8', $_, 1) } @ARGV;
 
 my ($std, $search, $section, $paragraph, $debug);
@@ -133,20 +136,20 @@ my $qsearch = quotemeta $search;
 $qsearch =~ s/\\ / /g;
 $qsearch =~ s/\s+/\\s+/g;
 
-while ($text =~ m/^([0-9A-Z]+\.[0-9.]*)/msg) {
+while ($text =~ m/^([0-9A-Z]+\.[0-9.]*)/msgi) {
     $this_section = $1;
 
     print "----------------------------------\n" if $debug >= 2;
     print "Processing section [$this_section]\n" if $debug;
 
-    if ($section_specified and $this_section !~ m/^$section/i) {
+    if ($section_specified and $this_section !~ m/^\Q$section/i) {
         print "No section match, skipping.\n" if $debug >= 4;
         next;
     }
 
     my $section_text;
 
-    if ($text =~ m/(.*?)^(?=\s{0,4}(?!Footnote)[0-9A-Z]+\.)/msg) {
+    if ($text =~ /(.*?)^(?=\s{0,4}(?!Footnote)[0-9A-Z]+\.)/msg) {
         $section_text = $1;
     } else {
         print "No section text, end of file marker found.\n" if $debug >= 4;
@@ -157,6 +160,7 @@ while ($text =~ m/^([0-9A-Z]+\.[0-9.]*)/msg) {
         $section_text =~ s/^\s{4}//ms;
         $section_text =~ s/^\s{4}Footnote.*//msi;
         $section_text =~ s/^\d.*//ms;
+        $section_text = $this_section . $section_text;
     } elsif ($section_text =~ m/(.*?)$/msg) {
         $section_title = $1 if length $1;
         $section_title =~ s/^\s+//;
@@ -247,28 +251,17 @@ if (not $found and $comma eq "") {
     exit 1;
 }
 
-$result =~ s/$found_section_title// if length $found_section_title;
+$result =~ s/\Q$found_section_title// if length $found_section_title;
 $result =~ s/^\s+//;
 $result =~ s/\s+$//;
-
-=cut
-$result =~ s/\s+/ /g;
-$result =~ s/[\n\r]/ /g;
-=cut
 
 if ($matches > 1 and not $list_only) { print "Displaying $match of $matches matches: "; }
 
 if ($comma eq "") {
-
-=cut
-  print $found_section;
-  print "p" . $found_paragraph if $paragraph_specified;
-=cut
-
-print "http://www.iso-9899.info/$std_name.html\#$found_section";
-print "p" . $found_paragraph if $paragraph_specified;
-print "\n\n";
-print "[", $found_section_title, "]\n\n" if length $found_section_title;
+    print "http://www.iso-9899.info/$std_name.html\#$found_section";
+    print "p" . $found_paragraph if $paragraph_specified;
+    print "\n\n";
+    print "[", $found_section_title, "]\n\n" if length $found_section_title;
 }
 
 $result =~ s/\s*Constraints\s*$//;
@@ -277,6 +270,7 @@ $result =~ s/\s*Description\s*$//;
 $result =~ s/\s*Returns\s*$//;
 $result =~ s/\s*Runtime-constraints\s*$//;
 $result =~ s/\s*Recommended practice\s*$//;
+$result =~ s/Footnote\.(\d)/Footnote $1/g;
 
 if (length $match_text) {
     my $match_result = $result;

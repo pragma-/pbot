@@ -23,7 +23,7 @@ binmode(STDERR, ":utf8");
 my $input = "@ARGV";
 
 if (not length $input) {
-    print STDERR "Usage: $0 <input .txt file>\n";
+    print STDERR "Usage: $0 <input file>\n";
     exit 1;
 }
 
@@ -270,7 +270,7 @@ sub gen_txt {
     foreach my $this_section (sort bysection keys %sections) {
         print STDERR "writing section $this_section\n" if $debug;
         if (not $this_section =~ m/p/) {
-            print "    $this_section $sections{$this_section}{title}\n";
+            print "$this_section $sections{$this_section}{title}\n";
             $section_head  = $this_section;
             $section_title = $sections{$this_section}{title};
         }
@@ -297,7 +297,7 @@ sub gen_txt {
                     if ($paren == -1) {
                         if (length $number and defined $footnotes[$number]) {
                             print STDERR "Got footnote $number here!\n" if $debug;
-                            $footer .= "\nFOOTNOTE.$number) $footnotes[$number]\n";
+                            $footer .= "\nFootnote.$number) $footnotes[$number]\n";
                         }
 
                         $paren = 0;
