@@ -6,79 +6,116 @@
 use warnings;
 use strict;
 
-my $debug = 0;
+use Getopt::Long qw/GetOptionsFromArray/;
+use Encode;
 
-# for paragraphs
-my $USER_SPECIFIED    = 1;
-my $RESULTS_SPECIFIED = 2;
+my %standards = (
+    C99 => 'n1256.out',
+    C11 => 'n1570.out',
+    C23 => 'n3047.out',
+);
 
-my $search = join ' ', @ARGV;
+@ARGV = map { decode('UTF-8', $_, 1) } @ARGV;
 
-if (not length $search) {
-    print
-    "Usage: c11std [-list] [-n#] [-section <section>] [search text] [-text <regex>] -- `section` must be in the form of `X.Y[pZ]` where `X` and `Y` are section/chapter and, optionally, `pZ` is paragraph. If both `section` and `search text` are specified, then the search space will be within the specified section. Use `-n <n>` to skip to the nth match. To list only the section numbers containing 'search text', add -list. To display specific text, use `-text <regex>`.\n";
-    exit 0;
+my ($std, $search, $section, $paragraph, $debug);
+my ($match, $list_only, $match_text);
+
+{
+    my $opt_error;
+    local $SIG{__WARN__} = sub {
+        $opt_error = shift;
+        chomp $opt_error;
+    };
+
+    Getopt::Long::Configure("bundling_override");
+
+    GetOptionsFromArray(
+        \@ARGV,
+        'std=s'       => \$std,
+        'section|s=s' => \$section,
+        'num|n=i'     => \$match,
+        'text|t=s'    => \$match_text,
+        'list|l'      => \$list_only,
+        'debug|d=i'   => \$debug,
+    );
+
+    $std       //= 'C99';
+    $section   //= '';
+    $match     //= 1;
+    $list_only //= 0;
+    $debug     //= 0;
+
+    $std = uc $std;
+
+    if (not exists $standards{$std}) {
+        print "Invalid -std=$std selected. Valid -std= values are: ", join(', ', sort keys %standards), "\n";
+        exit 1;
+    }
+
+    my $usage = "Usage: $std [-list] [-n#] [-section <section>] [search text] [-text <regex>] -- `section` must be in the form of `X.Y[pZ]` where `X` and `Y` are section/chapter and, optionally, `pZ` is paragraph. If both `section` and `search text` are specified, then the search space will be within the specified section. Use `-n <n>` to skip to the nth match. To list only the section numbers containing 'search text', add -list. To display specific text, use `-text <regex>`.\n";
+
+    if ($opt_error) {
+        print "$opt_error: $usage\n";
+        exit 1;
+    }
+
+    $search = "@ARGV";
+
+    if (!length $section && !length $search) {
+        print $usage;
+        exit 1;
+    }
 }
 
-my ($section, $paragraph, $section_specified, $paragraph_specified, $match, $list_only, $list_titles, $match_text);
+# for paragraphs
+use constant {
+    USER_SPECIFIED    => 1,
+    RESULTS_SPECIFIED => 2,
+};
 
-$section_specified   = 0;
-$paragraph_specified = 0;
+my $section_specified   = length $section ? 1 : 0;
+my $paragraph_specified = 0;
 
-if ($search =~ s/-section\s*([A-Z0-9\.p]+)//i or $search =~ s/\b([A-Z0-9]+\.[0-9\.p]+)//i) {
+if ($search =~ s/\b([A-Z0-9]+\.[0-9.p]*)//i) {
     $section = $1;
 
     if ($section =~ s/p(\d+)//i) {
         $paragraph           = $1;
-        $paragraph_specified = $USER_SPECIFIED;
+        $paragraph_specified = USER_SPECIFIED;
     } else {
         $paragraph = 1;
     }
 
-    $section = "$section." if $section =~ m/^[A-Z0-9]+$/i;
-
     $section_specified = 1;
 }
 
-if ($search =~ s/-n\s*(\d+)//) {
-    $match = $1;
-} else {
-    $match = 1;
-}
-
-if ($search =~ s/-list//i) {
-    $list_only   = 1;
-    $list_titles = 1;    # Added here instead of removing -titles option
-}
-
-if ($search =~ s/-titles//i) {
-    $list_only   = 1;
-    $list_titles = 1;
-}
-
-if ($search =~ s/-text ([^ ]+)//) {
-    $match_text = $1;
+# add trailing dot if missing
+if ($section =~ /^[A-Z0-9]+$/i) {
+    $section .= '.';
 }
 
 $search =~ s/^\s+//;
 $search =~ s/\s+$//;
 
-if (not defined $section) {
+if (not length $section) {
     $section   = "1.";
     $paragraph = 1;
 }
 
 if ($list_only and not length $search) {
     print "You must specify some search text to use with -list.\n";
-    exit 0;
+    exit 1;
 }
 
-open FH, "<n1570.out" or die "Could not open n1570: $!";
+open FH, "<:encoding(UTF-8)", $standards{$std} or die "Could not open $standards{$std}: $!";
 my @contents = <FH>;
 close FH;
 
 my $text = join '', @contents;
 $text =~ s/\r//g;
+
+my $std_name = $standards{$std};
+$std_name =~ s/(.*)\..*$/$1/;
 
 my $result;
 my $found_section       = "";
@@ -96,7 +133,7 @@ my $qsearch = quotemeta $search;
 $qsearch =~ s/\\ / /g;
 $qsearch =~ s/\s+/\\s+/g;
 
-while ($text =~ m/^\s{0,4}([0-9A-Z]+\.[0-9\.]*)/msg) {
+while ($text =~ m/^([0-9A-Z]+\.[0-9.]*)/msg) {
     $this_section = $1;
 
     print "----------------------------------\n" if $debug >= 2;
@@ -109,15 +146,16 @@ while ($text =~ m/^\s{0,4}([0-9A-Z]+\.[0-9\.]*)/msg) {
 
     my $section_text;
 
-    if ($text =~ m/(.*?)^(?=\s{0,4}(?!FOOTNOTE)[0-9A-Z]+\.)/msg) { $section_text = $1; }
-    else {
+    if ($text =~ m/(.*?)^(?=\s{0,4}(?!Footnote)[0-9A-Z]+\.)/msg) {
+        $section_text = $1;
+    } else {
         print "No section text, end of file marker found.\n" if $debug >= 4;
         last;
     }
 
-    if ($section =~ /FOOTNOTE/i) {
+    if ($section =~ /Footnote/i) {
         $section_text =~ s/^\s{4}//ms;
-        $section_text =~ s/^\s{4}FOOTNOTE.*//msi;
+        $section_text =~ s/^\s{4}Footnote.*//msi;
         $section_text =~ s/^\d.*//ms;
     } elsif ($section_text =~ m/(.*?)$/msg) {
         $section_title = $1 if length $1;
@@ -133,7 +171,7 @@ while ($text =~ m/^\s{0,4}([0-9A-Z]+\.[0-9\.]*)/msg) {
 
         print "paragraph $p: [$t]\n" if $debug >= 3;
 
-        if ($paragraph_specified == $USER_SPECIFIED and not length $search and $p == $paragraph) {
+        if ($paragraph_specified == USER_SPECIFIED and not length $search and $p == $paragraph) {
             $result              = $t if not $found;
             $found_paragraph     = $p;
             $found_section       = $this_section;
@@ -149,7 +187,7 @@ while ($text =~ m/^\s{0,4}([0-9A-Z]+\.[0-9\.]*)/msg) {
                     if ($matches >= $match) {
                         if ($list_only) {
                             $result .= sprintf("%s%-15s", $comma, $this_section . "p" . $p);
-                            $result .= " $section_title" if $list_titles;
+                            $result .= " $section_title";
                             $comma = ",\n    ";
                         } else {
                             if (not $found) {
@@ -157,7 +195,7 @@ while ($text =~ m/^\s{0,4}([0-9A-Z]+\.[0-9\.]*)/msg) {
                                 $found_section       = $this_section;
                                 $found_section_title = $section_title;
                                 $found_paragraph     = $p;
-                                $paragraph_specified = $RESULTS_SPECIFIED;
+                                $paragraph_specified = RESULTS_SPECIFIED;
                             }
                             $found = 1;
                         }
@@ -165,19 +203,23 @@ while ($text =~ m/^\s{0,4}([0-9A-Z]+\.[0-9\.]*)/msg) {
                 }
             };
 
-            if ($@) {
-                print "Error in search regex; you may need to escape characters such as *, ?, ., etc.\n";
+            if (my $err = $@) {
+                $err =~ s/.* at .*$//;
+                print "Error in search regex: $err\n";
                 exit 0;
             }
         }
     }
 
-    last if $found && $paragraph_specified == $USER_SPECIFIED;
+    last if $found && $paragraph_specified == USER_SPECIFIED;
 
-    if ($paragraph_specified == $USER_SPECIFIED) {
-        if   (length $search) { print "No such text '$search' in paragraph $paragraph of section $section of n1570.\n"; }
-        else                  { print "No such paragraph $paragraph in section $section of n1570.\n"; }
-        exit 0;
+    if ($paragraph_specified == USER_SPECIFIED) {
+        if (length $search) {
+            print "No such text '$search' in paragraph $paragraph of section $section of $std_name.\n";
+        } else {
+            print "No such paragraph $paragraph in section $section of $std_name.\n";
+        }
+        exit 1;
     }
 
     if (defined $section_specified and not length $search) {
@@ -192,15 +234,17 @@ while ($text =~ m/^\s{0,4}([0-9A-Z]+\.[0-9\.]*)/msg) {
 
 if (not $found and $comma eq "") {
     $search =~ s/\\s\+/ /g;
-    if ($section_specified) {
-        print "No such text '$search' found within section '$section' in C11 Draft Standard (n1570).\n" if length $search;
-        print "No such section '$section' in C11 Draft Standard (n1570).\n"                             if not length $search;
-        exit 0;
-    }
+    if (length $search) {
+        print "No such text '$search' found ";
 
-    print "No such section '$section' in C11 Draft Standard (n1570).\n"   if not length $search;
-    print "No such text '$search' found in C11 Draft Standard (n1570).\n" if length $search;
-    exit 0;
+        if ($section_specified) {
+            print "within section '$section' ";
+        }
+    } else {
+        print "No such section '$section' ";
+    }
+    print "in $std Draft Standard ($std_name).\n";
+    exit 1;
 }
 
 $result =~ s/$found_section_title// if length $found_section_title;
@@ -221,7 +265,7 @@ if ($comma eq "") {
   print "p" . $found_paragraph if $paragraph_specified;
 =cut
 
-print "http://www.iso-9899.info/n1570.html\#$found_section";
+print "http://www.iso-9899.info/$std_name.html\#$found_section";
 print "p" . $found_paragraph if $paragraph_specified;
 print "\n\n";
 print "[", $found_section_title, "]\n\n" if length $found_section_title;
