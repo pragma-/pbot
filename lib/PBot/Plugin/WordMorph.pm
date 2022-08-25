@@ -19,7 +19,7 @@ sub initialize {
 
     $self->{pbot}->{commands}->add(
         name => 'wordmorph',
-        help => 'Word Morph game',
+        help => 'Word Morph game! Solve a path between two words by changing one letter at a time: love > shot = love > lose > lost > loot > soot > shot.',
         subref => sub { $self->wordmorph(@_) },
     );
 
@@ -68,7 +68,24 @@ sub wordmorph {
             my @hints;
 
             for (my $i = 0; $i < $self->{$channel}->{hint}; $i++) {
-                push @hints, $self->{$channel}->{morph}->[$i];
+                my $hint = '';
+
+                if ($i > 0) {
+                    my $word1 = $self->{$channel}->{morph}->[$i - 1];
+                    my $word2 = $self->{$channel}->{morph}->[$i];
+
+                    for (0 .. length $word1) {
+                        if (substr($word1, $_, 1) eq substr($word2, $_, 1)) {
+                            $hint .= substr($word1, $_, 1);
+                        } else {
+                            $hint .= "?";
+                        }
+                    }
+                } else {
+                    $hint = $self->{$channel}->{morph}->[$i];
+                }
+
+                push @hints, $hint;
             }
 
             my $hint = '_' x length $self->{$channel}->{morph}->[0];
