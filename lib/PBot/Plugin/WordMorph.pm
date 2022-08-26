@@ -212,7 +212,7 @@ sub wordmorph {
                     return "I do not know this word `$word`.";
                 }
 
-                if (distance($word, $last_word) != 1) {
+                if (distance($word, $last_word) != 1 || length($word) != length($last_word)) {
                     return "Wrong. `$word` does not follow from `$last_word`.";
                 }
 
