@@ -149,7 +149,7 @@ while ($text =~ m/^([0-9A-Z]+\.[0-9.]*)/msgi) {
 
     my $section_text;
 
-    if ($text =~ /(.*?)^(?=\s{0,4}(?!Footnote)[0-9A-Z]+\.)/msg) {
+    if ($text =~ /(.*?)^(?=(?!Footnote)[0-9A-Z]+\.)/msg) {
         $section_text = $1;
     } else {
         print "No section text, end of file marker found.\n" if $debug >= 4;
@@ -157,8 +157,7 @@ while ($text =~ m/^([0-9A-Z]+\.[0-9.]*)/msgi) {
     }
 
     if ($section =~ /Footnote/i) {
-        $section_text =~ s/^\s{4}//ms;
-        $section_text =~ s/^\s{4}Footnote.*//msi;
+        $section_text =~ s/^Footnote.*//msi;
         $section_text =~ s/^\d.*//ms;
         $section_text = $this_section . $section_text;
     } elsif ($section_text =~ m/(.*?)$/msg) {
