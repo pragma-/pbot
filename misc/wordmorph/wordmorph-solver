@@ -1,0 +1,135 @@
+#!/usr/bin/perl
+#ver 2.00
+
+use warnings;
+use strict;
+
+use Storable;
+use Text::Levenshtein::XS 'distance';
+
+die <<HELP unless @ARGV == 2;
+usage: $0 <word1> <word2>
+
+The program finds a way from one word to other, like this:
+
+% $0 love shot
+love-lose-lost-loot-soot-shot
+HELP
+
+my ($left, $right)  =  @ARGV[0,1];
+
+for ($left, $right) {
+    $_ = lc;
+}
+
+die "the length of given words is not equal!\n" if length($left) != length $right;
+
+my $db = -e 'wordmorph.db' ? retrieve('wordmorph.db') : die "No database available\n";
+
+my $len = length $left;
+
+foreach my $word ($left, $right) {
+    if (!$db->{$len}{$word}) {
+        foreach my $test (keys %{$db->{$len}}) {
+            if (distance($word, $test) == 1) {
+                push @{$db->{$len}{$word}}, $test;
+                push @{$db->{$len}{$test}}, $word;
+            }
+        }
+    }
+}
+
+my $list = $db->{length($left)};
+
+eval {
+    printway([transform($left, $right, $list)]);
+    1;
+} or print $@;
+
+
+sub transform {
+    my $left = shift;
+    my $right = shift;
+    my $list = shift;
+
+    my (@left, %left, @right, %right);      # @left and @right- arrays containing word relation trees: ([foo], [0, foe], [0, fou], [0, 1, fie] ...)
+                                            # %left and %right - indices containing word offsets in arrays @left and @right
+
+    $left[0] = [$left];
+    $right[0] = [$right];
+    $left{$left} = 0;
+    $right{$right} = 0;
+
+    my $leftstart  = 0;
+    my $rightstart = 0;
+
+    my @way;
+    my (%leftstarts, %rightstarts);
+
+    SEARCH:
+    for (;;) {
+        my @left_ids = $leftstart..$#left;                              # choose array of indices of new words
+        $leftstart = $#left;
+        die "Cannot solve! Bad word '$left' :(\n" if $leftstarts{$leftstart}++ >2;  # finish search if the way could not be found
+        for my $id (@left_ids) {                                        # come through all new words
+            my @prefix   = @{$left[$id]};
+            my $searched = pop @prefix;
+            push @prefix, $id;
+            foreach my $word (@{$list->{$searched}}) {
+                next if $left{$word};                                   # skip words which are already in the tree
+                push @left, [@prefix, $word];
+                $left{$word} = $#left;                              # add new word to array and index
+                #print join " ", @{$left[-1]}, "\n"; #debugging
+                if ( defined(my $r_id = $right{$word}) ) {          # and check if the word appears in right index. if yes...
+                    my @end = reverse(print_rel($r_id, \@right));
+                    shift @end;
+                    @way = (print_rel($#left, \@left), @end);       # build the way between the words
+                    last SEARCH;                                    # and finish the search
+
+                }
+            }
+        }
+
+        my @right_ids = $rightstart..$#right;                           # all the same :) the tree is build from both ends to speed up the process
+        $rightstart = $#right;
+        die "Cannot solve! Bad word '$right' :(\n" if $rightstarts{$rightstart}++ > 2;
+        for my $id (@right_ids) {      # build right relational table
+            my @prefix   = @{$right[$id]};
+            my $searched = pop @prefix;
+            push @prefix, $id;
+            foreach my $word (@{$list->{$searched}}) {
+                next if $right{$word};
+                push @right, [@prefix, $word];
+                $right{$word} = $#right;
+                # print join " ", @{$right[-1]}, "\n"; #debugging
+                if ( defined(my $l_id = $left{$word}) ) {
+                    my @end = reverse print_rel($#right, \@right);
+                    shift @end;
+                    @way = (print_rel($l_id, \@left), @end);
+                    last SEARCH;
+                }
+            }
+        }
+    }
+    return @way;
+}
+
+
+sub print_rel {
+    my $id = shift;
+    my $ary = shift;
+    my @line;
+    my @rel = @{$ary->[$id]};
+    push @line, (pop @rel);
+
+    foreach my $ref_id (reverse @rel) {
+        unshift @line, $ary->[$ref_id]->[-1];
+    }
+    return wantarray ? @line : join "\n", @line, "";
+}
+
+sub printway {
+    my @way = @{+shift};
+    print join "-", @way;
+    print "\n";
+}

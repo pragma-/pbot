@@ -1,0 +1,35 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+
+use Storable;
+use Text::Levenshtein::XS 'distance';
+
+die "usage: $0 <wordlist file>\n" unless @ARGV == 1;
+
+#thanks to Limbic~Region, http://perlmonks.org/index.pl?node_id=180961
+open (my $wordlist, '<', $ARGV[0]) or die "Unable to open `$ARGV[0]` for reading: $!\n";
+my ($db, %data);
+
+while (<$wordlist>) {
+    chomp;
+    next if $_ !~ /^[a-z]{3,7}$/;
+    push @{$data{length()}}, $_;
+}
+
+for my $len (keys %data) {
+    my $end = $#{$data{$len}};
+    for my $i (0 .. $end - 1) {
+        my $word = $data{$len}[$i];
+        for my $j ($i + 1 .. $end) {
+            my $test = $data{$len}[$j];
+            if (distance($word, $test) == 1) {
+                push @{$db->{$len}{$word}}, $test;
+                push @{$db->{$len}{$test}}, $word;
+            }
+        }
+    }
+}
+
+store $db, 'wordmorph.db';

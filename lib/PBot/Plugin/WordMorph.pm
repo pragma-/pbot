@@ -134,8 +134,8 @@ sub wordmorph {
             }
 
             if (defined $args[1]) {
-                if ($args[1] !~ m/^[0-9]+$/ || $args[1] < 3 || $args[1] > 8) {
-                    return "Invalid word length `$args[1]`; must be integer >= 3 and <= 8."
+                if ($args[1] !~ m/^[0-9]+$/ || $args[1] < 3 || $args[1] > 7) {
+                    return "Invalid word length `$args[1]`; must be integer >= 3 and <= 7."
                 }
 
                 $length = $args[1];
@@ -271,7 +271,7 @@ sub set_up_new_morph {
 sub make_morph_by_steps {
     my ($self, $db, $steps, $length) = @_;
 
-    $length //= int(rand(3)) + 4;
+    $length //= int(rand(4)) + 4;
 
     my @words = keys %{$db->{$length}};
     my $word  = $words[rand $#words];
