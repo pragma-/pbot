@@ -38,6 +38,8 @@ use constant {
     USAGE => 'Usage: wordmorph start [steps to solve [word length]] | custom <word1> <word2> | solve <solution> | show | hint [from direction] | giveup',
     NO_MORPH_AVAILABLE => "There is no word morph available. Use `wordmorph start [steps to solve [word length]]` to create one.",
     DB_UNAVAILABLE => "Word morph database not available.",
+    LEFT  => 0,
+    RIGHT => 1,
 };
 
 sub wordmorph {
@@ -66,16 +68,16 @@ sub wordmorph {
             my $direction;
 
             if (@args == 0) {
-                $direction = 1;
+                $direction = LEFT;
             } elsif ($args[0] eq 'left' || $args[0] eq 'l') {
-                $direction = 1;
+                $direction = LEFT;
             } elsif ($args[0] eq 'right' || $args[0] eq 'r') {
-                $direction = -1;
+                $direction = RIGHT;
             } else {
                 return "Unknown direction `$args[0]`; usage: wordmorph hint [from direction]; from direction can be `left` or `right`";
             }
 
-            if ($direction == 1) {
+            if ($direction == LEFT) {
                 $self->{$channel}->{hintL}++;
 
                 if ($self->{$channel}->{hintL} > $#{$self->{$channel}->{morph}}) {
@@ -90,50 +92,26 @@ sub wordmorph {
             }
 
             my @hints;
-
-            my $size = @{$self->{$channel}->{morph}};
+            my $end = $#{$self->{$channel}->{morph}};
 
             $hints[0] = $self->{$channel}->{morph}->[0];
-            $hints[$size - 1] = $self->{$channel}->{morph}->[$size - 1];
+            $hints[$end] = $self->{$channel}->{morph}->[$end];
 
             for (my $i = 1; $i < $self->{$channel}->{hintL}; $i++) {
-                my $hint = '';
-
                 my $word1 = $self->{$channel}->{morph}->[$i - 1];
                 my $word2 = $self->{$channel}->{morph}->[$i];
-
-                for (0 .. length $word1) {
-                    if (substr($word1, $_, 1) eq substr($word2, $_, 1)) {
-                        $hint .= substr($word1, $_, 1);
-                    } else {
-                        $hint .= "?";
-                    }
-                }
-
-                $hints[$i] = $hint;
+                $hints[$i] = $self->form_hint($word1, $word2);
             }
 
             my $blank_hint = '_' x length $self->{$channel}->{morph}->[0];
-
             for (my $i = $self->{$channel}->{hintL}; $i < $self->{$channel}->{hintR} + 1; $i++) {
                 $hints[$i] = $blank_hint;
             }
 
             for (my $i = $#{$self->{$channel}->{morph}} - 1; $i > $self->{$channel}->{hintR}; $i--) {
-                my $hint = '';
-
                 my $word1 = $self->{$channel}->{morph}->[$i];
                 my $word2 = $self->{$channel}->{morph}->[$i + 1];
-
-                for (0 .. length $word1) {
-                    if (substr($word1, $_, 1) eq substr($word2, $_, 1)) {
-                        $hint .= substr($word1, $_, 1);
-                    } else {
-                        $hint .= "?";
-                    }
-                }
-
-                $hints[$i] = $hint;
+                $hints[$i] = $self->form_hint($word1, $word2);
             }
 
             return "Hint: " . join(' > ', @hints);
@@ -224,6 +202,8 @@ sub wordmorph {
                 return NO_MORPH_AVAILABLE;
             }
 
+            return DB_UNAVAILABLE if not $self->{db};
+
             my @solution = grep { length > 0 } split /\W/, join(' ', @args);
 
             if ($solution[0] ne $self->{$channel}->{word1}) {
@@ -236,23 +216,20 @@ sub wordmorph {
 
             my $last_word = $solution[0];
 
-            return DB_UNAVAILABLE if not $self->{db};
-
             if (not exists $self->{db}->{length $last_word}->{$last_word}) {
                 return "I do not know this word `$last_word`.";
             }
 
             my $length = length $last_word;
-            my $word;
 
             for (my $i = 1; $i < @solution; $i++) {
-                $word = $solution[$i];
+                my $word = $solution[$i];
 
                 if (not exists $self->{db}->{length $word}->{$word}) {
                     return "I do not know this word `$word`.";
                 }
 
-                if (distance($word, $last_word) != 1 || length($word) != $length) {
+                if (length($word) != $length || distance($word, $last_word) != 1) {
                     return "Wrong. `$word` does not follow from `$last_word`.";
                 }
 
@@ -269,9 +246,8 @@ sub wordmorph {
                 return "Correct! " . join(' > ', @solution);
             }
 
-            if (@solution < $expected_steps) {
-                return "Correct! " . join(' > ', @solution) . " is shorter than the expected solution. Congratulations!";
-            }
+            # this should never happen ... but just in case
+            return "Correct! " . join(' > ', @solution) . " is shorter than the expected solution. Congratulations!";
         }
 
         default {
@@ -307,6 +283,22 @@ sub set_up_new_morph {
     $self->{$channel}->{word2} = $self->{$channel}->{morph}->[$#{$self->{$channel}->{morph}}];
     $self->{$channel}->{hintL} = 1;
     $self->{$channel}->{hintR} = $#{$self->{$channel}->{morph}} - 1;
+}
+
+sub form_hint {
+    my ($self, $word1, $word2) = @_;
+
+    my $hint = '';
+
+    for (0 .. length $word1) {
+        if (substr($word1, $_, 1) eq substr($word2, $_, 1)) {
+            $hint .= substr($word1, $_, 1);
+        } else {
+            $hint .= "?";
+        }
+    }
+
+    return $hint;
 }
 
 sub make_morph_by_steps {
