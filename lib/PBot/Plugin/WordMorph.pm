@@ -77,11 +77,13 @@ sub wordmorph {
                 return "Unknown direction `$args[0]`; usage: wordmorph hint [from direction]; from direction can be `left` or `right`";
             }
 
+            my $end = $#{$self->{$channel}->{morph}};
+
             if ($direction == LEFT) {
                 $self->{$channel}->{hintL}++;
 
-                if ($self->{$channel}->{hintL} > $#{$self->{$channel}->{morph}}) {
-                    $self->{$channel}->{hintL} = $#{$self->{$channel}->{morph}};
+                if ($self->{$channel}->{hintL} > $end) {
+                    $self->{$channel}->{hintL} = $end;
                 }
             } else {
                 $self->{$channel}->{hintR}--;
@@ -92,9 +94,8 @@ sub wordmorph {
             }
 
             my @hints;
-            my $end = $#{$self->{$channel}->{morph}};
 
-            $hints[0] = $self->{$channel}->{morph}->[0];
+            $hints[0]    = $self->{$channel}->{morph}->[0];
             $hints[$end] = $self->{$channel}->{morph}->[$end];
 
             for (my $i = 1; $i < $self->{$channel}->{hintL}; $i++) {
@@ -108,7 +109,7 @@ sub wordmorph {
                 $hints[$i] = $blank_hint;
             }
 
-            for (my $i = $#{$self->{$channel}->{morph}} - 1; $i > $self->{$channel}->{hintR}; $i--) {
+            for (my $i = $end - 1; $i > $self->{$channel}->{hintR}; $i--) {
                 my $word1 = $self->{$channel}->{morph}->[$i];
                 my $word2 = $self->{$channel}->{morph}->[$i + 1];
                 $hints[$i] = $self->form_hint($word1, $word2);
