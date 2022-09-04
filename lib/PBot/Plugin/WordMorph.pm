@@ -77,7 +77,8 @@ sub wordmorph {
                 return "Unknown direction `$args[0]`; usage: wordmorph hint [from direction]; from direction can be `left` or `right`";
             }
 
-            my $end = $#{$self->{$channel}->{morph}};
+            my $morph = $self->{$channel}->{morph};
+            my $end = $#$morph;
 
             if ($direction == LEFT) {
                 $self->{$channel}->{hintL}++;
@@ -95,23 +96,23 @@ sub wordmorph {
 
             my @hints;
 
-            $hints[0]    = $self->{$channel}->{morph}->[0];
-            $hints[$end] = $self->{$channel}->{morph}->[$end];
+            $hints[0]    = $morph->[0];
+            $hints[$end] = $morph->[$end];
 
             for (my $i = 1; $i < $self->{$channel}->{hintL}; $i++) {
-                my $word1 = $self->{$channel}->{morph}->[$i - 1];
-                my $word2 = $self->{$channel}->{morph}->[$i];
+                my $word1 = $morph->[$i - 1];
+                my $word2 = $morph->[$i];
                 $hints[$i] = $self->form_hint($word1, $word2);
             }
 
-            my $blank_hint = '_' x length $self->{$channel}->{morph}->[0];
+            my $blank_hint = '_' x length $morph->[0];
             for (my $i = $self->{$channel}->{hintL}; $i < $self->{$channel}->{hintR} + 1; $i++) {
                 $hints[$i] = $blank_hint;
             }
 
             for (my $i = $end - 1; $i > $self->{$channel}->{hintR}; $i--) {
-                my $word1 = $self->{$channel}->{morph}->[$i];
-                my $word2 = $self->{$channel}->{morph}->[$i + 1];
+                my $word1 = $morph->[$i];
+                my $word2 = $morph->[$i + 1];
                 $hints[$i] = $self->form_hint($word1, $word2);
             }
 
@@ -141,7 +142,7 @@ sub wordmorph {
                 return "Invalid arguments; Usage: wordmorph start [steps to solve [word length]]";
             }
 
-            my $steps = 3;
+            my $steps = 4;
             my $length = undef;
 
             if (defined $args[0]) {
@@ -183,10 +184,7 @@ sub wordmorph {
         }
 
         when ('custom') {
-            if (@args != 2) {
-                return "Usage: wordmorph custom <word1> <word2>";
-            }
-
+            return "Usage: wordmorph custom <word1> <word2>" if @args != 2;
             return DB_UNAVAILABLE if not $self->{db};
             my $morph = eval { makemorph($self->{db}, $args[0], $args[1]) } or return $@;
             $self->{$channel}->{morph} = $morph;
@@ -261,7 +259,7 @@ sub load_db {
     my ($self) = @_;
 
     if (not -e $self->{db_path}) {
-        die "Word morph database not available; run `wordmorph_gendb` to build it.\n";
+        die "Word morph database not available; run `/misc/wordmorph/wordmorph-mkdb` to create it.\n";
     }
 
     return retrieve($self->{db_path});
@@ -302,10 +300,26 @@ sub form_hint {
     return $hint;
 }
 
+sub compare_suffix {
+    my ($word1, $word2) = @_;
+
+    my $length = 0;
+
+    for (my $i = length($word1) - 1; $i >= 0; --$i) {
+        if (substr($word1, $i, 1) eq substr($word2, $i, 1)) {
+            $length++;
+        } else {
+            last;
+        }
+    }
+
+    return $length;
+}
+
 sub make_morph_by_steps {
     my ($self, $db, $steps, $length) = @_;
 
-    $length //= int(rand(4)) + 4;
+    $length //= int(rand(3)) + 5;
 
     my @words = keys %{$db->{$length}};
     my $word  = $words[rand $#words];
@@ -326,6 +340,7 @@ sub make_morph_by_steps {
 
         my $try = eval {
             my $left = $morph->[0];
+            die if compare_suffix($left, $word) >= 2;
             [transform($left, $word, $db->{length $left})]
         } or next;
 
@@ -348,14 +363,9 @@ sub make_morph_by_steps {
 
 sub makemorph {
     my ($db, $left, $right) = @_;
-
     die "The length of given words are not equal.\n" if length($left) != length($right);
-
-    $left  = lc $left;
-    $right = lc $right;
-
     my $list = $db->{length $left};
-    my $morph = eval { [transform($left, $right, $list)] } or die $@;
+    my $morph = eval { [transform(lc $left, lc $right, $list)] } or die $@;
     return $morph;
 }
 
