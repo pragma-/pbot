@@ -35,7 +35,7 @@ sub unload {
 }
 
 use constant {
-    USAGE => 'Usage: wordmorph start [steps to solve [word length]] | custom <word1> <word2> | solve <solution> | show | hint [from direction] | giveup',
+    USAGE => 'Usage: wordmorph start [steps to solve [word length]] | custom <word1> <word2> | solve <solution> | hint [from direction] | check <word> | show | giveup',
     NO_MORPH_AVAILABLE => "There is no word morph available. Use `wordmorph start [steps to solve [word length]]` to create one.",
     DB_UNAVAILABLE => "Word morph database not available.",
     LEFT  => 0,
@@ -56,6 +56,20 @@ sub wordmorph {
     my $channel = $context->{from};
 
     given ($command) {
+        when ('check') {
+            if (!@args || @args > 1) {
+                return 'Usage: wordmorph check <word>; check if a word exists in the Word Morph database';
+            }
+
+            return DB_UNAVAILABLE if not $self->{db};
+
+            if (not exists $self->{db}->{length $args[0]}->{$args[0]}) {
+                return "I do not know this word `$args[0]`.";
+            } else {
+                return "Yes, `$args[0]` is a word I know.";
+            }
+        }
+
         when ('hint') {
             if (not defined $self->{$channel}->{morph}) {
                 return NO_MORPH_AVAILABLE;
