@@ -177,6 +177,10 @@ PBot uses a data-directory to store all its configuration settings and data. You
 clone this data-directory for each instance of PBot you want to run, otherwise they
 will become quite confused with each other and things will break horribly.
 
+Even when you're running just one bot, cloning the data-directory will allow PBot to
+be updated via `git` or `unzip` without overwriting your data. PBot will automatically use update
+migrations (see [`updates/`](../updates/)) to safely update your existing data with the new data.
+
 Here we clone the data-directory for two PBot instances, naming them after the
 IRC network they will connect to:
 
