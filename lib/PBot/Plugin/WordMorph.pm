@@ -35,7 +35,7 @@ sub unload {
 }
 
 use constant {
-    USAGE => 'Usage: wordmorph start [steps to solve [word length]] | custom <word1> <word2> | solve <solution> | hint [from direction] | check <word> | show | giveup',
+    USAGE => 'Usage: wordmorph start [steps to solve [word length]] | custom <word1> <word2> | solve <solution> | hint [from direction] | check <word> | neighbors <word> | show | giveup',
     NO_MORPH_AVAILABLE => "There is no word morph available. Use `wordmorph start [steps to solve [word length]]` to create one.",
     DB_UNAVAILABLE => "Word morph database not available.",
     LEFT  => 0,
@@ -56,6 +56,22 @@ sub wordmorph {
     my $channel = $context->{from};
 
     given ($command) {
+        when ('neighbors') {
+            if (!@args || @args > 1) {
+                return 'Usage: wordmorph neighbors <word>; list the neighbors of a given word';
+            }
+
+            return DB_UNAVAILABLE if not $self->{db};
+
+            if (not exists $self->{db}->{length $args[0]}->{$args[0]}) {
+                return "I do not know this word `$args[0]`.";
+            }
+
+            my @neighbors = @{$self->{db}->{length $args[0]}->{$args[0]}};
+            my $count = @neighbors;
+            return "`$args[0]` has $count neighbor" . ($count != 1 ? 's' : '') . ": " . join(', ', sort @neighbors);
+        }
+
         when ('check') {
             if (!@args || @args > 1) {
                 return 'Usage: wordmorph check <word>; check if a word exists in the Word Morph database';
@@ -400,11 +416,14 @@ sub transform {
     my @path;
     my (%leftstarts, %rightstarts);
 
+    die "I do not know this word `$left`.\n"  if not exists $list->{$left};
+    die "I do not know this word `$right`.\n" if not exists $list->{$right};
+
     SEARCH:
     for (;;) {
         my @left_ids = $leftstart..$#left;                        # choose array of indices of new words
         $leftstart = $#left;
-        die "Cannot create word morph! Bad word '$left' :(\n" if $leftstarts{$leftstart}++ > 2;  # finish search if the path could not be found
+        die "Cannot find a path from `$left` to `$right`.\n" if $leftstarts{$leftstart}++ > 2;  # finish search if the path could not be found
         for my $id (@left_ids) {                                  # come through all new words
             my @prefix   = @{$left[$id]};
             my $searched = pop @prefix;
@@ -425,7 +444,7 @@ sub transform {
 
         my @right_ids = $rightstart..$#right;                     # all the same :) the tree is build from both ends to speed up the process
         $rightstart = $#right;
-        die "Cannot create word morph! Bad word '$right'\n" if $rightstarts{$rightstart}++ > 2;
+        die "Cannot find a path from `$left` to `$right`.\n" if $rightstarts{$rightstart}++ > 2;  # finish search if the path could not be found
         for my $id (@right_ids) {                                 # build right relational table
             my @prefix   = @{$right[$id]};
             my $searched = pop @prefix;
