@@ -132,7 +132,7 @@ sub wordmorph {
             for (my $i = 1; $i < $self->{$channel}->{hintL}; $i++) {
                 my $word1 = $morph->[$i - 1];
                 my $word2 = $morph->[$i];
-                $hints[$i] = $self->form_hint($word1, $word2);
+                $hints[$i] = form_hint($word1, $word2);
             }
 
             my $blank_hint = '_' x length $morph->[0];
@@ -143,7 +143,7 @@ sub wordmorph {
             for (my $i = $end - 1; $i > $self->{$channel}->{hintR}; $i--) {
                 my $word1 = $morph->[$i];
                 my $word2 = $morph->[$i + 1];
-                $hints[$i] = $self->form_hint($word1, $word2);
+                $hints[$i] = form_hint($word1, $word2);
             }
 
             return "Hint: " . join(' > ', @hints);
@@ -194,22 +194,22 @@ sub wordmorph {
             return DB_UNAVAILABLE if not $self->{db};
 
             my $attempts = 100;
+            my $morph;
 
             while (--$attempts > 0) {
-                $self->{$channel}->{morph} = eval {
+                $morph = eval {
                     $self->make_morph_by_steps($self->{db}, $steps + 2, $length)
                 };
 
                 if (my $err = $@) {
                     next if $err eq "Too many attempts\n";
-                    $self->{$channel}->{morph} = undef;
                     return $err;
                 }
 
-                last if @{$self->{$channel}->{morph}};
+                last if @$morph;
             }
 
-            $self->set_up_new_morph($channel);
+            $self->set_up_new_morph($morph, $channel);
             return "New word morph: " . $self->show_morph_with_blanks($channel) . " (Fill in the blanks)";
         }
 
@@ -217,8 +217,7 @@ sub wordmorph {
             return "Usage: wordmorph custom <word1> <word2>" if @args != 2;
             return DB_UNAVAILABLE if not $self->{db};
             my $morph = eval { makemorph($self->{db}, $args[0], $args[1]) } or return $@;
-            $self->{$channel}->{morph} = $morph;
-            $self->set_up_new_morph($channel);
+            $self->set_up_new_morph($morph, $channel);
             return "New word morph: " . $self->show_morph_with_blanks($channel) . " (Fill in the blanks)";
         }
 
@@ -307,15 +306,16 @@ sub show_morph_with_blanks {
 }
 
 sub set_up_new_morph {
-    my ($self, $channel) = @_;
-    $self->{$channel}->{word1} = $self->{$channel}->{morph}->[0];
-    $self->{$channel}->{word2} = $self->{$channel}->{morph}->[$#{$self->{$channel}->{morph}}];
+    my ($self, $morph, $channel) = @_;
+    $self->{$channel}->{morph} = $morph;
+    $self->{$channel}->{word1} = $morph->[0];
+    $self->{$channel}->{word2} = $morph->[$#$morph];
     $self->{$channel}->{hintL} = 1;
-    $self->{$channel}->{hintR} = $#{$self->{$channel}->{morph}} - 1;
+    $self->{$channel}->{hintR} = $#$morph - 1;
 }
 
 sub form_hint {
-    my ($self, $word1, $word2) = @_;
+    my ($word1, $word2) = @_;
 
     my $hint = '';
 
