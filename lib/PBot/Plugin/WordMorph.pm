@@ -63,7 +63,9 @@ sub wordmorph {
 
             return DB_UNAVAILABLE if not $self->{db};
 
-            if (not exists $self->{db}->{length $args[0]}->{$args[0]}) {
+            if (length($args[0]) > 7) {
+                return "$args[0] is too long, max allowed is 7.";
+            } elsif (not exists $self->{db}->{length $args[0]}->{$args[0]}) {
                 return "I do not know this word `$args[0]`.";
             }
 
@@ -79,7 +81,9 @@ sub wordmorph {
 
             return DB_UNAVAILABLE if not $self->{db};
 
-            if (not exists $self->{db}->{length $args[0]}->{$args[0]}) {
+            if (length($args[0]) > 7) {
+                return "$args[0] is too long, max allowed is 7.";
+            } elsif (not exists $self->{db}->{length $args[0]}->{$args[0]}) {
                 return "I do not know this word `$args[0]`.";
             } else {
                 return "Yes, `$args[0]` is a word I know.";
