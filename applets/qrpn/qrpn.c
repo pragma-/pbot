@@ -13,6 +13,7 @@
 #include <time.h>
 #include <float.h>
 #include <complex.h>
+#include <limits.h>
 
 /* begin simple math functions we want to expose via the interpreter */
 
@@ -75,11 +76,15 @@ static unsigned long long gcd(unsigned long long a, unsigned long long b) {
 }
 
 static unsigned long long nchoosek(const unsigned long long n, const unsigned long long k) {
-    if (1 == k) return n;
     if (k > n - k) return nchoosek(n, n - k);
-    unsigned long long n_choose_k = n * (n - 1) / 2;
-    for (size_t kr = 3; kr <= k; kr++)
-        n_choose_k *= (n + 1 - kr) / kr;
+
+    unsigned long long n_choose_k = 1;
+    for (unsigned long long i = 1; i <= k; i++, n--) {
+        /* give up */
+        if (n_choose_k / i > ULLONG_MAX / n) return 0;
+
+        n_choose_k = n_choose_k / i * n + n_choose_k % i * n / i;
+    }
 
     return n_choose_k;
 }
