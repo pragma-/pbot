@@ -40,6 +40,11 @@ use constant {
     DB_UNAVAILABLE => "Word morph database not available.",
     LEFT  => 0,
     RIGHT => 1,
+    MIN_STEPS => 2,
+    MAX_STEPS => 8,
+    DEFAULT_STEPS => 4,
+    MIN_WORD_LENGTH => 3,
+    MAX_WORD_LENGTH => 7,
 };
 
 sub wordmorph {
@@ -63,9 +68,13 @@ sub wordmorph {
 
             return DB_UNAVAILABLE if not $self->{db};
 
-            if (length($args[0]) > 7) {
-                return "$args[0] is too long, max allowed is 7.";
-            } elsif (not exists $self->{db}->{length $args[0]}->{$args[0]}) {
+            my $length = length $args[0];
+
+            if ($length < MIN_WORD_LENGTH) {
+                return "`$args[0]` is too short; minimum word length is ".MIN_WORD_LENGTH.".";
+            } elsif ($length > MAX_WORD_LENGTH) {
+                return "`$args[0]` is too long, maximum word length is ".MAX_WORD_LENGTH.".";
+            } elsif (not exists $self->{db}->{$length}->{$args[0]}) {
                 return "I do not know this word `$args[0]`.";
             }
 
@@ -81,9 +90,13 @@ sub wordmorph {
 
             return DB_UNAVAILABLE if not $self->{db};
 
-            if (length($args[0]) > 7) {
-                return "$args[0] is too long, max allowed is 7.";
-            } elsif (not exists $self->{db}->{length $args[0]}->{$args[0]}) {
+            my $length = length $args[0];
+
+            if ($length < MIN_WORD_LENGTH) {
+                return "`$args[0]` is too short; minimum word length is ".MIN_WORD_LENGTH.".";
+            } elsif ($length > MAX_WORD_LENGTH) {
+                return "`$args[0]` is too long, maximum word length is ".MAX_WORD_LENGTH.".";
+            } elsif (not exists $self->{db}->{$length}->{$args[0]}) {
                 return "I do not know this word `$args[0]`.";
             } else {
                 return "Yes, `$args[0]` is a word I know.";
@@ -176,20 +189,20 @@ sub wordmorph {
                 return "Invalid arguments; Usage: wordmorph start [steps to solve [word length]]";
             }
 
-            my $steps = 4;
+            my $steps = DEFAULT_STEPS;
             my $length = undef;
 
             if (defined $args[0]) {
-                if ($args[0] !~ m/^[0-9]+$/ || $args[0] < 2 || $args[0] > 8) {
-                    return "Invalid number of steps `$args[0]`; must be integer >= 2 and <= 8."
+                if ($args[0] !~ m/^[0-9]+$/ || $args[0] < MIN_STEPS || $args[0] > MAX_STEPS) {
+                    return "Invalid number of steps `$args[0]`; must be integer >= ".MIN_STEPS." and <= ".MAX_STEPS.".";
                 }
 
                 $steps = $args[0];
             }
 
             if (defined $args[1]) {
-                if ($args[1] !~ m/^[0-9]+$/ || $args[1] < 3 || $args[1] > 7) {
-                    return "Invalid word length `$args[1]`; must be integer >= 3 and <= 7."
+                if ($args[1] !~ m/^[0-9]+$/ || $args[1] < MIN_WORD_LENGTH || $args[1] > MAX_WORD_LENGTH) {
+                    return "Invalid word length `$args[1]`; must be integer >= ".MIN_WORD_LENGTH." and <= ".MAX_WORD_LENGTH.".";
                 }
 
                 $length = $args[1];
@@ -197,7 +210,7 @@ sub wordmorph {
 
             return DB_UNAVAILABLE if not $self->{db};
 
-            my $attempts = 100;
+            my $attempts = 1000;
             my $morph;
 
             while (--$attempts > 0) {
@@ -213,6 +226,10 @@ sub wordmorph {
                 last if @$morph;
             }
 
+            if (not @$morph) {
+                return "Failed to create Word Morph with given parameters, in reasonable time. Try again.";
+            }
+
             $self->set_up_new_morph($morph, $channel);
             return "New word morph: " . $self->show_morph_with_blanks($channel) . " (Fill in the blanks)";
         }
@@ -220,7 +237,25 @@ sub wordmorph {
         when ('custom') {
             return "Usage: wordmorph custom <word1> <word2>" if @args != 2;
             return DB_UNAVAILABLE if not $self->{db};
+
+            my $length = length $args[0];
+
+            if ($length < MIN_WORD_LENGTH) {
+                return "`$args[0]` is too short; minimum word length is ".MIN_WORD_LENGTH.".";
+            } elsif ($length > MAX_WORD_LENGTH) {
+                return "`$args[0]` is too long, maximum word length is ".MAX_WORD_LENGTH.".";
+            }
+
+            $length = length $args[1];
+
+            if ($length < MIN_WORD_LENGTH) {
+                return "`$args[1]` is too short; minimum word length is ".MIN_WORD_LENGTH.".";
+            } elsif ($length > MAX_WORD_LENGTH) {
+                return "`$args[1]` is too long, maximum word length is ".MAX_WORD_LENGTH.".";
+            }
+
             my $morph = eval { makemorph($self->{db}, $args[0], $args[1]) } or return $@;
+            return "Failed to find a path between `$args[0]` and `$args[1]`." if not @$morph;
             $self->set_up_new_morph($morph, $channel);
             return "New word morph: " . $self->show_morph_with_blanks($channel) . " (Fill in the blanks)";
         }
@@ -361,7 +396,7 @@ sub make_morph_by_steps {
 
     push @$morph, $word;
 
-    my $attempts = 100;
+    my $attempts = 1000;
 
     while (--$attempts > 0) {
         my @list = @{$db->{$length}->{$word}};
