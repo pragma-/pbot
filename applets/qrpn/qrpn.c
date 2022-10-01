@@ -75,7 +75,7 @@ static unsigned long long gcd(unsigned long long a, unsigned long long b) {
     return a;
 }
 
-static unsigned long long nchoosek(const unsigned long long n, const unsigned long long k) {
+static unsigned long long nchoosek(unsigned long long n, const unsigned long long k) {
     if (k > n - k) return nchoosek(n, n - k);
 
     unsigned long long n_choose_k = 1;
