@@ -75,16 +75,12 @@ static unsigned long long gcd(unsigned long long a, unsigned long long b) {
     return a;
 }
 
-static unsigned long long nchoosek(unsigned long long n, const unsigned long long k) {
+static unsigned long long nchoosek(const unsigned long long n, const unsigned long long k) {
     if (k > n - k) return nchoosek(n, n - k);
 
     unsigned long long n_choose_k = 1;
-    for (unsigned long long i = 1; i <= k; i++, n--) {
-        /* give up */
-        if (n_choose_k / i > ULLONG_MAX / n) return 0;
-
-        n_choose_k = n_choose_k / i * n + n_choose_k % i * n / i;
-    }
+    for (size_t kr = 1; kr <= k; kr++)
+        n_choose_k = (n_choose_k * (n + 1 - kr)) / kr;
 
     return n_choose_k;
 }
