@@ -68,14 +68,8 @@ sub wordmorph {
 
             return DB_UNAVAILABLE if not $self->{db};
 
-            my $length = length $args[0];
-
-            if ($length < MIN_WORD_LENGTH) {
-                return "`$args[0]` is too short; minimum word length is ".MIN_WORD_LENGTH.".";
-            } elsif ($length > MAX_WORD_LENGTH) {
-                return "`$args[0]` is too long, maximum word length is ".MAX_WORD_LENGTH.".";
-            } elsif (not exists $self->{db}->{$length}->{$args[0]}) {
-                return "I do not know this word `$args[0]`.";
+            if (my $err = $self->validate_word($args[0], MIN_WORD_LENGTH, MAX_WORD_LENGTH)) {
+                return $err;
             }
 
             my @neighbors = @{$self->{db}->{length $args[0]}->{$args[0]}};
@@ -90,17 +84,11 @@ sub wordmorph {
 
             return DB_UNAVAILABLE if not $self->{db};
 
-            my $length = length $args[0];
-
-            if ($length < MIN_WORD_LENGTH) {
-                return "`$args[0]` is too short; minimum word length is ".MIN_WORD_LENGTH.".";
-            } elsif ($length > MAX_WORD_LENGTH) {
-                return "`$args[0]` is too long, maximum word length is ".MAX_WORD_LENGTH.".";
-            } elsif (not exists $self->{db}->{$length}->{$args[0]}) {
-                return "I do not know this word `$args[0]`.";
-            } else {
-                return "Yes, `$args[0]` is a word I know.";
+            if (my $err = $self->validate_word($args[0], MIN_WORD_LENGTH, MAX_WORD_LENGTH)) {
+                return $err;
             }
+
+            return "Yes, `$args[0]` is a word I know.";
         }
 
         when ('hint') {
@@ -238,20 +226,12 @@ sub wordmorph {
             return "Usage: wordmorph custom <word1> <word2>" if @args != 2;
             return DB_UNAVAILABLE if not $self->{db};
 
-            my $length = length $args[0];
-
-            if ($length < MIN_WORD_LENGTH) {
-                return "`$args[0]` is too short; minimum word length is ".MIN_WORD_LENGTH.".";
-            } elsif ($length > MAX_WORD_LENGTH) {
-                return "`$args[0]` is too long, maximum word length is ".MAX_WORD_LENGTH.".";
+            if (my $err = $self->validate_word($args[0], MIN_WORD_LENGTH, MAX_WORD_LENGTH)) {
+                return $err;
             }
 
-            $length = length $args[1];
-
-            if ($length < MIN_WORD_LENGTH) {
-                return "`$args[1]` is too short; minimum word length is ".MIN_WORD_LENGTH.".";
-            } elsif ($length > MAX_WORD_LENGTH) {
-                return "`$args[1]` is too long, maximum word length is ".MAX_WORD_LENGTH.".";
+            if (my $err = $self->validate_word($args[1], MIN_WORD_LENGTH, MAX_WORD_LENGTH)) {
+                return $err;
             }
 
             my $morph = eval { makemorph($self->{db}, $args[0], $args[1]) } or return $@;
@@ -367,6 +347,24 @@ sub form_hint {
     }
 
     return $hint;
+}
+
+sub validate_word {
+    my ($self, $word, $min, $max) = @_;
+
+    my $len = length $word;
+
+    if ($len < $min) {
+        return "`$word` is too short; minimum word length is $min.";
+    } elsif ($len > $max) {
+        return "`$word` is too long, maximum word length is $max.";
+    }
+
+    if (not exists $self->{db}->{$len}->{$word}) {
+        return "I do not know this word `$word`.";
+    }
+
+    return undef;
 }
 
 sub compare_suffix {
