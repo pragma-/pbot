@@ -2,6 +2,7 @@
 
 ## Table of Contents
 
+
 <!-- md-toc-begin -->
 * [QuickStart](QuickStart.md#quickstart)
   * [Installation](QuickStart.md#installation)
@@ -283,8 +284,9 @@
       * [reset](Applets.md#reset)
       * [qstats](Applets.md#qstats)
       * [qshow](Applets.md#qshow)
-    * [c99std](Applets.md#c99std)
-    * [c11std](Applets.md#c11std)
+    * [c99](Applets.md#c99)
+    * [c11](Applets.md#c11)
+    * [c23](Applets.md#c23)
     * [man](Applets.md#man)
     * [google](Applets.md#google)
     * [define](Applets.md#define)

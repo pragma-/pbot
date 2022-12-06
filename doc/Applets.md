@@ -54,8 +54,9 @@
     * [reset](#reset)
     * [qstats](#qstats)
     * [qshow](#qshow)
-  * [c99std](#c99std)
-  * [c11std](#c11std)
+  * [c99](#c99)
+  * [c11](#c11)
+  * [c23](#c23)
   * [man](#man)
   * [google](#google)
   * [define](#define)
@@ -617,10 +618,10 @@ Displays a specific C Jeopardy question without making it the current question. 
 
 Usage: `qshow <question id>`
 
-### c99std
+### c99
 Searches ISO/IEC 9899:TC3 (WG14/N1256), also known as the C99 draft standard.   http://www.open-std.org/jtc1/sc22/WG14/www/docs/n1256.pdf
 
-Usage: `c99std [-list] [-n#] [section] [search regex]`
+Usage: `c99 [-list] [-n#] [section] [search regex] [-text <regex>]`
 
 If specified, `section` must be in the form of `X.YpZ` where `X` and `Y` are section/chapter and, optionally, `pZ` is paragraph.
 
@@ -632,36 +633,46 @@ You may use `-n #` to skip to the nth match.
 
 To list only the section numbers containing 'search text', add `-list`.
 
+To display specific text, use `-text <regex>`.
+
 If both `section` and `search regex` are specified, then the search space will be within the specified section identifier.
 
-    <pragma-> c99std pointer value
+    <pragma-> c99 pointer value
        <PBot> Displaying #1 of 64 matches: 5.1.2.2.1p1: [Program startup] If they are declared, the parameters to the main function shall obey the following constraints: -- The value of argc shall be nonnegative. -- argv[argc] shall be a null pointer. -- If the value of argc is greater than zero, the array members argv[0] through argv[argc-1] inclusive shall contain pointers to st... truncated; see http://codepad.org/f2DULaGQ for full text.
+    <pragma-> Hmm, that was a bit long. I wanted just the part up to "nonnegative" ...
+    <pragma-> c99 pointer value -text ^.*?nonnegative
+       <PBot> Displaying #1 of 64 matches: 5.1.2.2.1p1: [Program startup] If they are declared, the parameters to the main function shall obey the following constraints: -- The value of argc shall be nonnegative ...
 
 <!-- -->
 
-     <pragma-> c99std pointer value -list
+     <pragma-> c99 pointer value -list
         <PBot> Sections containing 'pointer value': 5.1.2.2.1p2, 5.1.2.3p9, 6.2.5p20, 6.2.5p27, 6.3.2.1p3, 6.3.2.1p4, 6.3.2.3p2, 6.3.2.3p6, 6.5.2.1p3, 6.5.2.2p5, 6.5.2.2p6, 6.5.2.4p1, 6.5.2.4p2, 6.5.3.1p1, 6.5.3.2p3, 6.5.3.2p4, 6.5.3.3p5, 6.5.3.4p5, 6.5.6p8, 6.5.6p9, 6.5.8p5, 6.5.15p6, 6.6p7, 6.6p9, 6.7.2.2p5, 6.7.2.3p7, 6.7.2.3p3, 6.7.5.1p3, 6.7.5.2p7, 7.1.1p1, 7.1.1p4, 7.1.4p1, 7... truncated; see http://codepad.org/qQlnJYJk for full text.
 
 <!-- -->
 
     <pragma-> Hmm, how about just section 6.3?
-    <pragma-> c99std pointer value 6.3
+    <pragma-> c99 pointer value 6.3
        <PBot> Displaying #1 of 4 matches: 6.3.2.1p1: [Lvalues, arrays, and function designators] Except when it is the operand of the sizeof operator or the unary & operator, or is a string literal used to initialize an array, an expression that has type ``array of type is converted to an expression with type ``pointer to type that points to the initial element of the array ob... truncated; see http://codepad.org/mf1RNnr2 for full text.
 
 <!-- -->
 
-    <pragma-> c99std pointer value 6.3 -list
+    <pragma-> c99 pointer value 6.3 -list
        <PBot> Sections containing 'pointer value': 6.3.2.1p3, 6.3.2.1p4, 6.3.2.3p2, 6.3.2.3p6
 
 <!-- -->
 
-    <pragma-> c99std pointer value 6.3 -n3
+    <pragma-> c99 pointer value 6.3 -n3
        <PBot> Displaying #3 of 4 matches: 6.3.2.3p1: [Pointers] For any qualifier q, a pointer to a non-q-qualified type may be converted to a pointer to the q-qualified version of the type; the values stored in the original and converted pointers shall compare equal.
 
-### c11std
-Searches ISO/IEC 9811:201X (WG14/N1256), also known as the C11 draft standard.  http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf
+### c11
+Searches ISO/IEC 9811:201X (WG14/N1570), also known as the C11 draft standard.  http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf
 
-Usage is identical to `c99std`.
+Usage is identical to [`c99`](#c99).
+
+### c23
+Searches ISO/IEC 9899:2023 (WG14/N3047), also known as the C23 draft standard.  http://www.open-std.org/jtc1/sc22/wg14/www/docs/n3047.pdf
+
+Usage is identical to [`c99`](#c99).
 
 ### man
 Displays manpage summaries and/or C related tidbits (headers, prototypes, specifications), as well as a link to the FreeBSD manpage.
