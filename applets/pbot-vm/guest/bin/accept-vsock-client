@@ -21,6 +21,7 @@ use constant {
 };
 
 use lib MOD_DIR;
+use lib MOD_DIR . 'Languages/';
 
 use Guest;
 

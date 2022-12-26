@@ -241,7 +241,7 @@ sub main() {
         if (exists $context->{usage}) {
             print "$context->{usage}\n";
         } else {
-            print "Usage: cc [-lang=<language>] [-info] [-paste] [-args \"command-line arguments\"] [compiler/language options] <code> [-stdin <stdin input>]\n";
+            print "Usage: cc [-lang=<language>] [-vm=<virtual machine>] [-info] [-paste] [-args \"command-line arguments\"] [compiler/language options] <code> [-stdin <stdin input>]\n";
         }
         exit 1;
     }
