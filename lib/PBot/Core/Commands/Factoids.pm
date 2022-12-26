@@ -689,6 +689,14 @@ sub cmd_add_regex {
     return "/say $keyword added.";
 }
 
+# FIXME: use registry array instead
+my @valid_pastesites = (
+    'https?://sprunge.us',
+    'https?://ix.io',
+    'https?://dpaste.com',
+    'https?://0x0.st',
+);
+
 sub cmd_factadd {
     my ($self, $context) = @_;
 
@@ -728,8 +736,8 @@ sub cmd_factadd {
             my ($url) = $self->{pbot}->{interpreter}->split_args(\@arglist, 1);
 
             # FIXME: move this to registry
-            if ($url !~ m/^https?:\/\/(?:sprunge.us|ix.io)\/\w+$/) {
-                return "Invalid URL: acceptable URLs are: http://sprunge.us, http://ix.io";
+            if (not grep { $url =~ m/^$_/i } @valid_pastesites) {
+                return "Invalid URL: acceptable URLs are: " . join(', ', sort @valid_pastesites);
             }
 
             # create a UserAgent
@@ -1314,7 +1322,9 @@ sub cmd_factchange {
 
     if (defined $url) {
         # FIXME: move this to registry
-        if ($url !~ m/^https?:\/\/(?:sprunge.us|ix.io)\/\w+$/) { return "Invalid URL: acceptable URLs are: http://sprunge.us, http://ix.io"; }
+        if (not grep { $url =~ m/^$_/i } @valid_pastesites) {
+            return "Invalid URL: acceptable URLs are: " . join(', ', sort @valid_pastesites);
+        }
 
         my $ua       = LWP::UserAgent->new(timeout => 10);
         my $response = $ua->get($url);
