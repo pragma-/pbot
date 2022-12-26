@@ -30,13 +30,12 @@ my @quotes;
 while (1) {
     if ($#ARGV < 0) {
         my %post = ('number' => '4', 'collection[]' => 'mgm', 'collection[]' => 'motivate');
-        $response = $ua->post("http://www.quotationspage.com/random.php3", \%post);
+        $response = $ua->post("http://www.quotationspage.com/random.php", \%post);
     } else {
         my $arguments = join('+', @ARGV);
         my $author    = "";
 
         $arguments =~ s/\$nick/me/gi;
-        $arguments = uri_escape($arguments);
 
         if ($arguments =~ m/\-\-author[\s\+]+(.*)/i) {
             $author = $1;
