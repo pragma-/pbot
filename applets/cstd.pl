@@ -257,6 +257,7 @@ $result =~ s/\s+$//;
 if ($matches > 1 and not $list_only) { print "Displaying $match of $matches matches: "; }
 
 if ($comma eq "") {
+    $found_section =~ s/Footnote/FOOTNOTE/;
     print "http://www.iso-9899.info/$std_name.html\#$found_section";
     print "p" . $found_paragraph if $paragraph_specified;
     print "\n\n";
