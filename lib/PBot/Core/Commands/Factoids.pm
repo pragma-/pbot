@@ -814,7 +814,7 @@ sub cmd_factadd {
 
     $self->{pbot}->{logger}->log("$context->{hostmask} added [$from_chan] $keyword_text => $text\n");
 
-    $self->log_factoid($from_chan, $keyword, $context->{hostmask}, "created");
+    $self->log_factoid($from_chan, $keyword, $context->{hostmask}, "created: $text");
 
     return "/say $keyword_text added to " . ($from_chan eq '.*' ? 'global channel' : $from_chan) . ".";
 }
