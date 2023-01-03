@@ -1,3 +1,6 @@
 [submodule "Plang"]
 	path = Plang
 	url = https://github.com/pragma-/Plang
+[submodule "applets/qrpn"]
+	path = applets/qrpn
+	url = https://github.com/rlcamp/qrpn
