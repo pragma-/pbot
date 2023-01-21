@@ -268,7 +268,7 @@ foreach my $answer (@valid_answers) {
     my $ratio1 = ($t1 + $t1) / $a1;
     my $ratio2 = ($t2 + $t1) / $a2;
 
-    print STDERR "nick: $nick, t1 = $t1, t2 = $t2, a1 = $a1, a2 = $a2, ratio1 = $ratio1, ratio2 = $ratio2\n";
+    #print STDERR "nick: $nick, t1 = $t1, t2 = $t2, a1 = $a1, a2 = $a2, ratio1 = $ratio1, ratio2 = $ratio2\n";
 
     if ($ratio2 < $ratio1 and $player_data->{correct_streak} >= 3) {
       $player_data->{highest_quick_correct_streak} = $player_data->{correct_streak};

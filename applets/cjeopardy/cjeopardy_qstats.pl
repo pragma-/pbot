@@ -279,10 +279,8 @@ if (lc $command eq 'rank') {
 
   if (@$wrong_answers) {
     $stats .= ", wrong answers: ";
-    my $count = 0;
     my $sep = "";
     foreach my $answer (sort { $b->{count} <=> $a->{count} } @$wrong_answers) {
-      last if ++$count >= 10;
       $stats .= $sep;
       $stats .= $answer->{answer};
       if ($answer->{count} > 1) {
