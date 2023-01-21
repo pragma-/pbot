@@ -747,7 +747,7 @@ sub check_bans {
             {
                 $banmask = "\$a:$current_nickserv_account";
             } else {
-                if    ($host =~ m{^gateway/web/irccloud.com/}) { $banmask = "*!$user\@gateway/web/irccloud.com/*"; }
+                if    ($host =~ m{\.irccloud.com$}) { $banmask = "*!$user\@*.irccloud.com"; }
                 elsif ($host =~ m{^nat/([^/]+)/})              { $banmask = "*!$user\@nat/$1/*"; }
                 else {
                     $banmask = "*!*\@$host";

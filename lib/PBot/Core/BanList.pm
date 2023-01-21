@@ -281,6 +281,13 @@ sub get_baninfo {
         [ $self->{pbot}->{registry}->get_value('banlist', 'mute_mode_char'), $self->{quietlist} ],
     );
 
+    my $is_irccloud = $host =~ m{\.irccloud.com$};
+    my $irccloud_uid;
+
+    if ($is_irccloud) {
+        ($irccloud_uid) = $user =~ /id(\d+)$/;
+    }
+
     foreach my $entry (@lists) {
         my ($mode, $list) = @$entry;
         foreach my $banmask ($list->get_keys($channel)) {
@@ -298,9 +305,12 @@ sub get_baninfo {
             $banned = 1 if defined $nickserv and $nickserv eq $ban_nickserv;
             $banned = 1 if $mask =~ m/^$banmask_regex$/i;
 
-            if ($banmask =~ m{\@gateway/web/irccloud.com} and $host =~ m{^gateway/web/irccloud.com}) {
+            # irccloud hosts are disambiguated by the user field which can be uid{N}+ or sid{N}+
+            # where {N}+ are 1 or more integer digits
+            if ($is_irccloud && $banmask =~ m{\@.*\.irccloud.com$}) {
                 my ($bannick, $banuser, $banhost) = $banmask =~ m/([^!]+)!([^@]+)@(.*)/;
-                $banned = $1 if lc $user eq lc $banuser;
+                my ($banuid) = $banuser =~ /id(\d+)$/;
+                $banned = $1 if $irccloud_uid == $banuid;
             }
 
             if ($banned) {

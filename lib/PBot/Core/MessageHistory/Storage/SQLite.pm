@@ -307,8 +307,9 @@ sub add_message_account {
     my $id;
     my ($nick, $user, $host) = $mask =~ m/^([^!]+)!([^@]+)@(.*)/;
 
-    if (defined $link_id and $link_type == $self->{alias_type}->{STRONG}) { $id = $link_id; }
-    else {
+    if (defined $link_id and $link_type == $self->{alias_type}->{STRONG}) {
+        $id = $link_id;
+    } else {
         $id = $self->get_new_account_id();
         $self->{pbot}->{logger}->log("Got new account id $id\n");
     }
@@ -322,7 +323,6 @@ sub add_message_account {
             $sth = $self->{dbh}->prepare('INSERT INTO Accounts VALUES (?, ?, ?)');
             $sth->execute($id, $mask, "");
             $self->{new_entries}++;
-
             $self->{pbot}->{logger}->log("Added new account $id for mask $mask\n");
         }
     };
@@ -602,9 +602,10 @@ sub get_message_account {
             return ($rows, 0);
         } # end nick-change
 
-        if ($host =~ m{^gateway/web/irccloud.com}) {
-            $sth = $self->{dbh}->prepare('SELECT id, hostmask, last_seen FROM Hostmasks WHERE host = ? ORDER BY last_seen DESC');
-            $sth->execute("gateway/web/irccloud.com/x-$user");
+        if ($host =~ m{.*\.irccloud.com$}) {
+            my ($irccloud_uid) = $user =~ /id(\d+)$/;
+            $sth = $self->{dbh}->prepare('SELECT id, hostmask, last_seen FROM Hostmasks WHERE host LIKE ? ORDER BY last_seen DESC');
+            $sth->execute("\%id-${irccloud_uid}\%irccloud.com");
             my $rows = $sth->fetchall_arrayref({});
             if (defined $rows->[0]) {
                 $self->{pbot}->{logger}->log("5: irccloud match: $rows->[0]->{id}: $rows->[0]->{hostmask}\n");
