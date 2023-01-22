@@ -109,7 +109,7 @@ sub get_wttr {
 
     my %cache_opt = (
         'namespace'          => 'wttr',
-        'default_expires_in' => 3600
+        'default_expires_in' => 900
     );
 
     my $location_uri = uri_escape_utf8 $location;
@@ -287,8 +287,7 @@ sub get_wttr {
 
             when ('sun') {
                 my $a = $w->{'astronomy'}->[0];
-                $result .= "Sun: rise: $a->{'sunrise'}, set: $a->{'sunset'};\n";
-            }
+                $result .= "Sun: rise: $a->{'sunrise'}, set: $a->{'sunset'}; hours: $w->{'sunHour'}; UV Index: $c->{'uvIndex'};\n";}
 
             when ('sunhours') { $result .= "Hours of sun: $w->{'sunHour'};\n"; }
 
