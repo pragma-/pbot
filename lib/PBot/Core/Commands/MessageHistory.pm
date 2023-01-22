@@ -35,7 +35,7 @@ sub initialize {
 sub cmd_list_also_known_as {
     my ($self, $context) = @_;
 
-    my $usage = "Usage: aka [-hilngr] <nick> [-sort <by>]; -h show hostmasks; -i show ids; -l show last seen, -n show nickserv accounts; -g show gecos, -r show relationships";
+    my $usage = "Usage: aka [-hilngrw] <nick> [-sort <by>]; -h show hostmasks; -i show ids; -l show last seen, -n show nickserv accounts; -g show gecos, -r show relationships; -w include weak links";
 
     if (not length $context->{arguments}) {
         return $usage;

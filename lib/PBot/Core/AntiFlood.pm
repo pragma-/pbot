@@ -103,6 +103,7 @@ sub update_join_watch {
 # e.g. PBot::Plugin::AntiAbuse::ChatFlood, ::JoinFlood, ::EnterAbuse, etc.
 sub check_flood {
     my ($self, $channel, $nick, $user, $host, $text, $max_messages, $max_time, $mode, $context) = @_;
+
     $channel = lc $channel;
 
     my $mask    = "$nick!$user\@$host";
@@ -111,6 +112,7 @@ sub check_flood {
 
     if ($mode == MSG_JOIN and exists $self->{changinghost}->{$nick}) {
         $self->{pbot}->{logger}->log("Finalizing host change for $nick.\n");
+
         $account = delete $self->{changinghost}->{$nick};
 
         my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_id($mask);
@@ -129,11 +131,6 @@ sub check_flood {
         }
 
         $self->{pbot}->{messagehistory}->{database}->devalidate_all_channels($account);
-        my @nickserv_accounts = $self->{pbot}->{messagehistory}->{database}->get_nickserv_accounts($account);
-        foreach my $nickserv_account (@nickserv_accounts) {
-            $self->{pbot}->{logger}->log("$nick!$user\@$host [$account] seen with nickserv account [$nickserv_account]\n");
-            $self->check_nickserv_accounts($nick, $nickserv_account, "$nick!$user\@$host");
-        }
     } else {
         $account = $self->{pbot}->{messagehistory}->get_message_account($nick, $user, $host);
     }
@@ -147,6 +144,7 @@ sub check_flood {
         $mask    = "$newnick!$user\@$host";
         $account = $self->{pbot}->{messagehistory}->get_message_account($newnick, $user, $host);
         $nick    = $newnick;
+        $self->{pbot}->{messagehistory}->{database}->update_hostmask_data($mask, {last_seen => scalar gettimeofday});
     } else {
         $self->{pbot}->{logger}->log(sprintf("%-18s | %-65s | %s\n", $channel eq lc $mask ? "QUIT" : $channel, $mask, $text));
     }
@@ -158,7 +156,7 @@ sub check_flood {
     }
 
     # don't do flood processing for unidentified or banned users in +z channels
-    if (defined $context and $context->{'chan-z'} and ($context->{'unidentified'} or $context->{'banned'})) { return; }
+    return if defined $context and $context->{'chan-z'} and ($context->{'unidentified'} or $context->{'banned'});
 
     my $ancestor = $self->{pbot}->{messagehistory}->{database}->get_ancestor_id($account);
     $self->{pbot}->{logger}->log("Processing anti-flood account $account " . ($ancestor != $account ? "[ancestor $ancestor] " : '') . "for mask $mask\n")
@@ -598,7 +596,7 @@ sub check_bans {
 
     my $current_nickserv_account = $self->{pbot}->{messagehistory}->{database}->get_current_nickserv_account($message_account);
 
-    $self->{pbot}->{logger}->log("anti-flood: [check-bans] checking for bans on $mask "
+    $self->{pbot}->{logger}->log("anti-flood: [check-bans] checking for bans on ($message_account) $mask "
           . (defined $current_nickserv_account and length $current_nickserv_account ? "[$current_nickserv_account] " : "")
           . "in $channel\n");
 
@@ -811,39 +809,6 @@ sub check_bans {
     }
 }
 
-sub check_nickserv_accounts {
-    my ($self, $nick, $account, $hostmask) = @_;
-    my $message_account;
-
-    #$self->{pbot}->{logger}->log("Checking nickserv accounts for nick $nick with account $account and hostmask " . (defined $hostmask ? $hostmask : 'undef') . "\n");
-
-    $account = lc $account;
-
-    if (not defined $hostmask) {
-        ($message_account, $hostmask) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($nick);
-
-        if (not defined $message_account) {
-            $self->{pbot}->{logger}->log("No message account found for nick $nick.\n");
-            ($message_account) = $self->{pbot}->{messagehistory}->{database}->find_message_accounts_by_nickserv($account);
-
-            if (not $message_account) {
-                $self->{pbot}->{logger}->log("No message account found for nickserv $account.\n");
-                return;
-            }
-        }
-    } else {
-        ($message_account) = $self->{pbot}->{messagehistory}->{database}->find_message_accounts_by_mask($hostmask);
-        if (not $message_account) {
-            $self->{pbot}->{logger}->log("No message account found for hostmask $hostmask.\n");
-            return;
-        }
-    }
-
-    #$self->{pbot}->{logger}->log("anti-flood: $message_account: setting nickserv account to [$account]\n");
-    $self->{pbot}->{messagehistory}->{database}->update_nickserv_account($message_account, $account, scalar gettimeofday);
-    $self->{pbot}->{messagehistory}->{database}->set_current_nickserv_account($message_account, $account);
-}
-
 sub on_endofwhois {
     my ($self, $event_type, $event) = @_;
     my $nick = $event->{event}->{args}[1];
@@ -860,7 +825,9 @@ sub on_endofwhois {
     foreach my $channel (@$channels) {
         next unless $channel =~ /^#/;
         my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($id, $channel, 'validated');
-        if ($channel_data->{validated} & $self->{NEEDS_CHECKBAN} or not $channel_data->{validated} & $self->{NICKSERV_VALIDATED}) { $self->check_bans($id, $hostmask, $channel); }
+        if ($channel_data->{validated} & $self->{NEEDS_CHECKBAN} or not $channel_data->{validated} & $self->{NICKSERV_VALIDATED}) {
+            $self->check_bans($id, $hostmask, $channel);
+        }
     }
 
     return 0;
@@ -883,14 +850,17 @@ sub on_whoisaccount {
     my $nick    = $event->{event}->{args}[1];
     my $account = lc $event->{event}->{args}[2];
 
-    if ($self->{pbot}->{registry}->get_value('antiflood', 'debug_checkban')) { $self->{pbot}->{logger}->log("$nick is using NickServ account [$account]\n"); }
+    $self->{pbot}->{logger}->log("[MH] $nick is using NickServ account [$account]\n");
 
     my ($id, $hostmask) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($nick);
 
-    # $self->{pbot}->{logger}->log("whoisaccount: Found [$id][$hostmask][$account] for [$nick]\n");
-    $self->{pbot}->{messagehistory}->{database}->link_aliases($id, undef, $account) if $id;
-
-    $self->check_nickserv_accounts($nick, $account);
+    if ($id) {
+        $self->{pbot}->{messagehistory}->{database}->link_aliases($id, undef, $account);
+        $self->{pbot}->{messagehistory}->{database}->update_nickserv_account($id, $account, scalar gettimeofday);
+        $self->{pbot}->{messagehistory}->{database}->set_current_nickserv_account($id, $account);
+    } else {
+        $self->{pbot}->{logger}->log("[MH] No message account found for $nick [$account]; cannot update database.\n");
+    }
 
     return 0;
 }
@@ -898,29 +868,32 @@ sub on_whoisaccount {
 sub on_accountnotify {
     my ($self, $event_type, $event) = @_;
 
-    $self->{pbot}->{messagehistory}->{database}->update_hostmask_data($event->{event}->{from}, {last_seen => scalar gettimeofday});
+    my $mask = $event->{event}->{from};
+    my ($nick, $user, $host) = $mask =~ m/^([^!]+)!([^@]+)@(.*)/;
+    my $account = $event->{event}->{args}[0];
+    my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
 
-    if ($event->{event}->{args}[0] eq '*') {
-        $self->{pbot}->{logger}->log("$event->{event}->{from} logged out of NickServ\n");
-        my ($nick, $user, $host) = $event->{event}->{from} =~ m/^([^!]+)!([^@]+)@(.*)/;
-        my $message_account = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
-        $self->{pbot}->{messagehistory}->{database}->set_current_nickserv_account($message_account, '');
+    $self->{pbot}->{messagehistory}->{database}->update_hostmask_data($mask, {last_seen => scalar gettimeofday});
+
+    if ($account eq '*') {
+        $self->{pbot}->{logger}->log("[MH] ($id) $mask logged out of NickServ\n");
+        $self->{pbot}->{messagehistory}->{database}->set_current_nickserv_account($id, '');
     } else {
-        $self->{pbot}->{logger}->log("$event->{event}->{from} logged into NickServ account $event->{event}->{args}[0]\n");
+        $self->{pbot}->{logger}->log("[MH] ($id) $mask logged into NickServ account $account\n");
 
-        my $nick = $event->{event}->nick;
-        my ($id, $hostmask) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($nick);
-        $self->{pbot}->{messagehistory}->{database}->link_aliases($id, undef, $event->{event}->{args}[0]) if $id;
-        $self->check_nickserv_accounts($nick, $event->{event}->{args}[0]);
+        $self->{pbot}->{messagehistory}->{database}->link_aliases($id, undef, $account);
+        $self->{pbot}->{messagehistory}->{database}->update_nickserv_account($id, $account, scalar gettimeofday);
+        $self->{pbot}->{messagehistory}->{database}->set_current_nickserv_account($id, $account);
 
         $self->{pbot}->{messagehistory}->{database}->devalidate_all_channels($id);
 
         my $channels = $self->{pbot}->{nicklist}->get_channels($nick);
         foreach my $channel (@$channels) {
             next unless $channel =~ /^#/;
-            $self->check_bans($id, $hostmask, $channel);
+            $self->check_bans($id, $mask, $channel);
         }
     }
+
     return 0;
 }
 
@@ -969,8 +942,11 @@ sub adjust_offenses {
         if ($self->{nickflood}->{$account}->{offenses} and gettimeofday - $self->{nickflood}->{$account}->{timestamp} >= 60 * 60) {
             $self->{nickflood}->{$account}->{offenses}--;
 
-            if   ($self->{nickflood}->{$account}->{offenses} <= 0) { delete $self->{nickflood}->{$account}; }
-            else                                                   { $self->{nickflood}->{$account}->{timestamp} = gettimeofday; }
+            if ($self->{nickflood}->{$account}->{offenses} <= 0) {
+                delete $self->{nickflood}->{$account};
+            } else {
+                $self->{nickflood}->{$account}->{timestamp} = gettimeofday;
+            }
         }
     }
 }

@@ -121,6 +121,7 @@ sub on_join {
     ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
 
     my $message_account = $self->{pbot}->{messagehistory}->get_message_account($nick, $user, $host);
+
     $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $channel, "JOIN", MSG_JOIN);
 
     $self->{pbot}->{messagehistory}->{database}->devalidate_channel($message_account, $channel);
@@ -140,7 +141,8 @@ sub on_join {
 
         if ($nickserv ne '*') {
             $self->{pbot}->{messagehistory}->{database}->link_aliases($message_account, undef, $nickserv);
-            $self->{pbot}->{antiflood}->check_nickserv_accounts($nick, $nickserv);
+            $self->{pbot}->{messagehistory}->{database}->update_nickserv_account($message_account, $nickserv, scalar time);
+            $self->{pbot}->{messagehistory}->{database}->set_current_nickserv_account($message_account, $nickserv);
         } else {
             $self->{pbot}->{messagehistory}->{database}->set_current_nickserv_account($message_account, '');
         }

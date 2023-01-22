@@ -734,7 +734,7 @@ Examples:
 ### aka
 The `aka` command lists all known aliases for a given message history account.
 
-Usage: `aka [-hilngr] <nick> [-sort <by>]`
+Usage: `aka [-hilngrw] <nick> [-sort <by>]`
 
 Option | Description
 --- | ---
@@ -744,6 +744,7 @@ Option | Description
 `-n` | show nickserv accounts
 `-g` | show gecos
 `-r` | show relationships
+`-w` | include weak links
 
 Sort by | Description
 --- | ---

@@ -170,7 +170,7 @@ SQL
 
         $self->{dbh}->begin_work();
     };
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 }
 
 sub end {
@@ -194,7 +194,7 @@ sub get_gecos {
         $sth->execute($id);
         return $sth->fetchall_arrayref();
     };
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
     return map { $_->[0] } @$gecos;
 }
 
@@ -206,7 +206,7 @@ sub get_nickserv_accounts {
         $sth->execute($id);
         return $sth->fetchall_arrayref();
     };
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
     return map { $_->[0] } @$nickserv_accounts;
 }
 
@@ -235,7 +235,11 @@ sub set_current_nickserv_account {
         $sth->execute($nickserv, $id);
         $self->{new_entries}++;
     };
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
+
+    if (length $nickserv) {
+        $self->{pbot}->{logger}->log("[MH] Set nickserv to $nickserv for $id\n");
+    }
 }
 
 sub get_current_nickserv_account {
@@ -245,10 +249,9 @@ sub get_current_nickserv_account {
         my $sth = $self->{dbh}->prepare('SELECT nickserv FROM Accounts WHERE id = ?');
         $sth->execute($id);
         my $row = $sth->fetchrow_hashref();
-        if   (defined $row) { return $row->{'nickserv'}; }
-        else                { return undef; }
+        return $row->{nickserv};
     };
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
     return $nickserv;
 }
 
@@ -257,16 +260,14 @@ sub create_nickserv {
 
     eval {
         my $sth = $self->{dbh}->prepare('INSERT OR IGNORE INTO Nickserv VALUES (?, ?, 0)');
-        my $rv  = $sth->execute($id, $nickserv);
+        $sth->execute($id, $nickserv);
         $self->{new_entries}++;
     };
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 }
 
 sub update_nickserv_account {
     my ($self, $id, $nickserv, $timestamp) = @_;
-
-    #$self->{pbot}->{logger}->log("Updating nickserv account for id $id to $nickserv with timestamp [$timestamp]\n");
 
     $self->create_nickserv($id, $nickserv);
 
@@ -275,7 +276,7 @@ sub update_nickserv_account {
         $sth->execute($timestamp, $id, $nickserv);
         $self->{new_entries}++;
     };
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 }
 
 sub create_gecos {
@@ -286,7 +287,7 @@ sub create_gecos {
         my $rv  = $sth->execute($id, $gecos);
         $self->{new_entries}++ if $sth->rows;
     };
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 }
 
 sub update_gecos {
@@ -299,19 +300,21 @@ sub update_gecos {
         $sth->execute($timestamp, $id, $gecos);
         $self->{new_entries}++;
     };
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 }
 
 sub add_message_account {
     my ($self, $mask, $link_id, $link_type) = @_;
-    my $id;
+
     my ($nick, $user, $host) = $mask =~ m/^([^!]+)!([^@]+)@(.*)/;
+    my $id;
 
     if (defined $link_id and $link_type == $self->{alias_type}->{STRONG}) {
+        $self->{pbot}->{logger}->log("[MH] Using Account id $link_id for $mask due to strong link\n");
         $id = $link_id;
     } else {
         $id = $self->get_new_account_id();
-        $self->{pbot}->{logger}->log("Got new account id $id\n");
+        #$self->{pbot}->{logger}->log("[MH] Generated new account id $id for $mask\n");
     }
 
     eval {
@@ -319,18 +322,20 @@ sub add_message_account {
         $sth->execute($mask, $id, scalar time, $nick, $user, $host);
         $self->{new_entries}++;
 
+        #$self->{pbot}->{logger}->log("[MH] Added new Hostmask entry $mask for message account $id\n");
+
         if ((not defined $link_id) || ((defined $link_id) && ($link_type == $self->{alias_type}->{WEAK}))) {
             $sth = $self->{dbh}->prepare('INSERT INTO Accounts VALUES (?, ?, ?)');
             $sth->execute($id, $mask, "");
             $self->{new_entries}++;
-            $self->{pbot}->{logger}->log("Added new account $id for mask $mask\n");
+            #$self->{pbot}->{logger}->log("[MH] Added new Accounts entry $id for hostmask $mask\n");
         }
     };
 
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 
     if (defined $link_id && $link_type == $self->{alias_type}->{WEAK}) {
-        $self->{pbot}->{logger}->log("Weakly linking $id to $link_id\n");
+        $self->{pbot}->{logger}->log("[MH] Weakly linking $id to $link_id\n");
         $self->link_alias($id, $link_id, $link_type);
     }
 
@@ -347,7 +352,7 @@ sub find_message_account_by_id {
         return $row->{hostmask};
     };
 
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
     return $hostmask;
 }
 
@@ -361,7 +366,7 @@ sub find_message_account_by_nick {
         return ($row->{id}, $row->{hostmask});
     };
 
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
     return ($id, $hostmask);
 }
 
@@ -369,11 +374,11 @@ sub find_message_accounts_by_nickserv {
     my ($self, $nickserv) = @_;
 
     my $accounts = eval {
-        my $sth = $self->{dbh}->prepare('SELECT id FROM Nickserv WHERE nickserv = ?');
+        my $sth = $self->{dbh}->prepare('SELECT id FROM Nickserv WHERE nickserv = ? ORDER BY timestamp DESC');
         $sth->execute($nickserv);
         return $sth->fetchall_arrayref();
     };
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
     return map { $_->[0] } @$accounts;
 }
 
@@ -394,7 +399,7 @@ sub find_message_accounts_by_mask {
         $sth->execute($qmask, $limit);
         return $sth->fetchall_arrayref();
     };
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
     return map { $_->[0] } @$accounts;
 }
 
@@ -420,8 +425,8 @@ sub get_message_account {
     my $id   = $self->get_message_account_id($mask);
     return $id if defined $id;
 
-    $self->{pbot}->{logger}->log("Getting new message account for $nick!$user\@$host\n");
-    $self->{pbot}->{logger}->log("Nick-changing from $orig_nick\n") if defined $orig_nick;
+    $self->{pbot}->{logger}->log("[MH] Looking up message account for $nick!$user\@$host\n");
+    $self->{pbot}->{logger}->log("[MH] Nick-changing from $orig_nick\n") if defined $orig_nick;
 
     my $do_nothing = 0;
     my $sth;
@@ -461,13 +466,13 @@ sub get_message_account {
                         $link_type = $self->{alias_type}->{WEAK};
 
                         $self->{pbot}->{logger}->log(
-                            "Longer than 48 hours (" . concise duration(time - $rows->[0]->{last_seen}) . ")"
+                            "[MH] Longer than 48 hours (" . concise duration(time - $rows->[0]->{last_seen}) . ")"
                             . " for $rows->[0]->{hostmask} for $nick!$user\@$host, degrading to weak link\n"
                         );
                     }
 
                     # log match and return link
-                    $self->{pbot}->{logger}->log("6: nick-change guest match: $rows->[0]->{id}: $rows->[0]->{hostmask}\n");
+                    $self->{pbot}->{logger}->log("[MH] 6: nick-change guest match: $rows->[0]->{id}: $rows->[0]->{hostmask}\n");
                     $orig_nick = undef; # nick-change handled
                     return ($rows, $link_type);
                 }
@@ -493,7 +498,7 @@ sub get_message_account {
             my %processed_akas;
 
             foreach my $row (@$rows) {
-                $self->{pbot}->{logger}->log("Found matching nick-change account: [$row->{id}] $row->{hostmask}\n");
+                $self->{pbot}->{logger}->log("[MH] Found matching nick-change account: [$row->{id}] $row->{hostmask}\n");
                 my ($tnick) = $row->{hostmask} =~ m/^([^!]+)!/;
 
                 # don't process duplicates
@@ -513,12 +518,12 @@ sub get_message_account {
                     next if exists $processed_akas{$akas{$aka}->{id}};
                     $processed_akas{$akas{$aka}->{id}} = 1;
 
-                    $self->{pbot}->{logger}->log("Testing alias [$akas{$aka}->{id}] $aka\n");
+                    $self->{pbot}->{logger}->log("[MH] Testing alias [$akas{$aka}->{id}] $aka\n");
                     my $match = 0;
 
                     # account ids or *!user@host matches
                     if ($akas{$aka}->{id} == $orig_id || $aka =~ m/^.*!\Q$user\E\@\Q$host\E$/i) {
-                        $self->{pbot}->{logger}->log("1: match: $akas{$aka}->{id} vs $orig_id // $aka vs *!$user\@$host\n");
+                        $self->{pbot}->{logger}->log("[MH] 1: match: $akas{$aka}->{id} vs $orig_id // $aka vs *!$user\@$host\n");
                         $match = 1;
                         goto MATCH;
                     }
@@ -529,7 +534,7 @@ sub get_message_account {
                         foreach my $ns1 (@orig_nickserv_accounts) {
                             foreach my $ns2 (@nickserv_accounts) {
                                 if ($ns1 eq $ns2) {
-                                    $self->{pbot}->{logger}->log("Got matching nickserv: $ns1\n");
+                                    $self->{pbot}->{logger}->log("[MH] Got matching nickserv: $ns1\n");
                                     $match = 1;
                                     goto MATCH;
                                 }
@@ -544,10 +549,10 @@ sub get_message_account {
                         my ($account2) = $thost =~ m{/([^/]+)$};
 
                         if ($account1 ne $account2) {
-                            $self->{pbot}->{logger}->log("Skipping non-matching cloaked hosts: $host vs $thost\n");
+                            $self->{pbot}->{logger}->log("[MH] Skipping non-matching cloaked hosts: $host vs $thost\n");
                             next;
                         } else {
-                            $self->{pbot}->{logger}->log("Cloaked hosts match: $host vs $thost\n");
+                            $self->{pbot}->{logger}->log("[MH] Cloaked hosts match: $host vs $thost\n");
                             $rows->[0] = {
                                 id       => $self->get_ancestor_id($akas{$aka}->{id}),
                                 hostmask => $aka,
@@ -563,35 +568,35 @@ sub get_message_account {
                     #$self->{pbot}->{logger}->log("distance: " . ($distance / $length) . " -- $host vs $thost\n") if $length != 0;
 
                     if ($length != 0 && $distance / $length < 0.50) {
-                        $self->{pbot}->{logger}->log("2: distance match: $host vs $thost == " . ($distance / $length) . "\n");
+                        $self->{pbot}->{logger}->log("[MH] 2: distance match: $host vs $thost == " . ($distance / $length) . "\n");
                         $match = 1;
                     } else {
                         # handle cases like 99.57.140.149 vs 99-57-140-149.lightspeed.sntcca.sbcglobal.net
                         if (defined $hostip) {
                             if ($hostip eq $thost) {
                                 $match = 1;
-                                $self->{pbot}->{logger}->log("3: IP vs hostname match: $host vs $thost\n");
+                                $self->{pbot}->{logger}->log("[MH] 3: IP vs hostname match: $host vs $thost\n");
                             }
                         } elsif ($thost =~ m/(\d+[[:punct:]]\d+[[:punct:]]\d+[[:punct:]]\d+)\D/) {
                             my $thostip = $1;
                             $thostip =~ s/[[:punct:]]/./g;
                             if ($thostip eq $host) {
                                 $match = 1;
-                                $self->{pbot}->{logger}->log("4: IP vs hostname match: $host vs $thost\n");
+                                $self->{pbot}->{logger}->log("[MH] 4: IP vs hostname match: $host vs $thost\n");
                             }
                         }
                     }
 
                   MATCH:
                     if ($match) {
-                        $self->{pbot}->{logger}->log("Using this match.\n");
+                        $self->{pbot}->{logger}->log("[MH] Using this match.\n");
                         $rows->[0] = {id => $self->get_ancestor_id($akas{$aka}->{id}), hostmask => $aka};
                         return ($rows, $self->{alias_type}->{STRONG});
                     }
                 }
             }
 
-            $self->{pbot}->{logger}->log("Creating new nickchange account!\n");
+            $self->{pbot}->{logger}->log("[MH] Creating new nickchange account!\n");
 
             my $new_id = $self->add_message_account($mask);
             $self->link_alias($orig_id, $new_id, $self->{alias_type}->{WEAK});
@@ -608,7 +613,7 @@ sub get_message_account {
             $sth->execute("\%id-${irccloud_uid}\%irccloud.com");
             my $rows = $sth->fetchall_arrayref({});
             if (defined $rows->[0]) {
-                $self->{pbot}->{logger}->log("5: irccloud match: $rows->[0]->{id}: $rows->[0]->{hostmask}\n");
+                $self->{pbot}->{logger}->log("[MH] 5: irccloud match: $rows->[0]->{id}: $rows->[0]->{hostmask}\n");
                 return ($rows, $self->{alias_type}->{STRONG});
             }
         }
@@ -619,7 +624,7 @@ sub get_message_account {
             $sth->execute($nick, "nat/$nat/x-$user");
             my $rows = $sth->fetchall_arrayref({});
             if (defined $rows->[0]) {
-                $self->{pbot}->{logger}->log("6: nat match: $rows->[0]->{id}: $rows->[0]->{hostmask}\n");
+                $self->{pbot}->{logger}->log("[MH] 6: nat match: $rows->[0]->{id}: $rows->[0]->{hostmask}\n");
                 return ($rows, $self->{alias_type}->{STRONG});
             }
         }
@@ -630,7 +635,7 @@ sub get_message_account {
             $sth->execute($host);
             my $rows = $sth->fetchall_arrayref({});
             if (defined $rows->[0]) {
-                $self->{pbot}->{logger}->log("6: cloak match: $rows->[0]->{id}: $rows->[0]->{hostmask}\n");
+                $self->{pbot}->{logger}->log("[MH] 6: cloak match: $rows->[0]->{id}: $rows->[0]->{hostmask}\n");
                 return ($rows, $self->{alias_type}->{STRONG});
             }
         }
@@ -645,9 +650,9 @@ sub get_message_account {
                 if (time - $rows->[0]->{last_seen} > 60 * 60 * 48) {
                     $link_type = $self->{alias_type}->{WEAK};
                     $self->{pbot}->{logger}->log(
-                        "Longer than 48 hours (" . concise duration(time - $rows->[0]->{last_seen}) . ") for $rows->[0]->{hostmask} for $nick!$user\@$host, degrading to weak link\n");
+                        "[MH] Longer than 48 hours (" . concise duration(time - $rows->[0]->{last_seen}) . ") for $rows->[0]->{hostmask} for $nick!$user\@$host, degrading to weak link\n");
                 }
-                $self->{pbot}->{logger}->log("6: guest match: $rows->[0]->{id}: $rows->[0]->{hostmask}\n");
+                $self->{pbot}->{logger}->log("[MH] 6: guest match: $rows->[0]->{id}: $rows->[0]->{hostmask}\n");
                 return ($rows, $link_type);
             }
         }
@@ -661,7 +666,7 @@ sub get_message_account {
         my %processed_akas;
 
         foreach my $row (@$rows) {
-            $self->{pbot}->{logger}->log("Found matching nick $row->{hostmask} with id $row->{id}\n");
+            $self->{pbot}->{logger}->log("[MH] Found matching nick $row->{hostmask} with id $row->{id}\n");
             my ($tnick) = $row->{hostmask} =~ m/^([^!]+)!/;
 
             next if exists $processed_nicks{lc $tnick};
@@ -675,7 +680,7 @@ sub get_message_account {
                 next if exists $processed_akas{$akas{$aka}->{id}};
                 $processed_akas{$akas{$aka}->{id}} = 1;
 
-                $self->{pbot}->{logger}->log("Testing alias [$akas{$aka}->{id}] $aka\n");
+                $self->{pbot}->{logger}->log("[MH] Testing alias [$akas{$aka}->{id}] $aka\n");
 
                 my ($thost) = $aka =~ m/@(.*)$/;
 
@@ -683,10 +688,10 @@ sub get_message_account {
                     my ($account2) = $thost =~ m{/([^/]+)$};
 
                     if ($account1 ne $account2) {
-                        $self->{pbot}->{logger}->log("Skipping non-matching cloaked hosts: $host vs $thost\n");
+                        $self->{pbot}->{logger}->log("[MH] Skipping non-matching cloaked hosts: $host vs $thost\n");
                         next;
                     } else {
-                        $self->{pbot}->{logger}->log("Cloaked hosts match: $host vs $thost\n");
+                        $self->{pbot}->{logger}->log("[MH] Cloaked hosts match: $host vs $thost\n");
                         $rows->[0] = {id => $self->get_ancestor_id($akas{$aka}->{id}), hostmask => $aka};
                         return ($rows, $self->{alias_type}->{STRONG});
                     }
@@ -700,21 +705,21 @@ sub get_message_account {
                 my $match = 0;
 
                 if ($length != 0 && $distance / $length < 0.50) {
-                    $self->{pbot}->{logger}->log("7: distance match: $host vs $thost == " . ($distance / $length) . "\n");
+                    $self->{pbot}->{logger}->log("[MH] 7: distance match: $host vs $thost == " . ($distance / $length) . "\n");
                     $match = 1;
                 } else {
                     # handle cases like 99.57.140.149 vs 99-57-140-149.lightspeed.sntcca.sbcglobal.net
                     if (defined $hostip) {
                         if ($hostip eq $thost) {
                             $match = 1;
-                            $self->{pbot}->{logger}->log("8: IP vs hostname match: $host vs $thost\n");
+                            $self->{pbot}->{logger}->log("[MH] 8: IP vs hostname match: $host vs $thost\n");
                         }
                     } elsif ($thost =~ m/(\d+[[:punct:]]\d+[[:punct:]]\d+[[:punct:]]\d+)\D/) {
                         my $thostip = $1;
                         $thostip =~ s/[[:punct:]]/./g;
                         if ($thostip eq $host) {
                             $match = 1;
-                            $self->{pbot}->{logger}->log("9: IP vs hostname match: $host vs $thost\n");
+                            $self->{pbot}->{logger}->log("[MH] 9: IP vs hostname match: $host vs $thost\n");
                         }
                     }
                 }
@@ -736,7 +741,7 @@ sub get_message_account {
             if (defined $rows->[0] and time - $rows->[0]->{last_seen} > 60 * 60 * 48) {
                 $link_type = $self->{alias_type}->{WEAK};
                 $self->{pbot}->{logger}->log(
-                    "Longer than 48 hours (" . concise duration(time - $rows->[0]->{last_seen}) . ") for $rows->[0]->{hostmask} for $nick!$user\@$host, degrading to weak link\n");
+                    "[MH] Longer than 48 hours (" . concise duration(time - $rows->[0]->{last_seen}) . ") for $rows->[0]->{hostmask} for $nick!$user\@$host, degrading to weak link\n");
             }
 
 =cut
@@ -744,15 +749,17 @@ sub get_message_account {
         $self->{pbot}->{logger}->log("Found matching user\@host mask $row->{hostmask} with id $row->{id}\n");
       }
 =cut
-
         }
-        if (defined $rows->[0]) { $self->{pbot}->{logger}->log("10: matching *!user\@host: $rows->[0]->{id}: $rows->[0]->{hostmask}\n"); }
+
+        if (defined $rows->[0]) {
+            $self->{pbot}->{logger}->log("[MH] 10: matching *!user\@host: $rows->[0]->{id}: $rows->[0]->{hostmask}\n");
+        }
 
         return ($rows, $link_type);
     };
 
     if (my $exception = $@) {
-        $self->{pbot}->{logger}->log("Exception getting account: $exception");
+        $self->{pbot}->{logger}->log("EXCEPT: Exception getting account: $exception");
     }
 
     # nothing else to do here for nick-change, return id
@@ -773,30 +780,27 @@ sub get_message_account {
 
             if ($distance > 1 && ($nick1 !~ /^guest/ && $nick2 !~ /^guest/) && ($host1 !~ /$irc_cloak/ || $host2 !~ /$irc_cloak/)) {
                 my $id = $rows->[0]->{id};
-                $self->{pbot}->{logger}->log("[$nick1][$nick2] $distance / $length\n");
-                $self->{pbot}->{logger}->log("Possible bogus account: ($id) $host1 vs ($id) $host2\n");
+                $self->{pbot}->{logger}->log("[MH] [$nick1][$nick2] $distance / $length\n");
+                $self->{pbot}->{logger}->log("[MH] Possible bogus account: ($id) $host1 vs ($id) $host2\n");
             }
         }
 
-        $self->{pbot}->{logger}->log("message-history: [get-account] $nick!$user\@$host "
+        $id          = $rows->[0]->{id};
+        my $hostmask = $rows->[0]->{hostmask};
+
+        $self->{pbot}->{logger}->log("[MH] message-history: [get-account] $mask "
             . ($link_type == $self->{alias_type}->{WEAK} ? "weakly linked to" : "added to account")
-            . " $rows->[0]->{hostmask} with id $rows->[0]->{id}\n"
+            . " $hostmask with id $id\n"
         );
 
-        $self->add_message_account("$nick!$user\@$host", $rows->[0]->{id}, $link_type);
-        $self->devalidate_all_channels($rows->[0]->{id});
-        $self->update_hostmask_data("$nick!$user\@$host", { last_seen => scalar time });
+        $self->add_message_account($mask, $id, $link_type);
+        $self->devalidate_all_channels($id);
+        $self->update_hostmask_data($mask, { last_seen => scalar time });
 
-        my @nickserv_accounts = $self->get_nickserv_accounts($rows->[0]->{id});
-        foreach my $nickserv_account (@nickserv_accounts) {
-            $self->{pbot}->{logger}->log("$nick!$user\@$host [$rows->[0]->{id}] seen with nickserv account [$nickserv_account]\n");
-            $self->{pbot}->{antiflood}->check_nickserv_accounts($nick, $nickserv_account, "$nick!$user\@$host");
-        }
-
-        return $rows->[0]->{id};
+        return $id;
     }
 
-    $self->{pbot}->{logger}->log("No account found for $mask, adding new account\n");
+    $self->{pbot}->{logger}->log("[MH] No account found for $mask, adding new account\n");
     return $self->add_message_account($mask);
 }
 
@@ -809,7 +813,7 @@ sub find_most_recent_hostmask {
         my $row = $sth->fetchrow_hashref();
         return defined $row ? $row->{hostmask} : undef;
     };
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
     return $hostmask;
 }
 
@@ -836,7 +840,7 @@ sub update_hostmask_data {
         $sth->execute();
         $self->{new_entries}++;
     };
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 }
 
 sub get_nickserv_accounts_for_hostmask {
@@ -848,7 +852,7 @@ sub get_nickserv_accounts_for_hostmask {
         return $sth->fetchall_arrayref();
     };
 
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
     return map { $_->[0] } @$nickservs;
 }
 
@@ -861,7 +865,7 @@ sub get_gecos_for_hostmask {
         return $sth->fetchall_arrayref();
     };
 
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
     return map { $_->[0] } @$gecos;
 }
 
@@ -874,7 +878,7 @@ sub get_hostmasks_for_channel {
         return $sth->fetchall_arrayref({});
     };
 
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
     return $hostmasks;
 }
 
@@ -887,7 +891,7 @@ sub get_hostmasks_for_nickserv {
         return $sth->fetchall_arrayref({});
     };
 
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
     return $hostmasks;
 }
 
@@ -900,7 +904,7 @@ sub add_message {
         $self->{new_entries}++;
     };
 
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 
     $self->update_channel_data($id, $channel, { last_seen => $message->{timestamp }});
     $self->update_hostmask_data($hostmask, { last_seen => $message->{timestamp }});
@@ -957,7 +961,7 @@ sub get_recent_messages {
         return $sth->fetchall_arrayref({});
     };
 
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
     return $messages;
 }
 
@@ -978,7 +982,7 @@ sub get_recent_messages_from_channel {
         $sth->execute($channel, $limit);
         return $sth->fetchall_arrayref({});
     };
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
     return $messages;
 }
 
@@ -1036,7 +1040,7 @@ sub get_message_context {
             return [reverse @{$sth->fetchall_arrayref({})}];
         };
 
-        $self->{pbot}->{logger}->log($@) if $@;
+        $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
     }
 
     if (defined $before and $before > 0) {
@@ -1051,7 +1055,7 @@ sub get_message_context {
             return [reverse @{$sth->fetchall_arrayref({})}];
         };
 
-        $self->{pbot}->{logger}->log($@) if $@;
+        $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
     }
 
     if (defined $after and $after > 0) {
@@ -1066,7 +1070,7 @@ sub get_message_context {
             return $sth->fetchall_arrayref({});
         };
 
-        $self->{pbot}->{logger}->log($@) if $@;
+        $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
     }
 
     my @messages;
@@ -1124,7 +1128,7 @@ sub recall_message_by_count {
         return $sth->fetchall_arrayref({});
     };
 
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 
     if (defined $ignore_command) {
         my $botnick     = $self->{pbot}->{registry}->get_value('irc',     'botnick');
@@ -1192,7 +1196,7 @@ sub recall_message_by_text {
         return $sth->fetchall_arrayref({});
     };
 
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 
     if (defined $ignore_command) {
         my $bot_trigger = $self->{pbot}->{registry}->get_value('general', 'trigger');
@@ -1260,7 +1264,7 @@ sub get_random_message {
         return $sth->fetchrow_hashref;
     };
 
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 
     return $message;
 }
@@ -1307,7 +1311,7 @@ sub get_max_messages {
         return $sth->fetchrow_hashref->{'COUNT(*)'};
     };
 
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
     $count = 0 if not defined $count;
     return $count;
 }
@@ -1320,7 +1324,7 @@ sub create_channel {
         my $rv  = $sth->execute($id, $channel);
         $self->{new_entries}++;
     };
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 }
 
 sub get_channels {
@@ -1331,7 +1335,7 @@ sub get_channels {
         $sth->execute($id);
         return $sth->fetchall_arrayref();
     };
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
     return map { $_->[0] } @$channels;
 }
 
@@ -1357,7 +1361,7 @@ sub get_channel_data {
         $sth->execute($id, $channel);
         return $sth->fetchrow_hashref();
     };
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
     return $channel_data;
 }
 
@@ -1387,7 +1391,7 @@ sub update_channel_data {
         $sth->execute();
         $self->{new_entries}++;
     };
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 }
 
 sub get_channel_datas_where_last_offense_older_than {
@@ -1398,7 +1402,7 @@ sub get_channel_datas_where_last_offense_older_than {
         $sth->execute($timestamp);
         return $sth->fetchall_arrayref({});
     };
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
     return $channel_datas;
 }
 
@@ -1410,7 +1414,7 @@ sub get_channel_datas_with_enter_abuses {
         $sth->execute();
         return $sth->fetchall_arrayref({});
     };
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
     return $channel_datas;
 }
 
@@ -1424,7 +1428,7 @@ sub devalidate_channel {
         $sth->execute($mode, $id, $channel);
         $self->{new_entries}++;
     };
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 }
 
 sub devalidate_all_channels {
@@ -1442,7 +1446,7 @@ sub devalidate_all_channels {
         $sth->execute();
         $self->{new_entries}++;
     };
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 }
 
 sub link_aliases {
@@ -1551,7 +1555,7 @@ sub link_aliases {
             $self->link_alias($account, $id, $ids{$id}->{type}, $ids{$id}->{force});
         }
     };
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 }
 
 sub link_alias {
@@ -1596,7 +1600,7 @@ sub link_alias {
         $sth->execute($id,    $alias, $type);
         return 1;
     };
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 
     my $host1 = $self->find_most_recent_hostmask($id);
     my $host2 = $self->find_most_recent_hostmask($alias);
@@ -1626,6 +1630,7 @@ sub unlink_alias {
     my $ret = eval {
         my $ret = 0;
         my $sth = $self->{dbh}->prepare('DELETE FROM Aliases WHERE id = ? AND alias = ?');
+
         $sth->execute($id, $alias);
         if ($sth->rows) {
             $self->{new_entries}++;
@@ -1641,7 +1646,7 @@ sub unlink_alias {
         }
         return $ret;
     };
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
     return $ret;
 }
 
@@ -1726,11 +1731,13 @@ sub rebuild_aliases_table {
             $sth->execute($row->{id});
             my $nrows = $sth->fetchall_arrayref({});
 
-            foreach my $nrow (@$nrows) { $self->link_aliases($row->{id}, undef, $nrow->{nickserv}); }
+            foreach my $nrow (@$nrows) {
+                $self->link_aliases($row->{id}, undef, $nrow->{nickserv});
+            }
         }
     };
 
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 }
 
 sub get_also_known_as {
@@ -1954,7 +1961,7 @@ sub get_ancestor_id {
         return defined $row ? $row->{id} : 0;
     };
 
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 
     return $id if not $ancestor;
     return $ancestor < $id ? $ancestor : $id;
@@ -1972,7 +1979,7 @@ sub get_new_account_id {
         return $row->{id};
     };
 
-    $self->{pbot}->{logger}->log($@) if $@;
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
     return ++$id;
 }
 
@@ -1986,8 +1993,7 @@ sub get_message_account_id {
         return $row->{id};
     };
 
-    $self->{pbot}->{logger}->log($@) if $@;
-    #$self->{pbot}->{logger}->log("get_message_account_id: returning id [". (defined $id ? $id: 'undef') . "] for mask [$mask]\n");
+    $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
     return $id;
 }
 
@@ -2001,7 +2007,7 @@ sub commit_message_history {
         # $self->{pbot}->{logger}->log("Commiting $self->{new_entries} messages to SQLite\n");
         eval { $self->{dbh}->commit(); };
 
-        $self->{pbot}->{logger}->log("SQLite error $@ when committing $self->{new_entries} entries.\n") if $@;
+        $self->{pbot}->{logger}->log("EXCEPT: SQLite error $@ when committing $self->{new_entries} entries.\n") if $@;
 
         $self->{dbh}->begin_work();
         $self->{new_entries} = 0;

@@ -91,7 +91,7 @@ sub on_msg {
 
     ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
 
-    # send text to be processed as a bot command, coming from $nick
+    # send text to be processed as a bot command, in "channel" $nick
     $event->{interpreted} = $self->{pbot}->{interpreter}->process_line($nick, $nick, $user, $host, $text, 1);
 
     return 1;
