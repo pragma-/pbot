@@ -1,7 +1,7 @@
 # C-to-English Grammar
 # Pragmatic Software
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 {
@@ -1367,6 +1367,10 @@ direct_declarator:
           }
     | '(' declarator ')' array_declarator(s)
           {
+            if (ref $item{declarator} ne 'ARRAY') {
+              $item{declarator} = [$item{declarator}];
+            }
+
             push @{$item{declarator}}, join(' ', @{$item{'array_declarator(s)'}});
             $item{declarator}
           }

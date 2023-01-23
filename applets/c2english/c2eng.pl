@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 use strict;
@@ -47,11 +47,14 @@ sub istrue {
 }
 
 sub main {
-    my ($opt_T, $opt_t, $opt_o, $opt_P);
-    getopts('TPto:');
+    my %opts;
 
-    if ($opt_T ) {
-        $::RD_TRACE = 1;
+    getopts('TPo:', \%opts);
+
+
+    if ($opts{T}) {
+       print STDERR "Tracing enabled.\n";
+       $::RD_TRACE = 1;
     }
 
     $::RD_HINT = 1;
@@ -59,15 +62,15 @@ sub main {
 
     my $parser;
 
-    if ($opt_P or !eval { require PCGrammar }) {
+    if ($opts{P} or !eval { require PCGrammar }) {
         precompile_grammar();
         require PCGrammar;
     }
 
     $parser = PCGrammar->new or die "Bad grammar!\n";
 
-    if ($opt_o) {
-        open(OUTFILE, ">>$opt_o");
+    if ($opts{o}) {
+        open(OUTFILE, ">>$opts{o}");
         *STDOUT = *OUTFILE{IO};
     }
 
