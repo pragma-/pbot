@@ -160,9 +160,6 @@ sub do_server() {
 sub handle_client($client, $heartbeat) {
     my ($timed_out, $killed) = (0, 0);
 
-    # we don't care about child exit status
-    local $SIG{CHLD} = 'IGNORE';
-
     my $r = fork;
 
     if (not defined $r) {
@@ -241,6 +238,9 @@ sub handle_client($client, $heartbeat) {
 }
 
 sub main() {
+    # let OS clean-up child exits
+    $SIG{CHLD} = 'IGNORE';
+
     tie my $heartbeat, 'IPC::Shareable', { key => 'heartbeat', create => 1, destroy => 1 };
     tie my $running,   'IPC::Shareable', { key => 'running',   create => 1, destroy => 1 };
 
