@@ -508,9 +508,9 @@ sub handler {
         croak "Not enough arguments to handler()";
     }
 
-    print STDERR "Trying to handle event '$ev'.\n" if $self->{_debug};
+    print STDERR "--- Trying to handle event '$ev'.\n" if $self->{_debug};
 
-    if ($self->{_debug}) {
+    if ($self->{_debug} > 1) {
         use Data::Dumper;
         print STDERR "ev: ", Dumper($ev), "\nevent: ", Dumper($event), "\n";
     }
@@ -535,7 +535,7 @@ sub handler {
         confess "Bad parameter passed to handler(): rp=$rp";
     }
 
-    print STDERR "Handler for '$ev' called.\n" if $self->{_debug};
+    print STDERR "--- Handler for '$ev' called.\n" if $self->{_debug};
 
     return 1;
 }
@@ -838,7 +838,7 @@ sub oper {
 # appropriate handler. Takes no args, really.
 sub parse {
     my ($self) = shift;
-    my ($from, $type, $message, @stuff, $itype, $ev, @lines, $line);
+    my ($from, $type, $message, @stuff, $itype, $ev, @lines, $line, $tags);
 
     my $n;
 
@@ -920,7 +920,9 @@ sub parse {
             # Spurious backslashes are for the benefit of cperl-mode.
             # Assumption:  all non-numeric message types begin with a letter
         } elsif (
-            $line =~ /^:?
+            $line =~ /^
+            (?:\@\S+\s)?             # Optional message tags
+            :?                       # Initial colon
             (?:[][}{\w\\\`^|\-]+?    # The nick (valid nickname chars)
              !                       # The nick-username separator
              .+?                     # The username
@@ -932,6 +934,8 @@ sub parse {
             /x
           )    # That ought to do it for now...
         {
+            $tags = undef;
+            $tags = $1 if $line =~ s/^@(\S+)\s//;
             $line = substr $line, 1 if $line =~ /^:/;
 
             # Patch submitted for v.0.72
@@ -939,7 +943,7 @@ sub parse {
             # ($from, $line) = split ":", $line, 2;
             ($from, $line) = $line =~ /^(?:|)(\S+\s+[^:]+):?(.*)/;
 
-            print STDERR "from: [$from], line: [$line]\n" if $self->{_debug};
+            print STDERR "from: [$from], line: [$line]\n" if $self->{_debug} > 2;
 
             ($from, $type, @stuff) = split /\s+/, $from;
             $type = lc $type;
@@ -986,8 +990,9 @@ sub parse {
             #                  quotemeta($_)));  /$from/ }
             # ($self->ignore($type), $self->ignore("all"));
 
-            # Add $line to @stuff for the handlers
+            # Add $line and $tags to @stuff for the handlers
             push @stuff, $line if defined $line;
+            push @stuff, $tags if defined $tags;
 
             # Now ship it off to the appropriate handler and forget about it.
             if ($itype eq "ctcp") {    # it's got CTCP in it!
@@ -1251,6 +1256,9 @@ sub privmsg {
 
     my $buf    = CORE::join '', @_;
     my $length = $self->{_maxlinelen} - 11 - length($to);
+
+    print STDERR "privmsg trunc length: $length; msg len: " . (length $buf) . "\n" if $self->{_debug};
+
     my $line;
 
     if (ref($to) =~ /^(GLOB|IO::Socket)/) {
@@ -1261,8 +1269,11 @@ sub privmsg {
     } else {
         while (length($buf) > 0) {
             ($line, $buf) = unpack("a$length a*", $buf);
-            if   (ref $to eq 'ARRAY') { $self->sl("PRIVMSG ", CORE::join(',', @$to), " :$line"); }
-            else                      { $self->sl("PRIVMSG $to :$line"); }
+            if (ref $to eq 'ARRAY') {
+                $self->sl("PRIVMSG ", CORE::join(',', @$to), " :$line");
+            } else {
+                $self->sl("PRIVMSG $to :$line");
+            }
         }
     }
 }
@@ -1319,7 +1330,7 @@ sub schedule {
     unless ($coderef)                { croak 'Not enough arguments to Connection->schedule()'; }
     unless (ref($coderef) eq 'CODE') { croak 'Second argument to schedule() isn\'t a coderef'; }
 
-    print STDERR "Scheduling event with time [$time]\n" if $self->{_debug};
+    print STDERR "Scheduling event with time [$time]\n" if $self->{_debug} > 1;
     $time += time;
     $self->parent->enqueue_scheduled_event($time, $coderef, $self, @_);
 }
@@ -1332,7 +1343,7 @@ sub schedule_output_event {
     unless ($coderef)                { croak 'Not enough arguments to Connection->schedule()'; }
     unless (ref($coderef) eq 'CODE') { croak 'Second argument to schedule() isn\'t a coderef'; }
 
-    print STDERR "Scheduling output event with time [$time] [$_[0]]\n" if $self->{_debug};
+    print STDERR "Scheduling output event with time [$time] [$_[0]]\n" if $self->{_debug} > 1;
     $time += time;
     $self->parent->enqueue_output_event($time, $coderef, $self, @_);
 }
@@ -1395,6 +1406,10 @@ sub sl {
     if ($self->{_slcount} < 10) {
         $self->{_slcount}++;
         $self->{_lastsl} = time;
+
+        ### DEBUG DEBUG DEBUG
+        if ($self->{_debug} > 1) { print STDERR "S-> 0 " . (length ($line) + 2) . " $line\n"; }
+
         return $self->schedule_output_event(0, \&sl_real, $line);
     }
 
@@ -1413,7 +1428,7 @@ sub sl {
     }
 
     ### DEBUG DEBUG DEBUG
-    if ($self->{_debug}) { print STDERR "S-> $seconds $line\n"; }
+    if ($self->{_debug} > 1) { print STDERR "S-> $seconds " . (length ($line) + 2) . " $line\n"; }
 
     $self->schedule_output_event($seconds, \&sl_real, $line);
 }
@@ -1428,7 +1443,7 @@ sub sl_real {
     unless ($line) { croak "Not enough arguments to sl_real()"; }
 
     ### DEBUG DEBUG DEBUG
-    if ($self->{_debug}) { print STDERR ">>> $line\n"; }
+    if ($self->{_debug}) { print STDERR ">>> (" . (length ($line) + 2) . ") $line\n"; }
 
     return unless defined $self->socket;
 

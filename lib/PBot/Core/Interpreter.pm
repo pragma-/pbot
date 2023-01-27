@@ -38,7 +38,7 @@ sub initialize {
 # this is the main entry point for a message to be parsed into commands
 # and to execute those commands and process their output
 sub process_line {
-    my ($self, $from, $nick, $user, $host, $text, $is_command) = @_;
+    my ($self, $from, $nick, $user, $host, $text, $tags, $is_command) = @_;
 
     # lowercase `from` field for case-insensitivity
     $from = lc $from;
@@ -57,6 +57,7 @@ sub process_line {
         host     => $host,                 # hostname/ip address
         hostmask => "$nick!$user\@$host",  # full hostmask
         text     => $text,                 # message contents
+        tags     => $tags,                 # message tags
     };
 
     # add hostmask to user/message tracking database and get their account id

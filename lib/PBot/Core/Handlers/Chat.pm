@@ -52,18 +52,19 @@ sub on_notice {
 sub on_public {
     my ($self, $event_type, $event) = @_;
 
-    my ($from, $nick, $user, $host, $text) = (
+    my ($from, $nick, $user, $host, $text, $tags) = (
         $event->{event}->{to}->[0],
         $event->{event}->nick,
         $event->{event}->user,
         $event->{event}->host,
         $event->{event}->{args}->[0],
+        $event->{event}->{args}->[1],
     );
 
     ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
 
     # send text to be processed for bot commands, anti-flood enforcement, etc
-    $event->{interpreted} = $self->{pbot}->{interpreter}->process_line($from, $nick, $user, $host, $text);
+    $event->{interpreted} = $self->{pbot}->{interpreter}->process_line($from, $nick, $user, $host, $text, $tags);
 
     return 1;
 }
@@ -82,17 +83,18 @@ sub on_action {
 sub on_msg {
     my ($self, $event_type, $event) = @_;
 
-    my ($nick, $user, $host, $text) = (
+    my ($nick, $user, $host, $text, $tags) = (
         $event->{event}->nick,
         $event->{event}->user,
         $event->{event}->host,
         $event->{event}->{args}->[0],
+        $event->{event}->{args}->[1],
     );
 
     ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
 
     # send text to be processed as a bot command, in "channel" $nick
-    $event->{interpreted} = $self->{pbot}->{interpreter}->process_line($nick, $nick, $user, $host, $text, 1);
+    $event->{interpreted} = $self->{pbot}->{interpreter}->process_line($nick, $nick, $user, $host, $text, $tags, 1);
 
     return 1;
 }

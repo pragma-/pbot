@@ -260,6 +260,23 @@ sub timeout {
     return $self->{_timeout};
 }
 
+# parses message tags into a hashref
+sub get_tags {
+    my ($self, $tags) = @_;
+
+    $self->{_pbot}->{logger}->log("Message tags: [$tags]\n");
+
+    my @list = split ';', $tags;
+    my %hash;
+
+    foreach my $tag (@list) {
+        my ($key, $val) = split '=', $tag;
+        $hash{$key} = $val;
+    }
+
+    return \%hash;
+}
+
 1;
 
 __END__

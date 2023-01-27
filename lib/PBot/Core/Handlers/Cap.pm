@@ -10,6 +10,8 @@ package PBot::Core::Handlers::Cap;
 use PBot::Imports;
 use parent 'PBot::Core::Class';
 
+use POSIX qw/EXIT_FAILURE/;
+
 sub initialize {
     my ($self, %conf) = @_;
 
@@ -22,28 +24,16 @@ sub initialize {
 sub on_cap {
     my ($self, $event_type, $event) = @_;
 
-    # configure client capabilities that PBot currently supports
-    my %desired_caps = (
-        'account-notify' => 1,
-        'extended-join'  => 1,
-
-        # TODO: unsupported capabilities worth looking into
-        'away-notify'    => 0,
-        'chghost'        => 0,
-        'identify-msg'   => 0,
-        'multi-prefix'   => 0,
-    );
-
     if ($event->{event}->{args}->[0] eq 'LS') {
         my $capabilities;
-        my $caps_done = 0;
+        my $caps_listed = 0;
 
         if ($event->{event}->{args}->[1] eq '*') {
             # more CAP LS messages coming
             $capabilities = $event->{event}->{args}->[2];
         } else {
             # final CAP LS message
-            $caps_done    = 1;
+            $caps_listed    = 1;
             $capabilities = $event->{event}->{args}->[1];
         }
 
@@ -51,36 +41,20 @@ sub on_cap {
 
         my @caps = split /\s+/, $capabilities;
 
+        # store available capabilities
         foreach my $cap (@caps) {
             my $value;
 
-            if ($cap =~ /=/) {
-                ($cap, $value) = split /=/, $cap;
-            } else {
-                $value = 1;
-            }
+            ($cap, $value) = split /=/, $cap;
+            $value //= 1;
 
-            # store available capability
             $self->{pbot}->{irc_capabilities_available}->{$cap} = $value;
-
-            # request desired capabilities
-            if ($desired_caps{$cap}) {
-                $self->{pbot}->{logger}->log("Requesting client capability $cap\n");
-                $event->{conn}->sl("CAP REQ :$cap");
-            }
         }
 
-        # capability negotiation done
-        # now we either start SASL authentication or we send CAP END
-        if ($caps_done) {
-            # start SASL authentication if enabled
-            if ($self->{pbot}->{registry}->get_value('irc', 'sasl')) {
-                $self->{pbot}->{logger}->log("Requesting client capability sasl\n");
-                $event->{conn}->sl("CAP REQ :sasl");
-            } else {
-                $self->{pbot}->{logger}->log("Completed client capability negotiation\n");
-                $event->{conn}->sl("CAP END");
-            }
+        # all capabilities listed?
+        if ($caps_listed) {
+            # request desired capabilities
+            $self->request_caps($event);
         }
     }
     elsif ($event->{event}->{args}->[0] eq 'ACK') {
@@ -89,7 +63,10 @@ sub on_cap {
         my @caps = split /\s+/, $event->{event}->{args}->[1];
 
         foreach my $cap (@caps) {
-            $self->{pbot}->{irc_capabilities}->{$cap} = 1;
+            my ($key, $val) = split '=', $cap;
+            $val //= 1;
+
+            $self->{pbot}->{irc_capabilities}->{$key} = $val;
 
             if ($cap eq 'sasl') {
                 # begin SASL authentication
@@ -109,6 +86,47 @@ sub on_cap {
     }
 
     return 1;
+}
+
+sub request_caps {
+    my ($self, $event) = @_;
+
+    # configure client capabilities that PBot currently supports
+    my %desired_caps = (
+        'account-notify' => 1,
+        'account-tag'    => 1,
+        'extended-join'  => 1,
+        'message-tags'   => 1,
+        # sasl is gated by the irc.sasl registry entry instead
+
+        # TODO: unsupported capabilities worth looking into
+        'away-notify'    => 0,
+        'chghost'        => 0,
+        'identify-msg'   => 0,
+        'multi-prefix'   => 0,
+    );
+
+    foreach my $cap (keys $self->{pbot}->{irc_capabilities_available}->%*) {
+        # request desired capabilities
+        if ($desired_caps{$cap}) {
+            $self->{pbot}->{logger}->log("Requesting client capability $cap\n");
+            $event->{conn}->sl("CAP REQ :$cap");
+        }
+    }
+
+    # request SASL capability if enabled, otherwise end cap negotiation
+    if ($self->{pbot}->{registry}->get_value('irc', 'sasl')) {
+        if (not exists $self->{pbot}->{irc_capabilities_available}->{sasl}) {
+            $self->{pbot}->{logger}->log("SASL is not supported by this IRC server\n");
+            $self->{pbot}->exit(EXIT_FAILURE);
+        }
+
+        $self->{pbot}->{logger}->log("Requesting client capability sasl\n");
+        $event->{conn}->sl("CAP REQ :sasl");
+    } else {
+        $self->{pbot}->{logger}->log("Completed client capability negotiation\n");
+        $event->{conn}->sl("CAP END");
+    }
 }
 
 1;

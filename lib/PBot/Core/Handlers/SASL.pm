@@ -10,7 +10,7 @@ package PBot::Core::Handlers::SASL;
 use PBot::Imports;
 use parent 'PBot::Core::Class';
 
-use POSIX qw/EXIT_SUCCESS EXIT_FAILURE/;
+use POSIX qw/EXIT_FAILURE/;
 use Encode;
 use MIME::Base64;
 
@@ -60,7 +60,7 @@ sub on_sasl_authenticate {
 
 sub on_rpl_loggedin {
     my ($self, $event_type, $event) = @_;
-    $self->{pbot}->{logger}->log($event->{event}->{args}->[1] . "\n");
+    $self->{pbot}->{logger}->log($event->{event}->{args}->[3] . "\n");
     return 1;
 }
 

@@ -25,8 +25,10 @@ sub initialize {
     my ($self, %conf) = @_;
 
     # flags for 'validated' field
-    $self->{NICKSERV_VALIDATED} = (1 << 0);
-    $self->{NEEDS_CHECKBAN}     = (1 << 1);
+    use constant {
+        NICKSERV_VALIDATED => (1 << 0),
+        NEEDS_CHECKBAN     => (1 << 1),
+    };
 
     $self->{channels}      = {};    # per-channel statistics, e.g. for optimized tracking of last spoken nick for enter-abuse detection, etc
     $self->{nickflood}     = {};    # statistics to track nickchange flooding
@@ -188,6 +190,29 @@ sub check_flood {
         return;
     }
 
+    my $needs_checkban = 0;
+
+    if (defined $context && defined $context->{tags}) {
+        my $tags = $self->{pbot}->{irc}->get_tags($context->{tags});
+
+        if (defined $tags->{account}) {
+            my $nickserv_account = $tags->{account};
+            my $current_nickserv_account = $self->{pbot}->{messagehistory}->{database}->get_current_nickserv_account($account);
+
+            if ($self->{pbot}->{registry}->get_value('irc', 'debug_tags')) {
+                $self->{pbot}->{logger}->log("($account) $mask got account-tag $nickserv_account\n");
+            }
+
+            if ($current_nickserv_account ne $nickserv_account) {
+                $self->{pbot}->{logger}->log("[MH] ($account) $mask updating NickServ to $nickserv_account\n");
+                $self->{pbot}->{messagehistory}->{database}->set_current_nickserv_account($account, $nickserv_account);
+                $self->{pbot}->{messagehistory}->{database}->update_nickserv_account($account, $nickserv_account, scalar gettimeofday);
+                $self->{pbot}->{messagehistory}->{database}->link_aliases($account, $mask, $nickserv_account);
+                $needs_checkban = 1;
+            }
+        }
+    }
+
     my $channels;
     if ($mode == MSG_NICKCHANGE) {
         $channels = $self->{pbot}->{nicklist}->get_channels($oldnick);
@@ -205,14 +230,16 @@ sub check_flood {
         if ($chan =~ /^#/ and $mode == MSG_DEPARTURE) {
             # remove validation on PART or KICK so we check for ban-evasion when user returns at a later time
             my $chan_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $chan, 'validated');
-            if ($chan_data->{validated} & $self->{NICKSERV_VALIDATED}) {
-                $chan_data->{validated} &= ~$self->{NICKSERV_VALIDATED};
+            if ($chan_data->{validated} & NICKSERV_VALIDATED) {
+                $chan_data->{validated} &= ~NICKSERV_VALIDATED;
                 $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $chan, $chan_data);
             }
             next;
         }
 
-        if ($self->{pbot}->{capabilities}->userhas($u, 'is-whitelisted')) { next; }
+        next if $self->{pbot}->{capabilities}->userhas($u, 'is-whitelisted');
+
+        $self->check_bans($account, $mask, $chan) if $needs_checkban;
 
         if ($max_messages > $self->{pbot}->{registry}->get_value('messagehistory', 'max_messages')) {
             $self->{pbot}->{logger}->log("Warning: max_messages greater than max_messages limit; truncating.\n");
@@ -223,7 +250,7 @@ sub check_flood {
         if ($chan =~ m/^#/) {
             my $validated = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $chan, 'validated')->{'validated'};
 
-            if ($validated & $self->{NEEDS_CHECKBAN} or not $validated & $self->{NICKSERV_VALIDATED}) {
+            if ($validated & NEEDS_CHECKBAN or not $validated & NICKSERV_VALIDATED) {
                 if ($mode == MSG_DEPARTURE) {
                     # don't check for evasion on PART/KICK
                 } elsif ($mode == MSG_NICKCHANGE) {
@@ -575,8 +602,8 @@ sub devalidate_accounts {
 
     foreach my $account (@message_accounts) {
         my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $channel, 'validated');
-        if (defined $channel_data and $channel_data->{validated} & $self->{NICKSERV_VALIDATED}) {
-            $channel_data->{validated} &= ~$self->{NICKSERV_VALIDATED};
+        if (defined $channel_data and $channel_data->{validated} & NICKSERV_VALIDATED) {
+            $channel_data->{validated} &= ~NICKSERV_VALIDATED;
 
             #$self->{pbot}->{logger}->log("Devalidating account $account\n");
             $self->{pbot}->{messagehistory}->{database}->update_channel_data($account, $channel, $channel_data);
@@ -605,16 +632,16 @@ sub check_bans {
     if (defined $current_nickserv_account and length $current_nickserv_account) {
         $self->{pbot}->{logger}->log("anti-flood: [check-bans] current nickserv [$current_nickserv_account] found for $mask\n") if $debug_checkban >= 2;
         my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($message_account, $channel, 'validated');
-        if ($channel_data->{validated} & $self->{NEEDS_CHECKBAN}) {
-            $channel_data->{validated} &= ~$self->{NEEDS_CHECKBAN};
+        if ($channel_data->{validated} & NEEDS_CHECKBAN) {
+            $channel_data->{validated} &= ~NEEDS_CHECKBAN;
             $self->{pbot}->{messagehistory}->{database}->update_channel_data($message_account, $channel, $channel_data);
         }
     } else {
         if (not exists $self->{pbot}->{irc_capabilities}->{'account-notify'}) {
             # mark this account as needing check-bans when nickserv account is identified
             my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($message_account, $channel, 'validated');
-            if (not $channel_data->{validated} & $self->{NEEDS_CHECKBAN}) {
-                $channel_data->{validated} |= $self->{NEEDS_CHECKBAN};
+            if (not $channel_data->{validated} & NEEDS_CHECKBAN) {
+                $channel_data->{validated} |= NEEDS_CHECKBAN;
                 $self->{pbot}->{messagehistory}->{database}->update_channel_data($message_account, $channel, $channel_data);
             }
             $self->{pbot}->{logger}->log("anti-flood: [check-bans] no account for $mask; marking for later validation\n") if $debug_checkban >= 1;
@@ -685,8 +712,8 @@ sub check_bans {
                         $self->{pbot}->{logger}
                           ->log("anti-flood: [check-bans] $mask [$alias] evaded $baninfo->{mask} in $baninfo->{channel}, but within 5 seconds of establishing ban; giving another chance\n");
                         my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($message_account, $channel, 'validated');
-                        if ($channel_data->{validated} & $self->{NICKSERV_VALIDATED}) {
-                            $channel_data->{validated} &= ~$self->{NICKSERV_VALIDATED};
+                        if ($channel_data->{validated} & NICKSERV_VALIDATED) {
+                            $channel_data->{validated} &= ~NICKSERV_VALIDATED;
                             $self->{pbot}->{messagehistory}->{database}->update_channel_data($message_account, $channel, $channel_data);
                         }
                         $do_not_validate = 1;
@@ -792,8 +819,8 @@ sub check_bans {
                 );
             }
             my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($message_account, $channel, 'validated');
-            if ($channel_data->{validated} & $self->{NICKSERV_VALIDATED}) {
-                $channel_data->{validated} &= ~$self->{NICKSERV_VALIDATED};
+            if ($channel_data->{validated} & NICKSERV_VALIDATED) {
+                $channel_data->{validated} &= ~NICKSERV_VALIDATED;
                 $self->{pbot}->{messagehistory}->{database}->update_channel_data($message_account, $channel, $channel_data);
             }
             return;
@@ -802,8 +829,8 @@ sub check_bans {
 
     unless ($do_not_validate) {
         my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($message_account, $channel, 'validated');
-        if (not $channel_data->{validated} & $self->{NICKSERV_VALIDATED}) {
-            $channel_data->{validated} |= $self->{NICKSERV_VALIDATED};
+        if (not $channel_data->{validated} & NICKSERV_VALIDATED) {
+            $channel_data->{validated} |= NICKSERV_VALIDATED;
             $self->{pbot}->{messagehistory}->{database}->update_channel_data($message_account, $channel, $channel_data);
         }
     }
@@ -825,7 +852,7 @@ sub on_endofwhois {
     foreach my $channel (@$channels) {
         next unless $channel =~ /^#/;
         my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($id, $channel, 'validated');
-        if ($channel_data->{validated} & $self->{NEEDS_CHECKBAN} or not $channel_data->{validated} & $self->{NICKSERV_VALIDATED}) {
+        if ($channel_data->{validated} & NEEDS_CHECKBAN or not $channel_data->{validated} & NICKSERV_VALIDATED) {
             $self->check_bans($id, $hostmask, $channel);
         }
     }
@@ -870,7 +897,7 @@ sub on_accountnotify {
 
     my $mask = $event->{event}->{from};
     my ($nick, $user, $host) = $mask =~ m/^([^!]+)!([^@]+)@(.*)/;
-    my $account = $event->{event}->{args}[0];
+    my $account = $event->{event}{args}[0];
     my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
 
     $self->{pbot}->{messagehistory}->{database}->update_hostmask_data($mask, {last_seen => scalar gettimeofday});
