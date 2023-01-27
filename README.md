@@ -45,7 +45,7 @@ PBot supports several features of the IRCv3 specification.
 
 * client capability negotiation
 * SASL authentication
-* account-notify, extended-join, and more.
+* account-tag, account-notify, extended-join, message-tags, and more.
 
 ### Powerful command interpreter
 PBot has a powerful command interpreter with useful functionality, and tons of
