@@ -264,7 +264,9 @@ sub timeout {
 sub get_tags {
     my ($self, $tags) = @_;
 
-    $self->{_pbot}->{logger}->log("Message tags: [$tags]\n");
+    if ($self->{_pbot}->{registry}->get_value('irc', 'debug_tags')) {
+        $self->{_pbot}->{logger}->log("Message tags: [$tags]\n");
+    }
 
     my @list = split ';', $tags;
     my %hash;
