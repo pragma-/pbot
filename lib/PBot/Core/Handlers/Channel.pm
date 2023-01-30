@@ -62,7 +62,7 @@ sub on_mode {
         $mode   = $modifier . $flag;
         $target = $event->{event}->{args}->[++$i];
 
-        $self->{pbot}->{logger}->log("Mode $channel [$mode" . (length $target ? " $target" : '') . "] by $source\n");
+        $self->{pbot}->{logger}->log("[MODE] $channel $mode" . (length $target ? " $target" : '') . " by $source\n");
 
         # dispatch a single mode flag event
         $self->{pbot}->{event_dispatcher}->dispatch_event(

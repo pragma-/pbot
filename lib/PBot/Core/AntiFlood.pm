@@ -140,15 +140,22 @@ sub check_flood {
     $self->{pbot}->{messagehistory}->{database}->update_hostmask_data($mask, {last_seen => scalar gettimeofday});
 
     if ($mode == MSG_NICKCHANGE) {
-        $self->{pbot}->{logger}->log(sprintf("%-18s | %-65s | %s\n", "NICKCHANGE", $mask, $text));
-
         my ($newnick) = $text =~ m/NICKCHANGE (.*)/;
+
+        $self->{pbot}->{logger}->log("[NICKCHANGE] ($account) $mask changed nick to $newnick\n");
+
         $mask    = "$newnick!$user\@$host";
         $account = $self->{pbot}->{messagehistory}->get_message_account($newnick, $user, $host);
         $nick    = $newnick;
         $self->{pbot}->{messagehistory}->{database}->update_hostmask_data($mask, {last_seen => scalar gettimeofday});
     } else {
-        $self->{pbot}->{logger}->log(sprintf("%-18s | %-65s | %s\n", $channel eq lc $mask ? "QUIT" : $channel, $mask, $text));
+        if ($mode == MSG_CHAT) {
+            $self->{pbot}->{logger}->log("[MSG] $channel ($account) $mask => $text\n");
+        } else {
+            my $from = $channel eq lc $mask ? "QUIT" : $channel;
+            my ($type) = $text =~ /^(\w+) /;
+            $self->{pbot}->{logger}->log("[$type] $from ($account) $mask => $text\n");
+        }
     }
 
     # do not do flood processing for bot messages

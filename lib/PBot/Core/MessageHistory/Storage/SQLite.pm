@@ -1744,7 +1744,7 @@ sub get_also_known_as {
     my ($self, $nick, $dont_use_aliases_table) = @_;
     my $debug = $self->{pbot}->{registry}->get_value('messagehistory', 'debug_aka');
 
-    $self->{pbot}->{logger}->log("Looking for AKAs for nick [$nick]\n") if $debug;
+    $self->{pbot}->{logger}->log("[AKA] Checking nick $nick\n") if $debug;
 
     my %akas = eval {
         my (%akas, %hostmasks, %ids);
@@ -1755,7 +1755,7 @@ sub get_also_known_as {
             if (not defined $id) { return %akas; }
 
             $ids{$id} = {id => $id, type => $self->{alias_type}->{STRONG}};
-            $self->{pbot}->{logger}->log("Adding $id -> $id\n") if $debug;
+            $self->{pbot}->{logger}->log("Adding $id -> $id\n") if $debug > 2;
 
             my $sth = $self->{dbh}->prepare('SELECT alias, type FROM Aliases WHERE id = ?');
             $sth->execute($id);
@@ -1764,7 +1764,7 @@ sub get_also_known_as {
             foreach my $row (@$rows) {
                 # next if $row->{type} == $self->{alias_type}->{WEAK};
                 $ids{$row->{alias}} = {id => $id, type => $row->{type}};
-                $self->{pbot}->{logger}->log("[$id] 1) Adding $row->{alias} -> $id [type $row->{type}]\n") if $debug;
+                $self->{pbot}->{logger}->log("[$id] 1) Adding $row->{alias} -> $id [type $row->{type}]\n") if $debug > 2;
             }
 
             my %seen_id;
@@ -1786,7 +1786,7 @@ sub get_also_known_as {
                         #next if $row->{type} == $self->{alias_type}->{WEAK};
                         $ids{$row->{id}} = {id => $id, type => $ids{$id}->{type} == $self->{alias_type}->{WEAK} ? $self->{alias_type}->{WEAK} : $row->{type}};
                         $new_aliases++;
-                        $self->{pbot}->{logger}->log("[$id] 2) Adding $row->{id} -> $id [type $row->{type}]\n") if $debug;
+                        $self->{pbot}->{logger}->log("[$id] 2) Adding $row->{id} -> $id [type $row->{type}]\n") if $debug > 2;
                     }
                 }
                 last if not $new_aliases;
@@ -1816,7 +1816,7 @@ sub get_also_known_as {
                         last_seen => $row->{last_seen},
                     };
 
-                    $self->{pbot}->{logger}->log("[$id] Adding hostmask $row->{hostmask} -> $ids{$id}->{id} [type $ids{$id}->{type}]\n") if $debug;
+                    $self->{pbot}->{logger}->log("[AKA] hostmask ($id) $row->{hostmask} -> $ids{$id}->{id} [type $ids{$id}->{type}]\n") if $debug;
                 }
 
                 $nickserv_sth->execute($id);
