@@ -2,7 +2,7 @@
 #
 # Purpose: Handles IRC events related to PBot user accounts and user metadata.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2021-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::Handlers::Users;
@@ -23,10 +23,10 @@ sub on_join {
     my ($self, $event_type, $event) = @_;
 
     my ($nick, $user, $host, $channel) = (
-        $event->{event}->nick,
-        $event->{event}->user,
-        $event->{event}->host,
-        $event->{event}->to
+        $event->nick,
+        $event->user,
+        $event->host,
+        $event->to
     );
 
     ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
@@ -67,7 +67,7 @@ sub on_join {
 
 sub on_departure {
     my ($self, $event_type, $event) = @_;
-    my ($nick, $user, $host, $channel) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to);
+    my ($nick, $user, $host, $channel) = ($event->nick, $event->user, $event->host, $event->to);
     ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
     $self->{pbot}->{users}->decache_user($channel, "$nick!$user\@$host");
     return 1;
@@ -75,7 +75,7 @@ sub on_departure {
 
 sub on_kick {
     my ($self, $event_type, $event) = @_;
-    my ($nick, $user, $host, $channel) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->{args}[0]);
+    my ($nick, $user, $host, $channel) = ($event->nick, $event->user, $event->host, $event->{args}[0]);
     ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
     $self->{pbot}->{users}->decache_user($channel, "$nick!$user\@$host");
     return 1;

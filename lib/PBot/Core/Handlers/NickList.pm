@@ -2,7 +2,7 @@
 #
 # Purpose: Maintains lists of nicks currently present in channels.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2021-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::Handlers::NickList;
@@ -23,7 +23,7 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.join',     sub { $self->on_join(@_) },       0);
     $self->{pbot}->{event_dispatcher}->register_handler('irc.public',   sub { $self->on_activity(@_) },   0);
     $self->{pbot}->{event_dispatcher}->register_handler('irc.caction',  sub { $self->on_activity(@_) },   0);
-    $self->{pbot}->{event_dispatcher}->register_handler('irc.modeflag', sub { $self->on_modeflag(@_) },    0);
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.modeflag', sub { $self->on_modeflag(@_) },   0);
 
     # lowest priority so these get handled by NickList after all other handlers
     # (all other handlers should be given a priority < 100)
@@ -39,7 +39,7 @@ sub initialize {
 
 sub on_namreply {
     my ($self, $event_type, $event) = @_;
-    my ($channel, $nicks) = ($event->{event}->{args}[2], $event->{event}->{args}[3]);
+    my ($channel, $nicks) = ($event->{args}[2], $event->{args}[3]);
 
     foreach my $nick (split ' ', $nicks) {
         my $stripped_nick = $nick;
@@ -70,7 +70,7 @@ sub on_namreply {
 sub on_activity {
     my ($self, $event_type, $event) = @_;
 
-    my ($nick, $user, $host, $channel) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->{to}[0]);
+    my ($nick, $user, $host, $channel) = ($event->nick, $event->user, $event->host, $event->{to}[0]);
 
     $self->{pbot}->{nicklist}->update_timestamp($channel, $nick);
 
@@ -80,7 +80,7 @@ sub on_activity {
 sub on_join {
     my ($self, $event_type, $event) = @_;
 
-    my ($nick, $user, $host, $channel) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to);
+    my ($nick, $user, $host, $channel) = ($event->nick, $event->user, $event->host, $event->to);
 
     $self->{pbot}->{nicklist}->add_nick($channel, $nick);
 
@@ -95,7 +95,7 @@ sub on_join {
 sub on_part {
     my ($self, $event_type, $event) = @_;
 
-    my ($nick, $user, $host, $channel) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to);
+    my ($nick, $user, $host, $channel) = ($event->nick, $event->user, $event->host, $event->to);
 
     $self->{pbot}->{nicklist}->remove_nick($channel, $nick);
 
@@ -105,7 +105,7 @@ sub on_part {
 sub on_quit {
     my ($self, $event_type, $event) = @_;
 
-    my ($nick, $user, $host)  = ($event->{event}->nick, $event->{event}->user, $event->{event}->host);
+    my ($nick, $user, $host)  = ($event->nick, $event->user, $event->host);
 
     foreach my $channel (keys %{$self->{pbot}->{nicklist}->{nicklist}}) {
         if ($self->{pbot}->{nicklist}->is_present($channel, $nick)) {
@@ -119,7 +119,7 @@ sub on_quit {
 sub on_kick {
     my ($self, $event_type, $event) = @_;
 
-    my ($nick, $channel) = ($event->{event}->to, $event->{event}->{args}[0]);
+    my ($nick, $channel) = ($event->to, $event->{args}[0]);
 
     $self->{pbot}->{nicklist}->remove_nick($channel, $nick);
 
@@ -128,7 +128,7 @@ sub on_kick {
 
 sub on_nickchange {
     my ($self, $event_type, $event) = @_;
-    my ($nick, $user, $host, $newnick) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->args);
+    my ($nick, $user, $host, $newnick) = ($event->nick, $event->user, $event->host, $event->args);
 
     foreach my $channel (keys %{$self->{pbot}->{nicklist}->{nicklist}}) {
         if ($self->{pbot}->{nicklist}->is_present($channel, $nick)) {

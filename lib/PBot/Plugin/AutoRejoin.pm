@@ -49,12 +49,12 @@ sub on_kick {
     my ($self, $event_type, $event) = @_;
 
     my ($nick, $user, $host, $target, $channel, $reason) = (
-        $event->{event}->nick,
-        $event->{event}->user,
-        $event->{event}->host,
-        $event->{event}->to,
-        $event->{event}->{args}[0],
-        $event->{event}->{args}[1],
+        $event->nick,
+        $event->user,
+        $event->host,
+        $event->to,
+        $event->{args}[0],
+        $event->{args}[1],
     );
 
     return 0 if not $self->{pbot}->{channels}->is_active($channel);
@@ -71,10 +71,10 @@ sub on_part {
     my ($self, $event_type, $event) = @_;
 
     my ($nick, $user, $host, $channel) = (
-        $event->{event}->nick,
-        $event->{event}->user,
-        $event->{event}->host,
-        $event->{event}->to,
+        $event->nick,
+        $event->user,
+        $event->host,
+        $event->to,
     );
 
     return 0 if not $self->{pbot}->{channels}->is_active($channel);

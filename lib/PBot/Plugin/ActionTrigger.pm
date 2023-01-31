@@ -399,17 +399,17 @@ sub on_kick {
     return 0 if $event->{interpreted};
 
     my ($nick, $user, $host) = (
-        $event->{event}->nick,
-        $event->{event}->user,
-        $event->{event}->host
+        $event->nick,
+        $event->user,
+        $event->host
     );
 
     my ($victim, $reason) = (
-        $event->{event}->to,
-        $event->{event}->{args}[1]
+        $event->to,
+        $event->{args}[1]
     );
 
-    my $channel = $event->{event}->{args}[0];
+    my $channel = $event->{args}[0];
 
     $self->check_trigger($nick, $user, $host, $channel, "KICK $victim $reason");
     return 0;
@@ -419,13 +419,13 @@ sub on_action {
     my ($self, $event_type, $event) = @_;
 
     my ($nick, $user, $host, $msg) = (
-        $event->{event}->nick,
-        $event->{event}->user,
-        $event->{event}->host,
-        $event->{event}->args
+        $event->nick,
+        $event->user,
+        $event->host,
+        $event->args
     );
 
-    my $channel = $event->{event}->{to}[0];
+    my $channel = $event->{to}[0];
 
     $msg =~ s/^\/me\s+//;
 
@@ -437,12 +437,12 @@ sub on_public {
     my ($self, $event_type, $event) = @_;
 
     my ($nick, $user, $host, $msg) = (
-        $event->{event}->nick,
-        $event->{event}->user,
-        $event->{event}->host,
-        $event->{event}->args);
+        $event->nick,
+        $event->user,
+        $event->host,
+        $event->args);
 
-    my $channel = $event->{event}->{to}[0];
+    my $channel = $event->{to}[0];
 
     $self->check_trigger($nick, $user, $host, $channel, "PRIVMSG $msg");
     return 0;
@@ -452,11 +452,11 @@ sub on_join {
     my ($self, $event_type, $event) = @_;
 
     my ($nick, $user, $host, $channel, $args) = (
-        $event->{event}->nick,
-        $event->{event}->user,
-        $event->{event}->host,
-        $event->{event}->to,
-        $event->{event}->args
+        $event->nick,
+        $event->user,
+        $event->host,
+        $event->to,
+        $event->args
     );
 
     $self->check_trigger($nick, $user, $host, $channel, "JOIN");
@@ -467,14 +467,14 @@ sub on_departure {
     my ($self, $event_type, $event) = @_;
 
     my ($nick, $user, $host, $channel, $args) = (
-        $event->{event}->nick,
-        $event->{event}->user,
-        $event->{event}->host,
-        $event->{event}->to,
-        $event->{event}->args
+        $event->nick,
+        $event->user,
+        $event->host,
+        $event->to,
+        $event->args
     );
 
-    $self->check_trigger($nick, $user, $host, $channel, (uc $event->{event}->type) . " $args");
+    $self->check_trigger($nick, $user, $host, $channel, (uc $event->type) . " $args");
     return 0;
 }
 

@@ -998,7 +998,6 @@ sub parse {
             if ($itype eq "ctcp") {    # it's got CTCP in it!
                 $self->parse_ctcp($type, $from, $stuff[0], $line);
                 next;
-
             } elsif ($type eq "public"
                 or $type eq "msg"
                 or $type eq "notice"
@@ -1008,9 +1007,9 @@ sub parse {
                 or $type eq "topic"
                 or $type eq "invite"
                 or $type eq "whoisaccount"
+                or $type eq "chghost"
                 or $type eq "cap")  # IRCv3 client capabilities  pragma-
             {
-
                 $ev = PBot::Core::IRC::Event->new(
                     $type,    # pragma_ 2011/21/01
                     $from,
@@ -1019,7 +1018,6 @@ sub parse {
                     @stuff,
                 );
             } elsif ($type eq "quit" or $type eq "nick" or $type eq "account") {
-
                 $ev = PBot::Core::IRC::Event->new(
                     $type,    # pragma_ 2011/21/01
                     $from,
@@ -1028,7 +1026,6 @@ sub parse {
                     @stuff,
                 );
             } elsif ($type eq "kick") {
-
                 $ev = PBot::Core::IRC::Event->new(
                     $type,    # pragma_ 2011/21/01
                     $from,
@@ -1036,8 +1033,10 @@ sub parse {
                     $type,
                     @stuff[0, 2 .. $#stuff],
                 );
-
-            } elsif ($type eq "kill") {
+            } elsif ($type eq "kill"
+                or $type eq "wallops"
+                or $type eq "pong")
+            {
                 $ev = PBot::Core::IRC::Event->new(
                     $type,    # pragma_ 2011/21/01
                     $from,
@@ -1045,22 +1044,6 @@ sub parse {
                     $type,
                     $line
                 );            # Ahh, what the hell.
-            } elsif ($type eq "wallops") {
-                $ev = PBot::Core::IRC::Event->new(
-                    $type,    # pragma_ 2011/21/01
-                    $from,
-                    '',
-                    $type,
-                    $line
-                );
-            } elsif ($type eq "pong") {
-                $ev = PBot::Core::IRC::Event->new(
-                    $type,    # pragma_ 2011/21/01
-                    $from,
-                    '',
-                    $type,
-                    $line
-                );
             } else {
                 carp "Unknown event type: $type";
             }

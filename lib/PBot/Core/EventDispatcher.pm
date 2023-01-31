@@ -30,14 +30,15 @@ sub initialize {
 # NickList reserves 0 and 100 to ensure its list is populated by JOINs, etc,
 # before any handlers need to consult its list, or depopulated by PARTs, QUITs,
 # KICKs, etc, after any other handlers need to consult its list.
+
 sub register_handler {
-    my ($self, $event_name, $subref, $priority) = @_;
+    my ($self, $name, $subref, $priority) = @_;
 
     # get the package of the calling subroutine
     my ($package) = caller(0);
 
     # internal identifier to find calling package's event handler
-    my $handler_id = "$package-$event_name";
+    my $handler_id = "$package-$name";
 
     my $entry = {
         priority => $priority // 50,
@@ -46,12 +47,12 @@ sub register_handler {
     };
 
     # create new priority-queue for event-name if one doesn't exist
-    if (not exists $self->{handlers}->{$event_name}) {
-        $self->{handlers}->{$event_name} = PBot::Core::Utils::PriorityQueue->new(pbot => $self->{pbot});
+    if (not exists $self->{handlers}->{$name}) {
+        $self->{handlers}->{$name} = PBot::Core::Utils::PriorityQueue->new(pbot => $self->{pbot});
     }
 
     # add the event handler
-    $self->{handlers}->{$event_name}->add($entry);
+    $self->{handlers}->{$name}->add($entry);
 
     # debugging
     if ($self->{pbot}->{registry}->get_value('eventdispatcher', 'debug')) {
@@ -61,17 +62,17 @@ sub register_handler {
 
 # remove an event handler
 sub remove_handler {
-    my ($self, $event_name) = @_;
+    my ($self, $name) = @_;
 
     # get the package of the calling subroutine
     my ($package) = caller(0);
 
     # internal identifier to find calling package's event handler
-    my $handler_id = "$package-$event_name";
+    my $handler_id = "$package-$name";
 
     # remove the event handler
-    if (exists $self->{handlers}->{$event_name}) {
-        my $handlers = $self->{handlers}->{$event_name};
+    if (exists $self->{handlers}->{$name}) {
+        my $handlers = $self->{handlers}->{$name};
 
         for (my $i = 0; $i < $handlers->count; $i++) {
             my $handler = $handlers->get($i);
@@ -82,8 +83,8 @@ sub remove_handler {
         }
 
         # remove root event-name key if it has no more handlers
-        if (not $self->{handlers}->{$event_name}->count) {
-            delete $self->{handlers}->{$event_name};
+        if (not $self->{handlers}->{$name}->count) {
+            delete $self->{handlers}->{$name};
         }
     }
 
@@ -95,7 +96,7 @@ sub remove_handler {
 
 # send an event to its handlers
 sub dispatch_event {
-    my ($self, $event_name, $event_data) = @_;
+    my ($self, $name, $data) = @_;
 
     # debugging flag
     my $debug = $self->{pbot}->{registry}->get_value('eventdispatcher', 'debug') // 0;
@@ -104,17 +105,17 @@ sub dispatch_event {
     my $dispatch_result= undef;
 
     # if the event-name has handlers
-    if (exists $self->{handlers}->{$event_name}) {
+    if (exists $self->{handlers}->{$name}) {
         # then dispatch the event to each one
-        foreach my $handler ($self->{handlers}->{$event_name}->entries) {
+        foreach my $handler ($self->{handlers}->{$name}->entries) {
             # debugging
             if ($debug) {
-                $self->{pbot}->{logger}->log("Dispatching $event_name to handler $handler->{id}\n");
+                $self->{pbot}->{logger}->log("Dispatching $name to handler $handler->{id}\n");
             }
 
             # invoke an event handler. a handler may return undef to indicate
             # that it decided not to handle this event.
-            my $handler_result = eval { $handler->{subref}->($event_name, $event_data) };
+            my $handler_result = eval { $handler->{subref}->($name, $data) };
 
             # check for exception
             if (my $exception = $@) {

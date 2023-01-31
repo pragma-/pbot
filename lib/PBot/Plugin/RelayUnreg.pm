@@ -32,8 +32,8 @@ sub unload {
 
 sub on_public {
     my ($self, $event_type, $event) = @_;
-    my ($nick, $user, $host, $msg) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->args);
-    my $channel = lc $event->{event}->{to}[0];
+    my ($nick, $user, $host, $msg) = ($event->nick, $event->user, $event->host, $event->args);
+    my $channel = lc $event->{to}[0];
 
     $msg =~ s/^\s+|\s+$//g;
     return 0 if not length $msg;
@@ -56,17 +56,8 @@ sub on_public {
     return 0 if defined $nickserv && length $nickserv;
 
     my @filters = (
-        qr{https://bryanostergaard.com/},
-        qr{https://encyclopediadramatica.rs/Freenodegate},
-        qr{https://MattSTrout.com/},
-        qr{Contact me on twitter},
-        qr{At the beginning there was only Chaos},
-        qr{https://williampitcock.com/},
-        qr{Achievement Method},
-        qr{perceived death signal},
-        qr{efnet},
-        qr{https://evestigatorsucks.com},
-        qr{eVestigator},
+        # qr{list of filters},
+        # qr{etc},
     );
 
     # don't notify/relay for spammers

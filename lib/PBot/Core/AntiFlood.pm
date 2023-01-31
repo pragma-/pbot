@@ -6,7 +6,7 @@
 # The nickserv/ban-evasion stuff probably ought to be in BanTracker or some
 # such suitable class.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2021-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::AntiFlood;
@@ -845,7 +845,7 @@ sub check_bans {
 
 sub on_endofwhois {
     my ($self, $event_type, $event) = @_;
-    my $nick = $event->{event}->{args}[1];
+    my $nick = $event->{args}[1];
 
     delete $self->{whois_pending}->{$nick};
 
@@ -869,8 +869,8 @@ sub on_endofwhois {
 
 sub on_whoisuser {
     my ($self, $event_type, $event) = @_;
-    my $nick  = $event->{event}->{args}[1];
-    my $gecos = lc $event->{event}->{args}[5];
+    my $nick  = $event->{args}[1];
+    my $gecos = lc $event->{args}[5];
 
     my ($id) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($nick);
 
@@ -881,8 +881,8 @@ sub on_whoisuser {
 
 sub on_whoisaccount {
     my ($self, $event_type, $event) = @_;
-    my $nick    = $event->{event}->{args}[1];
-    my $account = lc $event->{event}->{args}[2];
+    my $nick    = $event->{args}[1];
+    my $account = lc $event->{args}[2];
 
     $self->{pbot}->{logger}->log("[MH] $nick is using NickServ account [$account]\n");
 
@@ -902,9 +902,9 @@ sub on_whoisaccount {
 sub on_accountnotify {
     my ($self, $event_type, $event) = @_;
 
-    my $mask = $event->{event}->{from};
+    my $mask = $event->{from};
     my ($nick, $user, $host) = $mask =~ m/^([^!]+)!([^@]+)@(.*)/;
-    my $account = $event->{event}{args}[0];
+    my $account = $event->{args}[0];
     my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
 
     $self->{pbot}->{messagehistory}->{database}->update_hostmask_data($mask, {last_seen => scalar gettimeofday});

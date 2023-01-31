@@ -52,6 +52,9 @@ sub unload {
 sub is_ignored_url {
     my ($self, $url) = @_;
 
+    return 1 if $url =~ m{https://asciinema.org}i;
+    return 1 if $url =~ m{https?://tpcg.io/}i;
+    return 1 if $url =~ m/bootlin.com/i;
     return 1 if $url =~ m{https?://matrix\.to}i;
     return 1 if $url =~ m{https?://.*\.c$}i;
     return 1 if $url =~ m{https?://.*\.h$}i;
@@ -67,6 +70,8 @@ sub is_ignored_url {
     return 1 if $url =~ m{127}i;
     return 1 if $url =~ m{192.168}i;
     return 1 if $url =~ m{file://}i;
+    return 1 if $url =~ m{/src/}i;
+    return 1 if $url =~ m{/trunk/}i;
     return 1 if $url =~ m{\.\.}i;
     return 1 if $url =~ m{https?://www.irccloud.com/pastebin}i;
     return 1 if $url =~ m{http://smuj.ca/cl}i;
@@ -258,14 +263,14 @@ sub show_url_titles {
     my ($self, $event_type, $event) = @_;
 
     my ($nick, $user, $host) = (
-        $event->{event}->nick,
-        $event->{event}->user,
-        $event->{event}->host
+        $event->nick,
+        $event->user,
+        $event->host
     );
 
     my ($channel, $msg) = (
-        $event->{event}->{to}[0],
-        $event->{event}->{args}[0]
+        $event->{to}[0],
+        $event->{args}[0]
     );
 
     # get show_url_titles for channel or true if not defined

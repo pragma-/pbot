@@ -17,18 +17,18 @@ sub initialize {
     # nothing to do here
 }
 
-# this default handler prepends 'irc.' to the event-type and then dispatches
+# this default handler prepends 'irc.' to the event-name and then dispatches
 # the event to the rest of PBot via PBot::Core::EventDispatcher.
 
 sub default_handler {
     my ($self, $conn, $event) = @_;
 
+    # add conn to event object so we can access it within handlers
+    $event->{conn} = $conn;
+
     my $result = $self->{pbot}->{event_dispatcher}->dispatch_event(
         "irc.$event->{type}",
-        {
-            conn => $conn,
-            event => $event
-        }
+        $event
     );
 
     # log event if it was not handled and logging is requested
@@ -36,6 +36,7 @@ sub default_handler {
         $Data::Dumper::Sortkeys = 1;
         $Data::Dumper::Indent   = 2;
         $Data::Dumper::Useqq    = 1;
+        delete $event->{conn}; # don't include conn in dump
         $self->{pbot}->{logger}->log(Dumper $event);
     }
 }

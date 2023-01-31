@@ -2,7 +2,7 @@
 #
 # Purpose: Handles IRCv3 CAP event.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2021-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::Handlers::Cap;
@@ -24,17 +24,17 @@ sub initialize {
 sub on_cap {
     my ($self, $event_type, $event) = @_;
 
-    if ($event->{event}->{args}->[0] eq 'LS') {
+    if ($event->{args}[0] eq 'LS') {
         my $capabilities;
         my $caps_listed = 0;
 
-        if ($event->{event}->{args}->[1] eq '*') {
+        if ($event->{args}[1] eq '*') {
             # more CAP LS messages coming
-            $capabilities = $event->{event}->{args}->[2];
+            $capabilities = $event->{args}[2];
         } else {
             # final CAP LS message
             $caps_listed    = 1;
-            $capabilities = $event->{event}->{args}->[1];
+            $capabilities = $event->{args}[1];
         }
 
         $self->{pbot}->{logger}->log("Client capabilities available: $capabilities\n");
@@ -57,10 +57,10 @@ sub on_cap {
             $self->request_caps($event);
         }
     }
-    elsif ($event->{event}->{args}->[0] eq 'ACK') {
-        $self->{pbot}->{logger}->log("Client capabilities granted: $event->{event}->{args}->[1]\n");
+    elsif ($event->{args}[0] eq 'ACK') {
+        $self->{pbot}->{logger}->log("Client capabilities granted: $event->{args}[1]\n");
 
-        my @caps = split /\s+/, $event->{event}->{args}->[1];
+        my @caps = split /\s+/, $event->{args}[1];
 
         foreach my $cap (@caps) {
             my ($key, $val) = split '=', $cap;
@@ -76,8 +76,8 @@ sub on_cap {
             }
         }
     }
-    elsif ($event->{event}->{args}->[0] eq 'NAK') {
-        $self->{pbot}->{logger}->log("Client capabilities rejected: $event->{event}->{args}->[1]\n");
+    elsif ($event->{args}[0] eq 'NAK') {
+        $self->{pbot}->{logger}->log("Client capabilities rejected: $event->{args}[1]\n");
     }
     else {
         $self->{pbot}->{logger}->log("Unknown CAP event:\n");

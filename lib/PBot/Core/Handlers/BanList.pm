@@ -3,7 +3,7 @@
 # Purpose: Populates and maintains channel banlists by checking mode +b/+q
 # when joining channels and by tracking modes +b/+q and -b/-q in channels.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2021-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::Handlers::BanList;
@@ -30,7 +30,7 @@ sub initialize {
 sub on_endofnames {
     my ($self, $event_type, $event) = @_;
 
-    my $channel = lc $event->{event}->{args}[1];
+    my $channel = lc $event->{args}[1];
 
     $self->{pbot}->{logger}->log("Retrieving banlist for $channel.\n");
 
@@ -52,10 +52,10 @@ sub on_endofnames {
 sub on_banlist_entry {
     my ($self, $event_type, $event) = @_;
 
-    my $channel   = lc $event->{event}->{args}[1];
-    my $target    = lc $event->{event}->{args}[2];
-    my $source    = lc $event->{event}->{args}[3];
-    my $timestamp =    $event->{event}->{args}[4];
+    my $channel   = lc $event->{args}[1];
+    my $target    = lc $event->{args}[2];
+    my $source    = lc $event->{args}[3];
+    my $timestamp =    $event->{args}[4];
 
     my $ago = concise ago(gettimeofday - $timestamp);
     $self->{pbot}->{logger}->log("Ban List: [banlist entry] $channel: $target banned by $source $ago.\n");
@@ -66,10 +66,10 @@ sub on_banlist_entry {
 sub on_quietlist_entry {
     my ($self, $event_type, $event) = @_;
 
-    my $channel   = lc $event->{event}->{args}[1];
-    my $target    = lc $event->{event}->{args}[3];
-    my $source    = lc $event->{event}->{args}[4];
-    my $timestamp =    $event->{event}->{args}[5];
+    my $channel   = lc $event->{args}[1];
+    my $target    = lc $event->{args}[3];
+    my $source    = lc $event->{args}[4];
+    my $timestamp =    $event->{args}[5];
 
     my $ago = concise ago(gettimeofday - $timestamp);
     $self->{pbot}->{logger}->log("Ban List: [quietlist entry] $channel: $target quieted by $source $ago.\n");
@@ -80,7 +80,7 @@ sub on_quietlist_entry {
 
 sub on_endofbanlist {
     my ($self, $event_type, $event) = @_;
-    my $channel = lc $event->{event}->{args}[1];
+    my $channel = lc $event->{args}[1];
 
     # first check for saved bans no longer in channel
     foreach my $mask ($self->{pbot}->{banlist}->{banlist}->get_keys($channel)) {
@@ -142,7 +142,7 @@ sub on_endofbanlist {
 
 sub on_endofquietlist {
     my ($self, $event_type, $event) = @_;
-    my $channel = lc $event->{event}->{args}[1];
+    my $channel = lc $event->{args}[1];
 
     my $mute_char = $self->{mute_char};
 

@@ -487,8 +487,8 @@ sub cmd_countertrigger {
 
 sub on_public {
     my ($self, $event_type, $event) = @_;
-    my ($nick, $user, $host, $msg) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->args);
-    my $channel = $event->{event}->{to}[0];
+    my ($nick, $user, $host, $msg) = ($event->nick, $event->user, $event->host, $event->args);
+    my $channel = $event->{to}[0];
 
     return 0 if $event->{interpreted};
 

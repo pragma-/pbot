@@ -2,7 +2,7 @@
 #
 # Purpose: Handles server-related IRC events.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2021-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::Handlers::Server;
@@ -76,8 +76,8 @@ sub on_motd {
     my ($self, $event_type, $event) = @_;
 
     if ($self->{pbot}->{registry}->get_value('irc', 'show_motd')) {
-        my $from = $event->{event}->{from};
-        my $msg  = $event->{event}->{args}->[1];
+        my $from = $event->{from};
+        my $msg  = $event->{args}[1];
         $self->{pbot}->{logger}->log("MOTD from $from :: $msg\n");
     }
 
@@ -88,9 +88,9 @@ sub on_notice {
     my ($self, $event_type, $event) = @_;
 
     my ($server, $to, $text) = (
-        $event->{event}->nick,
-        $event->{event}->to,
-        $event->{event}->{args}->[0],
+        $event->nick,
+        $event->to,
+        $event->{args}[0],
     );
 
     # don't handle non-server NOTICE
@@ -107,12 +107,12 @@ sub on_isupport {
 
     # remove and discard first and last arguments
     # (first arg is botnick, last arg is "are supported by this server")
-    shift @{$event->{event}->{args}};
-    pop   @{$event->{event}->{args}};
+    shift @{$event->{args}};
+    pop   @{$event->{args}};
 
-    my $logmsg = "$event->{event}->{from} supports:";
+    my $logmsg = "$event->{from} supports:";
 
-    foreach my $arg (@{$event->{event}->{args}}) {
+    foreach my $arg (@{$event->{args}}) {
         my ($key, $value) = split /=/, $arg;
 
         if ($key =~ s/^-//) {
@@ -132,7 +132,7 @@ sub on_isupport {
 
 sub on_nickchange {
     my ($self, $event_type, $event) = @_;
-    my ($nick, $user, $host, $newnick) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->args);
+    my ($nick, $user, $host, $newnick) = ($event->nick, $event->user, $event->host, $event->args);
 
     ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
 
@@ -169,7 +169,7 @@ sub on_nickchange {
 sub on_nononreg {
     my ($self, $event_type, $event) = @_;
 
-    my $target = $event->{event}->{args}->[1];
+    my $target = $event->{args}[1];
 
     $self->{pbot}->{logger}->log("Cannot send private /msg to $target; they are blocking unidentified /msgs.\n");
 
@@ -178,13 +178,13 @@ sub on_nononreg {
 
 sub log_first_arg {
     my ($self, $event_type, $event) = @_;
-    $self->{pbot}->{logger}->log("$event->{event}->{args}->[1]\n");
+    $self->{pbot}->{logger}->log("$event->{args}[1]\n");
     return 1;
 }
 
 sub log_third_arg {
     my ($self, $event_type, $event) = @_;
-    $self->{pbot}->{logger}->log("$event->{event}->{args}->[3]\n");
+    $self->{pbot}->{logger}->log("$event->{args}[3]\n");
     return 1;
 }
 

@@ -31,12 +31,12 @@ sub unload {
 
 sub on_kick {
     my ($self, $event_type, $event) = @_;
-    my ($nick, $user, $host) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host);
-    my ($target, $channel, $reason) = ($event->{event}->to, $event->{event}->{args}[0], $event->{event}->{args}[1]);
+    my ($nick, $user, $host) = ($event->nick, $event->user, $event->host);
+    my ($target, $channel, $reason) = ($event->to, $event->{args}[0], $event->{args}[1]);
 
     $channel = lc $channel;
     return 0 if not $self->{pbot}->{chanops}->can_gain_ops($channel);
-    return 0 if $reason eq '*BANG!*';                                   # roulette
+    return 0 if $reason eq '*BANG!*'; # roulette
 
     if (not exists $self->{kicks}->{$channel} or not exists $self->{kicks}->{$channel}->{$target}) {
         $self->{kicks}->{$channel}->{$target}->{rejoins} = 0;
@@ -48,10 +48,11 @@ sub on_kick {
 
 sub on_join {
     my ($self, $event_type, $event) = @_;
-    my ($nick, $user, $host, $channel) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to);
+    my ($nick, $user, $host, $channel) = ($event->nick, $event->user, $event->host, $event->to);
 
     $channel = lc $channel;
     return 0 if not $self->{pbot}->{chanops}->can_gain_ops($channel);
+
     my $u = $self->{pbot}->{users}->loggedin($channel, "$nick!$user\@$host");
     return 0 if $self->{pbot}->{capabilities}->userhas($u, 'is-whitelisted');
 

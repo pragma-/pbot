@@ -56,8 +56,11 @@ sub new {
 
     bless $self, $class;
 
-    if   ($self->type !~ /\D/) { $self->type($self->trans($self->type)); }
-    else                       { $self->type(lc($self->type)); }
+    if ($self->type !~ /\D/) {
+        $self->type($self->trans($self->type));
+    } else {
+        $self->type(lc($self->type));
+    }
 
     $self->from($from);    # sets nick, user, and host
     $self->args($args);    # strips colons from args
@@ -487,6 +490,7 @@ sub trans {
     'cap'          => 'cap',
     'account'      => 'account',
     'authenticate' => 'authenticate',
+    'chghost'      => 'chghost',
 );
 
 1;

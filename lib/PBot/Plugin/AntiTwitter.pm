@@ -28,9 +28,10 @@ sub unload {
 
 sub on_public {
     my ($self, $event_type, $event) = @_;
-    my ($nick, $user, $host, $channel, $msg) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->{to}[0], $event->{event}->args);
+    my ($nick, $user, $host, $channel, $msg) = ($event->nick, $event->user, $event->host, $event->{to}[0], $event->args);
 
     return 0 if $event->{interpreted};
+
     $channel = lc $channel;
     return 0 if not $self->{pbot}->{chanops}->can_gain_ops($channel);
 

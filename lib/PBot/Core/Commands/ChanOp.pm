@@ -90,7 +90,7 @@ sub initialize {
 sub on_inviting {
     my ($self, $event_type, $event) = @_;
 
-    my ($botnick, $target, $channel) = $event->{event}->args;
+    my ($botnick, $target, $channel) = $event->args;
 
     $self->{pbot}->{logger}->log("User $target invited to channel $channel.\n");
 
@@ -107,7 +107,7 @@ sub on_inviting {
 sub on_useronchannel {
     my ($self, $event_type, $event)   = @_;
 
-    my ($botnick, $target, $channel) = $event->{event}->args;
+    my ($botnick, $target, $channel) = $event->args;
 
     $self->{pbot}->{logger}->log("User $target is already on channel $channel.\n");
 
@@ -124,7 +124,7 @@ sub on_useronchannel {
 sub on_nosuchnick {
     my ($self, $event_type, $event) = @_;
 
-    my ($botnick, $target, $msg) = $event->{event}->args;
+    my ($botnick, $target, $msg) = $event->args;
 
     $self->{pbot}->{logger}->log("$target: $msg\n");
 

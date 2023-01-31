@@ -3,7 +3,7 @@
 # Purpose: Handlers for general channel-related IRC events that aren't handled
 # by any specialized Handler modules.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2021-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::Handlers::Channel;
@@ -36,11 +36,11 @@ sub on_mode {
     my ($self, $event_type, $event) = @_;
 
     my ($nick, $user, $host, $mode_string, $channel) = (
-        $event->{event}->nick,
-        $event->{event}->user,
-        $event->{event}->host,
-        $event->{event}->{args}->[0],
-        lc $event->{event}->{to}->[0],
+        $event->nick,
+        $event->user,
+        $event->host,
+        $event->{args}[0],
+        lc $event->{to}[0],
     );
 
     ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
@@ -60,7 +60,7 @@ sub on_mode {
         }
 
         $mode   = $modifier . $flag;
-        $target = $event->{event}->{args}->[++$i];
+        $target = $event->{args}[++$i];
 
         $self->{pbot}->{logger}->log("[MODE] $channel $mode" . (length $target ? " $target" : '') . " by $source\n");
 
@@ -112,10 +112,10 @@ sub on_join {
     my ($self, $event_type, $event) = @_;
 
     my ($nick, $user, $host, $channel) = (
-        $event->{event}->nick,
-        $event->{event}->user,
-        $event->{event}->host,
-        lc $event->{event}->{to}->[0],
+        $event->nick,
+        $event->user,
+        $event->host,
+        lc $event->{to}[0],
     );
 
     ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
@@ -131,8 +131,8 @@ sub on_join {
     # IRCv3 extended-join capability provides more details about user
     if (exists $self->{pbot}->{irc_capabilities}->{'extended-join'}) {
         my ($nickserv, $gecos) = (
-            $event->{event}->{args}->[0],
-            $event->{event}->{args}->[1],
+            $event->{args}[0],
+            $event->{args}[1],
         );
 
         $msg .= " $nickserv :$gecos";
@@ -147,7 +147,7 @@ sub on_join {
             $self->{pbot}->{messagehistory}->{database}->set_current_nickserv_account($message_account, '');
         }
 
-        $self->{pbot}->{antiflood}->check_bans($message_account, $event->{event}->from, $channel);
+        $self->{pbot}->{antiflood}->check_bans($message_account, $event->from, $channel);
     }
 
     $self->{pbot}->{antiflood}->check_flood(
@@ -164,11 +164,11 @@ sub on_invite {
     my ($self, $event_type, $event) = @_;
 
     my ($nick, $user, $host, $target, $channel) = (
-        $event->{event}->nick,
-        $event->{event}->user,
-        $event->{event}->host,
-        $event->{event}->to,
-        lc $event->{event}->{args}->[0]
+        $event->nick,
+        $event->user,
+        $event->host,
+        $event->to,
+        lc $event->{args}[0]
     );
 
     ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
@@ -189,12 +189,12 @@ sub on_kick {
     my ($self, $event_type, $event) = @_;
 
     my ($nick, $user, $host, $target, $channel, $reason) = (
-        $event->{event}->nick,
-        $event->{event}->user,
-        $event->{event}->host,
-        $event->{event}->to,
-        lc $event->{event}->{args}->[0],
-        $event->{event}->{args}->[1]
+        $event->nick,
+        $event->user,
+        $event->host,
+        $event->to,
+        lc $event->{args}[0],
+        $event->{args}[1]
     );
 
     ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
@@ -248,16 +248,16 @@ sub on_departure {
     my ($self, $event_type, $event) = @_;
 
     my ($nick, $user, $host, $channel, $args) = (
-        $event->{event}->nick,
-        $event->{event}->user,
-        $event->{event}->host,
-        lc $event->{event}->{to}->[0],
-        $event->{event}->args
+        $event->nick,
+        $event->user,
+        $event->host,
+        lc $event->{to}[0],
+        $event->args
     );
 
     ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
 
-    my $text = uc ($event->{event}->type) . ' ' . $args;
+    my $text = uc ($event->type) . ' ' . $args;
 
     my $message_account = $self->{pbot}->{messagehistory}->get_message_account($nick, $user, $host);
 
@@ -295,7 +295,7 @@ sub on_departure {
 sub on_channelmodeis {
     my ($self, $event_type, $event) = @_;
 
-    my (undef, $channel, $modes) = $event->{event}->args;
+    my (undef, $channel, $modes) = $event->args;
 
     $self->{pbot}->{logger}->log("Channel $channel modes: $modes\n");
 
@@ -306,7 +306,7 @@ sub on_channelmodeis {
 sub on_channelcreate {
     my ($self,  $event_type, $event) = @_;
 
-    my ($owner, $channel, $timestamp) = $event->{event}->args;
+    my ($owner, $channel, $timestamp) = $event->args;
 
     $self->{pbot}->{logger}->log("Channel $channel created by $owner on " . localtime($timestamp) . "\n");
 
@@ -318,16 +318,16 @@ sub on_channelcreate {
 sub on_topic {
     my ($self, $event_type, $event) = @_;
 
-    if (not length $event->{event}->{to}->[0]) {
+    if (not length $event->{to}[0]) {
         # on join
-        my (undef, $channel, $topic) = $event->{event}->args;
+        my (undef, $channel, $topic) = $event->args;
         $self->{pbot}->{logger}->log("Topic for $channel: $topic\n");
         $self->{pbot}->{channels}->{storage}->set($channel, 'TOPIC', $topic, 1);
     } else {
         # user changing topic
-        my ($nick, $user, $host) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host);
-        my $channel = $event->{event}->{to}->[0];
-        my $topic   = $event->{event}->{args}->[0];
+        my ($nick, $user, $host) = ($event->nick, $event->user, $event->host);
+        my $channel = $event->{to}[0];
+        my $topic   = $event->{args}[0];
 
         $self->{pbot}->{logger}->log("$nick!$user\@$host changed topic for $channel to: $topic\n");
         $self->{pbot}->{channels}->{storage}->set($channel, 'TOPIC',        $topic,               1);
@@ -340,7 +340,7 @@ sub on_topic {
 
 sub on_topicinfo {
     my ($self, $event_type, $event) = @_;
-    my (undef, $channel, $by, $timestamp) = $event->{event}->args;
+    my (undef, $channel, $by, $timestamp) = $event->args;
     $self->{pbot}->{logger}->log("Topic for $channel set by $by on " . localtime($timestamp) . "\n");
     $self->{pbot}->{channels}->{storage}->set($channel, 'TOPIC_SET_BY', $by,        1);
     $self->{pbot}->{channels}->{storage}->set($channel, 'TOPIC_SET_ON', $timestamp, 1);

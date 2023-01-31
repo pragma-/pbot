@@ -12,10 +12,13 @@ use parent 'PBot::Plugin::Base';
 use PBot::Imports;
 
 use Time::Duration qw/concise duration/;
-use Data::Dumper;
 use List::Util qw[min max];
+
+use Data::Dumper;
 $Data::Dumper::Useqq    = 1;
 $Data::Dumper::Sortkeys = 1;
+
+# This plugin was contributed by mannito, based on an earlier version of Battleship.pm
 
 sub initialize {
     my ($self, %conf) = @_;
@@ -46,9 +49,9 @@ sub unload {
 
 sub on_kick {
     my ($self, $event_type, $event) = @_;
-    my ($nick, $user, $host)  = ($event->{event}->nick, $event->{event}->user, $event->{event}->host);
-    my ($victim, $reason) = ($event->{event}->to, $event->{event}->{args}[1]);
-    my $channel = $event->{event}->{args}[0];
+    my ($nick, $user, $host)  = ($event->nick, $event->user, $event->host);
+    my ($victim, $reason) = ($event->to, $event->{args}[1]);
+    my $channel = $event->{args}[0];
     return 0 if lc $channel ne $self->{channel};
     $self->player_left($nick, $user, $host);
     return 0;
@@ -56,8 +59,8 @@ sub on_kick {
 
 sub on_departure {
     my ($self, $event_type, $event) = @_;
-    my ($nick, $user, $host, $channel) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->to);
-    my $type = uc $event->{event}->type;
+    my ($nick, $user, $host, $channel) = ($event->nick, $event->user, $event->host, $event->to);
+    my $type = uc $event->type;
     return 0 if $type ne 'QUIT' and lc $channel ne $self->{channel};
     $self->player_left($nick, $user, $host);
     return 0;

@@ -2,7 +2,7 @@
 #
 # Purpose: IRC handlers for chat/message events.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2021-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::Handlers::Chat;
@@ -23,11 +23,11 @@ sub on_notice {
     my ($self, $event_type, $event) = @_;
 
     my ($nick, $user, $host, $to, $text)  = (
-        $event->{event}->nick,
-        $event->{event}->user,
-        $event->{event}->host,
-        $event->{event}->to,
-        $event->{event}->{args}->[0],
+        $event->nick,
+        $event->user,
+        $event->host,
+        $event->to,
+        $event->{args}[0],
     );
 
     # don't handle non-chat NOTICE
@@ -39,7 +39,7 @@ sub on_notice {
     # if NOTICE is sent to the bot then replace the `to` field with the
     # sender's nick instead so when we pass it on to on_public ...
     if ($to eq $self->{pbot}->{registry}->get_value('irc', 'botnick')) {
-        $event->{event}->{to}->[0] = $nick;
+        $event->{to}[0] = $nick;
     }
 
     # handle this NOTICE as a public message
@@ -53,12 +53,12 @@ sub on_public {
     my ($self, $event_type, $event) = @_;
 
     my ($from, $nick, $user, $host, $text, $tags) = (
-        $event->{event}->{to}->[0],
-        $event->{event}->nick,
-        $event->{event}->user,
-        $event->{event}->host,
-        $event->{event}->{args}->[0],
-        $event->{event}->{args}->[1],
+        $event->{to}[0],
+        $event->nick,
+        $event->user,
+        $event->host,
+        $event->{args}[0],
+        $event->{args}[1],
     );
 
     ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
@@ -73,7 +73,7 @@ sub on_action {
     my ($self, $event_type, $event) = @_;
 
     # prepend "/me " to the message text
-    $event->{event}->{args}->[0] = "/me " . $event->{event}->{args}->[0];
+    $event->{args}[0] = "/me " . $event->{args}[0];
 
     # pass this along to on_public
     $self->on_public($event_type, $event);
@@ -84,11 +84,11 @@ sub on_msg {
     my ($self, $event_type, $event) = @_;
 
     my ($nick, $user, $host, $text, $tags) = (
-        $event->{event}->nick,
-        $event->{event}->user,
-        $event->{event}->host,
-        $event->{event}->{args}->[0],
-        $event->{event}->{args}->[1],
+        $event->nick,
+        $event->user,
+        $event->host,
+        $event->{args}[0],
+        $event->{args}[1],
     );
 
     ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);

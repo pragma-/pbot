@@ -36,8 +36,15 @@ sub unload {
 
 sub on_public {
     my ($self, $event_type, $event) = @_;
-    my ($nick, $user, $host, $msg) = ($event->{event}->nick, $event->{event}->user, $event->{event}->host, $event->{event}->args);
-    my $channel = lc $event->{event}->{to}[0];
+
+    my ($nick, $user, $host, $msg) = (
+        $event->nick,
+        $event->user,
+        $event->host,
+        $event->args,
+    );
+
+    my $channel = lc $event->{to}[0];
 
     ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
 
