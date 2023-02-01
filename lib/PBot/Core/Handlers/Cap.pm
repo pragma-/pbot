@@ -97,13 +97,13 @@ sub request_caps {
         'account-tag'    => 1,
         'extended-join'  => 1,
         'message-tags'   => 1,
+        'multi-prefix'   => 1,
         # sasl is gated by the irc.sasl registry entry instead
 
         # TODO: unsupported capabilities worth looking into
         'away-notify'    => 0,
         'chghost'        => 0,
         'identify-msg'   => 0,
-        'multi-prefix'   => 0,
     );
 
     foreach my $cap (keys $self->{pbot}->{irc_capabilities_available}->%*) {
