@@ -334,7 +334,7 @@
    "messagehistory" : {
       "debug_aka" : {
          "type" : "text",
-         "value" : "0"
+         "value" : "1"
       },
       "debug_link" : {
          "type" : "text",

@@ -1813,7 +1813,7 @@ sub get_also_known_as {
                         last_seen => $row->{last_seen},
                     };
 
-                    $self->{pbot}->{logger}->log("[AKA] hostmask ($id) $row->{hostmask} -> $ids{$id}->{id} [type $ids{$id}->{type}]\n") if $debug;
+                    $self->{pbot}->{logger}->log("[AKA] ($id) $row->{hostmask} -> $ids{$id}->{id} [".($ids{$id}->{type}==LINK_WEAK?"WEAK":"STRONG")."]\n") if $debug;
                 }
 
                 $nickserv_sth->execute($id);
