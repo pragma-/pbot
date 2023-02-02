@@ -191,8 +191,6 @@ sub on_chghost {
 
     my $account = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
 
-    $self->{pbot}->{logger}->log("[CHGHOST] ($account) $nick!$user\@$host changed host to $nick!$newuser\@$newhost\n");
-
     my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_id("$nick!$newuser\@$newhost");
 
     if (defined $id) {
@@ -200,8 +198,10 @@ sub on_chghost {
             $self->{pbot}->{messagehistory}->{database}->link_alias($account, $id, LINK_STRONG);
         }
     } else {
-        $self->{pbot}->{messagehistory}->{database}->add_message_account("$nick!$newuser\@$newhost", $account, LINK_STRONG);
+        $id = $self->{pbot}->{messagehistory}->{database}->add_message_account("$nick!$newuser\@$newhost", $account, LINK_STRONG);
     }
+
+    $self->{pbot}->{logger}->log("[CHGHOST] ($account) $nick!$user\@$host changed host to ($id) $nick!$newuser\@$newhost\n");
 
     return 1;
 }
