@@ -23,6 +23,7 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.mode',          sub { $self->on_mode          (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.join',          sub { $self->on_join          (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.part',          sub { $self->on_departure     (@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.quit',          sub { $self->on_departure     (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.kick',          sub { $self->on_kick          (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.invite',        sub { $self->on_invite        (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.channelmodeis', sub { $self->on_channelmodeis (@_) });

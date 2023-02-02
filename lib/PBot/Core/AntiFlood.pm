@@ -112,6 +112,7 @@ sub check_flood {
     my $oldnick = $nick;
     my $account;
 
+    # handle old-style pseudo-QUIT for changing-host if CHGHOST is not available
     if ($mode == MSG_JOIN and exists $self->{changinghost}->{$nick}) {
         $self->{pbot}->{logger}->log("Finalizing host change for $nick.\n");
 
@@ -152,9 +153,9 @@ sub check_flood {
         if ($mode == MSG_CHAT) {
             $self->{pbot}->{logger}->log("[MSG] $channel ($account) $mask => $text\n");
         } else {
-            my $from = $channel eq lc $mask ? "QUIT" : $channel;
+            my $from = $channel eq lc $mask ? undef : $channel;
             my ($type) = $text =~ /^(\w+) /;
-            $self->{pbot}->{logger}->log("[$type] $from ($account) $mask => $text\n");
+            $self->{pbot}->{logger}->log("[$type] " . (defined $from ? "$from " : '') . "($account) $mask => $text\n");
         }
     }
 
