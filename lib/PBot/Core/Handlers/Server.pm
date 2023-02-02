@@ -203,7 +203,13 @@ sub on_chghost {
 
     $self->{pbot}->{logger}->log("[CHGHOST] ($account) $nick!$user\@$host changed host to ($id) $nick!$newuser\@$newhost\n");
 
-    return 1;
+    my $channels = $self->{pbot}->{nicklist}->get_channels($nick);
+
+    foreach my $channel (@$channels) {
+        $self->{pbot}->{antiflood}->check_bans($id, "$nick!$newuser\@$newhost", $channel);
+    }
+
+     return 1;
 }
 
 sub log_first_arg {

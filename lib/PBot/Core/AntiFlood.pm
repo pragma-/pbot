@@ -154,7 +154,8 @@ sub check_flood {
             $self->{pbot}->{logger}->log("[MSG] $channel ($account) $mask => $text\n");
         } else {
             my $from = $channel eq lc $mask ? undef : $channel;
-            my ($type) = $text =~ /^(\w+) /;
+            $text =~ s/^(\w+) //;
+            my $type = $1;
             $self->{pbot}->{logger}->log("[$type] " . (defined $from ? "$from " : '') . "($account) $mask => $text\n");
         }
     }
