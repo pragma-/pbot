@@ -122,14 +122,14 @@ sub check_flood {
         if (defined $id) {
             if ($id != $account) {
                 $self->{pbot}->{logger}->log("Linking $mask [$id] to account $account\n");
-                $self->{pbot}->{messagehistory}->{database}->link_alias($account, $id, $self->{pbot}->{messagehistory}->{database}->{alias_type}->{STRONG}, 1);
+                $self->{pbot}->{messagehistory}->{database}->link_alias($account, $id, LINK_STRONG, 1);
             } else {
                 $self->{pbot}->{logger}->log("New hostmask already belongs to original account.\n");
             }
             $account = $id;
         } else {
             $self->{pbot}->{logger}->log("Adding $mask to account $account\n");
-            $self->{pbot}->{messagehistory}->{database}->add_message_account($mask, $account, $self->{pbot}->{messagehistory}->{database}->{alias_type}->{STRONG});
+            $self->{pbot}->{messagehistory}->{database}->add_message_account($mask, $account, LINK_STRONG);
         }
 
         $self->{pbot}->{messagehistory}->{database}->devalidate_all_channels($account);
@@ -667,7 +667,7 @@ sub check_bans {
 
         $self->{pbot}->{logger}->log("[after aka] processing $alias\n") if $debug_checkban >= 1;
 
-        if ($aliases{$alias}->{type} == $self->{pbot}->{messagehistory}->{database}->{alias_type}->{WEAK}) {
+        if ($aliases{$alias}->{type} == LINK_WEAK) {
             $self->{pbot}->{logger}->log("anti-flood: [check-bans] skipping WEAK alias $alias in channel $channel\n") if $debug_checkban >= 2;
             next;
         }

@@ -30,6 +30,7 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.n_local',       sub { $self->log_third_arg    (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.n_global',      sub { $self->log_third_arg    (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.nononreg',      sub { $self->on_nononreg      (@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.chghost',       sub { $self->on_chghost       (@_) });
 }
 
 sub on_init {
@@ -172,6 +173,35 @@ sub on_nononreg {
     my $target = $event->{args}[1];
 
     $self->{pbot}->{logger}->log("Cannot send private /msg to $target; they are blocking unidentified /msgs.\n");
+
+    return 1;
+}
+
+sub on_chghost {
+    my ($self, $event_type, $event) = @_;
+
+    my $nick    = $event->nick;
+    my $user    = $event->user;
+    my $host    = $event->host;
+    my $newuser = $event->{args}[0];
+    my $newhost = $event->{args}[1];
+
+    ($nick, $user,    $host)    = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user,    $host);
+    ($nick, $newuser, $newhost) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $newuser, $newhost);
+
+    my $account = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
+
+    $self->{pbot}->{logger}->log("[CHGHOST] ($account) $nick!$user\@$host changed host to $nick!$newuser\@$newhost\n");
+
+    my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account_id("$nick!$newuser\@$newhost");
+
+    if (defined $id) {
+        if ($id != $account) {
+            $self->{pbot}->{messagehistory}->{database}->link_alias($account, $id, LINK_STRONG);
+        }
+    } else {
+        $self->{pbot}->{messagehistory}->{database}->add_message_account("$nick!$newuser\@$newhost", $account, LINK_STRONG);
+    }
 
     return 1;
 }

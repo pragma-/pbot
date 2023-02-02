@@ -1007,7 +1007,6 @@ sub parse {
                 or $type eq "topic"
                 or $type eq "invite"
                 or $type eq "whoisaccount"
-                or $type eq "chghost"
                 or $type eq "cap")  # IRCv3 client capabilities  pragma-
             {
                 $ev = PBot::Core::IRC::Event->new(
@@ -1017,7 +1016,10 @@ sub parse {
                     $type,
                     @stuff,
                 );
-            } elsif ($type eq "quit" or $type eq "nick" or $type eq "account") {
+            } elsif ($type eq "quit"
+                or $type eq "nick"
+                or $type eq "account"
+                or $type eq "chghost") {
                 $ev = PBot::Core::IRC::Event->new(
                     $type,    # pragma_ 2011/21/01
                     $from,

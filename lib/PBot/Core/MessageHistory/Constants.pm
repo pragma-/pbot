@@ -4,23 +4,24 @@
 
 package PBot::Core::MessageHistory::Constants;
 
-use Exporter qw/import/;
+use warnings;
+use strict;
+use constant;
 
-our @EXPORT = ();
-
-our %EXPORT_TAGS = (
-    'all' => [qw/MSG_CHAT MSG_JOIN MSG_DEPARTURE MSG_NICKCHANGE/],
-);
-
-our @EXPORT_OK = (
-    @{ $EXPORT_TAGS{all} },
-);
-
-use constant {
+my %constants = (
     MSG_CHAT       => 0,    # PRIVMSG, ACTION
     MSG_JOIN       => 1,    # JOIN
     MSG_DEPARTURE  => 2,    # PART, QUIT, KICK
     MSG_NICKCHANGE => 3,    # CHANGED NICK
-};
+
+    LINK_WEAK   => 0,  # weakly linked AKAs
+    LINK_STRONG => 1,  # strongly linked AKAs
+);
+
+constant->import(\%constants);
+
+use Exporter qw/import/;
+our %EXPORT_TAGS = ('all' => [keys %constants]);
+our @EXPORT_OK = (@{$EXPORT_TAGS{all}});
 
 1;

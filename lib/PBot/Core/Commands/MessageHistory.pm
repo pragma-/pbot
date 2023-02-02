@@ -10,6 +10,8 @@ package PBot::Core::Commands::MessageHistory;
 use PBot::Imports;
 use parent 'PBot::Core::Class';
 
+use PBot::Core::MessageHistory::Constants ':all';
+
 use Time::HiRes qw(time tv_interval);
 use Time::Duration;
 
@@ -153,7 +155,7 @@ sub cmd_list_also_known_as {
         my $sep = "";
         foreach my $aka (sort { $sort{$sort_method}->(\%akas, $sort_direction) } keys %akas) {
             next if $aka =~ /^Guest\d+(?:!.*)?$/;
-            next if exists $akas{$aka}->{type} and $akas{$aka}->{type} == $self->{pbot}->{messagehistory}->{database}->{alias_type}->{WEAK} && not $show_weak;
+            next if exists $akas{$aka}->{type} and $akas{$aka}->{type} == LINK_WEAK && not $show_weak;
 
             if (not $show_hostmasks) {
                 my ($nick) = $aka =~ m/([^!]+)/;
@@ -178,7 +180,7 @@ sub cmd_list_also_known_as {
                 $result .= " [$akas{$aka}->{id}]";
             }
 
-            $result .= " [WEAK]" if exists $akas{$aka}->{type} and $akas{$aka}->{type} == $self->{pbot}->{messagehistory}->{database}->{alias_type}->{WEAK};
+            $result .= " [WEAK]" if exists $akas{$aka}->{type} and $akas{$aka}->{type} == LINK_WEAK;
 
             if ($show_last_seen) {
                 my $seen = concise ago (time - $akas{$aka}->{last_seen});
@@ -474,7 +476,7 @@ sub cmd_aka_link {
 
     my ($id, $alias, $type) = split /\s+/, $context->{arguments};
 
-    $type = $self->{pbot}->{messagehistory}->{database}->{alias_type}->{STRONG} if not defined $type;
+    $type = LINK_STRONG if not defined $type;
 
     if (not $id or not $alias) {
         return "Usage: akalink <target id> <alias id> [type]";
@@ -492,7 +494,7 @@ sub cmd_aka_link {
     }
 
     if ($self->{pbot}->{messagehistory}->{database}->link_alias($id, $alias, $type)) {
-        return "/say $source " . ($type == $self->{pbot}->{messagehistory}->{database}->{alias_type}->{WEAK} ? "weakly" : "strongly") . " linked to $target.";
+        return "/say $source " . ($type == LINK_WEAK ? "weakly" : "strongly") . " linked to $target.";
     } else {
         return "Link failed.";
     }

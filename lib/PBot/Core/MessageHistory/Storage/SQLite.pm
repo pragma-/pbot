@@ -47,9 +47,6 @@ sub initialize {
         sub { $self->commit_message_history },
         $self->{pbot}->{registry}->get_value('messagehistory', 'sqlite_commit_interval'),
         'messagehistory commit');
-
-    $self->{alias_type}->{WEAK}   = 0;
-    $self->{alias_type}->{STRONG} = 1;
 }
 
 sub sqlite_commit_interval_trigger {
@@ -309,7 +306,7 @@ sub add_message_account {
     my ($nick, $user, $host) = $mask =~ m/^([^!]+)!([^@]+)@(.*)/;
     my $id;
 
-    if (defined $link_id and $link_type == $self->{alias_type}->{STRONG}) {
+    if (defined $link_id and $link_type == LINK_STRONG) {
         $self->{pbot}->{logger}->log("[MH] Using Account id $link_id for $mask due to strong link\n");
         $id = $link_id;
     } else {
@@ -324,7 +321,7 @@ sub add_message_account {
 
         #$self->{pbot}->{logger}->log("[MH] Added new Hostmask entry $mask for message account $id\n");
 
-        if ((not defined $link_id) || ((defined $link_id) && ($link_type == $self->{alias_type}->{WEAK}))) {
+        if ((not defined $link_id) || ((defined $link_id) && ($link_type == LINK_WEAK))) {
             $sth = $self->{dbh}->prepare('INSERT INTO Accounts VALUES (?, ?, ?)');
             $sth->execute($id, $mask, "");
             $self->{new_entries}++;
@@ -334,7 +331,7 @@ sub add_message_account {
 
     $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 
-    if (defined $link_id && $link_type == $self->{alias_type}->{WEAK}) {
+    if (defined $link_id && $link_type == LINK_WEAK) {
         $self->{pbot}->{logger}->log("[MH] Weakly linking $id to $link_id\n");
         $self->link_alias($id, $link_id, $link_type);
     }
@@ -458,12 +455,12 @@ sub get_message_account {
 
                 # found a probable match
                 if (defined $rows->[0]) {
-                    my $link_type = $self->{alias_type}->{STRONG};
+                    my $link_type = LINK_STRONG;
 
                     # if 48 hours have elapsed since this *!user@host was seen
                     # then still link the Guest to this account, but weakly
                     if (time - $rows->[0]->{last_seen} > 60 * 60 * 48) {
-                        $link_type = $self->{alias_type}->{WEAK};
+                        $link_type = LINK_WEAK;
 
                         $self->{pbot}->{logger}->log(
                             "[MH] Longer than 48 hours (" . concise duration(time - $rows->[0]->{last_seen}) . ")"
@@ -487,7 +484,7 @@ sub get_message_account {
             if (not defined $rows->[0]) {
                 $rows->[0] = { id => $orig_id, hostmask => "$orig_nick!$user\@$host" };
                 $orig_nick = undef; # nick-change handled
-                return ($rows, $self->{alias_type}->{STRONG});
+                return ($rows, LINK_STRONG);
             }
 
             # look up original nick's NickServ accounts outside of upcoming loop
@@ -511,7 +508,7 @@ sub get_message_account {
                 # check each aka for identifying details
                 foreach my $aka (keys %akas) {
                     # skip dubious links
-                    next if $akas{$aka}->{type} == $self->{alias_type}->{WEAK};
+                    next if $akas{$aka}->{type} == LINK_WEAK;
                     next if $akas{$aka}->{nickchange} == 1;
 
                     # don't process duplicates
@@ -557,7 +554,7 @@ sub get_message_account {
                                 id       => $self->get_ancestor_id($akas{$aka}->{id}),
                                 hostmask => $aka,
                             };
-                            return ($rows, $self->{alias_type}->{STRONG});
+                            return ($rows, LINK_STRONG);
                         }
                     }
 
@@ -591,7 +588,7 @@ sub get_message_account {
                     if ($match) {
                         $self->{pbot}->{logger}->log("[MH] Using this match.\n");
                         $rows->[0] = {id => $self->get_ancestor_id($akas{$aka}->{id}), hostmask => $aka};
-                        return ($rows, $self->{alias_type}->{STRONG});
+                        return ($rows, LINK_STRONG);
                     }
                 }
             }
@@ -599,7 +596,7 @@ sub get_message_account {
             $self->{pbot}->{logger}->log("[MH] Creating new nickchange account!\n");
 
             my $new_id = $self->add_message_account($mask);
-            $self->link_alias($orig_id, $new_id, $self->{alias_type}->{WEAK});
+            $self->link_alias($orig_id, $new_id, LINK_WEAK);
             $self->update_hostmask_data($mask, {nickchange => 1, last_seen => scalar time});
 
             $do_nothing = 1;
@@ -614,7 +611,7 @@ sub get_message_account {
             my $rows = $sth->fetchall_arrayref({});
             if (defined $rows->[0]) {
                 $self->{pbot}->{logger}->log("[MH] 5: irccloud match: $rows->[0]->{id}: $rows->[0]->{hostmask}\n");
-                return ($rows, $self->{alias_type}->{STRONG});
+                return ($rows, LINK_STRONG);
             }
         }
 
@@ -625,7 +622,7 @@ sub get_message_account {
             my $rows = $sth->fetchall_arrayref({});
             if (defined $rows->[0]) {
                 $self->{pbot}->{logger}->log("[MH] 6: nat match: $rows->[0]->{id}: $rows->[0]->{hostmask}\n");
-                return ($rows, $self->{alias_type}->{STRONG});
+                return ($rows, LINK_STRONG);
             }
         }
 
@@ -636,7 +633,7 @@ sub get_message_account {
             my $rows = $sth->fetchall_arrayref({});
             if (defined $rows->[0]) {
                 $self->{pbot}->{logger}->log("[MH] 6: cloak match: $rows->[0]->{id}: $rows->[0]->{hostmask}\n");
-                return ($rows, $self->{alias_type}->{STRONG});
+                return ($rows, LINK_STRONG);
             }
         }
 
@@ -646,9 +643,9 @@ sub get_message_account {
             $sth->execute($user, $host);
             my $rows = $sth->fetchall_arrayref({});
             if (defined $rows->[0]) {
-                my $link_type = $self->{alias_type}->{STRONG};
+                my $link_type = LINK_STRONG;
                 if (time - $rows->[0]->{last_seen} > 60 * 60 * 48) {
-                    $link_type = $self->{alias_type}->{WEAK};
+                    $link_type = LINK_WEAK;
                     $self->{pbot}->{logger}->log(
                         "[MH] Longer than 48 hours (" . concise duration(time - $rows->[0]->{last_seen}) . ") for $rows->[0]->{hostmask} for $nick!$user\@$host, degrading to weak link\n");
                 }
@@ -661,7 +658,7 @@ sub get_message_account {
         $sth->execute($nick);
         my $rows = $sth->fetchall_arrayref({});
 
-        my $link_type = $self->{alias_type}->{WEAK};
+        my $link_type = LINK_WEAK;
         my %processed_nicks;
         my %processed_akas;
 
@@ -674,7 +671,7 @@ sub get_message_account {
 
             my %akas = $self->get_also_known_as($tnick);
             foreach my $aka (keys %akas) {
-                next if $akas{$aka}->{type} == $self->{alias_type}->{WEAK};
+                next if $akas{$aka}->{type} == LINK_WEAK;
                 next if $akas{$aka}->{nickchange} == 1;
 
                 next if exists $processed_akas{$akas{$aka}->{id}};
@@ -693,7 +690,7 @@ sub get_message_account {
                     } else {
                         $self->{pbot}->{logger}->log("[MH] Cloaked hosts match: $host vs $thost\n");
                         $rows->[0] = {id => $self->get_ancestor_id($akas{$aka}->{id}), hostmask => $aka};
-                        return ($rows, $self->{alias_type}->{STRONG});
+                        return ($rows, LINK_STRONG);
                     }
                 }
 
@@ -726,20 +723,20 @@ sub get_message_account {
 
                 if ($match) {
                     $rows->[0] = {id => $self->get_ancestor_id($akas{$aka}->{id}), hostmask => $aka};
-                    return ($rows, $self->{alias_type}->{STRONG});
+                    return ($rows, LINK_STRONG);
                 }
             }
         }
 
         if (not defined $rows->[0]) {
-            $link_type = $self->{alias_type}->{STRONG};
+            $link_type = LINK_STRONG;
 
             $sth = $self->{dbh}->prepare('SELECT id, hostmask, last_seen FROM Hostmasks WHERE user = ? AND host = ? ORDER BY last_seen DESC');
             $sth->execute($user, $host);
             $rows = $sth->fetchall_arrayref({});
 
             if (defined $rows->[0] and time - $rows->[0]->{last_seen} > 60 * 60 * 48) {
-                $link_type = $self->{alias_type}->{WEAK};
+                $link_type = LINK_WEAK;
                 $self->{pbot}->{logger}->log(
                     "[MH] Longer than 48 hours (" . concise duration(time - $rows->[0]->{last_seen}) . ") for $rows->[0]->{hostmask} for $nick!$user\@$host, degrading to weak link\n");
             }
@@ -766,7 +763,7 @@ sub get_message_account {
     return $rows->[0]->{id} if $do_nothing;
 
     if (defined $rows->[0] and not defined $orig_nick) {
-        if ($link_type == $self->{alias_type}->{STRONG}) {
+        if ($link_type == LINK_STRONG) {
             my $host1 = lc "$nick!$user\@$host";
             my $host2 = lc $rows->[0]->{hostmask};
 
@@ -789,7 +786,7 @@ sub get_message_account {
         my $hostmask = $rows->[0]->{hostmask};
 
         $self->{pbot}->{logger}->log("[MH] message-history: [get-account] $mask "
-            . ($link_type == $self->{alias_type}->{WEAK} ? "weakly linked to" : "added to account")
+            . ($link_type == LINK_WEAK ? "weakly linked to" : "added to account")
             . " $hostmask with id $id\n"
         );
 
@@ -931,13 +928,13 @@ sub get_recent_messages {
         } else {
             $akas{$id} = {
                 id => $id,
-                type => $self->{alias_type}->{STRONG},
+                type => LINK_STRONG,
                 nickchange => 0,
             };
         }
 
         foreach my $aka (keys %akas) {
-            next if $akas{$aka}->{type} == $self->{alias_type}->{WEAK};
+            next if $akas{$aka}->{type} == LINK_WEAK;
             next if $akas{$aka}->{nickchange} == 1;
             next if exists $seen_id{$akas{$aka}->{id}};
 
@@ -1002,13 +999,13 @@ sub get_message_context {
         } else {
             $akas{$context_id} = {
                 id         => $context_id,
-                type       => $self->{alias_type}->{STRONG},
+                type       => LINK_STRONG,
                 nickchange => 0,
             };
         }
 
         foreach my $aka (keys %akas) {
-            next if $akas{$aka}->{type} == $self->{alias_type}->{WEAK};
+            next if $akas{$aka}->{type} == LINK_WEAK;
             next if $akas{$aka}->{nickchange} == 1;
             next if exists $seen_id{$akas{$aka}->{id}};
 
@@ -1098,13 +1095,13 @@ sub recall_message_by_count {
             } else {
                 $akas{$id} = {
                     id         => $id,
-                    type       => $self->{alias_type}->{STRONG},
+                    type       => LINK_STRONG,
                     nickchange => 0,
                 };
             }
 
             foreach my $aka (keys %akas) {
-                next if $akas{$aka}->{type} == $self->{alias_type}->{WEAK};
+                next if $akas{$aka}->{type} == LINK_WEAK;
                 next if $akas{$aka}->{nickchange} == 1;
                 next if exists $seen_id{$akas{$aka}->{id}};
 
@@ -1164,13 +1161,13 @@ sub recall_message_by_text {
             } else {
                 $akas{$id} = {
                     id         => $id,
-                    type       => $self->{alias_type}->{STRONG},
+                    type       => LINK_STRONG,
                     nickchange => 0,
                 };
             }
 
             foreach my $aka (keys %akas) {
-                next if $akas{$aka}->{type} == $self->{alias_type}->{WEAK};
+                next if $akas{$aka}->{type} == LINK_WEAK;
                 next if $akas{$aka}->{nickchange} == 1;
                 next if exists $seen_id{$akas{$aka}->{id}};
 
@@ -1231,13 +1228,13 @@ sub get_random_message {
             } else {
                 $akas{$id} = {
                     id         => $id,
-                    type       => $self->{alias_type}->{STRONG},
+                    type       => LINK_STRONG,
                     nickchange => 0,
                 };
             }
 
             foreach my $aka (keys %akas) {
-                next if $akas{$aka}->{type} == $self->{alias_type}->{WEAK};
+                next if $akas{$aka}->{type} == LINK_WEAK;
                 next if $akas{$aka}->{nickchange} == 1;
                 next if exists $seen_id{$akas{$aka}->{id}};
 
@@ -1282,7 +1279,7 @@ sub get_max_messages {
         } else {
             $akas{$id} = {
                 id         => $id,
-                type       => $self->{alias_type}->{STRONG},
+                type       => LINK_STRONG,
                 nickchange => 0,
             };
         }
@@ -1290,7 +1287,7 @@ sub get_max_messages {
         my %seen_id;
 
         foreach my $aka (keys %akas) {
-            next if $akas{$aka}->{type} == $self->{alias_type}->{WEAK};
+            next if $akas{$aka}->{type} == LINK_WEAK;
             next if $akas{$aka}->{nickchange} == 1;
             next if exists $seen_id{$akas{$aka}->{id}};
 
@@ -1470,10 +1467,10 @@ sub link_aliases {
             foreach my $row (@$rows) {
                 my $idhost = $self->find_most_recent_hostmask($row->{id}) if $debug_link >= 2 && $row->{id} != $account;
                 if ($now - $row->{last_seen} <= 60 * 60 * 48) {
-                    $ids{$row->{id}} = {id => $row->{id}, type => $self->{alias_type}->{STRONG}, force => 1};
+                    $ids{$row->{id}} = {id => $row->{id}, type => LINK_STRONG, force => 1};
                     $self->{pbot}->{logger}->log("found STRONG matching id $row->{id} ($idhost) for host [$host]\n") if $debug_link >= 2 && $row->{id} != $account;
                 } else {
-                    $ids{$row->{id}} = {id => $row->{id}, type => $self->{alias_type}->{WEAK}};
+                    $ids{$row->{id}} = {id => $row->{id}, type => LINK_WEAK};
                     $self->{pbot}->{logger}->log("found WEAK matching id $row->{id} ($idhost) for host [$host]\n") if $debug_link >= 2 && $row->{id} != $account;
                 }
             }
@@ -1505,7 +1502,7 @@ sub link_aliases {
                             next;
                         } else {
                             $self->{pbot}->{logger}->log("Cloaked hosts match: $host vs $thost\n");
-                            $ids{$row->{id}} = {id => $row->{id}, type => $self->{alias_type}->{STRONG}, force => 1};
+                            $ids{$row->{id}} = {id => $row->{id}, type => LINK_STRONG, force => 1};
                         }
                     }
 
@@ -1516,20 +1513,20 @@ sub link_aliases {
 
                     if ($length != 0 && $distance / $length < 0.50) {
                         $self->{pbot}->{logger}->log("11: distance match: $host vs $thost == " . ($distance / $length) . "\n");
-                        $ids{$row->{id}} = {id => $row->{id}, type => $self->{alias_type}->{STRONG}};    # don't force linking
+                        $ids{$row->{id}} = {id => $row->{id}, type => LINK_STRONG};    # don't force linking
                         $self->{pbot}->{logger}->log("found STRONG matching id $row->{id} ($row->{hostmask}) for nick [$nick]\n") if $debug_link >= 2;
                     } else {
                         # handle cases like 99.57.140.149 vs 99-57-140-149.lightspeed.sntcca.sbcglobal.net
                         if (defined $hostip) {
                             if ($hostip eq $thost) {
-                                $ids{$row->{id}} = {id => $row->{id}, type => $self->{alias_type}->{STRONG}};    # don't force linking
+                                $ids{$row->{id}} = {id => $row->{id}, type => LINK_STRONG};    # don't force linking
                                 $self->{pbot}->{logger}->log("IP vs hostname match: $host vs $thost\n");
                             }
                         } elsif ($thost =~ m/(\d+[[:punct:]]\d+[[:punct:]]\d+[[:punct:]]\d+)\D/) {
                             my $thostip = $1;
                             $thostip =~ s/[[:punct:]]/./g;
                             if ($thostip eq $host) {
-                                $ids{$row->{id}} = {id => $row->{id}, type => $self->{alias_type}->{STRONG}};    # don't force linking
+                                $ids{$row->{id}} = {id => $row->{id}, type => LINK_STRONG};    # don't force linking
                                 $self->{pbot}->{logger}->log("IP vs hostname match: $host vs $thost\n");
                             }
                         }
@@ -1545,7 +1542,7 @@ sub link_aliases {
 
             foreach my $row (@$rows) {
                 my $idhost = $self->find_most_recent_hostmask($row->{id}) if $debug_link >= 2 && $row->{id} != $account;
-                $ids{$row->{id}} = {id => $row->{id}, type => $self->{alias_type}->{STRONG}, force => 1};
+                $ids{$row->{id}} = {id => $row->{id}, type => LINK_STRONG, force => 1};
                 $self->{pbot}->{logger}->log("12: found STRONG matching id $row->{id} ($idhost) for nickserv [$nickserv]\n") if $debug_link >= 2 && $row->{id} != $account;
             }
         }
@@ -1564,7 +1561,7 @@ sub link_alias {
     my $debug_link = $self->{pbot}->{registry}->get_value('messagehistory', 'debug_link');
 
     $self->{pbot}->{logger}
-      ->log("Attempting to " . ($force ? "forcefully " : "") . ($type == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " link $id to $alias\n")
+      ->log("Attempting to " . ($force ? "forcefully " : "") . ($type == LINK_STRONG ? "strongly" : "weakly") . " link $id to $alias\n")
       if $debug_link >= 3;
 
     my $ret = eval {
@@ -1576,7 +1573,7 @@ sub link_alias {
         if (defined $row) {
             if ($force) {
                 if ($row->{'type'} != $type) {
-                    $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " linked to $alias, forcing override\n")
+                    $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == LINK_STRONG ? "strongly" : "weakly") . " linked to $alias, forcing override\n")
                       if $debug_link >= 1;
 
                     $sth = $self->{dbh}->prepare('UPDATE Aliases SET type = ? WHERE alias = ? AND id = ?');
@@ -1584,12 +1581,12 @@ sub link_alias {
                     $sth->execute($type, $alias, $id);
                     return 1;
                 } else {
-                    $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " linked to $alias, ignoring\n")
+                    $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == LINK_STRONG ? "strongly" : "weakly") . " linked to $alias, ignoring\n")
                       if $debug_link >= 4;
                     return 0;
                 }
             } else {
-                $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == $self->{alias_type}->{STRONG} ? "strongly" : "weakly") . " linked to $alias, ignoring\n")
+                $self->{pbot}->{logger}->log("$id already " . ($row->{'type'} == LINK_STRONG ? "strongly" : "weakly") . " linked to $alias, ignoring\n")
                   if $debug_link >= 4;
                 return 0;
             }
@@ -1605,7 +1602,7 @@ sub link_alias {
     my $host1 = $self->find_most_recent_hostmask($id);
     my $host2 = $self->find_most_recent_hostmask($alias);
 
-    $self->{pbot}->{logger}->log(($type == $self->{alias_type}->{STRONG} ? "Strongly" : "Weakly") . " linked $id ($host1) to $alias ($host2).\n") if $ret and $debug_link;
+    $self->{pbot}->{logger}->log(($type == LINK_STRONG ? "Strongly" : "Weakly") . " linked $id ($host1) to $alias ($host2).\n") if $ret and $debug_link;
 
     if ($ret) {
         $host1 = lc $host1;
@@ -1754,7 +1751,7 @@ sub get_also_known_as {
 
             if (not defined $id) { return %akas; }
 
-            $ids{$id} = {id => $id, type => $self->{alias_type}->{STRONG}};
+            $ids{$id} = {id => $id, type => LINK_STRONG};
             $self->{pbot}->{logger}->log("Adding $id -> $id\n") if $debug > 2;
 
             my $sth = $self->{dbh}->prepare('SELECT alias, type FROM Aliases WHERE id = ?');
@@ -1762,7 +1759,7 @@ sub get_also_known_as {
             my $rows = $sth->fetchall_arrayref({});
 
             foreach my $row (@$rows) {
-                # next if $row->{type} == $self->{alias_type}->{WEAK};
+                # next if $row->{type} == LINK_WEAK;
                 $ids{$row->{alias}} = {id => $id, type => $row->{type}};
                 $self->{pbot}->{logger}->log("[$id] 1) Adding $row->{alias} -> $id [type $row->{type}]\n") if $debug > 2;
             }
@@ -1773,7 +1770,7 @@ sub get_also_known_as {
             while (1) {
                 my $new_aliases = 0;
                 foreach my $id (keys %ids) {
-                    next if $ids{$id}->{type} == $self->{alias_type}->{WEAK};
+                    next if $ids{$id}->{type} == LINK_WEAK;
                     next if exists $seen_id{$id};
                     $seen_id{$id} = $id;
 
@@ -1783,8 +1780,8 @@ sub get_also_known_as {
                     foreach my $row (@$rows) {
                         next if exists $ids{$row->{id}};
 
-                        #next if $row->{type} == $self->{alias_type}->{WEAK};
-                        $ids{$row->{id}} = {id => $id, type => $ids{$id}->{type} == $self->{alias_type}->{WEAK} ? $self->{alias_type}->{WEAK} : $row->{type}};
+                        #next if $row->{type} == LINK_WEAK;
+                        $ids{$row->{id}} = {id => $id, type => $ids{$id}->{type} == LINK_WEAK ? LINK_WEAK : $row->{type}};
                         $new_aliases++;
                         $self->{pbot}->{logger}->log("[$id] 2) Adding $row->{id} -> $id [type $row->{type}]\n") if $debug > 2;
                     }

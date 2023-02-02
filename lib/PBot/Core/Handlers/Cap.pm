@@ -95,6 +95,7 @@ sub request_caps {
     my %desired_caps = (
         'account-notify' => 1,
         'account-tag'    => 1,
+        'chghost'        => 1,
         'extended-join'  => 1,
         'message-tags'   => 1,
         'multi-prefix'   => 1,
@@ -102,7 +103,6 @@ sub request_caps {
 
         # TODO: unsupported capabilities worth looking into
         'away-notify'    => 0,
-        'chghost'        => 0,
         'identify-msg'   => 0,
     );
 

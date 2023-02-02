@@ -10,6 +10,8 @@ use parent 'PBot::Core::Class';
 
 use PBot::Imports;
 
+use PBot::Core::MessageHistory::Constants ':all';
+
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration;
 use POSIX qw/strftime/;
@@ -120,7 +122,7 @@ sub cmd_unbanme {
     my %aliases = $self->{pbot}->{messagehistory}->{database}->get_also_known_as($context->{nick});
 
     foreach my $alias (keys %aliases) {
-        next if $aliases{$alias}->{type} == $self->{pbot}->{messagehistory}->{database}->{alias_type}->{WEAK};
+        next if $aliases{$alias}->{type} == LINK_WEAK;
         next if $aliases{$alias}->{nickchange} == 1;
 
         my $join_flood_channel = $self->{pbot}->{registry}->get_value('antiflood', 'join_flood_channel') // '#stop-join-flood';
