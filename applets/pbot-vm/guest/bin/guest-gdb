@@ -292,8 +292,16 @@ sub get_main_start_end($context) {
 
         my ($line, $code) = split /\t/, $output->{_text};
 
-        # this line isn't part of main() yet
-        next if $line < $start;
+        if (not defined $start) {
+            # info functions didn't work, try to find main
+            if ($code =~ /main\s*\(/) {
+                $start = $line;
+            }
+            next;
+        } else {
+            # this line isn't part of main() yet
+            next if $line < $start;
+        }
 
         # blank out contents of string and char literals so we don't count
         # any braces within
