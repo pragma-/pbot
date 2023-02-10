@@ -294,7 +294,7 @@ sub get_main_start_end($context) {
 
         if (not defined $start) {
             # info functions didn't work, try to find main
-            if ($code =~ /main\s*\(/) {
+            if ($code =~ /\bmain[\b\s\)]*\(/) {
                 $start = $line;
             }
             next;
