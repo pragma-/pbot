@@ -24,13 +24,13 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.public',   sub { $self->on_activity(@_) },   0);
     $self->{pbot}->{event_dispatcher}->register_handler('irc.caction',  sub { $self->on_activity(@_) },   0);
     $self->{pbot}->{event_dispatcher}->register_handler('irc.modeflag', sub { $self->on_modeflag(@_) },   0);
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.nick',     sub { $self->on_nickchange(@_) }, 0);
 
     # lowest priority so these get handled by NickList after all other handlers
     # (all other handlers should be given a priority < 100)
     $self->{pbot}->{event_dispatcher}->register_handler('irc.part',     sub { $self->on_part(@_) },       100);
     $self->{pbot}->{event_dispatcher}->register_handler('irc.quit',     sub { $self->on_quit(@_) },       100);
     $self->{pbot}->{event_dispatcher}->register_handler('irc.kick',     sub { $self->on_kick(@_) },       100);
-    $self->{pbot}->{event_dispatcher}->register_handler('irc.nick',     sub { $self->on_nickchange(@_) }, 100);
 
     # handlers for the bot itself joining/leaving channels (highest priority)
     $self->{pbot}->{event_dispatcher}->register_handler('pbot.join', sub { $self->on_self_join(@_) },  0);

@@ -32,7 +32,8 @@ sub initialize {
 sub on_sasl_authenticate {
     my ($self, $event_type, $event) = @_;
 
-    my $nick     = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+    my $nick     = $self->{pbot}->{registry}->get_value('irc', 'identify_nick'); # try identify_nick
+       $nick   //= $self->{pbot}->{registry}->get_value('irc', 'botnick');       # fallback to botnick
     my $password = $self->{pbot}->{registry}->get_value('irc', 'identify_password');
 
     if (not defined $password or not length $password) {

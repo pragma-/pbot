@@ -224,7 +224,7 @@ sub check_flood {
 
     my $channels;
     if ($mode == MSG_NICKCHANGE) {
-        $channels = $self->{pbot}->{nicklist}->get_channels($oldnick);
+        $channels = $self->{pbot}->{nicklist}->get_channels($nick);
     } else {
         $self->update_join_watch($account, $channel, $text, $mode);
         push @$channels, $channel;
