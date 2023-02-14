@@ -508,11 +508,13 @@ sub handler {
         croak "Not enough arguments to handler()";
     }
 
-    print STDERR "--- Trying to handle event '$ev'.\n" if $self->{_debug};
+    unless ($ev eq 'pong') {
+        print STDERR "--- Trying to handle event '$ev'.\n" if $self->{_debug};
 
-    if ($self->{_debug} > 1) {
-        use Data::Dumper;
-        print STDERR "ev: ", Dumper($ev), "\nevent: ", Dumper($event), "\n";
+        if ($self->{_debug} > 1) {
+            use Data::Dumper;
+            print STDERR "ev: ", Dumper($ev), "\nevent: ", Dumper($event), "\n";
+        }
     }
 
     my $handler = undef;
@@ -535,7 +537,9 @@ sub handler {
         confess "Bad parameter passed to handler(): rp=$rp";
     }
 
-    print STDERR "--- Handler for '$ev' called.\n" if $self->{_debug};
+    unless ($ev eq 'pong') {
+        print STDERR "--- Handler for '$ev' called.\n" if $self->{_debug};
+    }
 
     return 1;
 }
