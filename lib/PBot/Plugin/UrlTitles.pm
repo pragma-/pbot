@@ -2,7 +2,7 @@
 #
 # Purpose: Display titles of URLs in channel messages.
 
-# SPDX-FileCopyrightText: 2021, 2022 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2009-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Plugin::UrlTitles;
@@ -123,6 +123,7 @@ sub is_ignored_url {
 sub is_ignored_title {
     my ($self, $title) = @_;
 
+    return 1 if $title =~ m{dive into reddit}i;
     return 1 if $title =~ m{^Loading}i;
     return 1 if $title =~ m{streamable}i;
     return 1 if $title =~ m{^IBM Knowledge Center$}i;

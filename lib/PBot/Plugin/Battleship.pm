@@ -21,7 +21,7 @@
 # the shot to a random tile. Much of the IOCCC silliness has been removed so that
 # I can maintain this code without going insane.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 1993-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Plugin::Battleship;

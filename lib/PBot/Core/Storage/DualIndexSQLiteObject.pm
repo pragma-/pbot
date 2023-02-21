@@ -13,7 +13,7 @@
 # Since this class does not store all the data in working memory, it provides
 # iterator-based access via get_each, get_next and get_all.
 #
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2020-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::Storage::DualIndexSQLiteObject;

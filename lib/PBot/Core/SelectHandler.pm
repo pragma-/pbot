@@ -3,7 +3,7 @@
 # Purpose: Adds/removes file handles to/from PBot::Core::IRC's select loop
 # and contains handlers for select events.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2014-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::SelectHandler;

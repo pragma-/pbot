@@ -3,7 +3,7 @@
 # Purpose: The `version` PBot command. It can check against GitHub or a
 # user-defined URL for PBot's VERSION.pm file.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2001-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::Commands::Version;

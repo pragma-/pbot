@@ -3,7 +3,7 @@
 # Purpose: for strings containing filenames, translates potentially unsafe
 # characters into safe expansions; e.g. "foo/bar" becomes "foo&fslash;bar".
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2017-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::Utils::SafeFilename;

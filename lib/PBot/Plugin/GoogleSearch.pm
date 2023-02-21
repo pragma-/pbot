@@ -3,7 +3,7 @@
 # Purpose: Google CustomSearch API. You'll need to configure an api-key and
 # a custom-search context. URLs to instructions are provided by the command.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2019-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Plugin::GoogleSearch;

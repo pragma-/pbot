@@ -3,7 +3,7 @@
 # Purpose: Handles forking and execution of applet/subroutine processes.
 # Provides commands to list running processes and to kill them.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2020-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::ProcessManager;

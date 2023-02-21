@@ -3,7 +3,7 @@
 # Purpose: Populates and maintains channel banlists by checking mode +b/+q
 # when joining channels and by tracking modes +b/+q and -b/-q in channels.
 
-# SPDX-FileCopyrightText: 2021-2023 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2010-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::Handlers::BanList;

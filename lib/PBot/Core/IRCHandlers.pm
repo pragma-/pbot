@@ -3,7 +3,7 @@
 # Purpose: Pipes the PBot::Core::IRC default handler through PBot::Core::EventDispatcher,
 # and registers default IRC handlers.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 20001-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::IRCHandlers;

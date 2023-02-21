@@ -3,7 +3,7 @@
 # Purpose: Provides implementation of PBot factoids. Factoids provide the
 # foundation for most user-submitted commands, as well as aliases, etc.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2001-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::Factoids;

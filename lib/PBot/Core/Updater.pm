@@ -6,7 +6,7 @@
 # on versioning information. Ensures data/configuration files are in the
 # proper location and using the latest data structure.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2020-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::Updater;

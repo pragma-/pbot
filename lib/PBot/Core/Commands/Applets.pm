@@ -2,7 +2,7 @@
 #
 # Purpose: Registers commands to load and unload PBot applets.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2007-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::Commands::Applets;

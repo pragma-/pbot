@@ -6,7 +6,7 @@
 # configurations where +v users are recognized as "semi-trusted" in
 # order to provide assistance in combating heavy spam and drone traffic.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2020-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Plugin::RestrictedMod;

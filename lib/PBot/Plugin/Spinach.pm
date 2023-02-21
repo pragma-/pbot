@@ -6,7 +6,7 @@
 # bot. Then all "lies" are revealed along with the true answer. Players
 # gain points every time another player picks their lie. Very fun!
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2018-2021 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Plugin::Spinach;

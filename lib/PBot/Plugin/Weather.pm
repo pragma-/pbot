@@ -2,7 +2,7 @@
 #
 # Purpose: Weather command. See Wttr.pm for a more featureful command.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2007-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Plugin::Weather;

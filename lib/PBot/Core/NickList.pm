@@ -4,7 +4,7 @@
 # Used to retrieve list of channels a nick is present in or to
 # determine if a nick is present in a channel.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2014-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::NickList;

@@ -2,7 +2,7 @@
 #
 # Purpose: Kicks people that visibly auto-away with ACTIONs or nick-changes
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2014-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Plugin::AntiAway;

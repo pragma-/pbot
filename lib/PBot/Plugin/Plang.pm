@@ -3,7 +3,7 @@
 # Purpose: Scripting language for creating advanced PBot factoids
 # and interacting with various internal PBot APIs.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2020-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Plugin::Plang;

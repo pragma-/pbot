@@ -4,7 +4,7 @@
 # for internal strings. This means ensuring the string is not too long,
 # does not have undesired characters, etc.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2017-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::Utils::ValidateString;

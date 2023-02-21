@@ -14,7 +14,7 @@
 # TODO: The PBot::Plugin::* plugins probably should have their own version
 # identifiers as a template for versioned $HOME/PBot/Plugin/ plugins.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2001-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::VERSION;
@@ -25,8 +25,8 @@ use PBot::Imports;
 # These are set by the /misc/update_version script
 use constant {
     BUILD_NAME     => "PBot",
-    BUILD_REVISION => 4620,
-    BUILD_DATE     => "2023-02-13",
+    BUILD_REVISION => 4622,
+    BUILD_DATE     => "2023-02-20",
 };
 
 sub initialize {}

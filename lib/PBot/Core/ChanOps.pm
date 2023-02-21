@@ -8,7 +8,7 @@
 # PBot gains OP status, all queued commands are invoked and then after a
 # timeout PBot will remove its OP status.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2010-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::ChanOps;

@@ -3,7 +3,7 @@
 # Purpose: Base class for PBot classes. This prevents each PBot class from
 # needing to define the new() constructor and other boilerplate.
 #
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2020-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::Class;

@@ -6,7 +6,7 @@
 # Used in conjunction with AntiFlood and Quotegrabs for kick/ban on
 # flood/ban-evasion and grabbing quotes, respectively.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2014-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::MessageHistory;

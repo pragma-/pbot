@@ -3,7 +3,7 @@
 # Purpose: Implements functions related to maintaining and tracking channel
 # bans/mutes. Maintains ban/mute queues and timeouts.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2015-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::BanList;

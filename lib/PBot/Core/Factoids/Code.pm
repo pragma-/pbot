@@ -3,7 +3,7 @@
 # Purpose: Launching pad for code factoids. Configures $context as a code
 # factoid and executes the vm-client applet.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2007-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::Factoids::Code;

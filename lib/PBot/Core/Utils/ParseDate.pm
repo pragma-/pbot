@@ -3,7 +3,7 @@
 # Purpose: Intelligently parses strings like "1h30m", "5 minutes", "next week",
 # "3:30 am pdt", "11 pm utc", etc, into seconds.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2015-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::Utils::ParseDate;

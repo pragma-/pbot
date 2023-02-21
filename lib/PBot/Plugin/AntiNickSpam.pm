@@ -3,7 +3,7 @@
 # Purpose: Temporarily mutes $~a in channel if too many nicks were
 #          mentioned within a time period; used to combat botnet spam
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2017-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Plugin::AntiNickSpam;

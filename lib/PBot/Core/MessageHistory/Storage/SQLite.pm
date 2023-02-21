@@ -6,7 +6,7 @@
 # ids. This is also extremely useful for detecting ban-evasions and listing
 # also-known-as data for a nickname (see the !aka bot command).
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2014-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::MessageHistory::Storage::SQLite;

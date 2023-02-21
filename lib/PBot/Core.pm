@@ -2,7 +2,7 @@
 #
 # Purpose: PBot IRC Bot Core
 #
-# PBot was started around 2004, 2005. It has been lovingly maintained;
+# PBot was started around 1997-2001. It has been lovingly maintained;
 # however, it does use the ancient but simple Net::IRC package (if it
 # ain't broke) instead of packages based on significantly more complex
 # Enterprise-level event-loop frameworks. PBot uses pure Perl 5 blessed
@@ -13,7 +13,7 @@
 # contains numerous bugfixes and supports various new features such as IRCv3
 # client capability negotiation and SASL user authentication.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2001-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core;

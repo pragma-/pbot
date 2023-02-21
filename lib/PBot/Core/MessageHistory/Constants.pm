@@ -2,6 +2,9 @@
 #
 # Purpose: Constants related to message history.
 
+# SPDX-FileCopyrightText: 2014-2023 Pragmatic Software <pragma78@gmail.com>
+# SPDX-License-Identifier: MIT
+
 package PBot::Core::MessageHistory::Constants;
 
 use warnings;

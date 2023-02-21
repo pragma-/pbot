@@ -3,7 +3,7 @@
 # Purpose: Users can use `remindme` to set up reminders. Reminders are
 # sent to the user (or to a channel, if option -c is used).
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2017-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Plugin::RemindMe;

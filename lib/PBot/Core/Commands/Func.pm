@@ -13,7 +13,7 @@
 # the command-substitution with the result, thus escaping $args to be safely
 # used in the URL of this simple Google Image Search factoid command.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2020-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::Commands::Func;

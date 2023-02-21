@@ -2,7 +2,7 @@
 #
 # Purpose: Commands to manage list of bot users/admins and their metadata.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2010-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::Commands::Users;

@@ -3,7 +3,7 @@
 # Purpose: Tracks when PBot gains or loses OPs in a channel and invokes
 # relevant actions. Handles OP-related actions when PBot joins or parts.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2005-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::Handlers::ChanOps;

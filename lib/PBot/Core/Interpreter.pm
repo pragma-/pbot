@@ -6,7 +6,7 @@
 # command splitting, command output processing such as truncating long
 # text to web paste sites, etc.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2001-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::Interpreter;

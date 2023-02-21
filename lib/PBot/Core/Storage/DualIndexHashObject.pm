@@ -12,7 +12,7 @@
 #
 # If a filename is provided, data is written to the file after any modifications.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2010-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::Storage::DualIndexHashObject;

@@ -3,7 +3,7 @@
 # Purpose: Counts occurrences of phrases or keywords. Can automatically
 # respond about specific counters.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2016-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Plugin::Counter;

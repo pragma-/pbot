@@ -3,7 +3,7 @@
 # Purpose: sends PING command to IRC server and times duration for PONG reply in
 # order to maintain lag history and average.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2011-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::LagChecker;

@@ -3,7 +3,7 @@
 # Purpose: Provides a centralized registry of configuration settings that can
 # easily be examined and updated via getters and setters.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2014-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::Registry;
