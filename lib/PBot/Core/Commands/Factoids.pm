@@ -1254,11 +1254,11 @@ sub cmd_factchange {
         if (defined $sub) {
             $delim = quotemeta $delim;
 
-            if ($sub =~ /^s$delim(.*?)$delim(.*)$delim(.*)$/) {
+            if ($sub =~ /^s(?<!\\)$delim(.*?)(?<!\\)$delim(.*)(?<!\\)$delim(.*)$/) {
                 $tochange = $1;
                 $changeto = $2;
                 $modifier = $3;
-            } elsif ($sub =~ /^s$delim(.*?)$delim(.*)$/) {
+            } elsif ($sub =~ /^s(?<!\\)$delim(.*?)(?<!\\)$delim(.*)$/) {
                 $tochange = $1;
                 $changeto = $2;
                 $modifier = '';
