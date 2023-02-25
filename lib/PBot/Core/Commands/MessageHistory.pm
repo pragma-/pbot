@@ -266,10 +266,12 @@ sub cmd_recall_message {
         if (not $channel_arg) {
             $recall_channel = "@$opt_args" if @$opt_args;
         } else {
-            if (defined $recall_history) {
-                $recall_history .= ' ';
+            if (@$opt_args) {
+                if (defined $recall_history) {
+                    $recall_history .= ' ';
+                }
+                $recall_history .= "@$opt_args";
             }
-            $recall_history .= "@$opt_args" if @$opt_args;
         }
 
         if (defined $recall_text and not defined $recall_history) {
