@@ -78,10 +78,6 @@ sub launch_applet {
     my ($exitval, $stdout, $stderr) = eval {
         my $args = $context->{arguments};
 
-        if (not $context->{args_utf8}) {
-            $args = encode('UTF-8', $args);
-        }
-
         my $strip_quotes = 1;
 
         $strip_quotes = 0 if $self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $trigger, 'keep-quotes');
@@ -92,12 +88,17 @@ sub launch_applet {
 
         my ($stdin, $stdout, $stderr);
 
+        # encode as UTF-8 if not already encoded (e.g. by encode_json)
+        if (not $context->{args_utf8}) {
+            @cmdline = map { encode('UTF-8', $_) } @cmdline;
+        }
+
         run \@cmdline, \$stdin, \$stdout, \$stderr, timeout($timeout);
 
         my $exitval = $? >> 8;
 
-        utf8::decode $stdout;
-        utf8::decode $stderr;
+        $stdout = decode('UTF-8', $stdout);
+        $stderr = decode('UTF-8', $stderr);
 
         return ($exitval, $stdout, $stderr);
     };

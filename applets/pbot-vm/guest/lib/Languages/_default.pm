@@ -77,13 +77,16 @@ sub execute {
 
     $stdin //= '';
 
+    $stdin = encode('UTF-8', $stdin);
+    @cmdline = map { encode('UTF-8', $_) } @cmdline;
+
     print STDERR "execute ($timeout) [$stdin] @cmdline\n";
 
     my ($exitval, $stdout, $stderr) = eval {
         my ($stdout, $stderr);
         run \@cmdline, \$stdin, \$stdout, \$stderr, timeout($timeout);
         my $exitval = $? >> 8;
-        return ($exitval, $stdout, $stderr);
+        return ($exitval, decode('UTF-8', $stdout), decode('UTF-8', $stderr));
     };
 
     if (my $exception = $@) {

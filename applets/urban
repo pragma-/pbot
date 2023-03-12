@@ -5,6 +5,7 @@
 
 use warnings;
 use strict;
+use utf8;
 
 use WebService::UrbanDictionary;
 use Getopt::Long qw(GetOptionsFromString);

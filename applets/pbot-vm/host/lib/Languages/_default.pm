@@ -210,7 +210,7 @@ sub execute {
     my $stdin = $self->{options}->{'-stdin'};
 
     if (not length $stdin) {
-        $stdin = `fortune -u -s`;
+        $stdin = decode('UTF-8', `fortune -u -s`);
         $stdin =~ s/[\n\r\t]/ /msg;
         $stdin =~ s/:/ - /g;
         $stdin =~ s/\s+/ /g;
@@ -270,7 +270,7 @@ sub execute {
     $compile_in->{'persist-key'} = $self->{'persist-key'} if length $self->{'persist-key'};
 
     my $compile_json = encode_json($compile_in);
-    $compile_json .= encode('UTF-8', "\n:end:\n");
+    $compile_json .= "\n:end:\n";
 
     my $length = length $compile_json;
     my $sent = 0;

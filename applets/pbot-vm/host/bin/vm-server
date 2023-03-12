@@ -43,7 +43,7 @@ sub execute($command) {
     # to get $? from pipe
     local $SIG{CHLD} = 'DEFAULT';
 
-    my $pid = open(my $fh, '-|', split / /, $command);
+    my $pid = open(my $fh, '-|', split / /, encode('UTF-8', $command));
 
     if (not defined $pid) {
         print "Couldn't fork: $!\n";
@@ -55,7 +55,7 @@ sub execute($command) {
         local $SIG{ALRM} = sub { kill 9, $pid; die "Timed-out: $output\n"; };
         alarm(COMPILE_TIMEOUT);
 
-        while (my $line = <$fh>) {
+        while (my $line = decode('UTF-8', <$fh>)) {
             $output .= $line;
         }
 
@@ -182,7 +182,7 @@ sub handle_client($client, $heartbeat) {
         local $SIG{ALRM} = sub { die "Client I/O timed-out\n"; };
         alarm 5;
 
-        while (my $line = <$client>) {
+        while (my $line = decode('UTF-8', <$client>)) {
             $line =~ s/[\r\n]+$//;
             next if $line =~ m/^\s*$/;
 
@@ -214,7 +214,7 @@ sub handle_client($client, $heartbeat) {
                 $timed_out = 1;
             }
 
-            print $client $result . "\n";
+            print $client encode('UTF-8', $result . "\n");
             last;
         }
     };
@@ -238,6 +238,9 @@ sub handle_client($client, $heartbeat) {
 }
 
 sub main() {
+    binmode(STDOUT, ':utf8');
+    binmode(STDERR, ':utf8');
+
     # let OS clean-up child exits
     $SIG{CHLD} = 'IGNORE';
 
