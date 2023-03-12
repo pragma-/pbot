@@ -396,7 +396,7 @@ sub show_output($self) {
     }
 
     if (exists $self->{options}->{'-paste'} or (defined $self->{got_run} and $self->{got_run} eq 'paste')) {
-        my $cmdline = "command: $self->{cmdline}\n";
+        my $cmdline = "$self->{cmdline}\n";
 
         $cmdline =~ s/\$sourcefile/$self->{sourcefile}/g;
         $cmdline =~ s/\$execfile/$self->{execfile}/g;
