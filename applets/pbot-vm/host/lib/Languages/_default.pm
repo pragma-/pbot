@@ -309,18 +309,14 @@ sub execute {
     my $result = "";
     my $got_result = 0;
 
-    while (my $line = decode('UTF-8', <$output>)) {
+    while (my $line = decode('UTF-8', <$output>, sub { sprintf '\\\\x%02X', shift })) {
         $line =~ s/[\r\n]+$//;
         last if $line =~ /^result:end$/;
 
         if ($line =~ /^result:/) {
             $line =~ s/^result://;
-
-            $line = encode('UTF-8', $line);
-            my $octets = decode('UTF-8', $line, sub { sprintf '\\\\x%02X', shift });
-            $line = encode('UTF-8', $octets, Encode::FB_CROAK);
-
-            my $compile_out = decode_json($line);
+            # use JSON::XS->new->decode() for non-utf8 decoding
+            my $compile_out = JSON::XS->new->decode($line);
             $result .= "$compile_out->{result}\n";
             $got_result = 1;
             next;
