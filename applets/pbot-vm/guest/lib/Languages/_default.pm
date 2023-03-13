@@ -9,9 +9,9 @@ use warnings;
 use strict;
 
 use IPC::Run qw/run timeout/;
+use Encode;
 
 use Data::Dumper;
-
 $Data::Dumper::Terse    = 1;
 $Data::Dumper::Sortkeys = 1;
 $Data::Dumper::Useqq    = 1;

@@ -309,14 +309,14 @@ sub execute {
     my $result = "";
     my $got_result = 0;
 
-    while (my $line = <$output>) {
-        utf8::decode($line);
+    while (my $line = decode('UTF-8', <$output>)) {
         $line =~ s/[\r\n]+$//;
         last if $line =~ /^result:end$/;
 
         if ($line =~ /^result:/) {
             $line =~ s/^result://;
 
+            $line = encode('UTF-8', $line);
             my $octets = decode('UTF-8', $line, sub { sprintf '\\\\x%02X', shift });
             $line = encode('UTF-8', $octets, Encode::FB_CROAK);
 
