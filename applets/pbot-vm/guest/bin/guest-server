@@ -19,8 +19,8 @@ no warnings qw(experimental::signatures);
 use constant {
     USERNAME  => 'vm',
     MOD_DIR   => '/usr/local/share/pbot-vm/',
-    SERIAL    => '/dev/ttyS1',
-    HEARTBEAT => '/dev/ttyS2',
+    SERIAL    => '/dev/ttyS2',
+    HEARTBEAT => '/dev/ttyS3',
     VPORT     => $ENV{PBOTVM_VPORT} // 5555,
 };
 
