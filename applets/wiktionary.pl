@@ -85,7 +85,7 @@ $num //= 1;
 
 my $cache = Cache::FileCache->new({ namespace => 'wiktionary', default_expires_in => '1 week' });
 
-my $cache_id = "$term $lang";
+my $cache_id = encode('UTF-8', "$term $lang");
 
 my $entries = $cache->get($cache_id);
 
