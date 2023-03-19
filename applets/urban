@@ -7,6 +7,7 @@ use warnings;
 use strict;
 use utf8;
 
+use Encode;
 use WebService::UrbanDictionary;
 use Getopt::Long qw(GetOptionsFromString);
 
@@ -19,6 +20,11 @@ local $SIG{__WARN__} = sub {
 };
 
 my $usage = "Usage: udict [-m <show definition matching this regex>] [-n <entry number>] [-s <up/down (sort by thumbs up/down)>] <phrase>\n";
+
+binmode(STDOUT, ":utf8");
+binmode(STDERR, ":utf8");
+
+@ARGV = map { decode('UTF-8', $_, 1) } @ARGV;
 
 my ($entry, $sort, $match, $show_all);
 my $arguments = join(' ', @ARGV);
@@ -33,7 +39,6 @@ my ($ret, $args) = GetOptionsFromString($arguments,
 
 print "$getopt_error -- $usage"  and exit if defined $getopt_error;
 print "Missing phrase -- $usage" and exit if @$args == 0 and not $match and not $entry;
-
 
 if (@$args == 0) {
   open my $fh, "<", "udict.last";
