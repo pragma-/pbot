@@ -368,6 +368,13 @@ sub interpret {
             # add it to the list of substituted commands
             push @{$context->{subcmd}}, "$keyword $arguments";
 
+            # FIXME: quick-and-dirty hack to fix $0.
+            # Without this hack `pet &{echo dog}` will output `You echo
+            # the dog` instead of `You pet the dog`.
+            if (not defined $context->{root_keyword}) {
+                $context->{root_keyword} = $keyword;
+            }
+
             # trim surrounding whitespace
             $command =~ s/^\s+|\s+$//g;
 
