@@ -3,7 +3,7 @@
 # SPDX-FileCopyrightText: 2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
-# quick-and-dirty
+# quick-and-dirty simplified interface to https://github.com/garabik/unicode
 
 use warnings;
 use strict;
@@ -11,7 +11,7 @@ use strict;
 use Encode;
 
 if (not @ARGV) {
-    print "Usage: unicode <character | U+XXXX code-point | search regex>\n";
+    print "Usage: unicode <character> | <U+XXXX code-point> | -s <search regex>\n";
     exit;
 }
 
@@ -21,7 +21,7 @@ my $args = join ' ', @ARGV;
 
 my $search = 0;
 
-if ($args =~ s/^-s\s+// || length $args > 1) {
+if ($args =~ s/^-s\s+//) {
     $search = 1;
 }
 
@@ -32,9 +32,9 @@ if ($args =~ /^u\+/i) {
 } elsif ($search) {
     $result = `unicode -r --color=off \Q$args\E --format 'U+{ordc:04X} {pchar} {name}\n'`;
 } else {
-    $result = `unicode -s --color=off \Q$args\E`;
+    $result = `unicode -s --color=off \Q$args\E --format 'U+{ordc:04X} ({utf8}) {pchar} {name} Category: {category} ({category_desc}) {opt_unicode_block}{opt_unicode_block_desc}{mirrored_desc}{opt_combining}{combining_desc}{opt_decomp}{decomp_desc}'`;
 }
 
-$result = join '; ', split /\n/, $result;
+$result = join '; ', split /\n+/, $result;
 
 print "$result\n";
