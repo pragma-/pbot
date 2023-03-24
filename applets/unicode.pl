@@ -11,7 +11,7 @@ use strict;
 use Encode;
 
 if (not @ARGV) {
-    print "Usage: unicode <expression>\n";
+    print "Usage: unicode <character | U+XXXX code-point | search regex>\n";
     exit;
 }
 
