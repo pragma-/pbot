@@ -30,11 +30,9 @@ my $result;
 if ($args =~ /^u\+/i) {
     $result = `unicode --color=off \Q$args\E`;
 } elsif ($search) {
-    $result = `unicode -r --color=off \Q$args\E --format 'U+{ordc:04X} {pchar} {name}\n'`;
+    $result = `unicode -r --max=100 --color=off \Q$args\E --format 'U+{ordc:04X} {pchar} {name};\n'`;
 } else {
-    $result = `unicode -s --color=off \Q$args\E --format 'U+{ordc:04X} ({utf8}) {pchar} {name} Category: {category} ({category_desc}) {opt_unicode_block}{opt_unicode_block_desc}{mirrored_desc}{opt_combining}{combining_desc}{opt_decomp}{decomp_desc}'`;
+    $result = `unicode -s --color=off \Q$args\E --format 'U+{ordc:04X} ({utf8}) {pchar} {name} Category: {category} ({category_desc}) {opt_unicode_block}{opt_unicode_block_desc}{mirrored_desc}{opt_combining}{combining_desc}{opt_decomp}{decomp_desc};\n'`;
 }
-
-$result = join '; ', split /\n+/, $result;
 
 print "$result\n";
