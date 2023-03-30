@@ -114,9 +114,14 @@ sub get_random_quotegrab {
         my $where = 'WHERE ';
         my $and   = '';
 
+        # multi-grabs have the nick separated by +'s so we must test for
+        # nick, nick+*, *+nick, and *+nick+* to match each of these cases
         if (defined $nick) {
-            $sql .= $where . 'nick LIKE ? ';
+            $sql .= $where . 'nick LIKE ? OR nick LIKE ? OR nick LIKE ? OR nick LIKE ?';
             push @params, "$nick";
+            push @params, "$nick+%";
+            push @params, "%+$nick";
+            push @params, "%+$nick+%";
             $where = '';
             $and   = 'AND ';
         }
