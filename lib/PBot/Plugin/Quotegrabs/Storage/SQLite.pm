@@ -47,6 +47,12 @@ CREATE TABLE IF NOT EXISTS Quotegrabs (
   timestamp  NUMERIC
 )
 SQL
+
+        $self->{dbh}->do(<< 'SQL');
+CREATE TABLE IF NOT EXISTS Seen (
+  id         INTEGER UNIQUE
+)
+SQL
     };
 
     $self->{pbot}->{logger}->log($@) if $@;
@@ -117,7 +123,7 @@ sub get_random_quotegrab {
         # multi-grabs have the nick separated by +'s so we must test for
         # nick, nick+*, *+nick, and *+nick+* to match each of these cases
         if (defined $nick) {
-            $sql .= $where . 'nick LIKE ? OR nick LIKE ? OR nick LIKE ? OR nick LIKE ?';
+            $sql .= $where . '(nick LIKE ? OR nick LIKE ? OR nick LIKE ? OR nick LIKE ?) ';
             push @params, "$nick";
             push @params, "$nick+%";
             push @params, "%+$nick";
@@ -138,15 +144,60 @@ sub get_random_quotegrab {
             push @params, "%$text%";
         }
 
-        $sql .= 'ORDER BY RANDOM() LIMIT 1';
-
-        my $sth = $self->{dbh}->prepare($sql);
+        my $sth = $self->{dbh}->prepare($sql . $where . $and . 'id NOT IN Seen ORDER BY RANDOM() LIMIT 1');
         $sth->execute(@params);
-        return $sth->fetchrow_hashref();
+        my $quotegrab = $sth->fetchrow_hashref();
+
+        # no unseen quote found, remove queried quotes from Seen table and try again
+        if (not defined $quotegrab) {
+            my $count = $self->remove_seen($sql, \@params);
+
+            # no matching quotes in Seen table, ergo no quote found
+            if ($count == 0) {
+                return undef;
+            }
+
+            # try again
+            $sth->execute(@params);
+            $quotegrab = $sth->fetchrow_hashref();
+        }
+
+        # mark quote as seen
+        if (defined $quotegrab) {
+            $self->add_seen($quotegrab->{id});
+        }
+
+        return $quotegrab;
     };
 
     $self->{pbot}->{logger}->log($@) if $@;
     return $quotegrab;
+}
+
+sub remove_seen {
+    my ($self, $sql, $params) = @_;
+
+    $sql =~ s/^SELECT \*/SELECT id/;
+
+    my $count = eval {
+        my $sth = $self->{dbh}->prepare("DELETE from Seen WHERE id IN ($sql)");
+        $sth->execute(@$params);
+        return $sth->rows;
+    };
+
+    $self->{pbot}->{logger}->log($@) if $@;
+    return $count;
+}
+
+sub add_seen {
+    my ($self, $id) = @_;
+
+    eval {
+        my $sth = $self->{dbh}->prepare('INSERT INTO Seen VALUES (?)');
+        $sth->execute($id);
+    };
+
+    $self->{pbot}->{logger}->log($@) if $@;
 }
 
 sub get_all_quotegrabs {
@@ -167,8 +218,10 @@ sub delete_quotegrab {
 
     eval {
         my $sth = $self->{dbh}->prepare('DELETE FROM Quotegrabs WHERE id == ?');
-        $sth->bind_param(1, $id);
-        $sth->execute();
+        $sth->execute($id);
+
+        $sth = $self->{dbh}->prepare('DELETE FROM Seen WHERE id == ?');
+        $sth->execute($id);
     };
 
     $self->{pbot}->{logger}->log($@) if $@;

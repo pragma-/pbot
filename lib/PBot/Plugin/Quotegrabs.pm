@@ -45,6 +45,7 @@ sub unload {
     $self->{pbot}->{commands}->unregister('getq');
     $self->{pbot}->{commands}->unregister('delq');
     $self->{pbot}->{commands}->unregister('rq');
+    $self->{database}->end();
 }
 
 sub uniq { my %seen; grep !$seen{$_}++, @_ }
