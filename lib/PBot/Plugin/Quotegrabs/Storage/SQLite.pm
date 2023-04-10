@@ -2,7 +2,7 @@
 #
 # Purpose: SQLite backend for storing and retreiving quotegrabs.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2021-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Plugin::Quotegrabs::Storage::SQLite;
@@ -10,13 +10,10 @@ package PBot::Plugin::Quotegrabs::Storage::SQLite;
 use PBot::Imports;
 
 use DBI;
-use Carp qw(shortmess);
+use Carp;
 
 sub new {
-    if (ref($_[1]) eq 'HASH') { Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference"); }
-
     my ($class, %conf) = @_;
-
     my $self = bless {}, $class;
     $self->initialize(%conf);
     return $self;
@@ -24,7 +21,6 @@ sub new {
 
 sub initialize {
     my ($self, %conf) = @_;
-
     $self->{pbot}     = delete $conf{pbot} // Carp::croak("Missing pbot reference in " . __FILE__);
     $self->{filename} = delete $conf{filename};
 }
@@ -33,7 +29,6 @@ sub begin {
     my $self = shift;
 
     $self->{pbot}->{logger}->log("Opening quotegrabs SQLite database: $self->{filename}\n");
-
     $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{filename}", "", "", {RaiseError => 1, PrintError => 0, sqlite_unicode => 1}) or die $DBI::errstr;
 
     eval {
@@ -81,7 +76,6 @@ sub add_quotegrab {
         $sth->bind_param(5, $quotegrab->{text});
         $sth->bind_param(6, $quotegrab->{timestamp});
         $sth->execute();
-
         return $self->{dbh}->sqlite_last_insert_rowid();
     };
 
@@ -142,27 +136,29 @@ sub get_random_quotegrab {
         if (defined $text) {
             $sql .= $where . $and . 'text LIKE ? ';
             push @params, "%$text%";
+            $where = '';
+            $and   = 'AND ';
         }
 
+        # search for a random unseen quotegrab
         my $sth = $self->{dbh}->prepare($sql . $where . $and . 'id NOT IN Seen ORDER BY RANDOM() LIMIT 1');
         $sth->execute(@params);
         my $quotegrab = $sth->fetchrow_hashref();
 
-        # no unseen quote found, remove queried quotes from Seen table and try again
+        # no unseen quote found
         if (not defined $quotegrab) {
-            my $count = $self->remove_seen($sql, \@params);
-
-            # no matching quotes in Seen table, ergo no quote found
-            if ($count == 0) {
+            # remove queried quotes from Seen table
+            if (not $self->remove_seen($sql, \@params)) {
+                # no matching quotes in Seen table ergo no quote found
                 return undef;
             }
 
-            # try again
+            # try again to search for random unseen quotegrab
             $sth->execute(@params);
             $quotegrab = $sth->fetchrow_hashref();
         }
 
-        # mark quote as seen
+        # mark quote as seen if found
         if (defined $quotegrab) {
             $self->add_seen($quotegrab->{id});
         }
