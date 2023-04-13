@@ -12,22 +12,18 @@ use PBot::Imports;
 use DBI;
 use Carp;
 
-sub new {
-    my ($class, %conf) = @_;
+sub new($class, %conf) {
     my $self = bless {}, $class;
     $self->initialize(%conf);
     return $self;
 }
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{pbot}     = delete $conf{pbot} // Carp::croak("Missing pbot reference in " . __FILE__);
     $self->{filename} = delete $conf{filename};
 }
 
-sub begin {
-    my $self = shift;
-
+sub begin($self) {
     $self->{pbot}->{logger}->log("Opening quotegrabs SQLite database: $self->{filename}\n");
     $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{filename}", "", "", {RaiseError => 1, PrintError => 0, sqlite_unicode => 1}) or die $DBI::errstr;
 
@@ -43,39 +39,31 @@ CREATE TABLE IF NOT EXISTS Quotegrabs (
 )
 SQL
 
-        $self->{dbh}->do(<< 'SQL');
-CREATE TABLE IF NOT EXISTS Seen (
-  id         INTEGER UNIQUE
-)
-SQL
+        $self->{dbh}->do('CREATE TABLE IF NOT EXISTS Seen (id INTEGER UNIQUE)');
     };
 
     $self->{pbot}->{logger}->log($@) if $@;
 }
 
-sub end {
-    my $self = shift;
-
-    $self->{pbot}->{logger}->log("Closing quotegrabs SQLite database\n");
-
+sub end($self) {
     if (exists $self->{dbh} and defined $self->{dbh}) {
+        $self->{pbot}->{logger}->log("Closing quotegrabs SQLite database\n");
         $self->{dbh}->disconnect();
         delete $self->{dbh};
     }
 }
 
-sub add_quotegrab {
-    my ($self, $quotegrab) = @_;
-
+sub add_quotegrab($self, $quotegrab) {
     my $id = eval {
         my $sth = $self->{dbh}->prepare('INSERT INTO Quotegrabs VALUES (?, ?, ?, ?, ?, ?)');
-        $sth->bind_param(1, undef);
-        $sth->bind_param(2, $quotegrab->{nick});
-        $sth->bind_param(3, $quotegrab->{channel});
-        $sth->bind_param(4, $quotegrab->{grabbed_by});
-        $sth->bind_param(5, $quotegrab->{text});
-        $sth->bind_param(6, $quotegrab->{timestamp});
-        $sth->execute();
+        $sth->execute(
+            undef,
+            $quotegrab->{nick},
+            $quotegrab->{channel},
+            $quotegrab->{grabbed_by},
+            $quotegrab->{text},
+            $quotegrab->{timestamp},
+        );
         return $self->{dbh}->sqlite_last_insert_rowid();
     };
 
@@ -83,9 +71,7 @@ sub add_quotegrab {
     return $id;
 }
 
-sub get_quotegrab {
-    my ($self, $id) = @_;
-
+sub get_quotegrab($self, $id) {
     my $quotegrab = eval {
         my $sth = $self->{dbh}->prepare('SELECT * FROM Quotegrabs WHERE id == ?');
         $sth->bind_param(1, $id);
@@ -97,51 +83,53 @@ sub get_quotegrab {
     return $quotegrab;
 }
 
-sub get_random_quotegrab {
-    my ($self, $nick, $channel, $text) = @_;
+sub get_random_quotegrab($self, $nick, $channel, $text) {
+    # convert from regex metachars to SQL LIKE metachars
+    if (defined $nick) {
+        $nick =~ s/\.?\*\??/%/g;
+        $nick =~ s/\./_/g;
+    }
 
-    $nick    =~ s/\.?\*\??/%/g if defined $nick;
-    $channel =~ s/\.?\*\??/%/g if defined $channel;
-    $text    =~ s/\.?\*\??/%/g if defined $text;
+    if (defined $channel) {
+        $channel =~ s/\.?\*\??/%/g;
+        $channel =~ s/\./_/g;
+    }
 
-    $nick    =~ s/\./_/g if defined $nick;
-    $channel =~ s/\./_/g if defined $channel;
-    $text    =~ s/\./_/g if defined $text;
+    if (defined $text) {
+        $text =~ s/\.?\*\??/%/g;
+        $text =~ s/\./_/g;
+    }
 
     my $quotegrab = eval {
-        my $sql = 'SELECT * FROM Quotegrabs ';
+        my $sql = 'SELECT * FROM Quotegrabs';
         my @params;
-        my $where = 'WHERE ';
-        my $and   = '';
+        my $joiner = ' WHERE';
 
         # multi-grabs have the nick separated by +'s so we must test for
         # nick, nick+*, *+nick, and *+nick+* to match each of these cases
         if (defined $nick) {
-            $sql .= $where . '(nick LIKE ? OR nick LIKE ? OR nick LIKE ? OR nick LIKE ?) ';
-            push @params, "$nick";
-            push @params, "$nick+%";
-            push @params, "%+$nick";
-            push @params, "%+$nick+%";
-            $where = '';
-            $and   = 'AND ';
+            $sql .= "$joiner (nick LIKE ? OR nick LIKE ? OR nick LIKE ? OR nick LIKE ?)";
+            push @params,        $nick;
+            push @params,        $nick . '+%';
+            push @params, '%+' . $nick;
+            push @params, '%+' . $nick . '+%';
+            $joiner = ' AND';
         }
 
         if (defined $channel) {
-            $sql .= $where . $and . 'channel LIKE ? ';
+            $sql .= "$joiner channel LIKE ?";
             push @params, $channel;
-            $where = '';
-            $and   = 'AND ';
+            $joiner = ' AND';
         }
 
         if (defined $text) {
-            $sql .= $where . $and . 'text LIKE ? ';
-            push @params, "%$text%";
-            $where = '';
-            $and   = 'AND ';
+            $sql .= "$joiner text LIKE ?";
+            push @params, '%' . $text . '%';
+            $joiner = ' AND';
         }
-
+$self->{pbot}->{logger}->log("$sql $joiner id NOT IN Seen ORDER BY RANDOM() LIMIT 1\n");
         # search for a random unseen quotegrab
-        my $sth = $self->{dbh}->prepare($sql . $where . $and . 'id NOT IN Seen ORDER BY RANDOM() LIMIT 1');
+        my $sth = $self->{dbh}->prepare("$sql $joiner id NOT IN Seen ORDER BY RANDOM() LIMIT 1");
         $sth->execute(@params);
         my $quotegrab = $sth->fetchrow_hashref();
 
@@ -170,9 +158,7 @@ sub get_random_quotegrab {
     return $quotegrab;
 }
 
-sub remove_seen {
-    my ($self, $sql, $params) = @_;
-
+sub remove_seen($self, $sql, $params) {
     $sql =~ s/^SELECT \*/SELECT id/;
 
     my $count = eval {
@@ -185,9 +171,7 @@ sub remove_seen {
     return $count;
 }
 
-sub add_seen {
-    my ($self, $id) = @_;
-
+sub add_seen($self, $id) {
     eval {
         my $sth = $self->{dbh}->prepare('INSERT INTO Seen VALUES (?)');
         $sth->execute($id);
@@ -196,9 +180,7 @@ sub add_seen {
     $self->{pbot}->{logger}->log($@) if $@;
 }
 
-sub get_all_quotegrabs {
-    my $self = shift;
-
+sub get_all_quotegrabs($self) {
     my $quotegrabs = eval {
         my $sth = $self->{dbh}->prepare('SELECT * from Quotegrabs');
         $sth->execute();
@@ -209,9 +191,7 @@ sub get_all_quotegrabs {
     return $quotegrabs;
 }
 
-sub delete_quotegrab {
-    my ($self, $id) = @_;
-
+sub delete_quotegrab($self, $id) {
     eval {
         my $sth = $self->{dbh}->prepare('DELETE FROM Quotegrabs WHERE id == ?');
         $sth->execute($id);
