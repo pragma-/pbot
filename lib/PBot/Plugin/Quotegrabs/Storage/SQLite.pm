@@ -127,7 +127,6 @@ sub get_random_quotegrab($self, $nick, $channel, $text) {
             push @params, '%' . $text . '%';
             $joiner = ' AND';
         }
-$self->{pbot}->{logger}->log("$sql $joiner id NOT IN Seen ORDER BY RANDOM() LIMIT 1\n");
         # search for a random unseen quotegrab
         my $sth = $self->{dbh}->prepare("$sql $joiner id NOT IN Seen ORDER BY RANDOM() LIMIT 1");
         $sth->execute(@params);
@@ -162,7 +161,7 @@ sub remove_seen($self, $sql, $params) {
     $sql =~ s/^SELECT \*/SELECT id/;
 
     my $count = eval {
-        my $sth = $self->{dbh}->prepare("DELETE from Seen WHERE id IN ($sql)");
+        my $sth = $self->{dbh}->prepare("DELETE FROM Seen WHERE id IN ($sql)");
         $sth->execute(@$params);
         return $sth->rows;
     };

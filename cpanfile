@@ -7,7 +7,7 @@
 # Install a fully featured PBot (without Windows compiler-vm support):
 #   cpanm -n --installdeps . --with-all-features --without-feature compiler_vm_win32
 
-requires 'perl' => '5.010001';
+requires 'perl' => '5.020000';
 
 # PBot core
 requires 'Cache::FileCache';

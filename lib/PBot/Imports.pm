@@ -19,13 +19,16 @@ sub import {
     warnings->import::into($target);
 
     # use feature ':5.16'
-    feature->import::into($target, ':5.16');
+    feature->import::into($target, ':5.20');
 
     # use utf8
     utf8->import::into($target);
 
-    # no if $] >= 5.018, warnings => 'experimental';
-    warnings->unimport::out_of($target, 'experimental') if $] >= 5.018
+    # use signatures
+    feature->import::into($target, 'signatures');
+
+    # no warnings => 'experimental';
+    warnings->unimport::out_of($target, 'experimental');
 }
 
 sub unimport {
