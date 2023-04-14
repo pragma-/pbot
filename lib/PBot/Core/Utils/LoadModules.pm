@@ -16,9 +16,7 @@ require Exporter;
 our @ISA    = qw/Exporter/;
 our @EXPORT = qw/load_modules/;
 
-sub load_modules {
-    my ($self, $base) = @_;
-
+sub load_modules($self, $base) {
     my $base_path = join '/', split '::', $base;
 
     foreach my $inc_path (@INC) {

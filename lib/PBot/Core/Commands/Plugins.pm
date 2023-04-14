@@ -12,9 +12,7 @@ use parent 'PBot::Core::Class';
 
 use File::Basename;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # plugin management bot commands
     $self->{pbot}->{commands}->register(sub { $self->cmd_plug(@_) },     "plug",     1);
     $self->{pbot}->{commands}->register(sub { $self->cmd_unplug(@_) },   "unplug",   1);
@@ -22,9 +20,7 @@ sub initialize {
     $self->{pbot}->{commands}->register(sub { $self->cmd_pluglist(@_) }, "pluglist", 0);
 }
 
-sub cmd_plug {
-    my ($self, $context) = @_;
-
+sub cmd_plug($self, $context) {
     my $plugin = $context->{arguments};
 
     if (not length $plugin) { return "Usage: plug <plugin>"; }
@@ -36,9 +32,7 @@ sub cmd_plug {
     }
 }
 
-sub cmd_unplug {
-    my ($self, $context) = @_;
-
+sub cmd_unplug($self, $context) {
     my $plugin = $context->{arguments};
 
     if (not length $plugin) { return "Usage: unplug <plugin>"; }
@@ -50,9 +44,7 @@ sub cmd_unplug {
     }
 }
 
-sub cmd_replug {
-    my ($self, $context) = @_;
-
+sub cmd_replug($self, $context) {
     my $plugin = $context->{arguments};
 
     if (not length $plugin) { return "Usage: replug <plugin>"; }
@@ -66,9 +58,7 @@ sub cmd_replug {
     return $result;
 }
 
-sub cmd_pluglist {
-    my ($self, $context) = @_;
-
+sub cmd_pluglist($self, $context) {
     my @plugins = sort keys %{$self->{pbot}->{plugins}->{plugins}};
 
     return "No plugins loaded." if not @plugins;

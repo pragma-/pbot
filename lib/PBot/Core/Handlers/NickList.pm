@@ -12,9 +12,7 @@ use parent 'PBot::Core::Class';
 
 use Time::HiRes qw/gettimeofday/;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # handlers for various IRC events (0 is highest priority, 100 is lowest priority)
 
     # highest priority so these get handled by NickList before any other handlers
@@ -37,8 +35,7 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('pbot.part', sub { $self->on_self_part(@_) },  0);
 }
 
-sub on_namreply {
-    my ($self, $event_type, $event) = @_;
+sub on_namreply($self, $event_type, $event) {
     my ($channel, $nicks) = ($event->{args}[2], $event->{args}[3]);
 
     foreach my $nick (split ' ', $nicks) {
@@ -67,9 +64,7 @@ sub on_namreply {
     return 1;
 }
 
-sub on_activity {
-    my ($self, $event_type, $event) = @_;
-
+sub on_activity($self, $event_type, $event) {
     my ($nick, $user, $host, $channel) = ($event->nick, $event->user, $event->host, $event->{to}[0]);
 
     $self->{pbot}->{nicklist}->update_timestamp($channel, $nick);
@@ -77,9 +72,7 @@ sub on_activity {
     return 1;
 }
 
-sub on_join {
-    my ($self, $event_type, $event) = @_;
-
+sub on_join($self, $event_type, $event) {
     my ($nick, $user, $host, $channel) = ($event->nick, $event->user, $event->host, $event->to);
 
     $self->{pbot}->{nicklist}->add_nick($channel, $nick);
@@ -87,14 +80,12 @@ sub on_join {
     $self->{pbot}->{nicklist}->set_meta($channel, $nick, 'hostmask', "$nick!$user\@$host");
     $self->{pbot}->{nicklist}->set_meta($channel, $nick, 'user',     $user);
     $self->{pbot}->{nicklist}->set_meta($channel, $nick, 'host',     $host);
-    $self->{pbot}->{nicklist}->set_meta($channel, $nick, 'join',     gettimeofday);
+    $self->{pbot}->{nicklist}->set_meta($channel, $nick, 'join',     scalar gettimeofday);
 
     return 1;
 }
 
-sub on_part {
-    my ($self, $event_type, $event) = @_;
-
+sub on_part($self, $event_type, $event) {
     my ($nick, $user, $host, $channel) = ($event->nick, $event->user, $event->host, $event->to);
 
     $self->{pbot}->{nicklist}->remove_nick($channel, $nick);
@@ -102,9 +93,7 @@ sub on_part {
     return 1;
 }
 
-sub on_quit {
-    my ($self, $event_type, $event) = @_;
-
+sub on_quit($self, $event_type, $event) {
     my ($nick, $user, $host)  = ($event->nick, $event->user, $event->host);
 
     foreach my $channel (keys %{$self->{pbot}->{nicklist}->{nicklist}}) {
@@ -116,9 +105,7 @@ sub on_quit {
     return 1;
 }
 
-sub on_kick {
-    my ($self, $event_type, $event) = @_;
-
+sub on_kick($self, $event_type, $event) {
     my ($nick, $channel) = ($event->to, $event->{args}[0]);
 
     $self->{pbot}->{nicklist}->remove_nick($channel, $nick);
@@ -126,8 +113,7 @@ sub on_kick {
     return 1;
 }
 
-sub on_nickchange {
-    my ($self, $event_type, $event) = @_;
+sub on_nickchange($self, $event_type, $event) {
     my ($nick, $user, $host, $newnick) = ($event->nick, $event->user, $event->host, $event->args);
 
     foreach my $channel (keys %{$self->{pbot}->{nicklist}->{nicklist}}) {
@@ -144,9 +130,7 @@ sub on_nickchange {
     return 1;
 }
 
-sub on_modeflag {
-    my ($self, $event_type, $event) = @_;
-
+sub on_modeflag($self, $event_type, $event) {
     my ($source, $channel, $mode, $target) = (
         $event->{source},
         $event->{channel},
@@ -168,15 +152,13 @@ sub on_modeflag {
     return 1;
 }
 
-sub on_self_join {
-    my ($self, $event_type, $event) = @_;
+sub on_self_join($self, $event_type, $event) {
     # clear nicklist to remove any stale nicks before repopulating with namreplies
     $self->{pbot}->{nicklist}->remove_channel($event->{channel});
     return 1;
 }
 
-sub on_self_part {
-    my ($self, $event_type, $event) = @_;
+sub on_self_part($self, $event_type, $event) {
     $self->{pbot}->{nicklist}->remove_channel($event->{channel});
     return 1;
 }

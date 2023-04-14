@@ -17,9 +17,7 @@ use Encode;
 use MIME::Base64;
 use Time::HiRes qw/time/;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.mode',          sub { $self->on_mode          (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.join',          sub { $self->on_join          (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.part',          sub { $self->on_departure     (@_) });
@@ -33,9 +31,7 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.modeflag',      sub { $self->on_modeflag      (@_) });
 }
 
-sub on_mode {
-    my ($self, $event_type, $event) = @_;
-
+sub on_mode($self, $event_type, $event) {
     my ($nick, $user, $host, $mode_string, $channel) = (
         $event->nick,
         $event->user,
@@ -80,9 +76,7 @@ sub on_mode {
     return 1;
 }
 
-sub on_modeflag {
-    my ($self, $event_type, $event) = @_;
-
+sub on_modeflag($self, $event_type, $event) {
     my ($source, $channel, $mode, $target) = (
         $event->{source},
         $event->{channel},
@@ -109,9 +103,7 @@ sub on_modeflag {
     return 1;
 }
 
-sub on_join {
-    my ($self, $event_type, $event) = @_;
-
+sub on_join($self, $event_type, $event) {
     my ($nick, $user, $host, $channel) = (
         $event->nick,
         $event->user,
@@ -161,9 +153,7 @@ sub on_join {
     return 1;
 }
 
-sub on_invite {
-    my ($self, $event_type, $event) = @_;
-
+sub on_invite($self, $event_type, $event) {
     my ($nick, $user, $host, $target, $channel) = (
         $event->nick,
         $event->user,
@@ -186,9 +176,7 @@ sub on_invite {
     return 1;
 }
 
-sub on_kick {
-    my ($self, $event_type, $event) = @_;
-
+sub on_kick($self, $event_type, $event) {
     my ($nick, $user, $host, $target, $channel, $reason) = (
         $event->nick,
         $event->user,
@@ -245,9 +233,7 @@ sub on_kick {
     return 1;
 }
 
-sub on_departure {
-    my ($self, $event_type, $event) = @_;
-
+sub on_departure($self, $event_type, $event) {
     my ($nick, $user, $host, $channel, $args) = (
         $event->nick,
         $event->user,
@@ -293,9 +279,7 @@ sub on_departure {
     return 1;
 }
 
-sub on_channelmodeis {
-    my ($self, $event_type, $event) = @_;
-
+sub on_channelmodeis($self, $event_type, $event) {
     my (undef, $channel, $modes) = $event->args;
 
     $self->{pbot}->{logger}->log("Channel $channel modes: $modes\n");
@@ -304,9 +288,7 @@ sub on_channelmodeis {
     return 1;
 }
 
-sub on_channelcreate {
-    my ($self,  $event_type, $event) = @_;
-
+sub on_channelcreate($self,  $event_type, $event) {
     my ($owner, $channel, $timestamp) = $event->args;
 
     $self->{pbot}->{logger}->log("Channel $channel created by $owner on " . localtime($timestamp) . "\n");
@@ -316,9 +298,7 @@ sub on_channelcreate {
     return 1;
 }
 
-sub on_topic {
-    my ($self, $event_type, $event) = @_;
-
+sub on_topic($self, $event_type, $event) {
     if (not length $event->{to}[0]) {
         # on join
         my (undef, $channel, $topic) = $event->args;
@@ -339,8 +319,7 @@ sub on_topic {
     return 1;
 }
 
-sub on_topicinfo {
-    my ($self, $event_type, $event) = @_;
+sub on_topicinfo($self, $event_type, $event) {
     my (undef, $channel, $by, $timestamp) = $event->args;
     $self->{pbot}->{logger}->log("Topic for $channel set by $by on " . localtime($timestamp) . "\n");
     $self->{pbot}->{channels}->{storage}->set($channel, 'TOPIC_SET_BY', $by,        1);

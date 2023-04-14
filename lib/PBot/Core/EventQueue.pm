@@ -5,7 +5,7 @@
 #
 # Note: PBot::Core::EventQueue has no relation to PBot::Core::EventDispatcher.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2021-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::EventQueue;
@@ -17,22 +17,18 @@ use PBot::Core::Utils::PriorityQueue;
 
 use Time::HiRes qw/time/;
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{event_queue} = PBot::Core::Utils::PriorityQueue->new(pbot => $self->{pbot});
 }
 
 # returns seconds until upcoming event.
-sub duration_until_next_event {
-    my ($self) = @_;
+sub duration_until_next_event($self) {
     return 0 if not $self->{event_queue}->count;
     return $self->{event_queue}->get_priority(0) - time;
 }
 
 # invokes any current events and then returns seconds until upcoming event.
-sub do_events {
-    my ($self) = @_;
-
+sub do_events($self) {
     # early-return if no events available
     return 0 if not $self->{event_queue}->count;
 
@@ -77,20 +73,12 @@ sub do_events {
 }
 
 # check if an event is in the event queue.
-sub exists {
-    my ($self, $id) = @_;
+sub exists($self, $id) {
     return scalar grep { $_->{id} eq $id } $self->{event_queue}->entries;
 }
 
 # adds an event to the event queue, optionally repeating
-sub enqueue_event {
-    my ($self, $subref, $interval, $id, $repeating) = @_;
-
-    # default values
-    $id        //= "unnamed (${interval}s $subref)";
-    $repeating //= 0;
-    $interval  //= 0;
-
+sub enqueue_event($self, $subref, $interval = 0, $id = "unamed (${interval}s $subref)", $repeating = 0) {
     # create event structure
     my $event = {
         id        => $id,
@@ -111,16 +99,13 @@ sub enqueue_event {
 }
 
 # convenient alias to add an event with repeating defaulted to enabled.
-sub enqueue {
-    my ($self, $subref, $interval, $id, $repeating) = @_;
-    $self->enqueue_event($subref, $interval, $id, $repeating // 1);
+sub enqueue($self, $subref, $interval = undef, $id = undef, $repeating = 1) {
+    $self->enqueue_event($subref, $interval, $id, $repeating);
 }
 
 # removes an event from the event queue, optionally invoking it.
 # `id` can contain `.*` and `.*?` for wildcard-matching/globbing.
-sub dequeue_event {
-    my ($self, $id, $execute) = @_;
-
+sub dequeue_event($self, $id, $execute = 0) {
     my $result = eval {
         # escape special characters
         $id = quotemeta $id;
@@ -172,23 +157,19 @@ sub dequeue_event {
 }
 
 # alias to dequeue_event, for consistency.
-sub dequeue {
-    my ($self, $id) = @_;
+sub dequeue($self, $id) {
     $self->dequeue_event($id);
 }
 
 # invoke and remove all events matching `id`, which can
 # contain `.*` and `.*?` for wildcard-matching/globbing.
-sub execute_and_dequeue_event {
-    my ($self, $id) = @_;
+sub execute_and_dequeue_event($self, $id) {
     return $self->dequeue_event($id, 1);
 }
 
 # replace code subrefs for matching events. if no events
 # were found, then add the event to the event queue.
-sub replace_subref_or_enqueue_event {
-    my ($self, $subref, $interval, $id, $repeating) = @_;
-
+sub replace_subref_or_enqueue_event($self, $subref, $interval, $id, $repeating = 0) {
     # find events matching id
     my @events = grep { $_->{id} eq $id } $self->{event_queue}->entries;
 
@@ -205,9 +186,7 @@ sub replace_subref_or_enqueue_event {
 }
 
 # remove existing events of this id then enqueue new event.
-sub replace_or_enqueue_event {
-    my ($self, $subref, $interval, $id, $repeating) = @_;
-
+sub replace_or_enqueue_event($self, $subref, $interval, $id, $repeating = 0) {
     # remove event if it exists
     $self->dequeue_event($id) if $self->exists($id);
 
@@ -216,9 +195,7 @@ sub replace_or_enqueue_event {
 }
 
 # add event unless it already had been added.
-sub enqueue_event_unless_exists {
-    my ($self, $subref, $interval, $id, $repeating) = @_;
-
+sub enqueue_event_unless_exists($self, $subref, $interval, $id, $repeating = 0) {
     # event already exists, bail out
     return if $self->exists($id);
 
@@ -227,9 +204,7 @@ sub enqueue_event_unless_exists {
 }
 
 # update the `repeating` flag for all events matching `id`.
-sub update_repeating {
-    my ($self, $id, $repeating) = @_;
-
+sub update_repeating($self, $id, $repeating) {
     foreach my $event ($self->{event_queue}->entries) {
         if ($event->{id} eq $id) {
             $event->{repeating} = $repeating;
@@ -238,9 +213,7 @@ sub update_repeating {
 }
 
 # update the `interval` value for all events matching `id`.
-sub update_interval {
-    my ($self, $id, $interval, $dont_enqueue) = @_;
-
+sub update_interval($self, $id, $interval, $dont_enqueue = 0) {
     for (my $i = 0; $i < $self->{event_queue}->count; $i++) {
         my $event = $self->{event_queue}->get($i);
 
@@ -258,13 +231,11 @@ sub update_interval {
     }
 }
 
-sub count {
-    my ($self) = @_;
+sub count($self) {
     return $self->{event_queue}->count;
 }
 
-sub entries {
-    my ($self) = @_;
+sub entries($self) {
     return $self->{event_queue}->entries;
 }
 

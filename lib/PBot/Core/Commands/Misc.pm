@@ -13,9 +13,7 @@ use parent 'PBot::Core::Class';
 
 use Time::Duration qw/duration/;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # misc commands
     $self->{pbot}->{commands}->register(sub { $self->cmd_nop(@_) },        'nop',     0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_uptime(@_) },     'uptime',  0);
@@ -32,20 +30,16 @@ sub initialize {
     $self->{pbot}->{capabilities}->add('admin', 'can-in', 1);
 }
 
-sub cmd_nop {
-    my ($self, $context) = @_;
+sub cmd_nop($self, $context) {
     $self->{pbot}->{logger}->log("Disregarding NOP command.\n");
     return '';
 }
 
-sub cmd_uptime {
-    my ($self, $context) = @_;
+sub cmd_uptime($self, $context) {
     return localtime($self->{pbot}->{startup_timestamp}) . ' [' . duration(time - $self->{pbot}->{startup_timestamp}) . ']';
 }
 
-sub cmd_in_channel {
-    my ($self, $context) = @_;
-
+sub cmd_in_channel($self, $context) {
     my $usage = 'Usage: in <channel> <command>';
 
     if (not length $context->{arguments}) {
@@ -71,8 +65,7 @@ sub cmd_in_channel {
     return $self->{pbot}->{interpreter}->interpret($context);
 }
 
-sub cmd_list {
-    my ($self, $context) = @_;
+sub cmd_list($self, $context) {
     my $text;
 
     my $usage = 'Usage: list <applets|commands>';
@@ -110,15 +103,13 @@ sub cmd_list {
     return $usage;
 }
 
-sub cmd_sl {
-    my ($self, $context) = @_;
+sub cmd_sl($self, $context) {
     return "Usage: sl <ircd command>" if not length $context->{arguments};
     $self->{pbot}->{conn}->sl($context->{arguments});
     return "/msg $context->{nick} sl: command sent. See log for result.";
 }
 
-sub cmd_die {
-    my ($self, $context) = @_;
+sub cmd_die($self, $context) {
     $self->{pbot}->{logger}->log("$context->{hostmask} made me exit.\n");
     $self->{pbot}->{conn}->privmsg($context->{from}, "Good-bye.") if $context->{from} ne 'stdin@pbot';
     $self->{pbot}->{conn}->quit("Departure requested.") if defined $self->{pbot}->{conn};
@@ -126,9 +117,7 @@ sub cmd_die {
     exit 0;
 }
 
-sub cmd_export {
-    my ($self, $context) = @_;
-
+sub cmd_export($self, $context) {
     my $usage = "Usage: export factoids";
 
     return $usage if not length $context->{arguments};
@@ -140,9 +129,7 @@ sub cmd_export {
     return $usage;
 }
 
-sub cmd_eval {
-    my ($self, $context) = @_;
-
+sub cmd_eval($self, $context) {
     $self->{pbot}->{logger}->log("eval: $context->{from} $context->{hostmask} evaluating `$context->{arguments}`\n");
 
     my $ret    = '';

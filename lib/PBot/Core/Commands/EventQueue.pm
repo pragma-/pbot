@@ -12,9 +12,7 @@ use parent 'PBot::Core::Class';
 
 use Time::Duration;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # register `eventqueue` bot command
     $self->{pbot}->{commands}->register(sub { $self->cmd_eventqueue(@_) }, 'eventqueue', 1);
 
@@ -22,9 +20,7 @@ sub initialize {
     $self->{pbot}->{capabilities}->add('admin', 'can-eventqueue', 1);
 }
 
-sub cmd_eventqueue {
-    my ($self, $context) = @_;
-
+sub cmd_eventqueue($self, $context) {
     my $usage = "Usage: eventqueue list [filter regex] | add <relative time> <command> [-repeat] | remove <regex>";
 
     my $command = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});

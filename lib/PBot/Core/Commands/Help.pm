@@ -10,14 +10,11 @@ package PBot::Core::Commands::Help;
 use PBot::Imports;
 use parent 'PBot::Core::Class';
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{pbot}->{commands}->register(sub { $self->cmd_help(@_) }, 'help');
 }
 
-sub cmd_help {
-    my ($self, $context) = @_;
-
+sub cmd_help($self, $context) {
     if (not length $context->{arguments}) {
         return "For general help, see <https://github.com/pragma-/pbot/tree/master/doc#table-of-contents>. For help about a specific command or factoid, use `help <keyword> [channel]`.";
     }

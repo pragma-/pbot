@@ -11,18 +11,14 @@ use parent 'PBot::Core::Class';
 
 use PBot::Imports;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{pbot}->{commands}->register(sub { $self->cmd_blacklist(@_) }, "blacklist", 1);
 
     # add capability to admin group
     $self->{pbot}->{capabilities}->add('admin', 'can-blacklist', 1);
 }
 
-sub cmd_blacklist {
-    my ($self, $context) = @_;
-
+sub cmd_blacklist($self, $context) {
     my $arglist = $context->{arglist};
     $self->{pbot}->{interpreter}->lc_args($arglist);
 

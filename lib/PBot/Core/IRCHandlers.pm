@@ -19,10 +19,7 @@ sub initialize {
 
 # this default handler prepends 'irc.' to the event-name and then dispatches
 # the event to the rest of PBot via PBot::Core::EventDispatcher.
-
-sub default_handler {
-    my ($self, $conn, $event) = @_;
-
+sub default_handler($self, $conn, $event) {
     # add conn to event object so we can access it within handlers
     $event->{conn} = $conn;
 
@@ -42,10 +39,7 @@ sub default_handler {
 }
 
 # registers handlers with a PBot::Core::IRC connection
-
-sub add_handlers {
-    my ($self) = @_;
-
+sub add_handlers($self) {
     # set up handlers for the IRC engine
     $self->{pbot}->{conn}->add_default_handler(
         sub { $self->default_handler(@_) }, 1);
@@ -71,10 +65,7 @@ sub add_handlers {
 }
 
 # replace randomized gibberish in certain hostmasks with identifying information
-
-sub normalize_hostmask {
-    my ($self, $nick, $user, $host) = @_;
-
+sub normalize_hostmask($self, $nick, $user, $host) {
     if ($host =~ m{^(gateway|nat)/(.*)/x-[^/]+$}) {
         $host = "$1/$2/x-$user";
     }

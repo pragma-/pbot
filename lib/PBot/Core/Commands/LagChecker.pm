@@ -13,15 +13,11 @@ use PBot::Imports;
 use Time::Duration qw/concise ago/;
 use Time::HiRes qw/gettimeofday/;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{pbot}->{commands}->register(sub { $self->cmd_lagcheck(@_) }, "lagcheck", 0);
 }
 
-sub cmd_lagcheck {
-    my ($self, $context) = @_;
-
+sub cmd_lagcheck($self, $context) {
     if (defined $self->{pbot}->{lagchecker}->{pong_received} and $self->{pbot}->{lagchecker}->{pong_received} == 0) {
         # a ping has been sent (pong_received is not undef) and no pong has been received yet
         my $elapsed   = tv_interval($self->{pbot}->{lagchecker}->{ping_send_time});

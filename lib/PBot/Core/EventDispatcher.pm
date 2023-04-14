@@ -14,9 +14,7 @@ use PBot::Imports;
 
 use PBot::Core::Utils::PriorityQueue;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # hash table of event handlers
     $self->{handlers} = {};
 }
@@ -31,9 +29,7 @@ sub initialize {
 # before any handlers need to consult its list, or depopulated by PARTs, QUITs,
 # KICKs, etc, after any other handlers need to consult its list.
 
-sub register_handler {
-    my ($self, $name, $subref, $priority) = @_;
-
+sub register_handler($self, $name, $subref, $priority = 50) {
     # get the package of the calling subroutine
     my ($package) = caller(0);
 
@@ -41,7 +37,7 @@ sub register_handler {
     my $handler_id = "$package-$name";
 
     my $entry = {
-        priority => $priority // 50,
+        priority => $priority,
         id       => $handler_id,
         subref   => $subref,
     };
@@ -61,9 +57,7 @@ sub register_handler {
 }
 
 # remove an event handler
-sub remove_handler {
-    my ($self, $name) = @_;
-
+sub remove_handler($self, $name) {
     # get the package of the calling subroutine
     my ($package) = caller(0);
 
@@ -95,9 +89,7 @@ sub remove_handler {
 }
 
 # send an event to its handlers
-sub dispatch_event {
-    my ($self, $name, $data) = @_;
-
+sub dispatch_event($self, $name, $data = undef) {
     # debugging flag
     my $debug = $self->{pbot}->{registry}->get_value('eventdispatcher', 'debug') // 0;
 

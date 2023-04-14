@@ -10,9 +10,7 @@ package PBot::Core::Handlers::NickServ;
 use PBot::Imports;
 use parent 'PBot::Core::Class';
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # NickServ-related IRC events get priority 10
     # priority is from 0 to 100 where 0 is highest and 100 is lowest
     $self->{pbot}->{event_dispatcher}->register_handler('irc.welcome',       sub { $self->on_welcome       (@_) }, 10);
@@ -20,9 +18,7 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.nicknameinuse', sub { $self->on_nicknameinuse (@_) }, 10);
 }
 
-sub on_welcome {
-    my ($self, $event_type, $event) = @_;
-
+sub on_welcome($self, $event_type, $event) {
     # if not using SASL, identify the old way by msging NickServ or some services bot
     if (not $self->{pbot}->{irc_capabilities}->{sasl}) {
         if (length $self->{pbot}->{registry}->get_value('irc', 'identify_password')) {
@@ -57,9 +53,7 @@ sub on_welcome {
     return undef;
 }
 
-sub on_notice {
-    my ($self, $event_type, $event) = @_;
-
+sub on_notice($self, $event_type, $event) {
     my ($nick, $user, $host, $to, $text)  = (
         $event->nick,
         $event->user,
@@ -107,9 +101,7 @@ sub on_notice {
     return undef;
 }
 
-sub on_nicknameinuse {
-    my ($self, $event_type, $event) = @_;
-
+sub on_nicknameinuse($self, $event_type, $event) {
     my (undef, $nick, $msg) = $event->args;
     my $from = $event->from;
 

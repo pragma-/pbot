@@ -26,8 +26,7 @@ use PBot::Core::Utils::SQLiteLoggerLayer;
 use DBI;
 use Text::Levenshtein::XS qw(distance);
 
-sub new {
-    my ($class, %args) = @_;
+sub new($class, %args) {
     Carp::croak("Missing pbot reference to " . __FILE__) unless exists $args{pbot};
     my $self = bless {}, $class;
     $self->{pbot} = delete $args{pbot};
@@ -35,9 +34,7 @@ sub new {
     return $self;
 }
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{name}     = $conf{name}     // 'Dual Index SQLite object';
     $self->{filename} = $conf{filename} // Carp::croak("Missing filename in " . __FILE__);
 
@@ -54,15 +51,12 @@ sub initialize {
     $self->begin;
 }
 
-sub sqlite_debug_trigger {
-    my ($self, $section, $item, $newvalue) = @_;
+sub sqlite_debug_trigger($self, $section, $item, $newvalue) {
     return if not defined $self->{dbh};
     $self->{dbh}->trace($self->{dbh}->parse_trace_flags("SQL|$newvalue"));
 }
 
-sub begin {
-    my ($self) = @_;
-
+sub begin($self) {
     $self->{pbot}->{logger}->log("Opening $self->{name} database ($self->{filename})\n");
 
     $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{filename}", undef, undef,
@@ -80,9 +74,7 @@ sub begin {
     }
 }
 
-sub end {
-    my ($self) = @_;
-
+sub end($self) {
     $self->{pbot}->{logger}->log("Closing $self->{name} database ($self->{filename})\n");
 
     if (defined $self->{dbh}) {
@@ -95,14 +87,12 @@ sub end {
     $self->{pbot}->{event_queue}->dequeue("Trim $self->{name} cache");
 }
 
-sub load  {
-    my ($self) = @_;
+sub load ($self) {
     $self->create_database;
     $self->create_cache;
 }
 
-sub save {
-    my ($self) = @_;
+sub save($self) {
     return if not $self->{dbh};
 
     eval { $self->{dbh}->commit };
@@ -112,9 +102,7 @@ sub save {
     }
 }
 
-sub create_database {
-    my ($self) = @_;
-
+sub create_database($self) {
     eval {
         $self->{dbh}->do(<<SQL);
 CREATE TABLE IF NOT EXISTS Stuff (
@@ -129,9 +117,7 @@ SQL
     $self->{pbot}->{logger}->log("Error creating $self->{name} databse: $@") if $@;
 }
 
-sub create_cache {
-    my ($self) = @_;
-
+sub create_cache($self) {
     $self->{cache} = {};
 
     my ($index1_count, $index2_count) = (0, 0);
@@ -161,9 +147,7 @@ sub create_cache {
     $self->{pbot}->{logger}->log("Cached $index2_count $self->{name} objects in $index1_count groups.\n");
 }
 
-sub cache_remove {
-    my ($self, $index1, $index2) = @_;
-
+sub cache_remove($self, $index1, $index2 = undef) {
     if (not defined $index2) {
         # remove index1
         delete $self->{cache}->{$index1};
@@ -181,9 +165,7 @@ sub cache_remove {
     }
 }
 
-sub enqueue_decache {
-    my ($self, $index1, $index2) = @_;
-
+sub enqueue_decache($self, $index1, $index2) {
     my $timeout = $self->{pbot}->{registry}->get_value('dualindexsqliteobject', 'cache_timeout') // 60 * 30;
 
     $self->{pbot}->{event_queue}->enqueue_event(
@@ -200,15 +182,12 @@ sub enqueue_decache {
     );
 }
 
-sub dequeue_decache {
-    my ($self, $index1, $index2) = @_;
+sub dequeue_decache($self, $index1, $index2) {
     my $key = ($index1 eq '.*' ? 'global' : $index1) . ".$index2";
     $self->{pbot}->{event_queue}->dequeue("Decache $self->{name} $key");
 }
 
-sub create_metadata {
-    my ($self, $columns) = @_;
-
+sub create_metadata($self, $columns) {
     return if not $self->{dbh};
 
     $self->{columns} = $columns;
@@ -234,12 +213,7 @@ sub create_metadata {
     }
 }
 
-sub levenshtein_matches {
-    my ($self, $index1, $index2, $distance, $strictnamespace) = @_;
-
-    $index1   //= '.*';
-    $distance //= 0.60;
-
+sub levenshtein_matches($self, $index1 = '.*', $index2 = undef, $distance = 0.60, $strictnamespace = 0) {
     my $output = 'none';
 
     if (not $index2) {
@@ -321,8 +295,7 @@ sub levenshtein_matches {
     return $output;
 }
 
-sub exists {
-    my ($self, $index1, $index2, $data_index) = @_;
+sub exists($self, $index1 = undef, $index2 = undef, $data_index = undef) {
     return 0 if not defined $index1;
     $index1 = lc $index1;
     return 0 if not grep { $_ eq $index1 } $self->get_keys;
@@ -333,9 +306,7 @@ sub exists {
     return defined $self->get_data($index1, $index2, $data_index);
 }
 
-sub get_keys {
-    my ($self, $index1, $index2, $nocache) = @_;
-
+sub get_keys($self, $index1 = undef, $index2 = undef, $nocache = 0) {
     my @keys;
 
     if (not defined $index1) {
@@ -428,9 +399,7 @@ sub get_keys {
     return @keys;
 }
 
-sub get_each {
-    my ($self, @opts) = @_;
-
+sub get_each($self, @opts) {
     my $sth = eval {
         my $sql    = 'SELECT ';
         my @keys   = ();
@@ -536,9 +505,7 @@ sub get_each {
     return $sth;
 }
 
-sub get_next {
-    my ($self, $sth) = @_;
-
+sub get_next($self, $sth) {
     my $data = eval {
         return $sth->fetchrow_hashref;
     };
@@ -551,9 +518,7 @@ sub get_next {
     return $data;
 }
 
-sub get_all {
-    my ($self, @opts) = @_;
-
+sub get_all($self, @opts) {
     my $sth = $self->get_each(@opts);
 
     my $data = eval {
@@ -568,9 +533,7 @@ sub get_all {
     return @$data;
 }
 
-sub get_key_name {
-    my ($self, $index1, $index2) = @_;
-
+sub get_key_name($self, $index1, $index2 = undef) {
     my $lc_index1 = lc $index1;
 
     if (not exists $self->{cache}->{$lc_index1}) {
@@ -598,9 +561,7 @@ sub get_key_name {
     }
 }
 
-sub get_data {
-    my ($self, $index1, $index2, $data_index) = @_;
-
+sub get_data($self, $index1, $index2, $data_index = undef) {
     my $lc_index1 = lc $index1;
     my $lc_index2 = lc $index2;
 
@@ -687,9 +648,7 @@ sub get_data {
     return $value;
 }
 
-sub add {
-    my ($self, $index1, $index2, $data, $quiet) = @_;
-
+sub add($self, $index1, $index2, $data, $quiet = 0) {
     my $name1 = $self->get_data($index1, '_name') // $index1;
 
     eval {
@@ -762,9 +721,7 @@ sub add {
     return "$index2 added to $name1.";
 }
 
-sub remove {
-    my ($self, $index1, $index2, $data_index, $dont_save) = @_;
-
+sub remove($self, $index1, $index2 = undef, $data_index = undef, $dont_save = 0) {
     if (not $self->exists($index1)) {
         my $result = "$self->{name}: $index1 not found; similiar matches: ";
         $result .= $self->levenshtein_matches($index1);
@@ -846,9 +803,7 @@ sub remove {
     return "$name2.$data_index is not set.";
 }
 
-sub set {
-    my ($self, $index1, $index2, $key, $value) = @_;
-
+sub set($self, $index1, $index2, $key = undef, $value = undef) {
     if (not $self->exists($index1)) {
         my $result = "$self->{name}: $index1 not found; similiar matches: ";
         $result .= $self->levenshtein_matches($index1);
@@ -919,9 +874,7 @@ sub set {
     return "[$name1] $name2.$key " . (defined $value ? "set to $value" : "is not set.");
 }
 
-sub unset {
-    my ($self, $index1, $index2, $key) = @_;
-
+sub unset($self, $index1, $index2, $key) {
     if (not $self->exists($index1)) {
         my $result = "$self->{name}: $index1 not found; similiar matches: ";
         $result .= $self->levenshtein_matches($index1);

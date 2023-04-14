@@ -24,9 +24,7 @@ use Time::Duration;
 use Time::HiRes  qw(gettimeofday);
 use Unicode::Truncate;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # PBot::Core::Interpreter can register multiple interpreter subrefs.
     # See also: Commands::interpreter() and Factoids::interpreter()
     $self->PBot::Core::Registerable::initialize(%conf);
@@ -37,9 +35,7 @@ sub initialize {
 
 # this is the main entry point for a message to be parsed into commands
 # and to execute those commands and process their output
-sub process_line {
-    my ($self, $from, $nick, $user, $host, $text, $tags, $is_command) = @_;
-
+sub process_line($self, $from, $nick, $user, $host, $text, $tags = '', $is_command = 0) {
     # lowercase `from` field for case-insensitivity
     $from = lc $from;
 
@@ -250,9 +246,7 @@ sub process_line {
 # main entry point to interpret/execute a bot command.
 # takes a $context object containing contextual information about the
 # command such as the channel, nick, user, host, command, etc.
-sub interpret {
-    my ($self, $context) = @_;
-
+sub interpret($self, $context) {
     # log command invocation
     $self->{pbot}->{logger}->log("=== [$context->{interpret_depth}] Got command: "
         . "($context->{from}) $context->{hostmask}: $context->{command}\n");
@@ -555,12 +549,8 @@ sub interpret {
 # finalizes processing on a command.
 # updates pipes, substitutions, splits. truncates to paste site.
 # sends final command output to appropriate queues.
-sub handle_result {
-    my ($self, $context, $result) = @_;
-
-    # use context result if no result argument given
-    $result //= $context->{result};
-
+# use context result if no result argument given.
+sub handle_result($self, $context, $result = $context->{result}) {
     # ensure we have a command result to work with
     return if not defined $result or not length $result;
 
@@ -747,9 +737,7 @@ sub handle_result {
 # truncates a message, optionally pasting to a web paste site.
 # $paste_text is the version of text (e.g. with whitespace formatting preserved, etc)
 # to send to the paste site.
-sub truncate_result {
-    my ($self, $context, $text, $paste_text) = @_;
-
+sub truncate_result($self, $context, $text, $paste_text) {
     my $max_msg_len = $self->{pbot}->{registry}->get_value('irc', 'max_msg_len');
 
     $max_msg_len -= length "PRIVMSG $context->{from} :";
@@ -810,6 +798,7 @@ my @dehighlight_exclusions = qw/auto if unsigned break inline void case int vola
 sub dehighlight_nicks {
     my ($self, $line, $channel) = @_;
 
+sub dehighlight_nicks($self, $line, $channel) {
     return $line if $self->{pbot}->{registry}->get_value('general', 'no_dehighlight_nicks');
 
     my @tokens = split / /, $line;
@@ -832,9 +821,7 @@ sub dehighlight_nicks {
     return join ' ', @tokens;
 }
 
-sub output_result {
-    my ($self, $context)   = @_;
-
+sub output_result($self, $context) {
     # debug flag to trace $context location and contents
     if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
         use Data::Dumper;
@@ -943,9 +930,7 @@ sub output_result {
     }
 }
 
-sub add_message_to_output_queue {
-    my ($self, $channel, $message, $delay) = @_;
-
+sub add_message_to_output_queue($self, $channel, $message, $delay = 0) {
     $self->{pbot}->{event_queue}->enqueue_event(
         sub {
             my $context = {
@@ -965,9 +950,7 @@ sub add_message_to_output_queue {
     );
 }
 
-sub add_to_command_queue {
-    my ($self, $channel, $command, $delay, $repeating) = @_;
-
+sub add_to_command_queue($self, $channel, $command, $delay = 0, $repeating = 0) {
     $self->{pbot}->{event_queue}->enqueue_event(
         sub {
             my $context = {
@@ -994,9 +977,7 @@ sub add_to_command_queue {
     );
 }
 
-sub add_botcmd_to_command_queue {
-    my ($self, $channel, $command, $delay) = @_;
-
+sub add_botcmd_to_command_queue($self, $channel, $command, $delay = 0) {
     my $botcmd = {
         nick     => $self->{pbot}->{registry}->get_value('irc', 'botnick'),
         user     => 'stdin',
@@ -1012,15 +993,7 @@ sub add_botcmd_to_command_queue {
 # extracts a bracketed substring, gracefully handling unbalanced quotes
 # or brackets. opening and closing brackets may each be more than one character.
 # optional prefix may be or begin with a character group.
-sub extract_bracketed {
-    my ($self, $string, $open_bracket, $close_bracket, $optional_prefix, $allow_whitespace) = @_;
-
-    # set default values when none provided
-    $open_bracket     //= '{';
-    $close_bracket    //= '}';
-    $optional_prefix  //= '';
-    $allow_whitespace //= 0;
-
+sub extract_bracketed($self, $string, $open_bracket = '{', $close_bracket = '}', $optional_prefix = '', $allow_whitespace = 0) {
     my @prefix_group;
 
     if ($optional_prefix =~ s/^\[(.*?)\]//) { @prefix_group = split //, $1; }
@@ -1178,9 +1151,7 @@ sub extract_bracketed {
 # whitespace or json separators.
 # handles unbalanced quotes gracefully by treating them as
 # part of the argument they were found within.
-sub split_line {
-    my ($self, $line, %opts) = @_;
-
+sub split_line($self, $line, %opts) {
     my %default_opts = (
         strip_quotes     => 0,
         keep_spaces      => 0,
@@ -1292,9 +1263,7 @@ sub split_line {
 }
 
 # creates an array of arguments from a string
-sub make_args {
-    my ($self, $string) = @_;
-
+sub make_args($self, $string) {
     my @args = $self->split_line($string, keep_spaces => 1);
 
     my @arglist;
@@ -1328,44 +1297,37 @@ sub make_args {
 }
 
 # returns size of array of arguments
-sub arglist_size {
-    my ($self, $args) = @_;
+sub arglist_size($self, $args) {
     return @$args / 2;
 }
 
 # unshifts new argument to front
-sub unshift_arg {
-    my ($self, $args, $arg) = @_;
+sub unshift_arg($self, $args, $arg) {
     splice @$args, @$args / 2, 0, $arg;    # add quoted argument
     unshift @$args, $arg;                  # add first argument
     return @$args;
 }
 
 # shifts first argument off array of arguments
-sub shift_arg {
-    my ($self, $args) = @_;
+sub shift_arg($self, $args) {
     return undef if not @$args;
     splice @$args, @$args / 2, 1;          # remove original quoted argument
     return shift @$args;
 }
 
 # returns list of unquoted arguments
-sub unquoted_args {
-    my ($self, $args) = @_;
+sub unquoted_args($self, $args) {
     return undef if not @$args;
     return @$args[0 .. @$args / 2 - 1];
 }
 
 # splits array of arguments into array with overflow arguments filling up last position
 # split_args(qw/dog cat bird hamster/, 3) => ("dog", "cat", "bird hamster")
-sub split_args {
-    my ($self, $args, $count, $offset, $preserve_quotes) = @_;
+sub split_args($self, $args, $count, $offset = 0, $preserve_quotes = 0) {
     my @result;
     my $max = $self->arglist_size($args);
 
-    $preserve_quotes //= 0;
-
-    my $i = $offset // 0;
+    my $i = $offset;
     unless ($count == 1) {
         do {
             my $arg = $args->[$i++];
@@ -1390,33 +1352,26 @@ sub split_args {
 }
 
 # lowercases array of arguments
-sub lc_args {
-    my ($self, $args) = @_;
+sub lc_args($self, $args) {
     for (my $i = 0; $i < @$args; $i++) { $args->[$i] = lc $args->[$i]; }
 }
 
 # getopt boilerplate in one place
 
 # 99% of our getopt use is on a string
-sub getopt {
-    my $self = shift;
-    $self->getopt_from_string(@_);
+sub getopt($self, @args) {
+    $self->getopt_from_string(@args);
 }
 
 # getopt_from_string() uses our split_line() function instead of
 # Getopt::Long::GetOptionsFromString's Text::ParseWords
-sub getopt_from_string {
-    my ($self, $string, $result, $config, @opts) = @_;
-
+sub getopt_from_string($self, $string, $result, $config, @opts) {
     my @opt_args = $self->split_line($string, strip_quotes => 1);
-
     return $self->getopt_from_array(\@opt_args, $result, $config, @opts);
 }
 
 # the workhorse getopt function
-sub getopt_from_array {
-    my ($self, $opt_args, $result, $config, @opts) = @_;
-
+sub getopt_from_array($self, $opt_args, $result, $config, @opts) {
     # emitting errors as Perl warnings instead of using die, weird.
     my $opt_error;
     local $SIG{__WARN__} = sub {
@@ -1425,9 +1380,7 @@ sub getopt_from_array {
     };
 
     Getopt::Long::Configure(@$config);
-
     GetOptionsFromArray($opt_args, $result, @opts);
-
     return ($opt_args, $opt_error);
 }
 

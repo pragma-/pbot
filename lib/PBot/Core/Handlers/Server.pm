@@ -14,9 +14,7 @@ use PBot::Core::MessageHistory::Constants ':all';
 
 use Time::HiRes qw/time/;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.welcome',       sub { $self->on_welcome       (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.disconnect',    sub { $self->on_disconnect    (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.motd',          sub { $self->on_motd          (@_) });
@@ -33,17 +31,14 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.chghost',       sub { $self->on_chghost       (@_) });
 }
 
-sub on_init {
-    my ($self, $conn, $event) = @_;
+sub on_init($self, $conn, $event) {
     my (@args) = ($event->args);
     shift @args;
     $self->{pbot}->{logger}->log("*** @args\n");
     return 1;
 }
 
-sub on_welcome {
-    my ($self, $event_type, $event) = @_;
-
+sub on_welcome($self, $event_type, $event) {
     $self->{pbot}->{logger}->log("Welcome!\n");
 
     if ($self->{pbot}->{irc_capabilities}->{sasl}) {
@@ -55,9 +50,7 @@ sub on_welcome {
     return 1;
 }
 
-sub on_disconnect {
-    my ($self, $event_type, $event) = @_;
-
+sub on_disconnect($self, $event_type, $event) {
     $self->{pbot}->{logger}->log("Disconnected...\n");
     $self->{pbot}->{conn} = undef;
 
@@ -73,9 +66,7 @@ sub on_disconnect {
     return 1;
 }
 
-sub on_motd {
-    my ($self, $event_type, $event) = @_;
-
+sub on_motd($self, $event_type, $event) {
     if ($self->{pbot}->{registry}->get_value('irc', 'show_motd')) {
         my $from = $event->{from};
         my $msg  = $event->{args}[1];
@@ -85,9 +76,7 @@ sub on_motd {
     return 1;
 }
 
-sub on_notice {
-    my ($self, $event_type, $event) = @_;
-
+sub on_notice($self, $event_type, $event) {
     my ($server, $to, $text) = (
         $event->nick,
         $event->to,
@@ -103,9 +92,7 @@ sub on_notice {
     return 1;
 }
 
-sub on_isupport {
-    my ($self, $event_type, $event) = @_;
-
+sub on_isupport($self, $event_type, $event) {
     # remove and discard first and last arguments
     # (first arg is botnick, last arg is "are supported by this server")
     shift @{$event->{args}};
@@ -131,8 +118,7 @@ sub on_isupport {
     return 1;
 }
 
-sub on_nickchange {
-    my ($self, $event_type, $event) = @_;
+sub on_nickchange($self, $event_type, $event) {
     my ($nick, $user, $host, $newnick) = ($event->nick, $event->user, $event->host, $event->args);
 
     ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
@@ -167,9 +153,7 @@ sub on_nickchange {
     return 1;
 }
 
-sub on_nononreg {
-    my ($self, $event_type, $event) = @_;
-
+sub on_nononreg($self, $event_type, $event) {
     my $target = $event->{args}[1];
 
     $self->{pbot}->{logger}->log("Cannot send private /msg to $target; they are blocking unidentified /msgs.\n");
@@ -177,9 +161,7 @@ sub on_nononreg {
     return 1;
 }
 
-sub on_chghost {
-    my ($self, $event_type, $event) = @_;
-
+sub on_chghost($self, $event_type, $event) {
     my $nick    = $event->nick;
     my $user    = $event->user;
     my $host    = $event->host;
@@ -212,14 +194,12 @@ sub on_chghost {
      return 1;
 }
 
-sub log_first_arg {
-    my ($self, $event_type, $event) = @_;
+sub log_first_arg($self, $event_type, $event) {
     $self->{pbot}->{logger}->log("$event->{args}[1]\n");
     return 1;
 }
 
-sub log_third_arg {
-    my ($self, $event_type, $event) = @_;
+sub log_third_arg($self, $event_type, $event) {
     $self->{pbot}->{logger}->log("$event->{args}[3]\n");
     return 1;
 }

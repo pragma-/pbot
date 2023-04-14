@@ -15,9 +15,7 @@ use Time::HiRes qw/gettimeofday/;
 use POSIX qw/WNOHANG/;
 use JSON;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # hash of currently running bot-invoked processes
     $self->{processes} = {};
 
@@ -27,9 +25,7 @@ sub initialize {
     };
 }
 
-sub add_process {
-    my ($self, $pid, $context) = @_;
-
+sub add_process($self, $pid, $context) {
     $context->{process_start} = gettimeofday;
 
     $self->{processes}->{$pid} = $context;
@@ -37,9 +33,7 @@ sub add_process {
     $self->{pbot}->{logger}->log("Starting process $pid: $context->{commands}->[0]\n");
 }
 
-sub remove_process {
-    my ($self, $pid) = @_;
-
+sub remove_process($self, $pid) {
     if (exists $self->{processes}->{$pid}) {
         my $command = $self->{processes}->{$pid}->{commands}->[0];
 
@@ -54,11 +48,7 @@ sub remove_process {
     }
 }
 
-sub execute_process {
-    my ($self, $context, $subref, $timeout, $reader_subref) = @_;
-
-    $timeout //= 30; # default timeout 30 seconds
-
+sub execute_process($self, $context, $subref, $timeout = undef, $reader_subref = undef) {
     # ensure contextual command history list is available for add_process()
     if (not exists $context->{commands}) {
         $context->{commands} = [$context->{command}];
@@ -110,7 +100,7 @@ sub execute_process {
         # execute the provided subroutine, results are stored in $context
         eval {
             local $SIG{ALRM} = sub { die "Process `$context->{commands}->[0]` timed-out\n" };
-            alarm $timeout;
+            alarm ($timeout // 30);
             $subref->($context);
             alarm 0;
         };
@@ -152,9 +142,7 @@ sub execute_process {
     }
 }
 
-sub process_pipe_reader {
-    my ($self, $pid, $buf) = @_;
-
+sub process_pipe_reader($self, $pid, $buf) {
     # retrieve context object from child
     my $context = decode_json $buf or do {
         $self->{pbot}->{logger}->log("Failed to decode bad json: [$buf]\n");

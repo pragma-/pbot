@@ -18,8 +18,7 @@ use Time::HiRes qw(time tv_interval);
 
 use PBot::Core::MessageHistory::Storage::SQLite;
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{filename} = $conf{filename} // $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/message_history.sqlite3';
 
     $self->{database} = PBot::Core::MessageHistory::Storage::SQLite->new(
@@ -35,13 +34,11 @@ sub initialize {
     $self->{pbot}->{atexit}->register(sub { $self->{database}->end });
 }
 
-sub get_message_account {
-    my ($self, $nick, $user, $host) = @_;
+sub get_message_account($self, $nick, $user, $host) {
     return $self->{database}->get_message_account($nick, $user, $host);
 }
 
-sub add_message {
-    my ($self, $account, $mask, $channel, $text, $mode) = @_;
+sub add_message($self, $account, $mask, $channel, $text, $mode) {
     $self->{database}->add_message($account, $mask, $channel, { timestamp => scalar time, msg => $text, mode => $mode });
 }
 

@@ -16,9 +16,7 @@ use Time::Duration qw(duration);
 sub initialize {}
 
 # main entry point for PBot::Core::Interpreter to interpret a factoid command
-sub interpreter {
-    my ($self, $context) = @_;
-
+sub interpreter($self, $context) {
     # trace context and context's contents
     if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
         use Data::Dumper;
@@ -275,9 +273,7 @@ sub interpreter {
     }
 }
 
-sub handle_action {
-    my ($self, $context, $action) = @_;
-
+sub handle_action($self, $context, $action) {
     # trace context and context's contents
     if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
         use Data::Dumper;

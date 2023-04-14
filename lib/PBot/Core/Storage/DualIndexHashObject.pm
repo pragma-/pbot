@@ -22,8 +22,7 @@ use PBot::Imports;
 use Text::Levenshtein::XS qw(distance);
 use JSON;
 
-sub new {
-    my ($class, %args) = @_;
+sub new($class, %args) {
     my $self = bless {}, $class;
     Carp::croak("Missing pbot reference to " . __FILE__) unless exists $args{pbot};
     $self->{pbot} = delete $args{pbot};
@@ -31,16 +30,14 @@ sub new {
     return $self;
 }
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{name}     = $conf{name}     // 'unnamed';
     $self->{filename} = $conf{filename} // Carp::carp("Missing filename to DualIndexHashObject, will not be able to save to or load from file.");
     $self->{save_queue_timeout} = $conf{save_queue_timeout} // 0;
     $self->{hash} = {};
 }
 
-sub load {
-    my ($self, $filename) = @_;
+sub load($self, $filename = undef) {
     $filename = $self->{filename} if not defined $filename;
 
     if (not defined $filename) {
@@ -96,11 +93,10 @@ sub load {
     }
 }
 
-sub save {
-    my $self = shift;
+sub save($self, @args) {
     my $filename;
-    if   (@_) { $filename = shift; }
-    else      { $filename = $self->{filename}; }
+    if   (@args) { $filename = shift @args; }
+    else         { $filename = $self->{filename}; }
 
     if (not defined $filename) {
         Carp::carp "No $self->{name} filename specified -- skipping saving to file.\n";
@@ -137,17 +133,13 @@ sub save {
     }
 }
 
-sub clear {
-    my $self = shift;
+sub clear($self) {
     $self->{hash} = {};
 }
 
-sub levenshtein_matches {
-    my ($self, $primary_index, $secondary_index, $distance, $strictnamespace) = @_;
+sub levenshtein_matches($self, $primary_index, $secondary_index, $distance = 0.60, $strictnamespace = 0) {
     my $comma  = '';
     my $result = "";
-
-    $distance = 0.60 if not defined $distance;
 
     $primary_index = '.*' if not defined $primary_index;
 
@@ -205,8 +197,7 @@ sub levenshtein_matches {
     return $result;
 }
 
-sub set {
-    my ($self, $primary_index, $secondary_index, $key, $value, $dont_save) = @_;
+sub set($self, $primary_index, $secondary_index, $key = undef, $value = undef, $dont_save = 0) {
     my $lc_primary_index   = lc $primary_index;
     my $lc_secondary_index = lc $secondary_index;
 
@@ -241,8 +232,9 @@ sub set {
         return $result;
     }
 
-    if (not defined $value) { $value = $self->{hash}->{$lc_primary_index}->{$lc_secondary_index}->{$key}; }
-    else {
+    if (not defined $value) {
+        $value = $self->{hash}->{$lc_primary_index}->{$lc_secondary_index}->{$key};
+    } else {
         $self->{hash}->{$lc_primary_index}->{$lc_secondary_index}->{$key} = $value;
         $self->save unless $dont_save;
     }
@@ -250,8 +242,7 @@ sub set {
     return "[$name1] $name2: $key " . (defined $value ? "set to $value" : "is not set.");
 }
 
-sub unset {
-    my ($self, $primary_index, $secondary_index, $key) = @_;
+sub unset($self, $primary_index, $secondary_index, $key) {
     my $lc_primary_index   = lc $primary_index;
     my $lc_secondary_index = lc $secondary_index;
 
@@ -282,8 +273,7 @@ sub unset {
     $self->save;
 }
 
-sub exists {
-    my ($self, $primary_index, $secondary_index, $data_index) = @_;
+sub exists($self, $primary_index = undef, $secondary_index = undef, $data_index = undef) {
     return 0 if not defined $primary_index;
     $primary_index = lc $primary_index;
     return 0 if not exists $self->{hash}->{$primary_index};
@@ -294,9 +284,7 @@ sub exists {
     return exists $self->{hash}->{$primary_index}->{$secondary_index}->{$data_index};
 }
 
-sub get_key_name {
-    my ($self, $primary_index, $secondary_index) = @_;
-
+sub get_key_name($self, $primary_index, $secondary_index = undef) {
     my $lc_primary_index = lc $primary_index;
 
     return $lc_primary_index if not exists $self->{hash}->{$lc_primary_index};
@@ -320,8 +308,7 @@ sub get_key_name {
     }
 }
 
-sub get_keys {
-    my ($self, $primary_index, $secondary_index) = @_;
+sub get_keys($self, $primary_index = undef, $secondary_index = undef) {
     return grep { $_ ne '$metadata$' } keys %{$self->{hash}} if not defined $primary_index;
 
     my $lc_primary_index = lc $primary_index;
@@ -339,9 +326,8 @@ sub get_keys {
     return grep { $_ ne '_name' } keys %{$self->{hash}->{lc $primary_index}->{lc $secondary_index}};
 }
 
-sub get_data {
-    my ($self, $primary_index, $secondary_index, $data_index) = @_;
-    $primary_index   = lc $primary_index   if defined $primary_index;
+sub get_data($self, $primary_index, $secondary_index = undef, $data_index = undef) {
+    $primary_index   = lc $primary_index;
     $secondary_index = lc $secondary_index if defined $secondary_index;
     return undef                                               if not exists $self->{hash}->{$primary_index};
     return $self->{hash}->{$primary_index}                     if not defined $secondary_index;
@@ -349,8 +335,7 @@ sub get_data {
     return $self->{hash}->{$primary_index}->{$secondary_index}->{$data_index};
 }
 
-sub add {
-    my ($self, $primary_index, $secondary_index, $data, $dont_save, $quiet) = @_;
+sub add($self, $primary_index, $secondary_index, $data, $dont_save = 0, $quiet = 0) {
     my $lc_primary_index   = lc $primary_index;
     my $lc_secondary_index = lc $secondary_index;
 
@@ -386,8 +371,7 @@ sub add {
     return "$self->{name}: [$name1]: $name2 added.";
 }
 
-sub remove {
-    my ($self, $primary_index, $secondary_index, $data_index, $dont_save) = @_;
+sub remove($self, $primary_index, $secondary_index = undef, $data_index = undef, $dont_save = 0) {
     my $lc_primary_index   = lc $primary_index;
     my $lc_secondary_index = lc $secondary_index if defined $secondary_index;
 

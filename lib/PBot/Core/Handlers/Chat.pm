@@ -10,18 +10,14 @@ package PBot::Core::Handlers::Chat;
 use PBot::Imports;
 use parent 'PBot::Core::Class';
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.notice',  sub { $self->on_notice (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.public',  sub { $self->on_public (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.caction', sub { $self->on_action (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.msg',     sub { $self->on_msg    (@_) });
 }
 
-sub on_notice {
-    my ($self, $event_type, $event) = @_;
-
+sub on_notice($self, $event_type, $event) {
     my ($nick, $user, $host, $to, $text)  = (
         $event->nick,
         $event->user,
@@ -49,9 +45,7 @@ sub on_notice {
     return 1;
 }
 
-sub on_public {
-    my ($self, $event_type, $event) = @_;
-
+sub on_public($self, $event_type, $event) {
     my ($from, $nick, $user, $host, $text, $tags) = (
         $event->{to}[0],
         $event->nick,
@@ -69,9 +63,7 @@ sub on_public {
     return 1;
 }
 
-sub on_action {
-    my ($self, $event_type, $event) = @_;
-
+sub on_action($self, $event_type, $event) {
     # prepend "/me " to the message text
     $event->{args}[0] = "/me " . $event->{args}[0];
 
@@ -80,9 +72,7 @@ sub on_action {
     return 1;
 }
 
-sub on_msg {
-    my ($self, $event_type, $event) = @_;
-
+sub on_msg($self, $event_type, $event) {
     my ($nick, $user, $host, $text, $tags) = (
         $event->nick,
         $event->user,

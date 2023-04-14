@@ -18,8 +18,7 @@ use PBot::Imports;
 use Text::Levenshtein::XS qw(distance);
 use JSON;
 
-sub new {
-    my ($class, %args) = @_;
+sub new($class, %args) {
     my $self  = bless {}, $class;
     Carp::croak("Missing pbot reference to " . __FILE__) unless exists $args{pbot};
     $self->{pbot} = delete $args{pbot};
@@ -27,9 +26,7 @@ sub new {
     return $self;
 }
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{name}     = $conf{name} // 'unnammed';
     $self->{hash}     = {};
     $self->{filename} = $conf{filename};
@@ -39,9 +36,7 @@ sub initialize {
     }
 }
 
-sub load {
-    my ($self, $filename) = @_;
-
+sub load($self, $filename = undef) {
     # allow overriding $self->{filename} with $filename parameter
     $filename //= $self->{filename};
 
@@ -100,9 +95,7 @@ sub load {
     }
 }
 
-sub save {
-    my ($self, $filename) = @_;
-
+sub save($self, $filename = undef) {
     # allow parameter overriding internal field
     $filename //= $self->{filename};
 
@@ -132,14 +125,11 @@ sub save {
     close(FILE);
 }
 
-sub clear {
-    my ($self) = @_;
+sub clear($self) {
     $self->{hash} = {};
 }
 
-sub levenshtein_matches {
-    my ($self, $keyword) = @_;
-
+sub levenshtein_matches($self, $keyword) {
     my @matches;
 
     foreach my $index (sort keys %{$self->{hash}}) {
@@ -165,8 +155,7 @@ sub levenshtein_matches {
     return $result;
 }
 
-sub set {
-    my ($self, $index, $key, $value, $dont_save) = @_;
+sub set($self, $index, $key = undef, $value = undef, $dont_save = 0) {
     my $lc_index = lc $index;
 
     # find similarly named keys
@@ -207,8 +196,7 @@ sub set {
     return "[$self->{name}] " . $self->get_key_name($lc_index) . ": $key " . (defined $value ? "set to $value" : "is not set.");
 }
 
-sub unset {
-    my ($self, $index, $key) = @_;
+sub unset($self, $index, $key = undef) {
     my $lc_index = lc $index;
 
     if (not exists $self->{hash}->{$lc_index}) {
@@ -225,35 +213,30 @@ sub unset {
     }
 }
 
-sub exists {
-    my ($self, $index, $data_index) = @_;
+sub exists($self, $index, $data_index = undef) {
     return exists $self->{hash}->{lc $index} if not defined $data_index;
     return exists $self->{hash}->{lc $index}->{$data_index};
 }
 
-sub get_key_name {
-    my ($self, $index) = @_;
+sub get_key_name($self, $index) {
     my $lc_index = lc $index;
     return $lc_index if not exists $self->{hash}->{$lc_index};
     return exists $self->{hash}->{$lc_index}->{_name} ? $self->{hash}->{$lc_index}->{_name} : $lc_index;
 }
 
-sub get_keys {
-    my ($self, $index) = @_;
+sub get_keys($self, $index = undef) {
     return grep { $_ ne '$metadata$' } keys %{$self->{hash}} if not defined $index;
     return grep { $_ ne '_name' } keys %{$self->{hash}->{lc $index}};
 }
 
-sub get_data {
-    my ($self, $index, $data_index) = @_;
+sub get_data($self, $index, $data_index = undef) {
     my $lc_index = lc $index;
     return undef                      if not exists $self->{hash}->{$lc_index};
     return $self->{hash}->{$lc_index} if not defined $data_index;
     return $self->{hash}->{$lc_index}->{$data_index};
 }
 
-sub add {
-    my ($self, $index, $data, $dont_save) = @_;
+sub add($self, $index, $data, $dont_save = 0) {
     my $lc_index = lc $index;
 
     # preserve case of index
@@ -266,8 +249,7 @@ sub add {
     return "$index added to $self->{name}.";
 }
 
-sub remove {
-    my ($self, $index, $data_index, $dont_save) = @_;
+sub remove($self, $index, $data_index = undef, $dont_save = 0) {
     my $lc_index = lc $index;
 
     if (not exists $self->{hash}->{$lc_index}) {

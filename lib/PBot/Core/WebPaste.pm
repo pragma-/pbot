@@ -15,9 +15,7 @@ use Time::Duration;
 use LWP::UserAgent::Paranoid;
 use Encode;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # There used to be many more paste sites in this list but one by one
     # many have died off. :-(
 
@@ -29,9 +27,7 @@ sub initialize {
     $self->{current_site} = 0;
 }
 
-sub get_paste_site {
-    my ($self) = @_;
-
+sub get_paste_site($self) {
     # get the next paste site's subroutine reference
     my $subref = $self->{paste_sites}->[$self->{current_site}];
 
@@ -43,9 +39,7 @@ sub get_paste_site {
     return $subref;
 }
 
-sub paste {
-    my ($self, $text, %opts) = @_;
-
+sub paste($self, $text, %opts) {
     my %default_opts = (
         no_split => 0,
     );
@@ -84,9 +78,7 @@ sub paste {
     return $result;
 }
 
-sub paste_0x0st {
-    my ($self, $text) = @_;
-
+sub paste_0x0st($self, $text) {
     my $ua = LWP::UserAgent::Paranoid->new(request_timeout => 10);
 
     push @{$ua->requests_redirectable}, 'POST';
@@ -98,9 +90,7 @@ sub paste_0x0st {
     );
 }
 
-sub paste_ixio {
-    my ($self, $text) = @_;
-
+sub paste_ixio($self, $text) {
     my $ua = LWP::UserAgent::Paranoid->new(request_timeout => 10);
 
     push @{$ua->requests_redirectable}, 'POST';

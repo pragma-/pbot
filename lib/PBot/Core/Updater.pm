@@ -16,15 +16,12 @@ use PBot::Imports;
 
 use File::Basename;
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{data_dir}   = $conf{data_dir};
     $self->{update_dir} = $conf{update_dir};
 }
 
-sub update {
-    my ($self) = @_;
-
+sub update($self) {
     $self->{pbot}->{logger}->log("Checking if update needed...\n");
 
     my $current_version     = $self->get_current_version;
@@ -58,8 +55,7 @@ sub update {
     return $self->put_last_update_version($current_version);
 }
 
-sub get_available_updates {
-    my ($self, $last_update_version) = @_;
+sub get_available_updates($self, $last_update_version) {
     my @updates = sort glob "$self->{update_dir}/*.pl";
     return grep { my ($version) = split /_/, basename $_; $version > $last_update_version } @updates;
 }
@@ -68,16 +64,14 @@ sub get_current_version {
     return PBot::VERSION::BUILD_REVISION;
 }
 
-sub get_last_update_version {
-    my ($self) = @_;
+sub get_last_update_version($self) {
     open(my $fh, '<', "$self->{data_dir}/last_update") or return 0;
     chomp(my $last_update = <$fh>);
     close $fh;
     return $last_update;
 }
 
-sub put_last_update_version {
-    my ($self, $version) = @_;
+sub put_last_update_version($self, $version) {
     if (open(my $fh, '>', "$self->{data_dir}/last_update")) {
         print $fh "$version\n";
         close $fh;

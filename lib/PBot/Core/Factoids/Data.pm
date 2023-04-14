@@ -52,9 +52,7 @@ our %factoid_metadata = (
     'workdir'               => 'TEXT',
 );
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{storage} = PBot::Core::Storage::DualIndexSQLiteObject->new(
         pbot     => $self->{pbot},
         name     => 'Factoids',
@@ -62,21 +60,17 @@ sub initialize {
     );
 }
 
-sub load {
-    my ($self) = @_;
+sub load($self) {
     $self->{storage}->load;
     $self->{storage}->create_metadata(\%factoid_metadata);
 }
 
-sub save {
-    my ($self, $export) = @_;
+sub save($self, $export = 0) {
     $self->{storage}->save;
     $self->{pbot}->{factoids}->{exporter}->export if $export;
 }
 
-sub add {
-    my ($self, $type, $channel, $owner, $trigger, $action, $dont_save) = @_;
-
+sub add($self, $type, $channel, $owner, $trigger, $action, $dont_save = 0) {
     $type    = lc $type;
     $channel = '.*' if $channel !~ /^#/;
 
@@ -104,21 +98,17 @@ sub add {
     $self->{storage}->add($channel, $trigger, $data, $dont_save);
 }
 
-sub remove {
-    my $self = shift;
+sub remove($self) {
     my ($channel, $trigger) = @_;
     $channel = '.*' if $channel !~ /^#/;
     return $self->{storage}->remove($channel, $trigger);
 }
 
-sub get_meta {
-    my ($self, $channel, $trigger, $key) = @_;
+sub get_meta($self, $channel, $trigger = undef, $key = undef) {
     return $self->{storage}->get_data($channel, $trigger, $key);
 }
 
-sub find {
-    my ($self, $from, $keyword, %opts) = @_;
-
+sub find($self, $from, $keyword, %opts) {
     my %default_opts = (
         arguments     => '',
         exact_channel => 0,

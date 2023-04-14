@@ -13,9 +13,7 @@ use PBot::Imports;
 
 use LWP::UserAgent;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # register `version` command
     $self->{pbot}->{commands}->register(sub { $self->cmd_version(@_) }, 'version');
 
@@ -27,9 +25,7 @@ sub initialize {
     };
 }
 
-sub cmd_version {
-    my ($self, $context) = @_;
-
+sub cmd_version($self, $context) {
     my $ratelimit = $self->{pbot}->{registry}->get_value('version', 'check_limit') // 300;
 
     if (time - $self->{last_check}->{timestamp} >= $ratelimit) {

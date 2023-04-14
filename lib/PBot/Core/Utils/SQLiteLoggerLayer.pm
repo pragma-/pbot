@@ -9,26 +9,22 @@ package PBot::Core::Utils::SQLiteLoggerLayer;
 
 use PBot::Imports;
 
-sub PUSHED {
-    my ($class, $mode, $fh) = @_;
+sub PUSHED($class, $mode, $fh) {
     my $logger;
     return bless \$logger, $class;
 }
 
-sub OPEN {
-    my ($self, $path, $mode, $fh) = @_;
+sub OPEN($self, $path, $mode, $fh) {
     $$self = $path; # path is our PBot::Logger object
     return 1;
 }
 
-sub WRITE {
-    my ($self, $buf, $fh) = @_;
+sub WRITE($self, $buf, $fh) {
     $$self->log($buf); # log message
     return length($buf);
 }
 
-sub CLOSE {
-    my ($self) = @_;
+sub CLOSE($self) {
     $$self->close();
     return 0;
 }

@@ -19,9 +19,7 @@ use PBot::Imports;
 use Time::HiRes    qw(gettimeofday);
 use Time::Duration qw(concise duration);
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{op_commands}  = {}; # OP command queue
     $self->{op_requested} = {}; # channels PBot has requested OP
     $self->{is_opped}     = {}; # channels PBot is currently OP
@@ -34,8 +32,7 @@ sub initialize {
 }
 
 # returns true if PBot can gain OP status in $channel
-sub can_gain_ops {
-    my ($self, $channel) = @_;
+sub can_gain_ops($self, $channel) {
     return
          $self->{pbot}->{channels}->{storage}->exists($channel)
       && $self->{pbot}->{channels}->{storage}->get_data($channel, 'chanop')
@@ -43,8 +40,7 @@ sub can_gain_ops {
 }
 
 # sends request to gain OP status in $channel
-sub gain_ops {
-    my ($self, $channel) = @_;
+sub gain_ops($self, $channel) {
     $channel = lc $channel;
 
     return if exists $self->{op_requested}->{$channel};
@@ -71,22 +67,19 @@ sub gain_ops {
 }
 
 # removes OP status in $channel
-sub lose_ops {
-    my ($self, $channel) = @_;
+sub lose_ops($self, $channel) {
     $channel = lc $channel;
     $self->{pbot}->{conn}->mode($channel, '-o ' . $self->{pbot}->{registry}->get_value('irc', 'botnick'));
 }
 
 # adds a command to the OP command queue
-sub add_op_command {
-    my ($self, $channel, $command) = @_;
+sub add_op_command($self, $channel, $command) {
     return if not $self->can_gain_ops($channel);
     push @{$self->{op_commands}->{lc $channel}}, $command;
 }
 
 # invokes commands in OP command queue
-sub perform_op_commands {
-    my ($self, $channel) = @_;
+sub perform_op_commands($self, $channel) {
     $channel = lc $channel;
 
     $self->{pbot}->{logger}->log("Performing op commands in $channel:\n");
@@ -112,8 +105,7 @@ sub perform_op_commands {
 }
 
 # manages OP-related timeouts
-sub check_opped_timeouts {
-    my $self = shift;
+sub check_opped_timeouts($self) {
     my $now  = gettimeofday();
     foreach my $channel (keys %{$self->{is_opped}}) {
         if ($self->{is_opped}->{$channel}{timeout} < $now) {

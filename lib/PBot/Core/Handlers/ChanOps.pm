@@ -13,15 +13,13 @@ use PBot::Imports;
 
 use Time::HiRes qw(gettimeofday);
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{pbot}->{event_dispatcher}->register_handler('pbot.join',    sub { $self->on_self_join(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('pbot.part',    sub { $self->on_self_part(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.modeflag', sub { $self->on_modeflag(@_) });
 }
 
-sub on_self_join {
-    my ($self, $event_type, $event) = @_;
+sub on_self_join($self, $event_type, $event) {
     my $channel = $event->{channel};
 
     delete $self->{pbot}->{chanops}->{is_opped}->{$channel};
@@ -34,17 +32,14 @@ sub on_self_join {
     return 1;
 }
 
-sub on_self_part {
-    my ($self, $event_type, $event) = @_;
+sub on_self_part($self, $event_type, $event) {
     my $channel = $event->{channel};
     delete $self->{pbot}->{chanops}->{is_opped}->{$channel};
     delete $self->{pbot}->{chanops}->{op_requested}->{$channel};
     return 1;
 }
 
-sub on_modeflag {
-    my ($self, $event_type, $event) = @_;
-
+sub on_modeflag($self, $event_type, $event) {
     my ($source, $channel, $mode, $target) = (
         $event->{source},
         $event->{channel},

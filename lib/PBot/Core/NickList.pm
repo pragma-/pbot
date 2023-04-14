@@ -15,9 +15,7 @@ use PBot::Imports;
 use Text::Levenshtein::XS qw/distance/;
 use Time::HiRes qw/gettimeofday/;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # nicklist hashtable
     $self->{nicklist} = {};
 
@@ -25,9 +23,7 @@ sub initialize {
     $self->{pbot}->{registry}->add_default('text', 'nicklist', 'debug', '0');
 }
 
-sub update_timestamp {
-    my ($self, $channel, $nick) = @_;
-
+sub update_timestamp($self, $channel, $nick) {
     my $orig_nick = $nick;
 
     $channel = lc $channel;
@@ -40,14 +36,11 @@ sub update_timestamp {
     $self->{nicklist}->{$channel}->{$nick}->{timestamp} = gettimeofday;
 }
 
-sub remove_channel {
-    my ($self, $channel) = @_;
+sub remove_channel($self, $channel) {
     delete $self->{nicklist}->{lc $channel};
 }
 
-sub add_nick {
-    my ($self, $channel, $nick) = @_;
-
+sub add_nick($self, $channel, $nick) {
     if (not exists $self->{nicklist}->{lc $channel}->{lc $nick}) {
         if ($self->{pbot}->{registry}->get_value('nicklist', 'debug')) {
             $self->{pbot}->{logger}->log("Adding nick '$nick' to channel '$channel'\n");
@@ -56,18 +49,14 @@ sub add_nick {
     }
 }
 
-sub remove_nick {
-    my ($self, $channel, $nick) = @_;
-
+sub remove_nick($self, $channel, $nick) {
     if ($self->{pbot}->{registry}->get_value('nicklist', 'debug')) {
         $self->{pbot}->{logger}->log("Removing nick '$nick' from channel '$channel'\n");
     }
     delete $self->{nicklist}->{lc $channel}->{lc $nick};
 }
 
-sub get_channels {
-    my ($self, $nick) = @_;
-
+sub get_channels($self, $nick) {
     $nick = lc $nick;
 
     my @channels;
@@ -81,9 +70,7 @@ sub get_channels {
     return \@channels;
 }
 
-sub get_nicks {
-    my ($self, $channel) = @_;
-
+sub get_nicks($self, $channel) {
     $channel = lc $channel;
 
     my @nicks;
@@ -97,9 +84,7 @@ sub get_nicks {
     return @nicks;
 }
 
-sub set_meta {
-    my ($self, $channel, $nick, $key, $value) = @_;
-
+sub set_meta($self, $channel, $nick, $key, $value) {
     $channel = lc $channel;
     $nick    = lc $nick;
 
@@ -130,9 +115,7 @@ sub set_meta {
     return 1;
 }
 
-sub delete_meta {
-    my ($self, $channel, $nick, $key) = @_;
-
+sub delete_meta($self, $channel, $nick, $key) {
     $channel = lc $channel;
     $nick    = lc $nick;
 
@@ -143,9 +126,7 @@ sub delete_meta {
     return delete $self->{nicklist}->{$channel}->{$nick}->{$key};
 }
 
-sub get_meta {
-    my ($self, $channel, $nick, $key) = @_;
-
+sub get_meta($self, $channel, $nick, $key) {
     $channel = lc $channel;
     $nick    = lc $nick;
 
@@ -156,9 +137,7 @@ sub get_meta {
     return $self->{nicklist}->{$channel}->{$nick}->{$key};
 }
 
-sub is_present_any_channel {
-    my ($self, $nick) = @_;
-
+sub is_present_any_channel($self, $nick) {
     $nick = lc $nick;
 
     foreach my $channel (keys %{$self->{nicklist}}) {
@@ -170,9 +149,7 @@ sub is_present_any_channel {
     return 0;
 }
 
-sub is_present {
-    my ($self, $channel, $nick) = @_;
-
+sub is_present($self, $channel, $nick) {
     $channel = lc $channel;
     $nick    = lc $nick;
 
@@ -183,9 +160,7 @@ sub is_present {
     }
 }
 
-sub is_present_similar {
-    my ($self, $channel, $nick, $similarity) = @_;
-
+sub is_present_similar($self, $channel, $nick, $similarity = undef) {
     $channel = lc $channel;
     $nick    = lc $nick;
 
@@ -228,9 +203,7 @@ sub is_present_similar {
     return 0;
 }
 
-sub random_nick {
-    my ($self, $channel) = @_;
-
+sub random_nick($self, $channel) {
     $channel = lc $channel;
 
     if (exists $self->{nicklist}->{$channel}) {

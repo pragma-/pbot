@@ -10,15 +10,11 @@ package PBot::Core::Commands::Reload;
 use PBot::Imports;
 use parent 'PBot::Core::Class';
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{pbot}->{commands}->register(sub { $self->cmd_reload(@_) }, 'reload',  1);
 }
 
-sub cmd_reload {
-    my ($self, $context) = @_;
-
+sub cmd_reload($self, $context) {
     my %reloadables = (
         'capabilities' => sub {
             $self->{pbot}->{capabilities}->{caps}->load;

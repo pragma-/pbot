@@ -10,22 +10,18 @@ use parent 'PBot::Core::Class';
 
 use PBot::Imports;
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{filename} = $conf{filename};
     $self->{storage}  = {};
     $self->load;
 }
 
-sub add {
-    my ($self, $channel, $hostmask) = @_;
+sub add($self, $channel, $hostmask) {
     $self->{storage}->{lc $channel}->{lc $hostmask} = 1;
     $self->save;
 }
 
-sub remove {
-    my ($self, $channel, $hostmask) = @_;
-
+sub remove($self, $channel, $hostmask) {
     $channel  = lc $channel;
     $hostmask = lc $hostmask;
 
@@ -40,14 +36,11 @@ sub remove {
     $self->save;
 }
 
-sub clear {
-    my ($self) = @_;
+sub clear($self) {
     $self->{storage} = {};
 }
 
-sub load {
-    my ($self) = @_;
-
+sub load($self) {
     if (not $self->{filename}) {
         $self->{pbot}->{logger}->log("No blacklist path specified -- skipping loading of blacklist");
         return;
@@ -81,9 +74,7 @@ sub load {
     $self->{pbot}->{logger}->log("  $i entries in blacklist\n");
 }
 
-sub save {
-    my ($self) = @_;
-
+sub save($self) {
     if (not $self->{filename}) {
         $self->{pbot}->{logger}->log("No blacklist path specified -- skipping saving of blacklist\n");
         return;
@@ -100,9 +91,7 @@ sub save {
     close FILE;
 }
 
-sub is_blacklisted {
-    my ($self, $hostmask, $channel, $nickserv, $gecos) = @_;
-
+sub is_blacklisted($self, $hostmask, $channel, $nickserv = undef, $gecos = undef) {
     return 0 if not defined $channel;
 
     my $result = eval {

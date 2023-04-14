@@ -18,9 +18,7 @@ use Time::HiRes qw/gettimeofday/;
 use Time::Duration;
 use POSIX qw/strftime/;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{pbot}->{registry}->add_default('text', 'banlist', 'chanserv_ban_timeout', '604800');
     $self->{pbot}->{registry}->add_default('text', 'banlist', 'mute_timeout',         '604800');
     $self->{pbot}->{registry}->add_default('text', 'banlist', 'debug',                '0');
@@ -61,9 +59,7 @@ sub initialize {
     $self->{pbot}->{event_queue}->enqueue(sub { $self->flush_unban_queue }, 30, 'Flush unban queue');
 }
 
-sub checkban {
-    my ($self, $channel, $mode, $mask) = @_;
-
+sub checkban($self, $channel, $mode, $mask) {
     $mask = $self->nick_to_banmask($mask);
 
     my $data;
@@ -97,15 +93,12 @@ sub checkban {
     return $result;
 }
 
-sub is_ban_exempted {
-    my ($self, $channel, $hostmask) = @_;
+sub is_ban_exempted($self, $channel, $hostmask) {
     return 1 if $self->{'ban-exemptions'}->exists(lc $channel, lc $hostmask);
     return 0;
 }
 
-sub is_banned {
-    my ($self, $channel, $nick, $user, $host) = @_;
-
+sub is_banned($self, $channel, $nick, $user, $host) {
     my $message_account   = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
     my @nickserv_accounts = $self->{pbot}->{messagehistory}->{database}->get_nickserv_accounts($message_account);
     push @nickserv_accounts, undef;
@@ -137,11 +130,7 @@ sub is_banned {
     return $banned;
 }
 
-sub has_ban_timeout {
-    my ($self, $channel, $mask, $mode) = @_;
-
-    $mode ||= 'b';
-
+sub has_ban_timeout($self, $channel, $mask, $mode = 'b') {
     my $list = $mode eq 'b' ? $self->{banlist} : $self->{quietlist};
 
     my $data = $list->get_data($channel, $mask);
@@ -153,9 +142,7 @@ sub has_ban_timeout {
     }
 }
 
-sub ban_user_timed {
-    my ($self, $channel, $mode, $mask, $length, $owner, $reason, $immediately) = @_;
-
+sub ban_user_timed($self, $channel, $mode, $mask, $length, $owner, $reason, $immediately = 0) {
     $channel = lc $channel;
     $mask    = lc $mask;
 
@@ -185,28 +172,22 @@ sub ban_user_timed {
     }
 }
 
-sub ban_user {
-    my ($self, $channel, $mode, $mask, $immediately) = @_;
-    $mode ||= 'b';
+sub ban_user($self, $channel, $mode, $mask, $immediately = 0) {
     $self->{pbot}->{logger}->log("Banning $channel +$mode $mask\n");
     $self->add_to_ban_queue($channel, $mode, $mask);
-    if (not defined $immediately or $immediately != 0) {
+    if ($immediately) {
         $self->flush_ban_queue;
     }
 }
 
-sub unban_user {
-    my ($self, $channel, $mode, $mask, $immediately) = @_;
+sub unban_user($self, $channel, $mode, $mask, $immediately = 0) {
     $mask    = lc $mask;
     $channel = lc $channel;
-    $mode ||= 'b';
     $self->{pbot}->{logger}->log("Unbanning $channel -$mode $mask\n");
     $self->unmode_user($channel, $mode, $mask, $immediately);
 }
 
-sub unmode_user {
-    my ($self, $channel, $mode, $mask, $immediately) = @_;
-
+sub unmode_user($self, $channel, $mode, $mask, $immediately = 0) {
     $mask    = lc $mask;
     $channel = lc $channel;
     $self->{pbot}->{logger}->log("Removing mode $mode from $mask in $channel\n");
@@ -228,9 +209,7 @@ sub unmode_user {
     $self->flush_unban_queue if $immediately;
 }
 
-sub get_bans {
-    my ($self, $channel, $mask) = @_;
-
+sub get_bans($self, $channel, $mask) {
     my $masks;
     my ($message_account, $hostmask);
 
@@ -264,8 +243,7 @@ sub get_bans {
     return $masks;
 }
 
-sub get_baninfo {
-    my ($self, $channel, $mask, $nickserv) = @_;
+sub get_baninfo($self, $channel, $mask, $nickserv) {
     my ($bans, $ban_nickserv);
 
     $nickserv = undef        if not length $nickserv;
@@ -334,9 +312,7 @@ sub get_baninfo {
     return $bans;
 }
 
-sub nick_to_banmask {
-    my ($self, $mask) = @_;
-
+sub nick_to_banmask($self, $mask) {
     if ($mask !~ m/[!@\$]/) {
         my ($message_account, $hostmask) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($mask);
         if (defined $hostmask) {
@@ -369,25 +345,21 @@ sub nick_to_banmask {
     return $mask;
 }
 
-sub add_to_ban_queue {
-    my ($self, $channel, $mode, $mask) = @_;
+sub add_to_ban_queue($self, $channel, $mode, $mask) {
     if (not grep { $_ eq $mask } @{$self->{ban_queue}->{$channel}->{$mode}}) {
         push @{$self->{ban_queue}->{$channel}->{$mode}}, $mask;
         $self->{pbot}->{logger}->log("Added +$mode $mask for $channel to ban queue.\n");
     }
 }
 
-sub add_to_unban_queue {
-    my ($self, $channel, $mode, $mask) = @_;
+sub add_to_unban_queue($self, $channel, $mode, $mask) {
     if (not grep { $_ eq $mask } @{$self->{unban_queue}->{$channel}->{$mode}}) {
         push @{$self->{unban_queue}->{$channel}->{$mode}}, $mask;
         $self->{pbot}->{logger}->log("Added -$mode $mask for $channel to unban queue.\n");
     }
 }
 
-sub flush_ban_queue {
-    my $self = shift;
-
+sub flush_ban_queue($self) {
     my $MAX_COMMANDS = 4;
     my $commands     = 0;
 
@@ -428,9 +400,7 @@ sub flush_ban_queue {
     }
 }
 
-sub flush_unban_queue {
-    my $self = shift;
-
+sub flush_unban_queue($self) {
     my $MAX_COMMANDS = 4;
     my $commands     = 0;
 
@@ -471,9 +441,7 @@ sub flush_unban_queue {
     }
 }
 
-sub enqueue_unban {
-    my ($self, $channel, $mode, $hostmask, $interval) = @_;
-
+sub enqueue_unban($self, $channel, $mode, $hostmask, $interval) {
     my $method = $mode eq 'b' ? 'unban' : 'unmute';
 
     $self->{pbot}->{event_queue}->enqueue_event(
@@ -485,8 +453,7 @@ sub enqueue_unban {
     );
 }
 
-sub enqueue_timeouts {
-    my ($self, $list, $mode) = @_;
+sub enqueue_timeouts($self, $list, $mode) {
     my $now = time;
 
     foreach my $channel ($list->get_keys) {

@@ -26,9 +26,7 @@ use Text::CSV;
 use Text::Levenshtein::XS qw/distance/;
 use Time::Duration;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{filename}    = $conf{filename} // $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/message_history.sqlite3';
     $self->{new_entries} = 0;
 
@@ -49,14 +47,11 @@ sub initialize {
         'messagehistory commit');
 }
 
-sub sqlite_commit_interval_trigger {
-    my ($self, $section, $item, $newvalue) = @_;
+sub sqlite_commit_interval_trigger($self, $section, $item, $newvalue) {
     $self->{pbot}->{event_queue}->update_interval('messagehistory commit', $newvalue);
 }
 
-sub sqlite_debug_trigger {
-    my ($self, $section, $item, $newvalue) = @_;
-
+sub sqlite_debug_trigger($self, $section, $item, $newvalue) {
     if ($newvalue) {
         open $self->{trace_layer}, '>:via(PBot::Core::Utils::SQLiteLoggerLayer)', PBot::Core::Utils::SQLiteLogger->new(pbot => $self->{pbot});
     } else {
@@ -67,9 +62,7 @@ sub sqlite_debug_trigger {
     $self->{dbh}->trace($self->{dbh}->parse_trace_flags("SQL|$newvalue")) if defined $self->{dbh};
 }
 
-sub begin {
-    my $self = shift;
-
+sub begin($self) {
     $self->{pbot}->{logger}->log("Opening message history SQLite database: $self->{filename}\n");
 
     $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{filename}", "", "", {RaiseError => 1, PrintError => 0, AutoInactiveDestroy => 1, sqlite_unicode => 1})
@@ -170,9 +163,7 @@ SQL
     $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 }
 
-sub end {
-    my $self = shift;
-
+sub end($self) {
     $self->{pbot}->{logger}->log("Closing message history SQLite database\n");
 
     if (exists $self->{dbh} and defined $self->{dbh}) {
@@ -183,9 +174,7 @@ sub end {
     }
 }
 
-sub get_gecos {
-    my ($self, $id) = @_;
-
+sub get_gecos($self, $id) {
     my $gecos = eval {
         my $sth = $self->{dbh}->prepare('SELECT gecos FROM Gecos WHERE id = ?');
         $sth->execute($id);
@@ -195,9 +184,7 @@ sub get_gecos {
     return map { $_->[0] } @$gecos;
 }
 
-sub get_nickserv_accounts {
-    my ($self, $id) = @_;
-
+sub get_nickserv_accounts($self, $id) {
     my $nickserv_accounts = eval {
         my $sth = $self->{dbh}->prepare('SELECT nickserv FROM Nickserv WHERE id = ?');
         $sth->execute($id);
@@ -207,9 +194,7 @@ sub get_nickserv_accounts {
     return map { $_->[0] } @$nickserv_accounts;
 }
 
-sub delete_nickserv_accounts {
-    my ($self, $id) = @_;
-
+sub delete_nickserv_accounts($self, $id) {
     eval {
         $self->{dbh}->do('DELETE FROM Nickserv WHERE id = ?', undef, $id);
         $self->{dbh}->commit;
@@ -224,9 +209,7 @@ sub delete_nickserv_accounts {
     return 1;
 }
 
-sub set_current_nickserv_account {
-    my ($self, $id, $nickserv) = @_;
-
+sub set_current_nickserv_account($self, $id, $nickserv) {
     eval {
         my $sth = $self->{dbh}->prepare('UPDATE Accounts SET nickserv = ? WHERE id = ?');
         $sth->execute($nickserv, $id);
@@ -239,9 +222,7 @@ sub set_current_nickserv_account {
     }
 }
 
-sub get_current_nickserv_account {
-    my ($self, $id) = @_;
-
+sub get_current_nickserv_account($self, $id) {
     my $nickserv = eval {
         my $sth = $self->{dbh}->prepare('SELECT nickserv FROM Accounts WHERE id = ?');
         $sth->execute($id);
@@ -252,9 +233,7 @@ sub get_current_nickserv_account {
     return $nickserv;
 }
 
-sub create_nickserv {
-    my ($self, $id, $nickserv) = @_;
-
+sub create_nickserv($self, $id, $nickserv) {
     eval {
         my $sth = $self->{dbh}->prepare('INSERT OR IGNORE INTO Nickserv VALUES (?, ?, 0)');
         $sth->execute($id, $nickserv);
@@ -263,9 +242,7 @@ sub create_nickserv {
     $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 }
 
-sub update_nickserv_account {
-    my ($self, $id, $nickserv, $timestamp) = @_;
-
+sub update_nickserv_account($self, $id, $nickserv, $timestamp) {
     $self->create_nickserv($id, $nickserv);
 
     eval {
@@ -276,9 +253,7 @@ sub update_nickserv_account {
     $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 }
 
-sub create_gecos {
-    my ($self, $id, $gecos) = @_;
-
+sub create_gecos($self, $id, $gecos) {
     eval {
         my $sth = $self->{dbh}->prepare('INSERT OR IGNORE INTO Gecos VALUES (?, ?, 0)');
         my $rv  = $sth->execute($id, $gecos);
@@ -287,9 +262,7 @@ sub create_gecos {
     $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 }
 
-sub update_gecos {
-    my ($self, $id, $gecos, $timestamp) = @_;
-
+sub update_gecos($self, $id, $gecos, $timestamp) {
     $self->create_gecos($id, $gecos);
 
     eval {
@@ -300,9 +273,7 @@ sub update_gecos {
     $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 }
 
-sub add_message_account {
-    my ($self, $mask, $link_id, $link_type) = @_;
-
+sub add_message_account($self, $mask, $link_id = undef, $link_type = undef) {
     my ($nick, $user, $host) = $mask =~ m/^([^!]+)!([^@]+)@(.*)/;
     my $id;
 
@@ -339,9 +310,7 @@ sub add_message_account {
     return $id;
 }
 
-sub find_message_account_by_id {
-    my ($self, $id) = @_;
-
+sub find_message_account_by_id($self, $id) {
     my $hostmask = eval {
         my $sth = $self->{dbh}->prepare('SELECT hostmask FROM Hostmasks WHERE id = ? ORDER BY last_seen DESC LIMIT 1');
         $sth->execute($id);
@@ -353,9 +322,7 @@ sub find_message_account_by_id {
     return $hostmask;
 }
 
-sub find_message_account_by_nick {
-    my ($self, $nick) = @_;
-
+sub find_message_account_by_nick($self, $nick) {
     my ($id, $hostmask) = eval {
         my $sth = $self->{dbh}->prepare('SELECT id, hostmask FROM Hostmasks WHERE nick = ? ORDER BY last_seen DESC LIMIT 1');
         $sth->execute($nick);
@@ -367,9 +334,7 @@ sub find_message_account_by_nick {
     return ($id, $hostmask);
 }
 
-sub find_message_accounts_by_nickserv {
-    my ($self, $nickserv) = @_;
-
+sub find_message_accounts_by_nickserv($self, $nickserv) {
     my $accounts = eval {
         my $sth = $self->{dbh}->prepare('SELECT id FROM Nickserv WHERE nickserv = ? ORDER BY timestamp DESC');
         $sth->execute($nickserv);
@@ -379,11 +344,7 @@ sub find_message_accounts_by_nickserv {
     return map { $_->[0] } @$accounts;
 }
 
-sub find_message_accounts_by_mask {
-    my ($self, $mask, $limit) = @_;
-
-    $limit //= 100;
-
+sub find_message_accounts_by_mask($self, $mask, $limit = 100) {
     my $qmask = quotemeta $mask;
     $qmask =~ s/_/\\_/g;
     $qmask =~ s/\\\./_/g;
@@ -400,16 +361,13 @@ sub find_message_accounts_by_mask {
     return map { $_->[0] } @$accounts;
 }
 
-sub get_message_account_ancestor {
-    my $self = shift;
-    my $id   = $self->get_message_account(@_);
+sub get_message_account_ancestor($self, @args) {
+    my $id = $self->get_message_account(@args);
     $id = $self->get_ancestor_id($id);
     return $id;
 }
 
-sub get_message_account {
-    my ($self, $nick, $user, $host, $orig_nick) = @_;
-
+sub get_message_account($self, $nick, $user, $host, $orig_nick = undef) {
     ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
 
 =cut
@@ -801,9 +759,7 @@ sub get_message_account {
     return $self->add_message_account($mask);
 }
 
-sub find_most_recent_hostmask {
-    my ($self, $id) = @_;
-
+sub find_most_recent_hostmask($self, $id) {
     my $hostmask = eval {
         my $sth = $self->{dbh}->prepare('SELECT hostmask FROM Hostmasks WHERE ID = ? ORDER BY last_seen DESC LIMIT 1');
         $sth->execute($id);
@@ -814,9 +770,7 @@ sub find_most_recent_hostmask {
     return $hostmask;
 }
 
-sub update_hostmask_data {
-    my ($self, $mask, $data) = @_;
-
+sub update_hostmask_data($self, $mask, $data) {
     eval {
         my $sql = 'UPDATE Hostmasks SET ';
 
@@ -840,9 +794,7 @@ sub update_hostmask_data {
     $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 }
 
-sub get_nickserv_accounts_for_hostmask {
-    my ($self, $hostmask) = @_;
-
+sub get_nickserv_accounts_for_hostmask($self, $hostmask) {
     my $nickservs = eval {
         my $sth = $self->{dbh}->prepare('SELECT nickserv FROM Hostmasks, Nickserv WHERE nickserv.id = hostmasks.id AND hostmasks.hostmask = ?');
         $sth->execute($hostmask);
@@ -853,9 +805,7 @@ sub get_nickserv_accounts_for_hostmask {
     return map { $_->[0] } @$nickservs;
 }
 
-sub get_gecos_for_hostmask {
-    my ($self, $hostmask) = @_;
-
+sub get_gecos_for_hostmask($self, $hostmask) {
     my $gecos = eval {
         my $sth = $self->{dbh}->prepare('SELECT gecos FROM Hostmasks, Gecos WHERE gecos.id = hostmasks.id AND hostmasks.hostmask = ?');
         $sth->execute($hostmask);
@@ -866,9 +816,7 @@ sub get_gecos_for_hostmask {
     return map { $_->[0] } @$gecos;
 }
 
-sub get_hostmasks_for_channel {
-    my ($self, $channel) = @_;
-
+sub get_hostmasks_for_channel($self, $channel) {
     my $hostmasks = eval {
         my $sth = $self->{dbh}->prepare('SELECT hostmasks.id, hostmask FROM Hostmasks, Channels WHERE channels.id = hostmasks.id AND channel = ?');
         $sth->execute($channel);
@@ -879,9 +827,7 @@ sub get_hostmasks_for_channel {
     return $hostmasks;
 }
 
-sub get_hostmasks_for_nickserv {
-    my ($self, $nickserv) = @_;
-
+sub get_hostmasks_for_nickserv($self, $nickserv) {
     my $hostmasks = eval {
         my $sth = $self->{dbh}->prepare('SELECT hostmasks.id, hostmask, nickserv FROM Hostmasks, Nickserv WHERE nickserv.id = hostmasks.id AND nickserv = ?');
         $sth->execute($nickserv);
@@ -892,9 +838,7 @@ sub get_hostmasks_for_nickserv {
     return $hostmasks;
 }
 
-sub add_message {
-    my ($self, $id, $hostmask, $channel, $message) = @_;
-
+sub add_message($self, $id, $hostmask, $channel, $message) {
     eval {
         my $sth = $self->{dbh}->prepare('INSERT INTO Messages VALUES (?, ?, ?, ?, ?, ?)');
         $sth->execute($id, $channel, $message->{msg}, $message->{timestamp}, $message->{mode}, $hostmask);
@@ -907,11 +851,7 @@ sub add_message {
     $self->update_hostmask_data($hostmask, { last_seen => $message->{timestamp }});
 }
 
-sub get_recent_messages {
-    my ($self, $id, $channel, $limit, $mode, $nick) = @_;
-
-    $limit //= 25;
-
+sub get_recent_messages($self, $id, $channel, $limit = 25, $mode = undef, $nick = undef) {
     $channel = lc $channel;
 
     my $mode_query = '';
@@ -962,12 +902,7 @@ sub get_recent_messages {
     return $messages;
 }
 
-sub get_recent_messages_from_channel {
-    my ($self, $channel, $limit, $mode, $direction) = @_;
-
-    $limit     //= 25;
-    $direction //= 'ASC';
-
+sub get_recent_messages_from_channel($self, $channel, $limit = 25, $mode = undef, $direction = 'ASC') {
     $channel = lc $channel;
 
     my $mode_query = '';
@@ -983,9 +918,7 @@ sub get_recent_messages_from_channel {
     return $messages;
 }
 
-sub get_message_context {
-    my ($self, $message, $before, $after, $count, $text, $context_id, $context_nick) = @_;
-
+sub get_message_context($self, $message, $before = undef, $after = undef, $count = undef, $text = undef, $context_id = undef, $context_nick = undef) {
     my %seen_id;
     my $ids = '';
 
@@ -1079,9 +1012,7 @@ sub get_message_context {
     return \@messages;
 }
 
-sub recall_message_by_count {
-    my ($self, $id, $channel, $count, $ignore_command, $use_aliases) = @_;
-
+sub recall_message_by_count($self, $id, $channel, $count, $ignore_command = undef, $use_aliases = undef) {
     my $messages = eval {
         my $sql = 'SELECT * FROM Messages WHERE ';
 
@@ -1141,9 +1072,7 @@ sub recall_message_by_count {
     return $messages->[0];
 }
 
-sub recall_message_by_text {
-    my ($self, $id, $channel, $text, $ignore_command, $use_aliases) = @_;
-
+sub recall_message_by_text($self, $id, $channel, $text, $ignore_command = undef, $use_aliases = undef) {
     my $search = "%$text%";
     $search =~ s/(?<!\\)\.?\*/%/g;
     $search =~ s/(?<!\\)\?/_/g;
@@ -1212,9 +1141,7 @@ sub recall_message_by_text {
     return $messages->[0];
 }
 
-sub get_random_message {
-    my ($self, $id, $channel, $use_aliases) = @_;
-
+sub get_random_message($self, $id, $channel, $use_aliases = undef) {
     my $message = eval {
         my $sql = 'SELECT * FROM Messages WHERE channel = ? AND mode = ? ';
 
@@ -1266,9 +1193,7 @@ sub get_random_message {
     return $message;
 }
 
-sub get_max_messages {
-    my ($self, $id, $channel, $use_aliases) = @_;
-
+sub get_max_messages($self, $id, $channel, $use_aliases = undef) {
     my $count = eval {
         my $sql = 'SELECT COUNT(*) FROM Messages WHERE channel = ? AND ';
 
@@ -1313,9 +1238,7 @@ sub get_max_messages {
     return $count;
 }
 
-sub create_channel {
-    my ($self, $id, $channel) = @_;
-
+sub create_channel($self, $id, $channel) {
     eval {
         my $sth = $self->{dbh}->prepare('INSERT OR IGNORE INTO Channels VALUES (?, ?, 0, 0, 0, 0, 0, 0, 0, 0)');
         my $rv  = $sth->execute($id, $channel);
@@ -1324,9 +1247,7 @@ sub create_channel {
     $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 }
 
-sub get_channels {
-    my ($self, $id) = @_;
-
+sub get_channels($self, $id) {
     my $channels = eval {
         my $sth = $self->{dbh}->prepare('SELECT channel FROM Channels WHERE id = ?');
         $sth->execute($id);
@@ -1336,9 +1257,7 @@ sub get_channels {
     return map { $_->[0] } @$channels;
 }
 
-sub get_channel_data {
-    my ($self, $id, $channel, @columns) = @_;
-
+sub get_channel_data($self, $id, $channel, @columns) {
     $self->create_channel($id, $channel);
 
     my $channel_data = eval {
@@ -1362,9 +1281,7 @@ sub get_channel_data {
     return $channel_data;
 }
 
-sub update_channel_data {
-    my ($self, $id, $channel, $data) = @_;
-
+sub update_channel_data($self, $id, $channel, $data) {
     $self->create_channel($id, $channel);
 
     eval {
@@ -1391,9 +1308,7 @@ sub update_channel_data {
     $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 }
 
-sub get_channel_datas_where_last_offense_older_than {
-    my ($self, $timestamp) = @_;
-
+sub get_channel_datas_where_last_offense_older_than($self, $timestamp) {
     my $channel_datas = eval {
         my $sth = $self->{dbh}->prepare('SELECT id, channel, offenses, last_offense, unbanmes FROM Channels WHERE last_offense > 0 AND last_offense <= ?');
         $sth->execute($timestamp);
@@ -1403,9 +1318,7 @@ sub get_channel_datas_where_last_offense_older_than {
     return $channel_datas;
 }
 
-sub get_channel_datas_with_enter_abuses {
-    my ($self) = @_;
-
+sub get_channel_datas_with_enter_abuses($self) {
     my $channel_datas = eval {
         my $sth = $self->{dbh}->prepare('SELECT id, channel, enter_abuses, last_offense FROM Channels WHERE enter_abuses > 0');
         $sth->execute();
@@ -1415,11 +1328,7 @@ sub get_channel_datas_with_enter_abuses {
     return $channel_datas;
 }
 
-sub devalidate_channel {
-    my ($self, $id, $channel, $mode) = @_;
-
-    $mode = 0 if not defined $mode;
-
+sub devalidate_channel($self, $id, $channel, $mode = 0) {
     eval {
         my $sth = $self->{dbh}->prepare("UPDATE Channels SET validated = ? WHERE id = ? AND channel = ?");
         $sth->execute($mode, $id, $channel);
@@ -1428,11 +1337,7 @@ sub devalidate_channel {
     $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 }
 
-sub devalidate_all_channels {
-    my ($self, $id, $mode) = @_;
-
-    $mode = 0 if not defined $mode;
-
+sub devalidate_all_channels($self, $id = undef, $mode = 0) {
     my $where = '';
     $where = 'WHERE id = ?' if defined $id;
 
@@ -1446,9 +1351,7 @@ sub devalidate_all_channels {
     $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 }
 
-sub link_aliases {
-    my ($self, $account, $hostmask, $nickserv) = @_;
-
+sub link_aliases($self, $account, $hostmask = undef, $nickserv = undef) {
     my $debug_link = $self->{pbot}->{registry}->get_value('messagehistory', 'debug_link');
 
     $self->{pbot}->{logger}->log("Linking [$account][" . ($hostmask ? $hostmask : 'undef') . "][" . ($nickserv ? $nickserv : 'undef') . "]\n") if $debug_link >= 3;
@@ -1555,9 +1458,7 @@ sub link_aliases {
     $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 }
 
-sub link_alias {
-    my ($self, $id, $alias, $type, $force) = @_;
-
+sub link_alias($self, $id, $alias, $type = undef, $force = undef) {
     my $debug_link = $self->{pbot}->{registry}->get_value('messagehistory', 'debug_link');
 
     $self->{pbot}->{logger}
@@ -1621,9 +1522,7 @@ sub link_alias {
     return $ret;
 }
 
-sub unlink_alias {
-    my ($self, $id, $alias) = @_;
-
+sub unlink_alias($self, $id, $alias) {
     my $ret = eval {
         my $ret = 0;
         my $sth = $self->{dbh}->prepare('DELETE FROM Aliases WHERE id = ? AND alias = ?');
@@ -1647,9 +1546,7 @@ sub unlink_alias {
     return $ret;
 }
 
-sub delete_hostmask {
-    my ($self, $id, $hostmask) = @_;
-
+sub delete_hostmask($self, $id, $hostmask) {
     eval {
         $self->{dbh}->do('DELETE FROM Hostmasks WHERE id = ? AND hostmask = ?', undef, $id, $hostmask);
         $self->{dbh}->commit;
@@ -1664,9 +1561,7 @@ sub delete_hostmask {
     return 1;
 }
 
-sub delete_account {
-    my ($self, $id) = @_;
-
+sub delete_account($self, $id) {
     $self->{dbh}->commit;
     $self->{dbh}->begin_work;
 
@@ -1694,9 +1589,7 @@ sub delete_account {
     return $ret;
 }
 
-sub vacuum {
-    my $self = shift;
-
+sub vacuum($self) {
     eval { $self->{dbh}->commit(); };
 
     $self->{pbot}->{logger}->log("SQLite error $@ when committing $self->{new_entries} entries.\n") if $@;
@@ -1707,9 +1600,7 @@ sub vacuum {
     $self->{new_entries} = 0;
 }
 
-sub rebuild_aliases_table {
-    my $self = shift;
-
+sub rebuild_aliases_table($self) {
     eval {
         $self->{dbh}->do('DELETE FROM Aliases');
         $self->vacuum;
@@ -1737,8 +1628,7 @@ sub rebuild_aliases_table {
     $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 }
 
-sub get_also_known_as {
-    my ($self, $nick, $dont_use_aliases_table) = @_;
+sub get_also_known_as($self, $nick, $dont_use_aliases_table = undef) {
     my $debug = $self->{pbot}->{registry}->get_value('messagehistory', 'debug_aka');
 
     $self->{pbot}->{logger}->log("[AKA] Checking nick $nick\n") if $debug;
@@ -1946,11 +1836,7 @@ sub get_also_known_as {
     return %akas;
 }
 
-sub get_ancestor_id {
-    my ($self, $id) = @_;
-
-    $id = 0 if not defined $id;
-
+sub get_ancestor_id($self, $id = 0) {
     my $ancestor = eval {
         my $sth = $self->{dbh}->prepare('SELECT id FROM Aliases WHERE alias = ? ORDER BY id LIMIT 1');
         $sth->execute($id);
@@ -1966,9 +1852,7 @@ sub get_ancestor_id {
 
 # End of public API, the remaining are internal support routines for this module
 
-sub get_new_account_id {
-    my $self = shift;
-
+sub get_new_account_id($self) {
     my $id = eval {
         my $sth = $self->{dbh}->prepare('SELECT id FROM Accounts ORDER BY id DESC LIMIT 1');
         $sth->execute();
@@ -1980,9 +1864,7 @@ sub get_new_account_id {
     return ++$id;
 }
 
-sub get_message_account_id {
-    my ($self, $mask) = @_;
-
+sub get_message_account_id($self, $mask) {
     my $id = eval {
         my $sth = $self->{dbh}->prepare('SELECT id FROM Hostmasks WHERE hostmask == ?');
         $sth->execute($mask);
@@ -1994,9 +1876,7 @@ sub get_message_account_id {
     return $id;
 }
 
-sub commit_message_history {
-    my ($self) = @_;
-
+sub commit_message_history($self) {
     return if not $self->{dbh};
     return if $self->{pbot}->{child};  # don't commit() as child of fork()
 

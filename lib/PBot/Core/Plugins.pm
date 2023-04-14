@@ -12,9 +12,7 @@ use PBot::Imports;
 
 use File::Basename;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # loaded plugins
     $self->{plugins} = {};
 
@@ -22,9 +20,7 @@ sub initialize {
     $self->autoload(%conf);
 }
 
-sub autoload {
-    my ($self, %conf) = @_;
-
+sub autoload($self, %conf) {
     return if $self->{pbot}->{registry}->get_value('plugins', 'noautoload');
 
     my $data_dir = $self->{pbot}->{registry}->get_value('general', 'data_dir');
@@ -63,9 +59,7 @@ sub autoload {
     $self->{pbot}->{logger}->log("$plugin_count plugin" . ($plugin_count == 1 ? '' : 's') . " loaded.\n");
 }
 
-sub load {
-    my ($self, $plugin, %conf) = @_;
-
+sub load($self, $plugin, %conf) {
     $self->unload($plugin);
 
     return if $self->{pbot}->{registry}->get_value('plugins', 'disabled');
@@ -91,9 +85,7 @@ sub load {
     return $ret;
 }
 
-sub unload {
-    my ($self, $plugin) = @_;
-
+sub unload($self, $plugin) {
     if (exists $self->{plugins}->{$plugin}) {
         eval {
             $self->{plugins}->{$plugin}->unload;

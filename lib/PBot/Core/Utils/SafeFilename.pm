@@ -14,8 +14,7 @@ require Exporter;
 our @ISA    = qw/Exporter/;
 our @EXPORT = qw/safe_filename/;
 
-sub safe_filename {
-    my ($name) = @_;
+sub safe_filename($name) {
     my $safe = '';
 
     while ($name =~ m/(.)/gms) {

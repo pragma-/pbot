@@ -17,9 +17,7 @@ use JSON;
 
 sub initialize {}
 
-sub expand_factoid_vars {
-    my ($self, $context, $action, %opts) = @_;
-
+sub expand_factoid_vars($self, $context, $action, %opts) {
     my %default_opts = (
         nested => 0,
         recursions => 0,
@@ -206,9 +204,7 @@ sub expand_factoid_vars {
     return validate_string($result, $self->{pbot}->{registry}->get_value('factoids', 'max_content_length'));
 }
 
-sub expand_action_arguments {
-    my ($self, $action, $input, $nick) = @_;
-
+sub expand_action_arguments($self, $action, $input, $nick) {
     $action = validate_string($action, $self->{pbot}->{registry}->get_value('factoids', 'max_content_length'));
     $input  = validate_string($input,  $self->{pbot}->{registry}->get_value('factoids', 'max_content_length'));
 
@@ -309,8 +305,7 @@ sub expand_action_arguments {
     return $action;
 }
 
-sub escape_json {
-    my ($self, $text) = @_;
+sub escape_json($self, $text) {
     my $thing = {thing => $text};
     my $json  = to_json $thing;
     $json =~ s/^{".*":"//;
@@ -318,9 +313,7 @@ sub escape_json {
     return $json;
 }
 
-sub expand_special_vars {
-    my ($self, $from, $nick, $root_keyword, $action) = @_;
-
+sub expand_special_vars($self, $from, $nick, $root_keyword, $action) {
     $action =~ s/(?<!\\)\$nick:json|(?<!\\)\$\{nick:json\}/$self->escape_json($nick)/ge;
     $action =~ s/(?<!\\)\$channel:json|(?<!\\)\$\{channel:json\}/$self->escape_json($from)/ge;
     $action =~

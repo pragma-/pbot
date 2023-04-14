@@ -15,12 +15,9 @@ use PBot::Core::Utils::Indefinite;
 use Time::HiRes qw(gettimeofday);
 use Time::Duration qw(duration);
 
-sub initialize {
-}
+sub initialize {}
 
-sub make_list {
-    my ($self, $context, $extracted, $settings, %opts) = @_;
-
+sub make_list($self, $context, $extracted, $settings, %opts) {
     if ($extracted =~ /(.*?)(?<!\\)%\s*\(.*\)/) {
         $opts{nested}++;
         $extracted = $self->expand_selectors($context, $extracted, %opts);
@@ -73,9 +70,7 @@ sub make_list {
     return \@list;
 }
 
-sub select_weighted_item_from_list {
-    my ($self, $list, $index) = @_;
-
+sub select_weighted_item_from_list($self, $list, $index = undef) {
     my @weights;
     my $weight_sum = 0;
 
@@ -105,9 +100,7 @@ sub select_weighted_item_from_list {
     }
 }
 
-sub select_item {
-    my ($self, $context, $extracted, $modifiers, %opts) = @_;
-
+sub select_item($self, $context, $extracted, $modifiers, %opts) {
     my %settings = $self->{pbot}->{factoids}->{modifiers}->parse($modifiers);
 
     if (exists $settings{errors}) {
@@ -195,9 +188,7 @@ sub select_item {
     return $item;
 }
 
-sub expand_selectors {
-    my ($self, $context, $action, %opts) = @_;
-
+sub expand_selectors($self, $context, $action, %opts) {
     my %default_opts = (
         nested => 0,
         recursions => 0,

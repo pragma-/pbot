@@ -10,8 +10,7 @@ package PBot::Core::Handlers::Users;
 use PBot::Imports;
 use parent 'PBot::Core::Class';
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.join',  sub { $self->on_join      (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.part',  sub { $self->on_departure (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.quit',  sub { $self->on_departure (@_) });
@@ -19,9 +18,7 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('pbot.part', sub { $self->on_self_part (@_) });
 }
 
-sub on_join {
-    my ($self, $event_type, $event) = @_;
-
+sub on_join($self, $event_type, $event) {
     my ($nick, $user, $host, $channel) = (
         $event->nick,
         $event->user,
@@ -65,24 +62,21 @@ sub on_join {
     return 1;
 }
 
-sub on_departure {
-    my ($self, $event_type, $event) = @_;
+sub on_departure($self, $event_type, $event) {
     my ($nick, $user, $host, $channel) = ($event->nick, $event->user, $event->host, $event->to);
     ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
     $self->{pbot}->{users}->decache_user($channel, "$nick!$user\@$host");
     return 1;
 }
 
-sub on_kick {
-    my ($self, $event_type, $event) = @_;
+sub on_kick($self, $event_type, $event) {
     my ($nick, $user, $host, $channel) = ($event->nick, $event->user, $event->host, $event->{args}[0]);
     ($nick, $user, $host) = $self->{pbot}->{irchandlers}->normalize_hostmask($nick, $user, $host);
     $self->{pbot}->{users}->decache_user($channel, "$nick!$user\@$host");
     return 1;
 }
 
-sub on_self_part {
-    my ($self, $event_type, $event) = @_;
+sub on_self_part($self, $event_type, $event) {
     delete $self->{pbot}->{users}->{user_cache}->{lc $event->{channel}};
     return 1;
 }

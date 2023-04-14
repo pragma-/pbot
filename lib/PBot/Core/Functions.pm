@@ -23,9 +23,7 @@ use parent 'PBot::Core::Class';
 
 use PBot::Imports;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # register `list` and `help` functions used to list
     # functions and obtain help about them
 
@@ -48,21 +46,15 @@ sub initialize {
     );
 }
 
-sub register {
-    my ($self, $func, $data) = @_;
+sub register($self, $func, $data) {
     $self->{funcs}->{$func} = $data;
 }
 
-sub unregister {
-    my ($self, $func) = @_;
+sub unregister($self, $func) {
     delete $self->{funcs}->{$func};
 }
 
-sub func_list {
-    my ($self, $regex) = @_;
-
-    $regex //= '.*';
-
+sub func_list($self, $regex = '.*') {
     my $result = eval {
         my @funcs;
 
@@ -94,9 +86,7 @@ sub func_list {
     return $result;
 }
 
-sub func_help {
-    my ($self, $func) = @_;
-
+sub func_help($self, $func) {
     if (not length $func) {
         return "func: invoke built-in functions; usage: func <keyword> [arguments]; to list available functions: func list [regex]";
     }

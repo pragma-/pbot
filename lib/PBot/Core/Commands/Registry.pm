@@ -10,8 +10,7 @@ package PBot::Core::Commands::Registry;
 use PBot::Imports;
 use parent 'PBot::Core::Class';
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{pbot}->{commands}->register(sub { $self->cmd_regset(@_) },       "regset",       1);
     $self->{pbot}->{commands}->register(sub { $self->cmd_regunset(@_) },     "regunset",     1);
     $self->{pbot}->{commands}->register(sub { $self->cmd_regshow(@_) },      "regshow",      0);
@@ -21,9 +20,7 @@ sub initialize {
     $self->{pbot}->{commands}->register(sub { $self->cmd_regfind(@_) },      "regfind",      0);
 }
 
-sub cmd_regset {
-    my ($self, $context) = @_;
-
+sub cmd_regset($self, $context) {
     my $usage = "Usage: regset <section>.<item> [value]";
 
     # support "<section>.<key>" syntax in addition to "<section> <key>"
@@ -52,9 +49,7 @@ sub cmd_regset {
     return "$section.$item set to $value";
 }
 
-sub cmd_regunset {
-    my ($self, $context) = @_;
-
+sub cmd_regunset($self, $context) {
     my $usage = "Usage: regunset <section>.<item>";
 
     # support "<section>.<key>" syntax in addition to "<section> <key>"
@@ -86,9 +81,7 @@ sub cmd_regunset {
     return "$section.$item deleted from registry";
 }
 
-sub cmd_regsetmeta {
-    my ($self, $context) = @_;
-
+sub cmd_regsetmeta($self, $context) {
     my $usage = "Usage: regsetmeta <section>.<item> [key [value]]";
 
     # support "<section>.<key>" syntax in addition to "<section> <key>"
@@ -112,9 +105,7 @@ sub cmd_regsetmeta {
     return $self->{pbot}->{registry}->set($section, $item, $key, $value);
 }
 
-sub cmd_regunsetmeta {
-    my ($self, $context) = @_;
-
+sub cmd_regunsetmeta($self, $context) {
     my $usage = "Usage: regunsetmeta <section>.<item> <key>";
 
     # support "<section>.<key>" syntax in addition to "<section> <key>"
@@ -135,9 +126,7 @@ sub cmd_regunsetmeta {
     return $self->{pbot}->{registry}->unset($section, $item, $key);
 }
 
-sub cmd_regshow {
-    my ($self, $context) = @_;
-
+sub cmd_regshow($self, $context) {
     my $usage    = "Usage: regshow <section>.<item>";
     my $registry = $self->{pbot}->{registry}->{storage};
 
@@ -176,9 +165,7 @@ sub cmd_regshow {
     return $result;
 }
 
-sub cmd_regfind {
-    my ($self, $context) = @_;
-
+sub cmd_regfind($self, $context) {
     my $usage     = "Usage: regfind [-showvalues] [-section section] <regex>";
     my $registry  = $self->{pbot}->{registry}->{storage};
 
@@ -262,9 +249,7 @@ sub cmd_regfind {
     }
 }
 
-sub cmd_regchange {
-    my ($self, $context) = @_;
-
+sub cmd_regchange($self, $context) {
     my ($section, $item, $delim, $tochange, $changeto, $modifier);
 
     my $arguments = $context->{arguments};

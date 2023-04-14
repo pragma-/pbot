@@ -14,9 +14,7 @@ use PBot::Imports;
 use Time::HiRes qw(gettimeofday tv_interval);
 use Time::Duration;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # average of entries in lag history, in seconds
     $self->{lag_average} = undef;
 
@@ -56,14 +54,11 @@ sub initialize {
 }
 
 # registry trigger fires when value changes
-sub trigger_lag_history_interval {
-    my ($self, $section, $item, $newvalue) = @_;
+sub trigger_lag_history_interval($self, $section, $item, $newvalue) {
     $self->{pbot}->{event_queue}->update_interval('lag check', $newvalue);
 }
 
-sub send_ping {
-    my $self = shift;
-
+sub send_ping($self) {
     return unless defined $self->{pbot}->{conn};
 
     $self->{ping_send_time} = [gettimeofday];
@@ -72,17 +67,13 @@ sub send_ping {
     $self->{pbot}->{conn}->sl("PING :lagcheck");
 }
 
-sub on_pong {
-    my $self = shift;
-
+sub on_pong($self, $event_type, $event) {
     $self->{pong_received} = 1;
 
     my $elapsed = tv_interval($self->{ping_send_time});
-
     push @{$self->{lag_history}}, [$self->{ping_send_time}[0], $elapsed * 1000];
 
     my $len = @{$self->{lag_history}};
-
     my $lag_history_max = $self->{pbot}->{registry}->get_value('lagchecker', 'lag_history_max');
 
     while ($len > $lag_history_max) {
@@ -97,44 +88,30 @@ sub on_pong {
 
     foreach my $entry (@{$self->{lag_history}}) {
         my ($send_time, $lag_result) = @$entry;
-
         $lag_total += $lag_result;
-
         my $ago = concise ago(gettimeofday - $send_time);
-
         push @entries, "[$ago] " . sprintf "%.1f ms", $lag_result;
     }
 
     $self->{lag_string} = join '; ', @entries;
-
     $self->{lag_average} = $lag_total / $len;
-
     $self->{lag_string} .= "; average: " . sprintf "%.1f ms", $self->{lag_average};
-
     return 0;
 }
 
-sub lagging {
-    my ($self) = @_;
-
+sub lagging($self) {
     if (defined $self->{pong_received} and $self->{pong_received} == 0) {
         # a ping has been sent (pong_received is not undef) and no pong has been received yet
         my $elapsed = tv_interval($self->{ping_send_time});
-
         return $elapsed >= $self->{pbot}->{registry}->get_value('lagchecker', 'lag_threshold');
     }
 
     return 0 if not defined $self->{lag_average};
-
     return $self->{lag_average} >= $self->{pbot}->{registry}->get_value('lagchecker', 'lag_threshold');
 }
 
-sub lagstring {
-    my ($self) = @_;
-
-    my $lag = $self->{lag_string} || "initializing";
-
-    return $lag;
+sub lagstring($self) {
+    return $self->{lag_string} || "initializing";
 }
 
 1;

@@ -10,9 +10,7 @@ use parent 'PBot::Core::Class';
 
 use PBot::Imports;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{storage} = PBot::Core::Storage::HashObject->new(
         pbot     => $self->{pbot},
         name     => 'Channels',
@@ -30,9 +28,7 @@ sub initialize {
     );
 }
 
-sub join {
-    my ($self, $channels) = @_;
-
+sub join($self, $channels) {
     return if not $channels;
 
     $self->{pbot}->{conn}->join($channels);
@@ -44,16 +40,13 @@ sub join {
     }
 }
 
-sub part {
-    my ($self, $channel) = @_;
+sub part($self, $channel) {
     $channel = lc $channel;
     $self->{pbot}->{event_dispatcher}->dispatch_event('pbot.part', { channel => $channel });
     $self->{pbot}->{conn}->part($channel);
 }
 
-sub autojoin {
-    my ($self) = @_;
-
+sub autojoin($self) {
     return if $self->{pbot}->{joined_channels};
 
     my $channels;
@@ -71,19 +64,15 @@ sub autojoin {
     $self->{pbot}->{joined_channels} = 1;
 }
 
-sub is_active {
-    my ($self, $channel) = @_;
-    # returns undef if channel doesn't exist; otherwise, the value of 'enabled'
+sub is_active($self, $channel) {
     return $self->{storage}->get_data($channel, 'enabled');
 }
 
-sub is_active_op {
-    my ($self, $channel) = @_;
+sub is_active_op($self, $channel) {
     return $self->is_active($channel) && $self->{storage}->get_data($channel, 'chanop');
 }
 
-sub get_meta {
-    my ($self, $channel, $key) = @_;
+sub get_meta($self, $channel, $key) {
     return $self->{storage}->get_data($channel, $key);
 }
 

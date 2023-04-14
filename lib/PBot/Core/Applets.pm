@@ -21,9 +21,7 @@ sub initialize {
     # nothing to do here
 }
 
-sub execute_applet {
-    my ($self, $context) = @_;
-
+sub execute_applet($self, $context) {
     if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
         use Data::Dumper;
         $Data::Dumper::Sortkeys = 1;
@@ -34,9 +32,7 @@ sub execute_applet {
     $self->{pbot}->{process_manager}->execute_process($context, sub { $self->launch_applet(@_) });
 }
 
-sub launch_applet {
-    my ($self, $context) = @_;
-
+sub launch_applet($self, $context) {
     $context->{arguments} //= '';
 
     my @factoids = $self->{pbot}->{factoids}->{data}->find($context->{from}, $context->{keyword}, exact_channel => 2, exact_trigger => 2);

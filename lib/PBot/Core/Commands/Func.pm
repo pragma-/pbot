@@ -21,15 +21,11 @@ use parent 'PBot::Core::Class';
 
 use PBot::Imports;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{pbot}->{commands}->register(sub { $self->cmd_func(@_) }, 'func', 0);
 }
 
-sub cmd_func {
-    my ($self, $context) = @_;
-
+sub cmd_func($self, $context) {
     my $func = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
 
     if (not defined $func) {

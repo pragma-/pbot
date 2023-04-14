@@ -96,7 +96,7 @@ sub on_departure($self, $event_type, $event) {
     return 0;
 }
 
-sub load_questions($self, $filename) {
+sub load_questions($self, $filename = undef) {
     if (not defined $filename) {
         $filename = exists $self->{loaded_filename} ? $self->{loaded_filename} : $self->{questions_filename};
     } else {
@@ -597,6 +597,7 @@ sub cmd_spinach($self, $context) {
         }
 
         when ($_ eq 'lie' or $_ eq 'truth' or $_ eq 'choose') {
+            $arguments //= '';
             $arguments = lc $arguments;
             if ($self->{current_state} =~ /choosecategory$/) {
                 if (not length $arguments) { return "Usage: spinach choose <integer>"; }

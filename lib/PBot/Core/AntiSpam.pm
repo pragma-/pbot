@@ -10,9 +10,7 @@ use parent 'PBot::Core::Class';
 
 use PBot::Imports;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     my $filename = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/spam_keywords';
 
     $self->{keywords} = PBot::Core::Storage::DualIndexHashObject->new(
@@ -26,8 +24,7 @@ sub initialize {
     $self->{pbot}->{registry}->add_default('text', 'antispam', 'enforce', $conf{enforce_antispam} // 1);
 }
 
-sub is_spam {
-    my ($self, $namespace, $text, $all_namespaces) = @_;
+sub is_spam($self, $namespace, $text, $all_namespaces = 0) {
     my $lc_namespace = lc $namespace;
 
     return 0 if not $self->{pbot}->{registry}->get_value('antispam', 'enforce');

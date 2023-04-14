@@ -12,9 +12,7 @@ use parent 'PBot::Core::Class';
 use PBot::Imports;
 use PBot::Core::Utils::LoadModules qw/load_modules/;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # registered commands hashtable
     $self->{commands} = {};
 
@@ -29,16 +27,13 @@ sub initialize {
 }
 
 # load commands in PBot::Core::Commands directory
-sub load_commands {
-    my ($self) = @_;
+sub load_commands($self) {
     $self->{pbot}->{logger}->log("Loading commands:\n");
     load_modules($self, 'PBot::Core::Commands');
 }
 
 # named-parameters interface to register()
-sub add {
-    my ($self, %args) = @_;
-
+sub add($self, %args) {
     # expected parameters
     my @valid = qw(subref name requires_cap help);
 
@@ -66,21 +61,16 @@ sub add {
 }
 
 # alias to unregister() for consistency
-sub remove {
-    my $self = shift @_;
-    $self->unregister(@_);
+sub remove($self, @args) {
+    $self->unregister(@args);
 }
 
-sub register {
-    my ($self, $subref, $name, $requires_cap, $help) = @_;
-
+sub register($self, $subref, $name, $requires_cap = 0, $help = '') {
     if (not defined $subref or not defined $name) {
         Carp::croak("Missing parameters to Commands::register");
     }
 
     $name = lc $name;
-    $requires_cap //= 0;
-    $help //= '';
 
     if (exists $self->{commands}->{$name}) {
         $self->{pbot}->{logger}->log("Commands: warning: overwriting existing command $name\n");
@@ -117,34 +107,28 @@ sub register {
     }
 }
 
-sub unregister {
-    my ($self, $name) = @_;
+sub unregister($self, $name) {
     Carp::croak("Missing name parameter to Commands::unregister") if not defined $name;
     delete $self->{commands}->{lc $name};
 }
 
-sub exists {
-    my ($self, $name) = @_;
+sub exists($self, $name) {
     return exists $self->{commands}->{lc $name};
 }
 
-sub set_meta {
-    my ($self, $command, $key, $value, $save) = @_;
+sub set_meta($self, $command, $key, $value, $save = 0) {
     return undef if not $self->{metadata}->exists($command);
     $self->{metadata}->set($command, $key, $value, !$save);
     return 1;
 }
 
-sub get_meta {
-    my ($self, $command, $key) = @_;
+sub get_meta($self, $command, $key) {
     return $self->{metadata}->get_data($command, $key);
 }
 
 # main entry point for PBot::Core::Interpreter to interpret a registered bot command
 # see also PBot::Core::Factoids::Interpreter for factoid commands
-sub interpreter {
-    my ($self, $context) = @_;
-
+sub interpreter($self, $context) {
     # debug flag to trace $context location and contents
     if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
         use Data::Dumper;

@@ -14,8 +14,7 @@ use PBot::Imports;
 use Time::HiRes qw(gettimeofday);
 use Time::Duration;
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.endofnames',     sub { $self->on_endofnames(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.banlist',        sub { $self->on_banlist_entry(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.quietlist',      sub { $self->on_quietlist_entry(@_) });
@@ -27,9 +26,7 @@ sub initialize {
 }
 
 # typically, immediately after joining a channel...
-sub on_endofnames {
-    my ($self, $event_type, $event) = @_;
-
+sub on_endofnames($self, $event_type, $event) {
     my $channel = lc $event->{args}[1];
 
     $self->{pbot}->{logger}->log("Retrieving banlist for $channel.\n");
@@ -49,9 +46,7 @@ sub on_endofnames {
     return 1;
 }
 
-sub on_banlist_entry {
-    my ($self, $event_type, $event) = @_;
-
+sub on_banlist_entry($self, $event_type, $event) {
     my $channel   = lc $event->{args}[1];
     my $target    = lc $event->{args}[2];
     my $source    = lc $event->{args}[3];
@@ -63,9 +58,7 @@ sub on_banlist_entry {
     return 1;
 }
 
-sub on_quietlist_entry {
-    my ($self, $event_type, $event) = @_;
-
+sub on_quietlist_entry($self, $event_type, $event) {
     my $channel   = lc $event->{args}[1];
     my $target    = lc $event->{args}[3];
     my $source    = lc $event->{args}[4];
@@ -78,8 +71,7 @@ sub on_quietlist_entry {
     return 1;
 }
 
-sub on_endofbanlist {
-    my ($self, $event_type, $event) = @_;
+sub on_endofbanlist($self, $event_type, $event) {
     my $channel = lc $event->{args}[1];
 
     # first check for saved bans no longer in channel
@@ -140,8 +132,7 @@ sub on_endofbanlist {
     return 1;
 }
 
-sub on_endofquietlist {
-    my ($self, $event_type, $event) = @_;
+sub on_endofquietlist($self, $event_type, $event) {
     my $channel = lc $event->{args}[1];
 
     my $mute_char = $self->{mute_char};
@@ -181,9 +172,7 @@ sub on_endofquietlist {
     return 1;
 }
 
-sub on_modeflag {
-    my ($self, $event_type, $event) = @_;
-
+sub on_modeflag($self, $event_type, $event) {
     my ($source, $channel, $mode, $mask) = (
         $event->{source},
         $event->{channel},

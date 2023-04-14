@@ -4,7 +4,7 @@
 # the 'expires' or 'Last-Modified' attributes, we always cache for the
 # specified duration.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2021-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Core::Utils::LWPUserAgentCached;
@@ -22,17 +22,16 @@ our %default_cache_args = (
     'default_expires_in' => 600
 );
 
-sub new {
-    my $class = shift;
+sub new($class, @args) {
     my $cache_opt;
     my %lwp_opt;
-    unless (scalar @_ % 2) {
-        %lwp_opt   = @_;
+    unless (scalar @args % 2) {
+        %lwp_opt   = @args;
         $cache_opt = {};
         for my $key (qw(namespace cache_root default_expires_in)) { $cache_opt->{$key} = delete $lwp_opt{$key} if exists $lwp_opt{$key}; }
     } else {
-        $cache_opt = shift || {};
-        %lwp_opt   = @_;
+        $cache_opt = shift @args || {};
+        %lwp_opt   = @args;
     }
     my $self       = $class->SUPER::new(%lwp_opt);
     my %cache_args = (%default_cache_args, %$cache_opt);
@@ -40,8 +39,7 @@ sub new {
     return $self;
 }
 
-sub request {
-    my ($self, @args) = @_;
+sub request($self, @args) {
     my $request = $args[0];
     return $self->SUPER::request(@args) if $request->method ne 'GET';
 

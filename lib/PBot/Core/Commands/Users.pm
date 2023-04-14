@@ -10,9 +10,7 @@ package PBot::Core::Commands::Users;
 use PBot::Imports;
 use parent 'PBot::Core::Class';
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # register commands
     $self->{pbot}->{commands}->register(sub { $self->cmd_login(@_) },     "login",     0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_logout(@_) },    "logout",    0);
@@ -35,9 +33,7 @@ sub initialize {
     $self->{pbot}->{capabilities}->add('can-modify-admins', undef, 1);
 }
 
-sub cmd_login {
-    my ($self, $context) = @_;
-
+sub cmd_login($self, $context) {
     my $channel = $context->{from};
     return "Usage: login [channel] password" if not $context->{arguments};
 
@@ -64,8 +60,7 @@ sub cmd_login {
     return "/msg $context->{nick} $result";
 }
 
-sub cmd_logout {
-    my ($self, $context) = @_;
+sub cmd_logout($self, $context) {
     $context->{from} = $context->{arguments} if length $context->{arguments};
     my ($user_channel, $user_hostmask) = $self->{pbot}->{users}->find_user_account($context->{from}, $context->{hostmask});
     return "/msg $context->{nick} You do not have a user account. You may use the `my` command to create a personal user account. See `help my`." if not defined $user_channel;
@@ -80,8 +75,7 @@ sub cmd_logout {
     return "/msg $context->{nick} Logged out of " . $self->{pbot}->{users}->{storage}->get_key_name($name) . " ($user_hostmask)$channel_text.";
 }
 
-sub cmd_users {
-    my ($self, $context) = @_;
+sub cmd_users($self, $context) {
     my $channel = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
 
     my $include_global = '';
@@ -132,8 +126,7 @@ sub cmd_users {
     return $text;
 }
 
-sub cmd_useradd {
-    my ($self, $context) = @_;
+sub cmd_useradd($self, $context) {
     my ($name, $hostmasks, $channels, $capabilities, $password) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 5);
     $capabilities //= 'none';
 
@@ -170,9 +163,7 @@ sub cmd_useradd {
     return "User added.";
 }
 
-sub cmd_userdel {
-    my ($self, $context) = @_;
-
+sub cmd_userdel($self, $context) {
     if (not length $context->{arguments}) { return "Usage: userdel <username>"; }
 
     my $u = $self->{pbot}->{users}->find_user($context->{from}, $context->{hostmask});
@@ -189,9 +180,7 @@ sub cmd_userdel {
     return $self->{pbot}->{users}->remove_user($context->{arguments});
 }
 
-sub cmd_usershow {
-    my ($self, $context) = @_;
-
+sub cmd_usershow($self, $context) {
     my ($name, $key) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
     if (not defined $name) { return "Usage: usershow <username> [key]"; }
@@ -213,9 +202,7 @@ sub cmd_usershow {
     return $result;
 }
 
-sub cmd_userset {
-    my ($self, $context) = @_;
-
+sub cmd_userset($self, $context) {
     my ($name, $key, $value) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 3);
 
     if (not defined $name) { return "Usage: userset <username> [key [value]]"; }
@@ -260,9 +247,7 @@ sub cmd_userset {
     return $result;
 }
 
-sub cmd_userunset {
-    my ($self, $context) = @_;
-
+sub cmd_userunset($self, $context) {
     my ($name, $key) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
     if (not defined $name or not defined $key) { return "Usage: userunset <username> <key>"; }
@@ -305,8 +290,7 @@ sub cmd_userunset {
     return $self->{pbot}->{users}->{storage}->unset($name, $key);
 }
 
-sub cmd_my {
-    my ($self, $context) = @_;
+sub cmd_my($self, $context) {
     my ($key, $value) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
     if (defined $value) {
@@ -372,9 +356,7 @@ sub cmd_my {
     return $result;
 }
 
-sub cmd_id {
-    my ($self, $context) = @_;
-
+sub cmd_id($self, $context) {
     my $target = length $context->{arguments} ? $context->{arguments} : $context->{nick};
 
     my ($message_account, $hostmask);

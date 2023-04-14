@@ -9,52 +9,40 @@ package PBot::Core::Utils::PriorityQueue;
 
 use PBot::Imports;
 
-sub new {
-    my ($class, %args) = @_;
-
+sub new($class, %args) {
     return bless {
         # list of entries; each entry is expected to have a `priority` and an `id` field
         queue => [],
     }, $class;
 }
 
-sub queue {
-    my ($self) = @_;
+sub queue($self) {
     return $self->{queue};
 }
 
-sub entries {
-    my ($self) = @_;
+sub entries($self) {
     return @{$self->{queue}};
 }
 
-sub count {
-    my ($self) = @_;
+sub count($self) {
     return scalar @{$self->{queue}};
 }
 
-sub get {
-    my ($self, $position) = @_;
+sub get($self, $position) {
     return $self->{queue}->[$position];
 }
 
-sub get_priority {
-    my ($self, $position) = @_;
+sub get_priority($self, $position) {
     return $self->{queue}->[$position]->{priority};
 }
 
-sub remove {
-    my ($self, $position) = @_;
+sub remove($self, $position) {
     return splice @{$self->{queue}}, $position, 1;
 }
 
 # quickly and efficiently find the best position in the entry
 # queue array for a given priority value
-sub find_enqueue_position {
-    my ($self, $priority) = @_;
-
-    $priority //= 0;
-
+sub find_enqueue_position($self, $priority = 0) {
     # shorter alias
     my $queue = $self->{queue};
 
@@ -98,15 +86,13 @@ sub find_enqueue_position {
     return $lo;
 }
 
-sub add {
-    my ($self, $entry) = @_;
+sub add($self, $entry) {
     my $position = $self->find_enqueue_position($entry->{priority});
     splice @{$self->{queue}}, $position, 0, $entry;
     return $position;
 }
 
-sub update_priority {
-    my ($self, $id, $priority) = @_;
+sub update_priority($self, $id, $priority) {
     my @entries = grep { $_->{id} eq $id } @{$self->{queue}};
     map { $_->{priority} = $priority } @entries;
     $self->{queue} = [ sort { $a->{priority} <=> $b->{priority} } @{$self->{queue}} ];

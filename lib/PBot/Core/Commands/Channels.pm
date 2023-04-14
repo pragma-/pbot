@@ -10,9 +10,7 @@ package PBot::Core::Commands::Channels;
 use PBot::Imports;
 use parent 'PBot::Core::Class';
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # register commands
     $self->{pbot}->{commands}->register(sub { $self->cmd_join(@_) },   "join",      1);
     $self->{pbot}->{commands}->register(sub { $self->cmd_part(@_) },   "part",      1);
@@ -28,8 +26,7 @@ sub initialize {
     $self->{pbot}->{capabilities}->add('admin', 'can-chanlist', 1);
 }
 
-sub cmd_join {
-    my ($self, $context) = @_;
+sub cmd_join($self, $context) {
     foreach my $channel (split /[\s+,]/, $context->{arguments}) {
         $self->{pbot}->{logger}->log("$context->{hostmask} made me join $channel\n");
         $self->{pbot}->{channels}->join($channel);
@@ -37,8 +34,7 @@ sub cmd_join {
     return "/msg $context->{nick} Joining $context->{arguments}";
 }
 
-sub cmd_part {
-    my ($self, $context) = @_;
+sub cmd_part($self, $context) {
     $context->{arguments} = $context->{from} if not $context->{arguments};
     foreach my $channel (split /[\s+,]/, $context->{arguments}) {
         $self->{pbot}->{logger}->log("$context->{hostmask} made me part $channel\n");
@@ -47,22 +43,19 @@ sub cmd_part {
     return "/msg $context->{nick} Parting $context->{arguments}";
 }
 
-sub cmd_set {
-    my ($self, $context) = @_;
+sub cmd_set($self, $context) {
     my ($channel, $key, $value) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 3);
     return "Usage: chanset <channel> [key [value]]" if not defined $channel;
     return $self->{pbot}->{channels}->{storage}->set($channel, $key, $value);
 }
 
-sub cmd_unset {
-    my ($self, $context) = @_;
+sub cmd_unset($self, $context) {
     my ($channel, $key) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
     return "Usage: chanunset <channel> <key>" if not defined $channel or not defined $key;
     return $self->{pbot}->{channels}->{storage}->unset($channel, $key);
 }
 
-sub cmd_add {
-    my ($self, $context) = @_;
+sub cmd_add($self, $context) {
     return "Usage: chanadd <channel>" if not length $context->{arguments};
 
     my $data = {
@@ -74,8 +67,7 @@ sub cmd_add {
     return $self->{pbot}->{channels}->{storage}->add($context->{arguments}, $data);
 }
 
-sub cmd_remove {
-    my ($self, $context) = @_;
+sub cmd_remove($self, $context) {
     return "Usage: chanrem <channel>" if not length $context->{arguments};
 
     # clear banlists
@@ -88,8 +80,7 @@ sub cmd_remove {
     return $self->{pbot}->{channels}->{storage}->remove($context->{arguments});
 }
 
-sub cmd_list {
-    my ($self, $context) = @_;
+sub cmd_list($self, $context) {
     my $result;
     foreach my $channel (sort $self->{pbot}->{channels}->{storage}->get_keys) {
         $result .= $self->{pbot}->{channels}->{storage}->get_key_name($channel) . ': {';

@@ -12,15 +12,11 @@ use parent 'PBot::Core::Class';
 
 use File::Basename;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{pbot}->{commands}->register(sub { $self->cmd_refresh(@_) }, "refresh", 1);
 }
 
-sub cmd_refresh {
-    my ($self, $context) = @_;
-
+sub cmd_refresh($self, $context) {
     my $last_update = $self->{pbot}->{updater}->get_last_update_version;
     my @updates     = $self->{pbot}->{updater}->get_available_updates($last_update);
 

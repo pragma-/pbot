@@ -10,9 +10,7 @@ use parent 'PBot::Core::Class';
 
 use PBot::Imports;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # capabilities file
     my $filename = $conf{filename} // $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/capabilities';
 
@@ -34,8 +32,7 @@ sub initialize {
     $self->add('is-whitelisted', undef, 1);
 }
 
-sub has {
-    my ($self, $cap, $subcap, $depth) = @_;
+sub has($self, $cap, $subcap, $depth = 10) {
     my $cap_data = $self->{caps}->get_data($cap);
 
     return 0 if not defined $cap_data;
@@ -44,8 +41,6 @@ sub has {
         return 0 if exists $cap_data->{$subcap} and not $cap_data->{$subcap};
         return 1;
     }
-
-    $depth //= 10;  # set depth to 10 if it's not defined
 
     if (--$depth <= 0) {
         $self->{pbot}->{logger}->log("Max recursion reached for PBot::Core::Capabilities->has($cap, $subcap)\n");
@@ -60,9 +55,7 @@ sub has {
     return 0;
 }
 
-sub userhas {
-    my ($self, $user, $cap) = @_;
-
+sub userhas($self, $user, $cap) {
     return 0 if not defined $user;
     return 1 if $user->{$cap};
 
@@ -75,9 +68,7 @@ sub userhas {
     return 0;
 }
 
-sub exists {
-    my ($self, $cap) = @_;
-
+sub exists($self, $cap) {
     $cap = lc $cap;
 
     foreach my $c ($self->{caps}->get_keys) {
@@ -91,9 +82,7 @@ sub exists {
     return 0;
 }
 
-sub add {
-    my ($self, $cap, $subcap, $dontsave) = @_;
-
+sub add($self, $cap, $subcap, $dontsave = 0) {
     $cap = lc $cap;
 
     if (not defined $subcap) {
@@ -109,9 +98,7 @@ sub add {
     }
 }
 
-sub remove {
-    my ($self, $cap, $subcap) = @_;
-
+sub remove($self, $cap, $subcap) {
     $cap = lc $cap;
 
     if (not defined $subcap) {
@@ -128,9 +115,7 @@ sub remove {
     $self->{caps}->save;
 }
 
-sub rebuild_botowner_capabilities {
-    my ($self) = @_;
-
+sub rebuild_botowner_capabilities($self) {
     $self->{caps}->remove('botowner', undef, 1);
 
     foreach my $cap ($self->{caps}->get_keys) {
@@ -138,9 +123,7 @@ sub rebuild_botowner_capabilities {
     }
 }
 
-sub list {
-    my ($self, $capability) = @_;
-
+sub list($self, $capability) {
     if (defined $capability and not $self->{caps}->exists($capability)) {
         return "No such capability $capability.";
     }

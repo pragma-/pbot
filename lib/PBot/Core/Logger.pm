@@ -15,8 +15,7 @@ use File::Copy;
 use Time::HiRes qw/gettimeofday/;
 use POSIX;
 
-sub new {
-    my ($class, %args) = @_;
+sub new($class, %args) {
     my $self = bless {}, $class;
     Carp::croak("Missing pbot reference to " . __FILE__) unless exists $args{pbot};
     $self->{pbot} = delete $args{pbot};
@@ -25,9 +24,7 @@ sub new {
     return $self;
 }
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # ensure logfile path was provided
     $self->{logfile} = $conf{filename} // Carp::croak "Missing logfile parameter in " . __FILE__;
 
@@ -52,9 +49,7 @@ sub initialize {
     $self->{pbot}->{atexit}->register(sub { $self->rotate_log });
 }
 
-sub log {
-    my ($self, $text) = @_;
-
+sub log($self, $text) {
     # get current time
     my ($sec, $usec) = gettimeofday;
     my $time = strftime "%a %b %e %Y %H:%M:%S", localtime $sec;
@@ -70,9 +65,7 @@ sub log {
     print STDOUT "$time :: $text" unless $self->{pbot}->{overrides}->{'general.daemon'};
 }
 
-sub rotate_log {
-    my ($self) = @_;
-
+sub rotate_log($self) {
     # get start time
     my $time = localtime $self->{start};
     $time =~ s/\s+/_/g; # replace spaces with underscores

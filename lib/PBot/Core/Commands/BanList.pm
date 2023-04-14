@@ -16,9 +16,7 @@ use Time::HiRes qw/gettimeofday/;
 use Time::Duration;
 use POSIX qw/strftime/;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{pbot}->{commands}->register(sub { $self->cmd_banlist(@_) },    "banlist",   0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_checkban(@_) },   "checkban",  0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_checkmute(@_) },  "checkmute", 0);
@@ -30,9 +28,7 @@ sub initialize {
 
 }
 
-sub cmd_banlist {
-    my ($self, $context) = @_;
-
+sub cmd_banlist($self, $context) {
     if (not length $context->{arguments}) {
         return "Usage: banlist <channel>";
     }
@@ -93,8 +89,7 @@ sub cmd_banlist {
     return $result;
 }
 
-sub cmd_checkban {
-    my ($self, $context) = @_;
+sub cmd_checkban($self, $context) {
     my ($target, $channel) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
     return "Usage: checkban <mask> [channel]" if not defined $target;
@@ -104,8 +99,7 @@ sub cmd_checkban {
     return $self->{pbot}->{banlist}->checkban($channel, 'b', $target);
 }
 
-sub cmd_checkmute {
-    my ($self, $context) = @_;
+sub cmd_checkmute($self, $context) {
     my ($target, $channel) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
     return "Usage: checkmute <mask> [channel]" if not defined $target;
@@ -115,8 +109,7 @@ sub cmd_checkmute {
     return $self->{pbot}->{banlist}->checkban($channel, $self->{pbot}->{registry}->get_value('banlist', 'mute_mode_char'), $target);
 }
 
-sub cmd_unbanme {
-    my ($self, $context) = @_;
+sub cmd_unbanme($self, $context) {
     my $unbanned;
 
     my %aliases = $self->{pbot}->{messagehistory}->{database}->get_also_known_as($context->{nick});
@@ -226,8 +219,7 @@ sub cmd_unbanme {
     }
 }
 
-sub cmd_ban_exempt {
-    my ($self, $context) = @_;
+sub cmd_ban_exempt($self, $context) {
     my $arglist = $context->{arglist};
     $self->{pbot}->{interpreter}->lc_args($arglist);
 

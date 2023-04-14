@@ -71,16 +71,13 @@ BEGIN {
     @ARGV = map { decode('UTF-8', $_, 1) } @ARGV;
 }
 
-sub new {
-    my ($class, %args) = @_;
+sub new($class, %args) {
     my $self = bless {}, $class;
     $self->initialize(%args);
     return $self;
 }
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{startup_timestamp} = time;
 
     # process command-line arguments for path and registry overrides
@@ -225,8 +222,7 @@ sub initialize {
     $self->{logger}->log("PBot::Core initialized.\n");
 }
 
-sub random_nick {
-    my ($self, $length) = @_;
+sub random_nick($self, $length) {
     $length //= 9;
     my @chars = ("A" .. "Z", "a" .. "z", "0" .. "9");
     my $nick  = $chars[rand @chars - 10];               # nicks cannot start with a digit
@@ -235,9 +231,7 @@ sub random_nick {
 }
 
 # TODO: add disconnect subroutine and connect/disconnect/reconnect commands
-sub connect {
-    my ($self) = @_;
-
+sub connect($self) {
     return if $ENV{PBOT_LOCAL};
 
     my $server  = $self->{registry}->get_value('irc', 'server');
@@ -301,9 +295,7 @@ sub connect {
     $self->{irchandlers}->add_handlers;
 }
 
-sub register_signal_handlers {
-    my ($self) = @_;
-
+sub register_signal_handlers($self) {
     $SIG{INT} = sub {
         my $msg = "SIGINT received, exiting immediately.\n";
         if (exists $self->{logger}) {
@@ -317,8 +309,7 @@ sub register_signal_handlers {
 }
 
 # called when PBot terminates
-sub atexit {
-    my ($self) = @_;
+sub atexit($self) {
     $self->{atexit}->execute_all;
     if (exists $self->{logger}) {
         $self->{logger}->log("Good-bye.\n");
@@ -328,8 +319,7 @@ sub atexit {
 }
 
 # convenient function to exit PBot
-sub exit {
-    my ($self, $exitval) = @_;
+sub exit($self, $exitval) {
     $exitval //= EXIT_SUCCESS;
 
     my $msg = "Exiting immediately.\n";
@@ -344,9 +334,7 @@ sub exit {
 }
 
 # main loop
-sub do_one_loop {
-    my ($self) = @_;
-
+sub do_one_loop($self) {
     # do an irc engine loop (select, eventqueues, etc)
     $self->{irc}->do_one_loop;
 
@@ -359,9 +347,7 @@ sub do_one_loop {
 }
 
 # main entry point
-sub start {
-    my ($self) = @_;
-
+sub start($self) {
     $self->connect;
 
     while (1) {

@@ -14,9 +14,7 @@ use PBot::Imports;
 
 use Module::Refresh;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{refresher} = Module::Refresh->new;
 }
 

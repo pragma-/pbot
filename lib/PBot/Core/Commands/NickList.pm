@@ -13,14 +13,11 @@ use parent 'PBot::Core::Class';
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration qw/concise ago/;
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{pbot}->{commands}->register(sub { $self->cmd_nicklist(@_) }, "nicklist", 1);
 }
 
-sub cmd_nicklist {
-    my ($self, $context) = @_;
-
+sub cmd_nicklist($self, $context) {
     my $usage = "Usage: nicklist (<channel [nick]> | <nick>) [-sort <by>] [-hostmask] [-join]; -hostmask shows hostmasks instead of nicks; -join includes join time";
 
     my $sort_method   = 'nick';

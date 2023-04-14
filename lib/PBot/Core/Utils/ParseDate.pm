@@ -14,22 +14,18 @@ use DateTime;
 use DateTime::Format::Flexible;
 use DateTime::Format::Duration;
 
-sub new {
-    Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref $_[1] eq 'HASH';
-    my ($class, %args) = @_;
+sub new($class, %args) {
     my $self = bless {}, $class;
     $self->initialize(%args);
     return $self;
 }
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{pbot} = $conf{pbot} // Carp::croak("Missing pbot reference to " . __FILE__);
 }
 
 # expands stuff like "7d3h" to "7 days and 3 hours"
-sub unconcise {
-    my ($input) = @_;
+sub unconcise($input) {
     my %word = (y => 'years', w => 'weeks', d => 'days', h => 'hours', m => 'minutes', s => 'seconds');
     $input =~ s/(\d+)([ywdhms])(?![a-z])/"$1 " . $word{lc $2} . ' and '/ige;
     $input =~ s/ and $//;
@@ -38,9 +34,7 @@ sub unconcise {
 
 # parses English natural language date strings into seconds
 # does not accept times or dates in the past
-sub parsedate {
-    my ($self, $input) = @_;
-
+sub parsedate($self, $input) {
     my $examples = "Try `30s`, `1h30m`, `tomorrow`, `next monday`, `9:30am pdt`, `11pm utc`, etc.";
 
     my $attempts = 0;

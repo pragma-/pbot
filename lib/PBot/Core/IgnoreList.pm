@@ -12,9 +12,7 @@ use PBot::Imports;
 
 use Time::Duration qw/duration/;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{filename} = $conf{filename};
 
     $self->{storage} = PBot::Core::Storage::DualIndexHashObject->new(
@@ -27,8 +25,7 @@ sub initialize {
     $self->enqueue_ignores;
 }
 
-sub enqueue_ignores {
-    my ($self) = @_;
+sub enqueue_ignores($self) {
     my $now    = time;
 
     foreach my $channel ($self->{storage}->get_keys) {
@@ -47,9 +44,7 @@ sub enqueue_ignores {
     }
 }
 
-sub add {
-    my ($self, $channel, $hostmask, $length, $owner) = @_;
-
+sub add($self, $channel, $hostmask, $length, $owner) {
     if ($hostmask !~ /!/) {
         $hostmask .= '!*@*';
     } elsif ($hostmask !~ /@/) {
@@ -89,9 +84,7 @@ sub add {
     return "$hostmask ignored for $duration";
 }
 
-sub remove {
-    my ($self, $channel, $hostmask) = @_;
-
+sub remove($self, $channel, $hostmask) {
     if ($hostmask !~ /!/) {
         $hostmask .= '!*@*';
     } elsif ($hostmask !~ /@/) {
@@ -104,9 +97,7 @@ sub remove {
     return $self->{storage}->remove($channel, $hostmask);
 }
 
-sub is_ignored {
-    my ($self, $channel, $hostmask) = @_;
-
+sub is_ignored($self, $channel, $hostmask) {
     return 0 if $self->{pbot}->{users}->loggedin_admin($channel, $hostmask);
 
     foreach my $chan ('.*', $channel) {

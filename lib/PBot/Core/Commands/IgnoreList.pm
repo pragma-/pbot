@@ -12,9 +12,7 @@ use PBot::Imports;
 
 use Time::Duration qw/concise duration/;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{pbot}->{commands}->register(sub { $self->cmd_ignore(@_) },   "ignore",   1);
     $self->{pbot}->{commands}->register(sub { $self->cmd_unignore(@_) }, "unignore", 1);
 
@@ -27,9 +25,7 @@ sub initialize {
     $self->{pbot}->{capabilities}->add('chanop', 'can-unignore', 1);
 }
 
-sub cmd_ignore {
-    my ($self, $context) = @_;
-
+sub cmd_ignore($self, $context) {
     my ($target, $channel, $length) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 3);
 
     if (not defined $target) {
@@ -82,9 +78,7 @@ sub cmd_ignore {
     return $self->{pbot}->{ignorelist}->add($channel, $target, $length, $context->{hostmask});
 }
 
-sub cmd_unignore {
-    my ($self, $context) = @_;
-
+sub cmd_unignore($self, $context) {
     my ($target, $channel) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
     if (not defined $target) {

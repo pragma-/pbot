@@ -31,7 +31,6 @@ sub import {
     warnings->unimport::out_of($target, 'experimental');
 }
 
-sub unimport {
-}
+sub unimport {}
 
 1;

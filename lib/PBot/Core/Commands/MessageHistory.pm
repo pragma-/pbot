@@ -15,9 +15,7 @@ use PBot::Core::MessageHistory::Constants ':all';
 use Time::HiRes qw(time tv_interval);
 use Time::Duration;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # unprivileged commands
     $self->{pbot}->{commands}->register(sub { $self->cmd_list_also_known_as(@_) }, "aka",            0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_recall_message(@_) },     "recall",         0);
@@ -34,9 +32,7 @@ sub initialize {
     $self->{pbot}->{capabilities}->add('admin', 'can-akadelete', 1);
 }
 
-sub cmd_list_also_known_as {
-    my ($self, $context) = @_;
-
+sub cmd_list_also_known_as($self, $context) {
     my $usage = "Usage: aka [-hilngrw] <nick> [-sort <by>]; -h show hostmasks; -i show ids; -l show last seen, -n show nickserv accounts; -g show gecos, -r show relationships; -w include weak links";
 
     if (not length $context->{arguments}) {
@@ -199,9 +195,7 @@ sub cmd_list_also_known_as {
     }
 }
 
-sub cmd_recall_message {
-    my ($self, $context) = @_;
-
+sub cmd_recall_message($self, $context) {
     my $usage = 'Usage: recall [nick [history [channel]]] [-c <channel>] [-t <text>] [-b <context before>] [-a <context after>] [-x <filter to nick>] [-n <count>] [-r raw mode] [+ ...]';
 
     my $arguments = $context->{arguments};
@@ -468,14 +462,11 @@ sub cmd_recall_message {
     return $result;
 }
 
-sub cmd_rebuild_aliases {
-    my ($self, $context) = @_;
+sub cmd_rebuild_aliases($self, $context) {
     $self->{pbot}->{messagehistory}->{database}->rebuild_aliases_table;
 }
 
-sub cmd_aka_link {
-    my ($self, $context) = @_;
-
+sub cmd_aka_link($self, $context) {
     my ($id, $alias, $type) = split /\s+/, $context->{arguments};
 
     $type = LINK_STRONG if not defined $type;
@@ -502,9 +493,7 @@ sub cmd_aka_link {
     }
 }
 
-sub cmd_aka_unlink {
-    my ($self, $context) = @_;
-
+sub cmd_aka_unlink($self, $context) {
     my ($id, $alias) = split /\s+/, $context->{arguments};
 
     if (not $id or not $alias) {
@@ -529,9 +518,7 @@ sub cmd_aka_unlink {
     }
 }
 
-sub cmd_aka_delete {
-    my ($self, $context) = @_;
-
+sub cmd_aka_delete($self, $context) {
     my $usage = "Usage: akadelete [-hn] <account id or hostmask>; -h delete only hostmask; -n delete only nickserv";
 
     if (not length $context->{arguments}) {

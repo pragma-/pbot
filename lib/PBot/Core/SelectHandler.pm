@@ -15,9 +15,7 @@ sub initialize {
     # nothing to initialize
 }
 
-sub add_reader {
-    my ($self, $handle, $subref) = @_;
-
+sub add_reader($self, $handle, $subref) {
     # add file handle to PBot::Core::IRC's select loop
     $self->{pbot}->{irc}->addfh($handle, sub { $self->on_select_read($handle, $subref) }, 'r');
 
@@ -25,9 +23,7 @@ sub add_reader {
     $self->{buffers}->{$handle} = '';
 }
 
-sub remove_reader {
-    my ($self, $handle) = @_;
-
+sub remove_reader($self, $handle) {
     # remove file handle from PBot::Core::IRC's select loop
     $self->{pbot}->{irc}->removefh($handle);
 
@@ -35,9 +31,7 @@ sub remove_reader {
     delete $self->{buffers}->{$handle};
 }
 
-sub on_select_read {
-    my ($self, $handle, $subref) = @_;
-
+sub on_select_read($self, $handle, $subref) {
     # maximum read length
     my $length = 8192;
 

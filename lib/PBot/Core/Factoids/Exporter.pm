@@ -16,9 +16,7 @@ use POSIX qw(strftime);
 sub initialize {
 }
 
-sub export {
-    my $self = shift;
-
+sub export($self) {
     my $filename;
 
     if (@_) {

@@ -13,9 +13,7 @@ use PBot::Imports;
 sub initialize {
 }
 
-sub parse {
-    my ($self, $modifier) = @_;
-
+sub parse($self, $modifier) {
     my %modifiers;
 
     my $interp = $self->{pbot}->{interpreter};

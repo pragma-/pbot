@@ -10,14 +10,11 @@ package PBot::Core::Commands::Capabilities;
 use PBot::Imports;
 use parent 'PBot::Core::Class';
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{pbot}->{commands}->register(sub { $self->cmd_cap(@_) }, "cap");
 }
 
-sub cmd_cap {
-    my ($self, $context) = @_;
-
+sub cmd_cap($self, $context) {
     my $command = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
 
     given ($command) {

@@ -12,9 +12,7 @@ use PBot::Imports;
 
 use Time::HiRes qw(gettimeofday);
 
-sub new {
-    my ($class, %args) = @_;
-
+sub new($class, %args) {
     my $self = {
         pbot      => $args{pbot},
         buf       => '',
@@ -24,9 +22,7 @@ sub new {
     return bless $self, $class;
 }
 
-sub log {
-    my $self = shift;
-
+sub log($self) {
     $self->{buf} .= shift;
 
     # DBI feeds us pieces at a time, so accumulate a complete line
@@ -37,9 +33,7 @@ sub log {
     }
 }
 
-sub log_message {
-    my ($self) = @_;
-
+sub log_message($self) {
     my $now     = gettimeofday;
     my $elapsed = $now - $self->{timestamp};
 
@@ -54,9 +48,7 @@ sub log_message {
     $self->{timestamp} = $now;
 }
 
-sub close {
-    my ($self) = @_;
-
+sub close($self) {
     # log anything left in buf when closing
     if ($self->{buf}) {
         $self->log_message;

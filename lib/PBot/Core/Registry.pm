@@ -11,9 +11,7 @@ use parent 'PBot::Core::Class';
 
 use PBot::Imports;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # ensure we have a registry filename
     my $filename = $conf{filename} // Carp::croak("Missing filename configuration item in " . __FILE__);
 
@@ -94,9 +92,7 @@ sub initialize {
 
 # registry triggers fire when value changes
 
-sub trigger_irc_debug {
-    my ($self, $section, $item, $newvalue) = @_;
-
+sub trigger_irc_debug($self, $section, $item, $newvalue) {
     $self->{pbot}->{irc}->debug($newvalue);
 
     if ($self->{pbot}->{conn}) {
@@ -104,9 +100,7 @@ sub trigger_irc_debug {
     }
 }
 
-sub trigger_change_botnick {
-    my ($self, $section, $item, $newvalue) = @_;
-
+sub trigger_change_botnick($self, $section, $item, $newvalue) {
     if ($self->{pbot}->{conn}) {
         $self->{pbot}->{conn}->nick($newvalue)
     }
@@ -114,9 +108,7 @@ sub trigger_change_botnick {
 
 # registry api
 
-sub load {
-    my $self = shift;
-
+sub load($self) {
     # load registry from file
     $self->{storage}->load;
 
@@ -128,21 +120,15 @@ sub load {
     }
 }
 
-sub save {
-    my $self = shift;
-
+sub save($self) {
     $self->{storage}->save;
 }
 
-sub add_default {
-    my ($self, $type, $section, $item, $value) = @_;
-
+sub add_default($self, $type, $section, $item, $value) {
     $self->add($type, $section, $item, $value, 1);
 }
 
-sub add {
-    my ($self, $type, $section, $item, $value, $is_default) = @_;
-
+sub add($self, $type, $section, $item, $value, $is_default = 0) {
     $type = lc $type;
 
     if (not $self->{storage}->exists($section, $item)) {
@@ -177,21 +163,15 @@ sub add {
     }
 }
 
-sub remove {
-    my ($self, $section, $item) = @_;
-
+sub remove($self, $section, $item) {
     $self->{storage}->remove($section, $item);
 }
 
-sub set_default {
-    my ($self, $section, $item, $key, $value) = @_;
-
+sub set_default($self, $section, $item, $key, $value) {
     $self->set($section, $item, $key, $value, 1);
 }
 
-sub set {
-    my ($self, $section, $item, $key, $value, $is_default, $dont_save) = @_;
-
+sub set($self, $section, $item, $key = undef, $value = undef, $is_default = 0, $dont_save = 0) {
     $key = lc $key if defined $key;
 
     if ($is_default && $self->{storage}->exists($section, $item, $key)) {
@@ -217,17 +197,12 @@ sub set {
     return $result;
 }
 
-sub unset {
-    my ($self, $section, $item, $key) = @_;
-
+sub unset($self, $section, $item, $key = undef) {
     $key = lc $key if defined $key;
-
     return $self->{storage}->unset($section, $item, $key);
 }
 
-sub get_value {
-    my ($self, $section, $item, $as_text, $context) = @_;
-
+sub get_value($self, $section, $item, $as_text = undef, $context = undef) {
     $section = lc $section;
     $item    = lc $item;
 
@@ -252,9 +227,7 @@ sub get_value {
     return undef;
 }
 
-sub get_array_value {
-    my ($self, $section, $item, $index, $context) = @_;
-
+sub get_array_value($self, $section, $item, $index, $context = undef) {
     $section = lc $section;
     $item    = lc $item;
 
@@ -280,21 +253,18 @@ sub get_array_value {
     return undef;
 }
 
-sub add_trigger {
-    my ($self, $section, $item, $subref) = @_;
-
+sub add_trigger($self, $section, $item, $subref) {
     $self->{triggers}->{lc $section}->{lc $item} = $subref;
 }
 
-sub process_trigger {
-    my $self = shift;           # shift $self off of the top of @_
-    my ($section, $item) = @_;  # but leave $section, $item and anything else (i.e. $value) in @_
+sub process_trigger($self, @args) {
+    my ($section, $item) = @args;
 
     $section = lc $section;
     $item    = lc $item;
 
     if (exists $self->{triggers}->{$section} and exists $self->{triggers}->{$section}->{$item}) {
-        return &{$self->{triggers}->{$section}->{$item}}(@_); # $section, $item, $value, etc in @_
+        return &{$self->{triggers}->{$section}->{$item}}(@args);
     }
 
     return undef;

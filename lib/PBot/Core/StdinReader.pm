@@ -20,9 +20,7 @@ use POSIX qw(tcgetpgrp getpgrp);  # to check whether process is in background or
 
 use Encode;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # create stdin bot-admin account for bot
     my $user = $self->{pbot}->{users}->find_user('.*', '*!stdin@pbot');
 
@@ -47,9 +45,7 @@ sub initialize {
     }
 }
 
-sub stdin_reader {
-    my ($self, $input) = @_;
-
+sub stdin_reader($self, $input) {
     # make sure we're in the foreground first
     $self->{foreground} = (tcgetpgrp($self->{tty_fd}) == getpgrp()) ? 1 : 0;
     return if not $self->{foreground};

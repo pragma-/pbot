@@ -13,18 +13,14 @@ use PBot::Imports;
 use Time::HiRes qw/gettimeofday/;
 use POSIX       qw/strftime/;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{pbot}->{commands}->register(sub { $self->cmd_antispam(@_) }, "antispam", 1);
 
     # add capability to admin group
     $self->{pbot}->{capabilities}->add('admin', 'can-antispam', 1);
 }
 
-sub cmd_antispam {
-    my ($self, $context) = @_;
-
+sub cmd_antispam($self, $context) {
     my $arglist = $context->{arglist};
 
     my $command = $self->{pbot}->{interpreter}->shift_arg($arglist);

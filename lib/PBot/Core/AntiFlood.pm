@@ -21,9 +21,7 @@ use Time::Duration;
 use POSIX qw/strftime/;
 use Text::CSV;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # flags for 'validated' field
     use constant {
         NICKSERV_VALIDATED => (1 << 0),
@@ -64,9 +62,7 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.account',      sub { $self->on_accountnotify(@_) });
 }
 
-sub update_join_watch {
-    my ($self, $account, $channel, $text, $mode) = @_;
-
+sub update_join_watch($self, $account, $channel, $text, $mode) {
     return if $channel =~ /[@!]/;    # ignore QUIT messages from nick!user@host channels
 
     my $channel_data = $self->{pbot}->{messagehistory}->{database}->get_channel_data($account, $channel, 'join_watch');
@@ -103,9 +99,7 @@ sub update_join_watch {
 
 # TODO: break this gigantic function up into simple plugins
 # e.g. PBot::Plugin::AntiAbuse::ChatFlood, ::JoinFlood, ::EnterAbuse, etc.
-sub check_flood {
-    my ($self, $channel, $nick, $user, $host, $text, $max_messages, $max_time, $mode, $context) = @_;
-
+sub check_flood($self, $channel, $nick, $user, $host, $text, $max_messages, $max_time, $mode, $context = undef) {
     $channel = lc $channel;
 
     my $mask    = "$nick!$user\@$host";
@@ -569,8 +563,7 @@ sub check_flood {
     $self->{channels}->{$channel}->{last_spoken_nick} = $nick if $mode == MSG_CHAT;
 }
 
-sub address_to_mask {
-    my ($self, $address) = @_;
+sub address_to_mask($self, $address) {
     my $banmask;
 
     if ($address =~ m/^([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)$/) {
@@ -595,9 +588,8 @@ sub address_to_mask {
     return $banmask;
 }
 
-sub devalidate_accounts {
-    # remove validation on accounts in $channel that match a ban/quiet $mask
-    my ($self, $mask, $channel) = @_;
+# remove validation on accounts in $channel that match a ban/quiet $mask
+sub devalidate_accounts($self, $mask, $channel) {
     my @message_accounts;
 
     #$self->{pbot}->{logger}->log("Devalidating accounts for $mask in $channel\n");
@@ -620,8 +612,7 @@ sub devalidate_accounts {
     }
 }
 
-sub check_bans {
-    my ($self, $message_account, $mask, $channel, $dry_run) = @_;
+sub check_bans($self, $message_account, $mask, $channel, $dry_run = 0) {
     $channel = lc $channel;
 
     return if not $self->{pbot}->{chanops}->can_gain_ops($channel);
@@ -845,8 +836,7 @@ sub check_bans {
     }
 }
 
-sub on_endofwhois {
-    my ($self, $event_type, $event) = @_;
+sub on_endofwhois($self, $event_type, $event) {
     my $nick = $event->{args}[1];
 
     delete $self->{whois_pending}->{$nick};
@@ -869,8 +859,7 @@ sub on_endofwhois {
     return 0;
 }
 
-sub on_whoisuser {
-    my ($self, $event_type, $event) = @_;
+sub on_whoisuser($self, $event_type, $event) {
     my $nick  = $event->{args}[1];
     my $gecos = lc $event->{args}[5];
 
@@ -881,8 +870,7 @@ sub on_whoisuser {
     $self->{pbot}->{messagehistory}->{database}->update_gecos($id, $gecos, scalar gettimeofday);
 }
 
-sub on_whoisaccount {
-    my ($self, $event_type, $event) = @_;
+sub on_whoisaccount($self, $event_type, $event) {
     my $nick    = $event->{args}[1];
     my $account = lc $event->{args}[2];
 
@@ -901,9 +889,7 @@ sub on_whoisaccount {
     return 0;
 }
 
-sub on_accountnotify {
-    my ($self, $event_type, $event) = @_;
-
+sub on_accountnotify($self, $event_type, $event) {
     my $mask = $event->{from};
     my ($nick, $user, $host) = $mask =~ m/^([^!]+)!([^@]+)@(.*)/;
     my $account = $event->{args}[0];
@@ -933,11 +919,7 @@ sub on_accountnotify {
     return 0;
 }
 
-sub adjust_offenses {
-    my $self = shift;
-
-    #$self->{pbot}->{logger}->log("Adjusting offenses . . .\n");
-
+sub adjust_offenses($self) {
     # decrease offenses counter if 24 hours have elapsed since latest offense
     my $channel_datas = $self->{pbot}->{messagehistory}->{database}->get_channel_datas_where_last_offense_older_than(gettimeofday - 60 * 60 * 24);
     foreach my $channel_data (@$channel_datas) {

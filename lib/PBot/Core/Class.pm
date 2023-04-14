@@ -12,18 +12,14 @@ use PBot::Imports;
 
 my %import_opts;
 
-sub import {
-    my ($package, %opts) = @_;
-
+sub import($package, %opts) {
     if (%opts) {
         # set import options for package
         $import_opts{$package} = \%opts;
     }
 }
 
-sub new {
-    my ($class, %args) = @_;
-
+sub new($class, %args) {
     # ensure class was passed a PBot instance
     if (not exists $args{pbot}) {
         my ($package, $filename, $line) = caller(0);

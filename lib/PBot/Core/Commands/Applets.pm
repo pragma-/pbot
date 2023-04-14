@@ -13,17 +13,13 @@ use PBot::Imports;
 use IPC::Run qw/run timeout/;
 use Encode;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # bot commands to load and unload applets
     $self->{pbot}->{commands}->register(sub { $self->cmd_load(@_) },   "load",   1);
     $self->{pbot}->{commands}->register(sub { $self->cmd_unload(@_) }, "unload", 1);
 }
 
-sub cmd_load {
-    my ($self, $context) = @_;
-
+sub cmd_load($self, $context) {
     my ($keyword, $applet) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
     return "Usage: load <keyword> <applet>" if not defined $applet;
@@ -44,9 +40,7 @@ sub cmd_load {
     return "Loaded applet $keyword => $applet";
 }
 
-sub cmd_unload {
-    my ($self, $context) = @_;
-
+sub cmd_unload($self, $context) {
     my $applet = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
 
     return "Usage: unload <keyword>" if not defined $applet;

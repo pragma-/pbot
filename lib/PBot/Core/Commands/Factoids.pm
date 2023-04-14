@@ -40,9 +40,7 @@ our %factoid_metadata_capabilities = (
     # all others are allowed to be factset by anybody
 );
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{pbot}->{registry}->add_default('text', 'general', 'applet_repo', $conf{applet_repo}
         // 'https://github.com/pragma-/pbot/blob/master/applets/');
 
@@ -69,8 +67,7 @@ sub initialize {
     $self->{pbot}->{commands}->register(sub { $self->cmd_add_regex(@_) },    "regex",      1);
 }
 
-sub cmd_call_factoid {
-    my ($self, $context) = @_;
+sub cmd_call_factoid($self, $context) {
     my ($chan, $keyword, $args) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 3, 0, 1);
 
     if (not defined $chan or not defined $keyword) {
@@ -92,9 +89,7 @@ sub cmd_call_factoid {
     return $self->{pbot}->{factoids}->{interpreter}->interpreter($context);
 }
 
-sub cmd_as_factoid {
-    my ($self, $context) = @_;
-
+sub cmd_as_factoid($self, $context) {
     my $arguments = $context->{arguments};
 
     my $usage = "Usage: factoid <text to interpret as a factoid> [--args 'arguments passed to factoid']";
@@ -133,8 +128,7 @@ sub cmd_as_factoid {
     return $result;
 }
 
-sub cmd_factundo {
-    my ($self, $context) = @_;
+sub cmd_factundo($self, $context) {
     my $usage = "Usage: factundo [-l [N]] [-r N] [channel] <keyword> (-l list undo history, optionally starting from N; -r jump to revision N)";
 
     my $arguments = $context->{arguments};
@@ -238,9 +232,7 @@ sub cmd_factundo {
     return "[$channel_name] $trigger_name reverted (revision " . ($undos->{idx} + 1) . "): $changes\n";
 }
 
-sub cmd_factredo {
-    my ($self, $context) = @_;
-
+sub cmd_factredo($self, $context) {
     my $usage = "Usage: factredo [-l [N]] [-r N] [channel] <keyword> (-l list undo history, optionally starting from N; -r jump to revision N)";
 
     my $arguments = $context->{arguments};
@@ -332,9 +324,7 @@ sub cmd_factredo {
     return "[$channel_name] $trigger_name restored (revision " . ($undos->{idx} + 1) . "): $changes\n";
 }
 
-sub cmd_factset {
-    my ($self, $context) = @_;
-
+sub cmd_factset($self, $context) {
     my ($channel, $trigger, $arguments) = $self->find_factoid_with_optional_channel(
         $context->{from}, $context->{arguments}, 'factset', usage => 'Usage: factset [channel] <factoid> [key [value]]', explicit => 1
     );
@@ -430,8 +420,7 @@ sub cmd_factset {
     return $result;
 }
 
-sub cmd_factunset {
-    my ($self, $context) = @_;
+sub cmd_factunset($self, $context) {
     my $usage = 'Usage: factunset [channel] <factoid> <key>';
 
     my ($channel, $trigger, $arguments) = $self->find_factoid_with_optional_channel(
@@ -516,9 +505,7 @@ sub cmd_factunset {
     return $result;
 }
 
-sub cmd_factmove {
-    my ($self, $context) = @_;
-
+sub cmd_factmove($self, $context) {
     my ($src_channel, $source, $target_channel, $target) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 5);
 
     my $usage = "Usage: factmove <source channel> <source factoid> <target channel/factoid> [target factoid]";
@@ -614,8 +601,7 @@ sub cmd_factmove {
     }
 }
 
-sub cmd_factalias {
-    my ($self, $context) = @_;
+sub cmd_factalias($self, $context) {
     my ($chan, $alias, $command) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 3, 0, 1);
 
     if (defined $chan and not($chan eq '.*' or $chan =~ m/^#/)) {
@@ -657,8 +643,7 @@ sub cmd_factalias {
     return "/say $alias aliases `$command` for " . ($chan eq '.*' ? 'the global channel' : $chan);
 }
 
-sub cmd_add_regex {
-    my ($self, $context) = @_;
+sub cmd_add_regex($self, $context) {
     my ($keyword, $text) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
     my $channel = $context->{from};
@@ -697,9 +682,7 @@ my @valid_pastesites = (
     'https?://0x0.st',
 );
 
-sub cmd_factadd {
-    my ($self, $context) = @_;
-
+sub cmd_factadd($self, $context) {
     my ($from_chan, $keyword, $text, $force);
 
     my @arglist = @{$context->{arglist}};
@@ -819,8 +802,7 @@ sub cmd_factadd {
     return "/say $keyword_text added to " . ($from_chan eq '.*' ? 'global channel' : $from_chan) . ".";
 }
 
-sub cmd_factrem {
-    my ($self, $context) = @_;
+sub cmd_factrem($self, $context) {
     my $factoids = $self->{pbot}->{factoids}->{data}->{storage};
 
     my ($from_chan, $from_trig) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
@@ -860,9 +842,7 @@ sub cmd_factrem {
     return '/say '. $self->{pbot}->{factoids}->{data}->remove($channel, $trigger);
 }
 
-sub cmd_factshow {
-    my ($self, $context) = @_;
-
+sub cmd_factshow($self, $context) {
     my $usage = "Usage: factshow [-p] [channel] <keyword>; -p to paste";
     return $usage if not length $context->{arguments};
 
@@ -909,9 +889,7 @@ sub cmd_factshow {
     return $result;
 }
 
-sub cmd_factlog {
-    my ($self, $context) = @_;
-
+sub cmd_factlog($self, $context) {
     my $usage = "Usage: factlog [-h] [-t] [channel] <keyword>; -h show full hostmask; -t show actual timestamp instead of relative";
 
     return $usage if not length $context->{arguments};
@@ -993,8 +971,7 @@ sub cmd_factlog {
     return $result;
 }
 
-sub cmd_factinfo {
-    my ($self, $context) = @_;
+sub cmd_factinfo($self, $context) {
     my $factoids = $self->{pbot}->{factoids}->{data}->{storage};
     my ($chan, $trig) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
@@ -1084,15 +1061,12 @@ sub cmd_factinfo {
     return "/say $context->{arguments} is not a factoid or an applet.";
 }
 
-sub quotemeta2 {
-    my ($text) = @_;
+sub quotemeta2($text) {
     $text =~ s/(?<!\\) ([\[ \\ \| () { ^ \$ * + ? . ])/\\$1/gx;
     return $text;
 }
 
-sub cmd_factfind {
-    my ($self, $context) = @_;
-
+sub cmd_factfind($self, $context) {
     my $arguments = $context->{arguments};
 
     my $usage = "Usage: factfind [-channel channel] [-owner regex] [-editby regex] [-refby regex] [-regex] [text]";
@@ -1212,8 +1186,7 @@ sub cmd_factfind {
     }
 }
 
-sub cmd_factchange {
-    my ($self, $context) = @_;
+sub cmd_factchange($self, $context) {
     my $factoids_data = $self->{pbot}->{factoids}->{data}->{storage};
     my ($channel, $trigger, $keyword, $delim, $tochange, $changeto, $modifier, $url);
 
@@ -1400,8 +1373,7 @@ sub cmd_factchange {
     return "Changed: $trigger_name is $action";
 }
 
-sub cmd_top20 {
-    my ($self, $context) = @_;
+sub cmd_top20($self, $context) {
     my $factoids = $self->{pbot}->{factoids}->{data}->{storage};
     my %hash     = ();
     my $text     = "";
@@ -1419,7 +1391,8 @@ sub cmd_top20 {
             last if $i >= 20;
         }
 
-        $channel = "the global channel"                             if $channel eq '.*';
+        $channel = "the global channel" if $channel eq '.*';
+
         if ($i > 0) {
             return "Top $i referenced factoids for $channel: $text";
         } else {
@@ -1460,8 +1433,7 @@ sub cmd_top20 {
     }
 }
 
-sub cmd_histogram {
-    my ($self, $context) = @_;
+sub cmd_histogram($self, $context) {
     my $factoids = $self->{pbot}->{factoids}->{data}->{storage};
     my %owners;
     my $factoid_count = 0;
@@ -1485,8 +1457,7 @@ sub cmd_histogram {
     return "/say $factoid_count factoids, top $top submitters:\n$text";
 }
 
-sub cmd_count {
-    my ($self, $context) = @_;
+sub cmd_count($self, $context) {
     my $factoids = $self->{pbot}->{factoids}->{data}->{storage};
     my $i        = 0;
     my $total    = 0;
@@ -1518,9 +1489,7 @@ sub cmd_count {
     }
 }
 
-sub log_factoid {
-    my ($self, $channel, $trigger, $hostmask, $msg, $dont_save_undo) = @_;
-
+sub log_factoid($self, $channel, $trigger, $hostmask, $msg, $dont_save_undo = 0) {
     $channel = lc $channel;
     $trigger = lc $trigger;
 
@@ -1568,9 +1537,7 @@ sub log_factoid {
     $self->{pbot}->{logger}->log("Error storing undo: $@\n") if $@;
 }
 
-sub find_factoid_with_optional_channel {
-    my ($self, $from, $arguments, $command, %opts) = @_;
-
+sub find_factoid_with_optional_channel($self, $from, $arguments, $command, %opts) {
     my %default_opts = (
         usage         => undef,
         explicit      => 0,
@@ -1667,8 +1634,7 @@ sub find_factoid_with_optional_channel {
     return ($channel, $trigger, $remaining_args);
 }
 
-sub hash_differences_as_string {
-    my ($self, $old, $new) = @_;
+sub hash_differences_as_string($self, $old, $new) {
     my @exclude = qw/created_on last_referenced_in last_referenced_on ref_count ref_user edited_by edited_on/;
     my %diff;
 
@@ -1687,35 +1653,45 @@ sub hash_differences_as_string {
     my $changes = "";
     my $comma   = "";
     foreach my $key (sort keys %diff) {
-        if   (defined $diff{$key}) { $changes .= "$comma$key => $diff{$key}"; }
-        else                       { $changes .= "$comma$key"; }
+        if (defined $diff{$key}) {
+            $changes .= "$comma$key => $diff{$key}";
+        } else {
+            $changes .= "$comma$key";
+        }
         $comma = ", ";
     }
     return $changes;
 }
 
-sub list_undo_history {
-    my ($self, $undos, $start_from) = @_;
-
+sub list_undo_history($self, $undos, $start_from = undef) {
     $start_from-- if defined $start_from;
     $start_from = 0 if not defined $start_from or $start_from < 0;
 
     my $result = "";
     if ($start_from > @{$undos->{list}}) {
-        if   (@{$undos->{list}} == 1) { return "But there is only one revision available."; }
-        else                          { return "But there are only " . @{$undos->{list}} . " revisions available."; }
+        if (@{$undos->{list}} == 1) {
+            return "But there is only one revision available.";
+        } else {
+            return "But there are only " . @{$undos->{list}} . " revisions available.";
+        }
     }
 
     if ($start_from == 0) {
-        if   ($undos->{idx} == 0) { $result .= "*1*: "; }
-        else                      { $result .= "1: "; }
+        if ($undos->{idx} == 0) {
+            $result .= "*1*: ";
+        } else {
+            $result .= "1: ";
+        }
         $result .= $self->hash_differences_as_string({}, $undos->{list}->[0]) . ";\n\n";
         $start_from++;
     }
 
     for (my $i = $start_from; $i < @{$undos->{list}}; $i++) {
-        if   ($i == $undos->{idx}) { $result .= "*" . ($i + 1) . "*: "; }
-        else                       { $result .= ($i + 1) . ": "; }
+        if ($i == $undos->{idx}) {
+            $result .= "*" . ($i + 1) . "*: ";
+        } else {
+            $result .= ($i + 1) . ": ";
+        }
         $result .= $self->hash_differences_as_string($undos->{list}->[$i - 1], $undos->{list}->[$i]);
         $result .= ";\n\n";
     }

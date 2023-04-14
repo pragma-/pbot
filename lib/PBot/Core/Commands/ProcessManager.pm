@@ -13,9 +13,7 @@ use parent 'PBot::Core::Class';
 use Time::Duration qw/concise duration/;
 use Time::HiRes qw/gettimeofday/;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # process manager bot commands
     $self->{pbot}->{commands}->register(sub { $self->cmd_ps(@_) },   'ps',   0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_kill(@_) }, 'kill', 1);
@@ -24,9 +22,7 @@ sub initialize {
     $self->{pbot}->{capabilities}->add('admin', 'can-kill', 1);
 }
 
-sub cmd_ps {
-    my ($self, $context) = @_;
-
+sub cmd_ps($self, $context) {
     my $usage = 'Usage: ps [-atu]; -a show all information; -t show running time; -u show user/channel';
 
     my ($show_all, $show_user, $show_running_time);
@@ -82,9 +78,7 @@ sub cmd_ps {
     return $result;
 }
 
-sub cmd_kill {
-    my ($self, $context) = @_;
-
+sub cmd_kill($self, $context) {
     my $usage = 'Usage: kill [-a] [-t <seconds>] [-s <signal>]  [pids...]; -a kill all processes; -t <seconds> kill processes running longer than <seconds>; -s send <signal> to processes';
 
     my ($kill_all, $kill_time, $signal);

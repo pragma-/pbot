@@ -10,9 +10,7 @@ use parent 'PBot::Core::Class';
 
 use PBot::Imports;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{storage} = PBot::Core::Storage::HashObject->new(
         pbot     => $conf{pbot},
         name     => 'Users',
@@ -25,12 +23,10 @@ sub initialize {
     $self->load;
 }
 
-sub add_user {
-    my ($self, $name, $channels, $hostmasks, $capabilities, $password, $dont_save) = @_;
+sub add_user($self, $name, $channels, $hostmasks, $capabilities = 'none', $password = undef, $dont_save = 0) {
     $channels = 'global' if $channels !~ m/^#/;
 
-    $capabilities //= 'none';
-    $password     //= $self->{pbot}->random_nick(16);
+    $password //= $self->{pbot}->random_nick(16);
 
     my $data = {
         channels  => $channels,
@@ -49,16 +45,13 @@ sub add_user {
     return $data;
 }
 
-sub remove_user {
-    my ($self, $name) = @_;
+sub remove_user($self, $name) {
     my $result = $self->{storage}->remove($name);
     $self->rebuild_user_index;
     return $result;
 }
 
-sub load {
-    my $self = shift;
-
+sub load($self) {
     $self->{storage}->load;
     $self->rebuild_user_index;
 
@@ -75,14 +68,11 @@ sub load {
     $self->{pbot}->{logger}->log("  $i users loaded.\n");
 }
 
-sub save {
-    my ($self) = @_;
+sub save($self) {
     $self->{storage}->save;
 }
 
-sub rebuild_user_index {
-    my ($self) = @_;
-
+sub rebuild_user_index($self) {
     $self->{user_index} = {};
     $self->{user_cache} = {};
 
@@ -101,25 +91,21 @@ sub rebuild_user_index {
     }
 }
 
-sub cache_user {
-    my ($self, $channel, $hostmask, $username, $account_mask) = @_;
+sub cache_user($self, $channel, $hostmask, $username, $account_mask) {
     return if not length $username or not length $account_mask;
     $self->{user_cache}->{lc $channel}->{lc $hostmask} = [ $username, $account_mask ];
 }
 
-sub decache_user {
-    my ($self, $channel, $hostmask) = @_;
+sub decache_user($self, $channel, $hostmask) {
     my $lc_channel = lc $channel;
     my $lc_hostmask = lc $hostmask;
     delete $self->{user_cache}->{$lc_channel}->{$lc_hostmask} if exists $self->{user_cache}->{$lc_channel};
     delete $self->{user_cache}->{global}->{$lc_hostmask};
 }
 
-sub find_user_account {
-    my ($self, $channel, $hostmask, $any_channel) = @_;
+sub find_user_account($self, $channel, $hostmask, $any_channel = 0) {
     $channel  = lc $channel;
     $hostmask = lc $hostmask;
-    $any_channel //= 0;
 
     # first try to find an exact match
 
@@ -167,9 +153,7 @@ sub find_user_account {
     return (undef, $hostmask);
 }
 
-sub find_user {
-    my ($self, $channel, $hostmask, $any_channel) = @_;
-    $any_channel //= 0;
+sub find_user($self, $channel, $hostmask, $any_channel = 0) {
     my ($found_channel, $found_hostmask) = $self->find_user_account($channel, $hostmask, $any_channel);
     return undef if not defined $found_channel;
     my $name = $self->{user_index}->{$found_channel}->{$found_hostmask};
@@ -177,16 +161,14 @@ sub find_user {
     return wantarray ? ($self->{storage}->get_data($name), $name) : $self->{storage}->get_data($name);
 }
 
-sub find_admin {
-    my ($self, $from, $hostmask) = @_;
+sub find_admin($self, $from, $hostmask) {
     my $user = $self->find_user($from, $hostmask);
     return undef if not defined $user;
     return undef if not $self->{pbot}->{capabilities}->userhas($user, 'admin');
     return $user;
 }
 
-sub login {
-    my ($self, $channel, $hostmask, $password) = @_;
+sub login($self, $channel, $hostmask, $password = undef) {
     my $user         = $self->find_user($channel, $hostmask);
     my $channel_text = $channel eq 'global' ? '' : " for $channel";
 
@@ -207,35 +189,30 @@ sub login {
     return "Logged into " . $self->{storage}->get_key_name($name) . " ($hostmask)$channel_text.";
 }
 
-sub logout {
-    my ($self, $channel, $hostmask) = @_;
+sub logout($self, $channel, $hostmask) {
     my $user = $self->find_user($channel, $hostmask);
     delete $user->{loggedin} if defined $user;
 }
 
-sub loggedin {
-    my ($self, $channel, $hostmask) = @_;
+sub loggedin($self, $channel, $hostmask) {
     my $user = $self->find_user($channel, $hostmask);
     return $user if defined $user and $user->{loggedin};
     return undef;
 }
 
-sub loggedin_admin {
-    my ($self, $channel, $hostmask) = @_;
+sub loggedin_admin($self, $channel, $hostmask) {
     my $user = $self->loggedin($channel, $hostmask);
     return $user if defined $user and $self->{pbot}->{capabilities}->userhas($user, 'admin');
     return undef;
 }
 
-sub get_user_metadata {
-    my ($self, $channel, $hostmask, $key) = @_;
+sub get_user_metadata($self, $channel, $hostmask, $key) {
     my $user = $self->find_user($channel, $hostmask, 1);
     return $user->{lc $key} if $user;
     return undef;
 }
 
-sub get_loggedin_user_metadata {
-    my ($self, $channel, $hostmask, $key) = @_;
+sub get_loggedin_user_metadata($self, $channel, $hostmask, $key) {
     my $user = $self->loggedin($channel, $hostmask);
     return $user->{lc $key} if $user;
     return undef;

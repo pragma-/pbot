@@ -15,9 +15,7 @@ use JSON;
 
 sub initialize {}
 
-sub execute {
-    my ($self, $context) = @_;
-
+sub execute($self, $context) {
     my $factoids = $self->{pbot}->{factoids}->{data}->{storage};
 
     my $interpolate = $factoids->get_data($context->{channel}, $context->{keyword}, 'interpolate');

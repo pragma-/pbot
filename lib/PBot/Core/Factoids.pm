@@ -19,9 +19,7 @@ use PBot::Core::Factoids::Modifiers;
 use PBot::Core::Factoids::Selectors;
 use PBot::Core::Factoids::Variables;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{data} = PBot::Core::Factoids::Data->new(%conf);
     $self->{data}->load;
 

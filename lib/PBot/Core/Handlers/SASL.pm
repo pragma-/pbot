@@ -14,9 +14,7 @@ use POSIX qw/EXIT_FAILURE/;
 use Encode;
 use MIME::Base64;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.authenticate',    sub { $self->on_sasl_authenticate (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.rpl_loggedin',    sub { $self->on_rpl_loggedin      (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.rpl_loggedout',   sub { $self->on_rpl_loggedout     (@_) });
@@ -29,9 +27,7 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.rpl_saslmechs',   sub { $self->on_rpl_saslmechs     (@_) });
 }
 
-sub on_sasl_authenticate {
-    my ($self, $event_type, $event) = @_;
-
+sub on_sasl_authenticate($self, $event_type, $event) {
     my $nick     = $self->{pbot}->{registry}->get_value('irc', 'identify_nick'); # try identify_nick
        $nick   //= $self->{pbot}->{registry}->get_value('irc', 'botnick');       # fallback to botnick
     my $password = $self->{pbot}->{registry}->get_value('irc', 'identify_password');
@@ -59,57 +55,48 @@ sub on_sasl_authenticate {
     return 1;
 }
 
-sub on_rpl_loggedin {
-    my ($self, $event_type, $event) = @_;
+sub on_rpl_loggedin($self, $event_type, $event) {
     $self->{pbot}->{logger}->log($event->{args}[3] . "\n");
     return 1;
 }
 
-sub on_rpl_loggedout {
-    my ($self, $event_type, $event) = @_;
+sub on_rpl_loggedout($self, $event_type, $event) {
     $self->{pbot}->{logger}->log($event->{args}[1] . "\n");
     return 1;
 }
 
-sub on_err_nicklocked {
-    my ($self, $event_type, $event) = @_;
+sub on_err_nicklocked($self, $event_type, $event) {
     $self->{pbot}->{logger}->log($event->{args}[1] . "\n");
     $self->{pbot}->exit(EXIT_FAILURE);
 }
 
-sub on_rpl_saslsuccess {
-    my ($self, $event_type, $event) = @_;
+sub on_rpl_saslsuccess($self, $event_type, $event) {
     $self->{pbot}->{logger}->log($event->{args}[1] . "\n");
     $event->{conn}->sl("CAP END");
     return 1;
 }
 
-sub on_err_saslfail {
-    my ($self, $event_type, $event) = @_;
+sub on_err_saslfail($self, $event_type, $event) {
     $self->{pbot}->{logger}->log($event->{args}[1] . "\n");
     $self->{pbot}->exit(EXIT_FAILURE);
 }
 
-sub on_err_sasltoolong {
-    my ($self, $event_type, $event) = @_;
+sub on_err_sasltoolong($self, $event_type, $event) {
     $self->{pbot}->{logger}->log($event->{args}[1] . "\n");
     $self->{pbot}->exit(EXIT_FAILURE);
 }
 
-sub on_err_saslaborted {
-    my ($self, $event_type, $event) = @_;
+sub on_err_saslaborted($self, $event_type, $event) {
     $self->{pbot}->{logger}->log($event->{args}[1] . "\n");
     $self->{pbot}->exit(EXIT_FAILURE);
 }
 
-sub on_err_saslalready {
-    my ($self, $event_type, $event) = @_;
+sub on_err_saslalready($self, $event_type, $event) {
     $self->{pbot}->{logger}->log($event->{args}[1] . "\n");
     return 1;
 }
 
-sub on_rpl_saslmechs {
-    my ($self, $event_type, $event) = @_;
+sub on_rpl_saslmechs($self, $event_type, $event) {
     $self->{pbot}->{logger}->log("SASL mechanism not available.\n");
     $self->{pbot}->{logger}->log("Available mechanisms are: $event->{args}[1]\n");
     $self->{pbot}->exit(EXIT_FAILURE);

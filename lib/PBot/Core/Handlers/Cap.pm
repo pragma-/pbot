@@ -12,18 +12,14 @@ use parent 'PBot::Core::Class';
 
 use POSIX qw/EXIT_FAILURE/;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # IRCv3 client capabilities
     $self->{pbot}->{event_dispatcher}->register_handler('irc.cap', sub { $self->on_cap(@_) });
 }
 
 # TODO: CAP NEW and CAP DEL
 
-sub on_cap {
-    my ($self, $event_type, $event) = @_;
-
+sub on_cap($self, $event_type, $event) {
     if ($event->{args}[0] eq 'LS') {
         my $capabilities;
         my $caps_listed = 0;
@@ -88,9 +84,7 @@ sub on_cap {
     return 1;
 }
 
-sub request_caps {
-    my ($self, $event) = @_;
-
+sub request_caps($self, $event) {
     # configure client capabilities that PBot currently supports
     my %desired_caps = (
         'account-notify' => 1,

@@ -37,16 +37,11 @@ use Unicode::Truncate;
 #
 # if $max_length is 0, no truncation occurs.
 
-sub validate_string {
-    my ($string, $max_length) = @_;
-
+sub validate_string($string, $max_length = 1024 * 8) {
     if (not defined $string or not length $string) {
         # nothing to validate; return as-is.
         return $string;
     }
-
-    # set default max length if none given
-    $max_length //= 1024 * 8;
 
     local $@;
     eval {
@@ -86,9 +81,7 @@ sub validate_string {
 # validates the string.
 # safely performs Unicode truncation given a byte length, handles
 # unwanted characters, etc.
-sub validate_this_string {
-    my ($string, $max_length) = @_;
-
+sub validate_this_string($string, $max_length = 1024 * 8) {
     # truncate safely
     if ($max_length > 0) {
         $string = encode('UTF-8', $string);

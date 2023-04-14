@@ -13,9 +13,7 @@ use parent 'PBot::Core::Class';
 use Time::Duration;
 use Time::HiRes qw/gettimeofday/;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # register commands
     $self->{pbot}->{commands}->register(sub { $self->cmd_op(@_) },      "op",      1);
     $self->{pbot}->{commands}->register(sub { $self->cmd_deop(@_) },    "deop",    1);
@@ -87,9 +85,7 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.nosuchnick',    sub { $self->on_nosuchnick(@_) });
 }
 
-sub on_inviting {
-    my ($self, $event_type, $event) = @_;
-
+sub on_inviting($self, $event_type, $event) {
     my ($botnick, $target, $channel) = $event->args;
 
     $self->{pbot}->{logger}->log("User $target invited to channel $channel.\n");
@@ -104,9 +100,7 @@ sub on_inviting {
     return 1;
 }
 
-sub on_useronchannel {
-    my ($self, $event_type, $event)   = @_;
-
+sub on_useronchannel($self, $event_type, $event) {
     my ($botnick, $target, $channel) = $event->args;
 
     $self->{pbot}->{logger}->log("User $target is already on channel $channel.\n");
@@ -121,9 +115,7 @@ sub on_useronchannel {
     return 1;
 }
 
-sub on_nosuchnick {
-    my ($self, $event_type, $event) = @_;
-
+sub on_nosuchnick($self, $event_type, $event) {
     my ($botnick, $target, $msg) = $event->args;
 
     $self->{pbot}->{logger}->log("$target: $msg\n");
@@ -142,8 +134,7 @@ sub on_nosuchnick {
     return 1;
 }
 
-sub cmd_invite {
-    my ($self, $context) = @_;
+sub cmd_invite($self, $context) {
     my ($channel, $target);
 
     if ($context->{from} !~ m/^#/) {
@@ -168,8 +159,7 @@ sub cmd_invite {
     return "";    # responses handled by events
 }
 
-sub generic_mode {
-    my ($self, $mode_flag, $mode_name, $context) = @_;
+sub generic_mode($self, $mode_flag, $mode_name, $context) {
     my $result = '';
     my $channel = $context->{from};
 
@@ -220,29 +210,23 @@ sub generic_mode {
     return $result;
 }
 
-sub cmd_op {
-    my ($self, $context) = @_;
+sub cmd_op($self, $context) {
     return $self->generic_mode('+o', 'op', $context);
 }
 
-sub cmd_deop {
-    my ($self, $context) = @_;
+sub cmd_deop($self, $context) {
     return $self->generic_mode('-o', 'deop', $context);
 }
 
-sub cmd_voice {
-    my ($self, $context) = @_;
+sub cmd_voice($self, $context) {
     return $self->generic_mode('+v', 'voice', $context);
 }
 
-sub cmd_devoice {
-    my ($self, $context) = @_;
+sub cmd_devoice($self, $context) {
     return $self->generic_mode('-v', 'devoice', $context);
 }
 
-sub cmd_mode {
-    my ($self, $context) = @_;
-
+sub cmd_mode($self, $context) {
     if (not length $context->{arguments}) { return "Usage: mode [channel] <arguments>"; }
 
     # add current channel as default channel
@@ -352,8 +336,7 @@ sub cmd_mode {
     else                             { return "";      }
 }
 
-sub cmd_ban {
-    my ($self, $context) = @_;
+sub cmd_ban($self, $context) {
     my ($target, $channel, $length) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 3);
 
     $channel = '' if not defined $channel;
@@ -431,9 +414,7 @@ sub cmd_ban {
     return $result;
 }
 
-sub cmd_unban {
-    my ($self, $context) = @_;
-
+sub cmd_unban($self, $context) {
     if (not defined $context->{from}) {
         $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
         return "";
@@ -483,8 +464,7 @@ sub cmd_unban {
     return "/msg $context->{nick} $target has been unbanned from $channel.";
 }
 
-sub cmd_mute {
-    my ($self, $context) = @_;
+sub cmd_mute($self, $context) {
     my ($target, $channel, $length) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 3);
 
     $channel = '' if not defined $channel;
@@ -564,9 +544,7 @@ sub cmd_mute {
     return $result;
 }
 
-sub cmd_unmute {
-    my ($self, $context) = @_;
-
+sub cmd_unmute($self, $context) {
     if (not defined $context->{from}) {
         $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
         return "";
@@ -613,9 +591,7 @@ sub cmd_unmute {
     return "/msg $context->{nick} $target has been unmuted in $channel.";
 }
 
-sub cmd_kick {
-    my ($self, $context) = @_;
-
+sub cmd_kick($self, $context) {
     my ($channel, $victim, $reason);
     my $arguments = $context->{arguments};
 
