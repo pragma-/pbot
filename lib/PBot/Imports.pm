@@ -18,7 +18,7 @@ sub import {
     # use warnings
     warnings->import::into($target);
 
-    # use feature ':5.16'
+    # use feature ':5.20'
     feature->import::into($target, ':5.20');
 
     # use utf8
