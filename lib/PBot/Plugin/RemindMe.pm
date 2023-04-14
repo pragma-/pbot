@@ -15,9 +15,7 @@ use DBI;
 use Time::Duration qw(ago concise duration);
 use Time::HiRes    qw(time);
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # register `remindme` bot command
     $self->{pbot}->{commands}->add(
         name   => 'remindme',
@@ -38,9 +36,7 @@ sub initialize {
     $self->enqueue_reminders;
 }
 
-sub unload {
-    my ($self) = @_;
-
+sub unload($self) {
     # close database
     $self->dbi_end;
 
@@ -52,9 +48,7 @@ sub unload {
 }
 
 # `remindme` bot command
-sub cmd_remindme {
-    my ($self, $context) = @_;
-
+sub cmd_remindme($self, $context) {
     if (not $self->{dbh}) {
         return "Internal error.";
     }
@@ -272,9 +266,7 @@ sub cmd_remindme {
 }
 
 # invoked whenever a reminder event is ready
-sub do_reminder {
-    my ($self, $id, $event) = @_;
-
+sub do_reminder($self, $id, $event) {
     my $reminder = $self->get_reminder($id);
 
     if (not defined $reminder) {
@@ -359,9 +351,7 @@ sub do_reminder {
 }
 
 # add a single reminder to the PBot event queue
-sub enqueue_reminder {
-    my ($self, $reminder, $timeout) = @_;
-
+sub enqueue_reminder($self, $reminder, $timeout) {
     $self->{pbot}->{event_queue}->enqueue_event(
         sub {
             my ($event) = @_;
@@ -373,9 +363,7 @@ sub enqueue_reminder {
 
 # load all reminders from SQLite database and add them
 # to PBot's event queue. typically used once at PBot start-up.
-sub enqueue_reminders {
-    my ($self) = @_;
-
+sub enqueue_reminders($self) {
     return if not $self->{dbh};
 
     my $reminders = eval {
@@ -403,9 +391,7 @@ sub enqueue_reminders {
     }
 }
 
-sub create_database {
-    my ($self) = @_;
-
+sub create_database($self) {
     return if not $self->{dbh};
 
     eval {
@@ -427,8 +413,7 @@ SQL
     $self->{pbot}->{logger}->log("RemindMe: create database failed: $@") if $@;
 }
 
-sub dbi_begin {
-    my ($self) = @_;
+sub dbi_begin($self) {
     eval {
         $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{filename}", "", "", {RaiseError => 1, PrintError => 0, AutoInactiveDestroy => 1, sqlite_unicode => 1})
           or die $DBI::errstr;
@@ -443,17 +428,14 @@ sub dbi_begin {
     }
 }
 
-sub dbi_end {
-    my ($self) = @_;
+sub dbi_end($self) {
     return if not $self->{dbh};
     $self->{dbh}->disconnect;
     delete $self->{dbh};
 }
 
 # add a reminder, to SQLite and the PBot event queue
-sub add_reminder {
-    my ($self, %args) = @_;
-
+sub add_reminder($self, %args) {
     # add reminder to SQLite database
     my $id = eval {
         my $sth = $self->{dbh}->prepare('INSERT INTO Reminders (account, channel, text, alarm, interval, repeats, created_on, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
@@ -491,9 +473,7 @@ sub add_reminder {
 }
 
 # delete a reminder by its id, from SQLite and the PBot event queue
-sub delete_reminder {
-    my ($self, $id, $dont_dequeue) = @_;
-
+sub delete_reminder($self, $id, $dont_dequeue) {
     return if not $self->{dbh};
 
     # remove from SQLite database
@@ -518,9 +498,7 @@ sub delete_reminder {
 }
 
 # update a reminder's data, in SQLite
-sub update_reminder {
-    my ($self, $id, $data) = @_;
-
+sub update_reminder($self, $id, $data) {
     eval {
         my $sql = 'UPDATE Reminders SET ';
 
@@ -549,9 +527,7 @@ sub update_reminder {
 }
 
 # get a single reminder by its id, from SQLite
-sub get_reminder {
-    my ($self, $id) = @_;
-
+sub get_reminder($self, $id) {
     my $reminder = eval {
         my $sth = $self->{dbh}->prepare('SELECT * FROM Reminders WHERE id = ?');
         $sth->execute($id);
@@ -567,9 +543,7 @@ sub get_reminder {
 }
 
 # get all reminders belonging to an account id, from SQLite
-sub get_reminders {
-    my ($self, $account) = @_;
-
+sub get_reminders($self, $account) {
     my $reminders = eval {
         my $sth = $self->{dbh}->prepare('SELECT * FROM Reminders WHERE account = ? ORDER BY id');
         $sth->execute($account);

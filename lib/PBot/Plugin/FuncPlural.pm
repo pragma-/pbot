@@ -10,8 +10,7 @@ use parent 'PBot::Plugin::Base';
 
 use PBot::Imports;
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{pbot}->{functions}->register(
         'plural',
         {
@@ -22,14 +21,11 @@ sub initialize {
     );
 }
 
-sub unload {
-    my $self = shift;
+sub unload($self) {
     $self->{pbot}->{functions}->unregister('plural');
 }
 
-sub pluralize_word {
-  my ($word) = @_;
-
+sub pluralize_word($word) {
   my @ignore = qw/trout fish tobacco music snow armor police dice caribou moose people sheep/;
 
   my %endings = (
@@ -83,9 +79,7 @@ sub pluralize_word {
   return $word;
 }
 
-sub pluralize {
-  my ($string) = @_;
-
+sub pluralize($string) {
   if ($string =~ m/(.*?) (containing|packed with|with what appears to be) (.*)/) {
     my $word = pluralize_word $1;
     return "$word $2 $3";
@@ -97,10 +91,8 @@ sub pluralize {
   }
 }
 
-sub func_plural {
-    my $self = shift @_;
-    my $text = "@_";
-    return pluralize($text);
+sub func_plural($self, @text) {
+    return pluralize("@text");
 }
 
 1;

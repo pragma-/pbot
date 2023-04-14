@@ -14,8 +14,7 @@ use PBot::Imports;
 use WWW::Google::CustomSearch;
 use HTML::Entities;
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{pbot}->{registry}->add_default('text', 'googlesearch', 'api_key', '');
     $self->{pbot}->{registry}->add_default('text', 'googlesearch', 'context', '');
 
@@ -29,13 +28,11 @@ sub initialize {
     );
 }
 
-sub unload {
-    my ($self) = @_;
+sub unload($self) {
     $self->{pbot}->{commands}->remove('google');
 }
 
-sub cmd_googlesearch {
-    my ($self, $context) = @_;
+sub cmd_googlesearch($self, $context) {
     return "Usage: google [-n <number of results>] query\n" if not length $context->{arguments};
 
     my $matches = 3;
