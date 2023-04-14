@@ -20,21 +20,17 @@ use parent 'PBot::Plugin::Base';
 
 use PBot::Imports;
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.public',  sub { $self->on_public(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.caction', sub { $self->on_public(@_) });
 }
 
-sub unload {
-    my ($self) = @_;
+sub unload($self) {
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.public');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.caction');
 }
 
-sub on_public {
-    my ($self, $event_type, $event) = @_;
-
+sub on_public($self, $event_type, $event) {
     my ($nick, $user, $host, $msg) = ($event->nick, $event->user, $event->host, $event->args);
 
     my $channel = lc $event->{to}[0];

@@ -2,7 +2,7 @@
 #
 # Purpose: Ranks players by various keywords.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2021-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Plugin::Spinach::Rank;
@@ -15,56 +15,47 @@ use lib "$FindBin::RealBin/../../..";
 use PBot::Plugin::Spinach::Stats;
 use Math::Expression::Evaluator;
 
-sub new {
-    Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference") if ref $_[1] eq 'HASH';
-    my ($class, %conf) = @_;
+sub new($class, %conf) {
     my $self = bless {}, $class;
     $self->initialize(%conf);
     return $self;
 }
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{pbot}     = $conf{pbot}     // Carp::croak("Missing pbot reference to " . __FILE__);
     $self->{channel}  = $conf{channel}  // Carp::croak("Missing channel reference to " . __FILE__);
     $self->{filename} = $conf{filename} // 'stats.sqlite';
     $self->{stats} = PBot::Plugin::Spinach::Stats->new(pbot => $self->{pbot}, filename => $self->{filename});
 }
 
-sub sort_generic {
-    my ($self, $key) = @_;
+sub sort_generic($self, $key) {
     if   ($self->{rank_direction} eq '+') { return $b->{$key} <=> $a->{$key}; }
     else                                  { return $a->{$key} <=> $b->{$key}; }
 }
 
-sub print_generic {
-    my ($self, $key, $player) = @_;
+sub print_generic($self, $key, $player) {
     return undef if $player->{games_played} == 0;
     return "$player->{nick}: $player->{$key}";
 }
 
-sub print_avg_score {
-    my ($self, $player) = @_;
+sub print_avg_score($self, $player) {
     return undef if $player->{games_played} == 0;
     my $result = int $player->{avg_score};
     return "$player->{nick}: $result";
 }
 
-sub sort_bad_lies {
-    my ($self) = @_;
+sub sort_bad_lies($self) {
     if   ($self->{rank_direction} eq '+') { return $b->{questions_played} - $b->{good_lies} <=> $a->{questions_played} - $a->{good_lies}; }
     else                                  { return $a->{questions_played} - $a->{good_lies} <=> $b->{questions_played} - $b->{good_lies}; }
 }
 
-sub print_bad_lies {
-    my ($self, $player) = @_;
+sub print_bad_lies($self, $player) {
     return undef if $player->{games_played} == 0;
     my $result = $player->{questions_played} - $player->{good_lies};
     return "$player->{nick}: $result";
 }
 
-sub sort_mentions {
-    my ($self) = @_;
+sub sort_mentions($self) {
     if ($self->{rank_direction} eq '+') {
         return $b->{games_played} - $b->{times_first} - $b->{times_second} - $b->{times_third} <=> $a->{games_played} - $a->{times_first} - $a->{times_second} -
           $a->{times_third};
@@ -74,16 +65,13 @@ sub sort_mentions {
     }
 }
 
-sub print_mentions {
-    my ($self, $player) = @_;
+sub print_mentions($self, $player) {
     return undef if $player->{games_played} == 0;
     my $result = $player->{games_played} - $player->{times_first} - $player->{times_second} - $player->{times_third};
     return "$player->{nick}: $result";
 }
 
-sub sort_expr {
-    my ($self) = @_;
-
+sub sort_expr($self) {
     my $result = eval {
         my $result_a = $self->{expr}->val(
             {
@@ -135,9 +123,7 @@ sub sort_expr {
     return $result;
 }
 
-sub print_expr {
-    my ($self, $player) = @_;
-
+sub print_expr($self, $player) {
     return undef if $player->{games_played} == 0;
 
     my $result = eval {
@@ -169,9 +155,7 @@ sub print_expr {
     return "$player->{nick}: $result";
 }
 
-sub rank {
-    my ($self, $arguments) = @_;
-
+sub rank($self, $arguments) {
     my %ranks = (
         highscore => {
             sort  => sub { $self->sort_generic('high_score', @_) },

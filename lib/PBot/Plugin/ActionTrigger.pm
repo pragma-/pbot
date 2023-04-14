@@ -43,9 +43,7 @@ use DBI;
 use Time::Duration qw/duration/;
 use Time::HiRes qw/gettimeofday/;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # register bot command
     $self->{pbot}->{commands}->add(
         name => 'actiontrigger',
@@ -73,9 +71,7 @@ sub initialize {
     $self->create_database;
 }
 
-sub unload {
-    my ($self) = @_;
-
+sub unload($self) {
     # close database
     $self->dbi_end;
 
@@ -94,9 +90,7 @@ sub unload {
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.kick');
 }
 
-sub cmd_actiontrigger {
-    my ($self, $context) = @_;
-
+sub cmd_actiontrigger($self, $context) {
     # database not available
     return "Internal error." if not $self->{dbh};
 
@@ -253,9 +247,7 @@ sub cmd_actiontrigger {
     }
 }
 
-sub create_database {
-    my $self = shift;
-
+sub create_database($self) {
     return if not $self->{dbh};
 
     eval {
@@ -275,9 +267,7 @@ SQL
     $self->{pbot}->{logger}->log("ActionTrigger create database failed: $@") if $@;
 }
 
-sub dbi_begin {
-    my ($self) = @_;
-
+sub dbi_begin($self) {
     eval {
         $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{filename}", "", "", {RaiseError => 1, PrintError => 0, AutoInactiveDestroy => 1, sqlite_unicode => 1})
           or die $DBI::errstr;
@@ -291,16 +281,13 @@ sub dbi_begin {
     }
 }
 
-sub dbi_end {
-    my ($self) = @_;
+sub dbi_end($self) {
     return if not $self->{dbh};
     $self->{dbh}->disconnect;
     delete $self->{dbh};
 }
 
-sub add_trigger {
-    my ($self, $channel, $trigger, $action, $owner, $cap_override, $ratelimit) = @_;
-
+sub add_trigger($self, $channel, $trigger, $action, $owner, $cap_override, $ratelimit) {
     return 0 if $self->get_trigger($channel, $trigger);
 
     eval {
@@ -316,17 +303,14 @@ sub add_trigger {
     return 1;
 }
 
-sub delete_trigger {
-    my ($self, $channel, $trigger) = @_;
+sub delete_trigger($self, $channel, $trigger) {
     return 0 if not $self->get_trigger($channel, $trigger);
     my $sth = $self->{dbh}->prepare('DELETE FROM Triggers WHERE channel = ? AND trigger = ?');
     $sth->execute(lc $channel, $trigger);
     return 1;
 }
 
-sub list_triggers {
-    my ($self, $channel) = @_;
-
+sub list_triggers($self, $channel) {
     my $triggers = eval {
         my $sth;
 
@@ -347,9 +331,7 @@ sub list_triggers {
     return @$triggers;
 }
 
-sub update_trigger {
-    my ($self, $channel, $trigger, $data) = @_;
-
+sub update_trigger($self, $channel, $trigger, $data) {
     eval {
         my $sql = 'UPDATE Triggers SET ';
 
@@ -374,9 +356,7 @@ sub update_trigger {
     $self->{pbot}->{logger}->log("Update trigger $channel/$trigger failed: $@\n") if $@;
 }
 
-sub get_trigger {
-    my ($self, $channel, $trigger) = @_;
-
+sub get_trigger($self, $channel, $trigger) {
     my $row = eval {
         my $sth = $self->{dbh}->prepare('SELECT * FROM Triggers WHERE channel = ? AND trigger = ?');
         $sth->execute(lc $channel, $trigger);
@@ -392,9 +372,7 @@ sub get_trigger {
     return $row;
 }
 
-sub on_kick {
-    my ($self, $event_type, $event) = @_;
-
+sub on_kick($self, $event_type, $event) {
     # don't handle this event if it was caused by a bot command
     return 0 if $event->{interpreted};
 
@@ -415,9 +393,7 @@ sub on_kick {
     return 0;
 }
 
-sub on_action {
-    my ($self, $event_type, $event) = @_;
-
+sub on_action($self, $event_type, $event) {
     my ($nick, $user, $host, $msg) = (
         $event->nick,
         $event->user,
@@ -433,14 +409,13 @@ sub on_action {
     return 0;
 }
 
-sub on_public {
-    my ($self, $event_type, $event) = @_;
-
+sub on_public($self, $event_type, $event) {
     my ($nick, $user, $host, $msg) = (
         $event->nick,
         $event->user,
         $event->host,
-        $event->args);
+        $event->args
+    );
 
     my $channel = $event->{to}[0];
 
@@ -448,9 +423,7 @@ sub on_public {
     return 0;
 }
 
-sub on_join {
-    my ($self, $event_type, $event) = @_;
-
+sub on_join($self, $event_type, $event) {
     my ($nick, $user, $host, $channel, $args) = (
         $event->nick,
         $event->user,
@@ -463,9 +436,7 @@ sub on_join {
     return 0;
 }
 
-sub on_departure {
-    my ($self, $event_type, $event) = @_;
-
+sub on_departure($self, $event_type, $event) {
     my ($nick, $user, $host, $channel, $args) = (
         $event->nick,
         $event->user,
@@ -478,9 +449,7 @@ sub on_departure {
     return 0;
 }
 
-sub check_trigger {
-    my ($self, $nick, $user, $host, $channel, $text) = @_;
-
+sub check_trigger($self, $nick, $user, $host, $channel, $text) {
     # database not available
     return 0 if not $self->{dbh};
 

@@ -14,21 +14,18 @@ use PBot::Imports;
 use Time::Duration qw/duration/;
 use Time::HiRes qw/gettimeofday/;
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.public',  sub { $self->on_public(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.caction', sub { $self->on_action(@_) });
     $self->{nicks} = {};
 }
 
-sub unload {
-    my ($self) = @_;
+sub unload($self) {
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.public');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.caction');
 }
 
-sub on_action {
-    my ($self, $event_type, $event) = @_;
+sub on_action($self, $event_type, $event) {
     my ($nick, $user, $host, $msg) = ($event->nick, $event->user, $event->host, $event->args);
     my $channel = $event->{to}[0];
     return 0 if $event->{interpreted};
@@ -36,8 +33,7 @@ sub on_action {
     return 0;
 }
 
-sub on_public {
-    my ($self, $event_type, $event) = @_;
+sub on_public($self, $event_type, $event) {
     my ($nick, $user, $host, $msg) = ($event->nick, $event->user, $event->host, $event->args);
     my $channel = $event->{to}[0];
     return 0 if $event->{interpreted};
@@ -45,8 +41,7 @@ sub on_public {
     return 0;
 }
 
-sub check_flood {
-    my ($self, $nick, $user, $host, $channel, $msg) = @_;
+sub check_flood($self, $nick, $user, $host, $channel, $msg) {
     return 0 if not $self->{pbot}->{chanops}->can_gain_ops($channel);
 
     $channel = lc $channel;
@@ -76,13 +71,12 @@ sub check_flood {
     }
 }
 
-sub clear_old_nicks {
-    my ($self, $channel) = @_;
-    my $now = gettimeofday;
+sub clear_old_nicks($self, $channel) {
     return if not exists $self->{nicks}->{$channel};
+    my $now = gettimeofday;
 
     while (1) {
-        if   (@{$self->{nicks}->{$channel}} and $self->{nicks}->{$channel}->[0]->[0] <= $now - 15) {
+        if (@{$self->{nicks}->{$channel}} and $self->{nicks}->{$channel}->[0]->[0] <= $now - 15) {
             shift @{$self->{nicks}->{$channel}};
         } else {
             last;

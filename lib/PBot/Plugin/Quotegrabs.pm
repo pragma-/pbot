@@ -23,8 +23,7 @@ use PBot::Core::Utils::ValidateString;
 
 use POSIX qw(strftime);
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{filename} = $conf{quotegrabs_file} // $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/quotegrabs.sqlite3';
 
     $self->{database} = PBot::Plugin::Quotegrabs::Storage::SQLite->new(pbot => $self->{pbot}, filename => $self->{filename});
@@ -39,8 +38,7 @@ sub initialize {
     $self->{pbot}->{commands}->register(sub { $self->cmd_show_random_quotegrab(@_) }, 'rq'  );
 }
 
-sub unload {
-    my ($self) = @_;
+sub unload($self) {
     $self->{pbot}->{commands}->unregister('grab');
     $self->{pbot}->{commands}->unregister('getq');
     $self->{pbot}->{commands}->unregister('delq');
@@ -50,9 +48,7 @@ sub unload {
 
 sub uniq { my %seen; grep !$seen{$_}++, @_ }
 
-sub export_quotegrabs {
-    my $self = shift;
-
+sub export_quotegrabs($self) {
     $self->{export_path} = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/quotegrabs.html';
 
     my $quotegrabs = $self->{database}->get_all_quotegrabs;
@@ -153,9 +149,7 @@ sub export_quotegrabs {
     return "$i quotegrabs exported.";
 }
 
-sub cmd_grab_quotegrab {
-    my ($self, $context) = @_;
-
+sub cmd_grab_quotegrab($self, $context) {
     if (not length $context->{arguments}) {
         return
           "Usage: grab <nick> [history [channel]] [+ <nick> [history [channel]] ...] -- where [history] is an optional regex argument; e.g., to grab a message containing 'pizza', use `grab nick pizza`; you can chain grabs with + to grab multiple messages";
@@ -264,9 +258,7 @@ sub cmd_grab_quotegrab {
     }
 }
 
-sub cmd_delete_quotegrab {
-    my ($self, $context) = @_;
-
+sub cmd_delete_quotegrab($self, $context) {
     my $quotegrab = $self->{database}->get_quotegrab($context->{arguments});
 
     if (not defined $quotegrab) {
@@ -293,9 +285,7 @@ sub cmd_delete_quotegrab {
     }
 }
 
-sub cmd_show_quotegrab {
-    my ($self, $context) = @_;
-
+sub cmd_show_quotegrab($self, $context) {
     my $quotegrab = $self->{database}->get_quotegrab($context->{arguments});
 
     if (not defined $quotegrab) {
@@ -316,9 +306,7 @@ sub cmd_show_quotegrab {
     }
 }
 
-sub cmd_show_random_quotegrab {
-    my ($self, $context) = @_;
-
+sub cmd_show_random_quotegrab($self, $context) {
     my $usage = 'Usage: rq [nick [channel [text]]] [-c <channel>] [-t <text>]';
 
     my ($nick_search, $channel_search, $text_search);

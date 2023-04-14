@@ -20,9 +20,7 @@ $Data::Dumper::Sortkeys = 1;
 
 # This plugin was contributed by mannito, based on an earlier version of Battleship.pm
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{pbot}->{commands}->add(
         name   => 'connect4',
         help   => 'Connect-4 board game',
@@ -38,8 +36,7 @@ sub initialize {
     $self->create_states;
 }
 
-sub unload {
-    my $self = shift;
+sub unload($self) {
     $self->{pbot}->{commands}->remove('connect4');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.part');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.quit');
@@ -47,8 +44,7 @@ sub unload {
     $self->{pbot}->{event_queue}->dequeue_event('connect4 loop');
 }
 
-sub on_kick {
-    my ($self, $event_type, $event) = @_;
+sub on_kick($self, $event_type, $event) {
     my ($nick, $user, $host)  = ($event->nick, $event->user, $event->host);
     my ($victim, $reason) = ($event->to, $event->{args}[1]);
     my $channel = $event->{args}[0];
@@ -57,8 +53,7 @@ sub on_kick {
     return 0;
 }
 
-sub on_departure {
-    my ($self, $event_type, $event) = @_;
+sub on_departure($self, $event_type, $event) {
     my ($nick, $user, $host, $channel) = ($event->nick, $event->user, $event->host, $event->to);
     my $type = uc $event->type;
     return 0 if $type ne 'QUIT' and lc $channel ne $self->{channel};
@@ -99,8 +94,7 @@ my $MAX_NX              = 80;
 my $MAX_NY              = 12;
 
 # challenge options: CONNS:ROWSxCOLS
-sub parse_challenge {
-    my ($self, $options) = @_;
+sub parse_challenge($self, $options) {
     my ($conns, $xy, $nx, $ny);
 
     "x" =~ /x/;    # clear $1, $2 ...
@@ -132,16 +126,18 @@ sub parse_challenge {
     return 0;
 }
 
-sub cmd_connect4 {
-    my ($self, $context) = @_;
-    my $err;
-
+sub cmd_connect4($self, $context) {
     $context->{arguments} =~ s/^\s+|\s+$//g;
 
     my $usage = "Usage: connect4 challenge|accept|play|board|quit|players|kick|abort; for more information about a command: connect4 help <command>";
 
     my ($command, $arguments, $options) = split / /, $context->{arguments}, 3;
-    $command = lc $command;
+
+    if (defined $command) {
+        $command = lc $command;
+    } else {
+        $command = '';
+    }
 
     given ($command) {
         when ('help') {
@@ -163,6 +159,8 @@ sub cmd_connect4 {
             $self->{N_X}         = $DEFAULT_NX;
             $self->{N_Y}         = $DEFAULT_NY;
             $self->{CONNECTIONS} = $DEFAULT_CONNECTIONS;
+
+            my $err;
 
             if ((not length $arguments) || ($arguments =~ m/^\d+.*$/ && not($err = $self->parse_challenge($arguments)))) {
                 $self->{current_state} = 'accept';
@@ -351,9 +349,7 @@ sub cmd_connect4 {
     return "";
 }
 
-sub player_left {
-    my ($self, $nick, $user, $host) = @_;
-
+sub player_left($self, $nick, $user, $host) {
     my $id      = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
     my $removed = 0;
 
@@ -371,8 +367,7 @@ sub player_left {
     }
 }
 
-sub send_message {
-    my ($self, $to, $text, $delay) = @_;
+sub send_message($self, $to, $text, $delay) {
     $delay = 0 if not defined $delay;
     my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
     my $message = {
@@ -387,9 +382,7 @@ sub send_message {
     $self->{pbot}->{interpreter}->add_message_to_output_queue($to, $message, $delay);
 }
 
-sub run_one_state {
-    my $self = shift;
-
+sub run_one_state($self) {
     # check for naughty or missing players
     if ($self->{current_state} =~ /(?:move|accept)/) {
         my $removed = 0;
@@ -461,9 +454,7 @@ sub run_one_state {
     $self->{state_data}->{ticks}++;
 }
 
-sub create_states {
-    my $self = shift;
-
+sub create_states($self) {
     $self->{pbot}->{logger}->log("Connect4: Creating game state machine\n");
 
     $self->{previous_state} = '';
@@ -502,9 +493,7 @@ sub create_states {
 
 # connect4 stuff
 
-sub init_game {
-    my ($self, $nick1, $nick2) = @_;
-
+sub init_game($self, $nick1, $nick2) {
     $self->{chips} = 0;
     $self->{draw}  = 0;
 
@@ -522,8 +511,7 @@ sub init_game {
     $self->generate_board;
 }
 
-sub generate_board {
-    my ($self) = @_;
+sub generate_board($self) {
     my ($x, $y);
 
     for ($y = 0; $y < $self->{N_Y}; $y++) {
@@ -531,8 +519,7 @@ sub generate_board {
     }
 }
 
-sub check_one {
-    my ($self, $y, $x, $prev) = @_;
+sub check_one($self, $y, $x, $prev) {
     my $chip = $self->{board}[$y][$x];
 
     push @{$self->{winner_line}}, "$y $x";
@@ -542,8 +529,7 @@ sub check_one {
     return (scalar @{$self->{winner_line}} == $self->{CONNECTIONS}, $chip);
 }
 
-sub connected {
-    my ($self) = @_;
+sub connected($self) {
     my ($i, $j, $row, $col, $prev) = (0, 0, 0, 0, 0);
     my $rv;
 
@@ -605,8 +591,7 @@ sub connected {
     return 0;
 }
 
-sub column_top {
-    my ($self, $x) = @_;
+sub column_top($self, $x) {
     my $y;
 
     for ($y = 0; $y < $self->{N_Y}; $y++) {
@@ -615,8 +600,7 @@ sub column_top {
     return -1;    # shouldnt happen
 }
 
-sub play {
-    my ($self, $player, $location) = @_;
+sub play($self, $player, $location) {
     my ($draw, $c4, $x, $y);
 
     $x = $location - 1;
@@ -652,8 +636,7 @@ sub play {
     return 1;
 }
 
-sub show_board {
-    my ($self) = @_;
+sub show_board($self) {
     my ($x, $y, $buf, $chip, $c);
 
     $self->{pbot}->{logger}->log("showing board\n");
@@ -683,9 +666,11 @@ sub show_board {
     for ($y = 0; $y < $self->{N_Y}; $y++) {
         for ($x = 0; $x < $self->{N_X}; $x++) {
             $chip = $self->{board}->[$y][$x];
+
             my $rc = "$y $x";
 
             $c = $chip eq 'O' ? $color{red} : $color{yellow};
+
             if (grep(/^$rc$/, @{$self->{winner_line}})) { $c .= $color{bold}; }
 
             $buf .= $color{blue} . "[";
@@ -702,16 +687,13 @@ sub show_board {
 
 # state subroutines
 
-sub nogame {
-    my ($self, $state) = @_;
+sub nogame($self, $state) {
     $state->{result} = 'nogame';
     $self->{pbot}->{event_queue}->update_repeating('connect4 loop', 0);
     return $state;
 }
 
-sub accept {
-    my ($self, $state) = @_;
-
+sub accept($self, $state) {
     $state->{max_count} = 3;
 
     if ($state->{players}->[1]->{accepted}) {
@@ -743,16 +725,14 @@ sub accept {
     return $state;
 }
 
-sub genboard {
-    my ($self, $state) = @_;
+sub genboard($self, $state) {
     $self->init_game($state->{players}->[0]->{name}, $state->{players}->[1]->{name});
     $state->{max_count} = 3;
-    $state->{result}    = 'next';
+    $state->{result} = 'next';
     return $state;
 }
 
-sub showboard {
-    my ($self, $state) = @_;
+sub showboard($self, $state) {
     $self->send_message($self->{channel}, "Showing board ...");
     $self->show_board;
     $self->send_message($self->{channel}, "Fight! Anybody (players and spectators) can use `board` at any time to see latest version of the board!");
@@ -760,12 +740,14 @@ sub showboard {
     return $state;
 }
 
-sub playermove {
-    my ($self, $state) = @_;
-
+sub playermove($self, $state) {
     my $tock;
-    if   ($state->{first_tock}) { $tock = 3; }
-    else                        { $tock = 15; }
+
+    if ($state->{first_tock}) {
+        $tock = 3;
+    } else {
+        $tock = 15;
+    }
 
     if ($self->{player}->[$state->{current_player}]->{done}) {
         $self->{pbot}->{logger}->log("playermove: player $state->{current_player} done, nexting\n");
@@ -780,8 +762,8 @@ sub playermove {
             $self->send_message($self->{channel}, "$state->{players}->[$state->{current_player}]->{name} failed to play in time. They forfeit their turn!");
             $self->{player}->[$state->{current_player}]->{done}  = 1;
             $self->{player}->[!$state->{current_player}]->{done} = 0;
-            $state->{current_player}                             = !$state->{current_player};
-            $state->{result}                                     = 'next';
+            $state->{current_player} = !$state->{current_player};
+            $state->{result} = 'next';
             return $state;
         }
 
@@ -798,20 +780,18 @@ sub playermove {
     return $state;
 }
 
-sub checkplayer {
-    my ($self, $state) = @_;
-
-    if   ($self->{player}->[$state->{current_player}]->{won} || $self->{draw}) { $state->{result} = 'end'; }
-    else                                                                       { $state->{result} = 'next'; }
+sub checkplayer($self, $state) {
+    if   ($self->{player}->[$state->{current_player}]->{won} || $self->{draw}) {
+        $state->{result} = 'end';
+    } else {
+        $state->{result} = 'next';
+    }
     return $state;
 }
 
-sub gameover {
-    my ($self, $state) = @_;
-    my $buf;
+sub gameover($self, $state) {
     if ($state->{ticks} % 2 == 0) {
         $self->show_board;
-        $self->send_message($self->{channel}, $buf);
         $self->send_message($self->{channel}, "Game over!");
         $state->{players} = [];
         $state->{counter} = 0;

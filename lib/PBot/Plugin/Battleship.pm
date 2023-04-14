@@ -59,9 +59,7 @@ my %color = (
     reset      => "\x0F",
 );
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # register `battleship` bot command
     $self->{pbot}->{commands}->add(
         name   => 'battleship',
@@ -128,9 +126,7 @@ sub initialize {
     );
 }
 
-sub unload {
-    my ($self) = @_;
-
+sub unload($self) {
     # unregister `battleship` bot command
     $self->{pbot}->{commands}->remove('battleship');
 
@@ -148,9 +144,7 @@ sub unload {
 # disconnected with 'excess flood'). this event handler resumes the game once
 # the boards have finished transmitting, unless the game was manually paused
 # by a player.
-sub on_output_queue_empty {
-    my ($self) = @_; # we don't care about the other event arguments
-
+sub on_output_queue_empty($self, $event_type, $event) {
     # if we're paused waiting for the output queue, go ahead and unpause
     if ($self->{state_data}->{paused} == $self->{PAUSED_FOR_OUTPUT_QUEUE}) {
         $self->{state_data}->{paused} = 0;
@@ -160,9 +154,7 @@ sub on_output_queue_empty {
 }
 
 # `battleship` bot command
-sub cmd_battleship {
-    my ($self, $context) = @_;
-
+sub cmd_battleship($self, $context) {
     my $usage = "Usage: battleship challenge|accept|decline|ready|unready|bomb|board|score|players|pause|quit|kick|abort; see also: battleship help <command>";
 
     # strip leading and trailing whitespace
@@ -485,11 +477,7 @@ sub cmd_battleship {
 }
 
 # add a message to PBot output queue, optionally with a delay
-sub send_message {
-    my ($self, $to, $text, $delay) = @_;
-
-    $delay //= 0;
-
+sub send_message($self, $to, $text, $delay = 0) {
     my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
 
     my $message = {
@@ -506,16 +494,13 @@ sub send_message {
 }
 
 # get unambiguous internal id for player hostmask
-sub get_player_id {
-    my ($self, $nick, $user, $host) = @_;
+sub get_player_id($self, $nick, $user, $host) {
     my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
     return   $self->{pbot}->{messagehistory}->{database}->get_ancestor_id($id);
 }
 
 # create a new player hash
-sub new_player {
-    my ($self, $id, $nick) = @_;
-
+sub new_player($self, $id, $nick) {
     return {
         id           => $id,
         name         => $nick,
@@ -533,15 +518,13 @@ sub new_player {
 }
 
 # get a random number interval [lower, upper)
-sub number {
-    my ($self, $lower, $upper) = @_;
+sub number($self, $lower, $upper) {
     return int rand($upper - $lower) + $lower;
 }
 
 # battleship stuff
 
-sub begin_game_loop {
-    my ($self) = @_;
+sub begin_game_loop($self) {
     # add `battleship loop` event repeating at 1s interval
     $self->{pbot}->{event_queue}->enqueue_event(
         sub {
@@ -551,8 +534,7 @@ sub begin_game_loop {
     );
 }
 
-sub end_game_loop {
-    my ($self) = @_;
+sub end_game_loop($self) {
     # remove `battleship loop` event
 
     # repeating events get added back to event queue if we attempt to
@@ -564,9 +546,7 @@ sub end_game_loop {
     $self->{pbot}->{event_queue}->dequeue_event('battleship loop', 0);
 }
 
-sub init_game {
-    my ($self, $state) = @_;
-
+sub init_game($self, $state) {
     # default board dimensions
     $self->{N_X}   = $self->{BOARD_X};
     $self->{N_Y}   = $self->{BOARD_Y};
@@ -596,9 +576,7 @@ sub init_game {
 }
 
 # ensures a ship can be placed at this location (all desired tiles are ocean)
-sub check_ship_placement {
-    my ($self, $x, $y, $o, $l) = @_;
-
+sub check_ship_placement($self, $x, $y, $o, $l) {
     my ($xd, $yd, $i);
 
     if ($o == $self->{ORIENT_VERT}) {
@@ -625,9 +603,7 @@ sub check_ship_placement {
 }
 
 # attempt to place a ship on the battlefield
-sub place_ship {
-    my ($self, $player_id, $player_index, $ship) = @_;
-
+sub place_ship($self, $player_id, $player_index, $ship) {
     my ($x, $y, $o, $i, $l);
     my ($yd, $xd) = (0, 0);
 
@@ -702,9 +678,7 @@ sub place_ship {
     return 0;
 }
 
-sub place_whirlpool {
-    my ($self) = @_;
-
+sub place_whirlpool($self) {
     for (my $attempt = 0; $attempt < 1000; $attempt++) {
         my $x = $self->number(0, $self->{N_X});
         my $y = $self->number(0, $self->{N_Y});
@@ -724,9 +698,7 @@ sub place_whirlpool {
     return 0;
 }
 
-sub generate_battlefield {
-    my ($self) = @_;
-
+sub generate_battlefield($self) {
     # fill board with ocean
     for (my $x = 0; $x < $self->{N_X}; $x++) {
         for (my $y = 0; $y < $self->{N_Y}; $y++) {
@@ -760,9 +732,7 @@ sub generate_battlefield {
 }
 
 # we hit a ship; check if the ship has sunk
-sub check_sunk {
-    my ($self, $x, $y) = @_;
-
+sub check_sunk($self, $x, $y) {
     # alias to the tile we hit
     my $tile = $self->{board}->[$x][$y];
 
@@ -791,9 +761,7 @@ sub check_sunk {
     }
 }
 
-sub get_attack_text {
-    my ($self) = @_;
-
+sub get_attack_text($self) {
     my @attacks = (
         "launches torpedoes at",
         "launches nukes at",
@@ -810,9 +778,7 @@ sub get_attack_text {
 
 # checks if we hit whirlpool, ocean, ship, etc
 # reveals struck whirlpools
-sub check_hit {
-    my ($self, $state, $player, $location_data) = @_;
-
+sub check_hit($self, $state, $player, $location_data) {
     my ($x, $y, $location) = (
         $location_data->{x},
         $location_data->{y},
@@ -874,9 +840,7 @@ sub check_hit {
     return 0;
 }
 
-sub perform_attack {
-    my ($self, $state, $player) = @_;
-
+sub perform_attack($self, $state, $player) {
     $player->{shots}++;
 
     # random attack verb
@@ -975,9 +939,7 @@ sub perform_attack {
     }
 }
 
-sub list_players {
-    my ($self) = @_;
-
+sub list_players($self) {
     my @players;
 
     foreach my $player (@{$self->{state_data}->{players}}) {
@@ -989,9 +951,7 @@ sub list_players {
     }
 }
 
-sub show_scoreboard {
-    my ($self) = @_;
-
+sub show_scoreboard($self) {
     foreach my $player (sort { $b->{health} <=> $a->{health} } @{$self->{state_data}->{players}}) {
         next if $player->{removed};
 
@@ -1010,9 +970,7 @@ sub show_scoreboard {
     }
 }
 
-sub show_battlefield {
-    my ($self, $player_index, $nick) = @_;
-
+sub show_battlefield($self, $player_index, $nick) {
     $self->{pbot}->{logger}->log("Showing battlefield for player $player_index\n");
 
     my $player;
@@ -1173,9 +1131,7 @@ sub show_battlefield {
 # game state machine stuff
 
 # do one loop of the game engine
-sub run_one_state {
-    my ($self) = @_;
-
+sub run_one_state($self) {
     # don't run a game loop if we're paused
     if ($self->{state_data}->{paused}) {
         return;
@@ -1243,17 +1199,14 @@ sub run_one_state {
 }
 
 # skip directly to a state
-sub set_state {
-    my ($self, $newstate) = @_;
+sub set_state($self, $newstate) {
     $self->{previous_state} = $self->{current_state};
     $self->{current_state}  = $newstate;
     $self->{state_data}->{ticks} = 0;
 }
 
 # set up game state machine
-sub create_states {
-    my ($self) = @_;
-
+sub create_states($self) {
     $self->{pbot}->{logger}->log("Battleship: Creating game state machine\n");
 
     # initialize default state
@@ -1321,15 +1274,12 @@ sub create_states {
 
 # game states
 
-sub state_nogame {
-    my ($self, $state) = @_;
+sub state_nogame($self, $state) {
     $self->end_game_loop;
     $state->{trans} = 'nogame';
 }
 
-sub state_challenge {
-    my ($self, $state) = @_;
-
+sub state_challenge($self, $state) {
     # max number of times to perform tock action
     $state->{tock_limit} = 5;
 
@@ -1378,9 +1328,7 @@ sub state_challenge {
     }
 }
 
-sub state_genboard {
-    my ($self, $state) = @_;
-
+sub state_genboard($self, $state) {
     if (!$self->init_game($state)) {
         $self->{pbot}->{logger}->log("Failed to generate battlefield\n");
         $self->send_message($self->{channel}, "Failed to generate a suitable battlefield. Please try again.");
@@ -1391,9 +1339,7 @@ sub state_genboard {
     }
 }
 
-sub state_showboard {
-    my ($self, $state) = @_;
-
+sub state_showboard($self, $state) {
     # pause the game to send the boards to all the players.
     # this is due to output pacing; the messages are trickled out slowly
     # to avoid overflowing the ircd's receive queue. we do not want the
@@ -1411,9 +1357,7 @@ sub state_showboard {
     $state->{trans} = 'next';
 }
 
-sub state_move {
-    my ($self, $state) = @_;
-
+sub state_move($self, $state) {
     # allow 5 tocks before players have missed their move
     $state->{tock_limit} = 5;
 
@@ -1493,9 +1437,7 @@ sub state_move {
     $state->{trans} = 'wait';
 }
 
-sub state_attack {
-    my ($self, $state) = @_;
-
+sub state_attack($self, $state) {
     my $trans = 'next';
 
     foreach my $player (@{$state->{players}}) {
@@ -1515,9 +1457,7 @@ sub state_attack {
     $state->{trans} = $trans;
 }
 
-sub state_gameover {
-    my ($self, $state) = @_;
-
+sub state_gameover($self, $state) {
     if (@{$state->{players}} >= 2) {
         $self->show_battlefield($self->{BOARD_FINAL});
         $self->show_scoreboard;

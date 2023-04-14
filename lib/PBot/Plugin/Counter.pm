@@ -15,8 +15,7 @@ use DBI;
 use Time::Duration qw/duration/;
 use Time::HiRes qw/gettimeofday/;
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{pbot}->{commands}->register(sub { $self->cmd_counteradd(@_) },     'counteradd',     0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_counterdel(@_) },     'counterdel',     0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_counterreset(@_) },   'counterreset',   0);
@@ -31,8 +30,7 @@ sub initialize {
     $self->create_database;
 }
 
-sub unload {
-    my $self = shift;
+sub unload($self) {
     $self->{pbot}->{commands}->unregister('counteradd');
     $self->{pbot}->{commands}->unregister('counterdel');
     $self->{pbot}->{commands}->unregister('counterreset');
@@ -43,9 +41,7 @@ sub unload {
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.public');
 }
 
-sub create_database {
-    my $self = shift;
-
+sub create_database($self) {
     eval {
         $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{filename}", "", "", {RaiseError => 1, PrintError => 0, AutoInactiveDestroy => 1, sqlite_unicode => 1})
           or die $DBI::errstr;
@@ -76,8 +72,7 @@ SQL
     $self->{pbot}->{logger}->log("Counter create database failed: $@") if $@;
 }
 
-sub dbi_begin {
-    my ($self) = @_;
+sub dbi_begin($self) {
     eval { $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{filename}", "", "", {RaiseError => 1, PrintError => 0, AutoInactiveDestroy => 1}) or die $DBI::errstr; };
 
     if ($@) {
@@ -88,27 +83,26 @@ sub dbi_begin {
     }
 }
 
-sub dbi_end {
-    my ($self) = @_;
+sub dbi_end($self) {
     $self->{dbh}->disconnect;
 }
 
-sub add_counter {
-    my ($self, $owner, $channel, $name, $description) = @_;
-
+sub add_counter($self, $owner, $channel, $name, $description) {
     my ($desc, $timestamp) = $self->get_counter($channel, $name);
+
     if (defined $desc) { return 0; }
 
     eval {
         my $sth = $self->{dbh}->prepare('INSERT INTO Counters (channel, name, description, timestamp, created_on, created_by, counter) VALUES (?, ?, ?, ?, ?, ?, ?)');
-        $sth->bind_param(1, lc $channel);
-        $sth->bind_param(2, lc $name);
-        $sth->bind_param(3, $description);
-        $sth->bind_param(4, scalar gettimeofday);
-        $sth->bind_param(5, scalar gettimeofday);
-        $sth->bind_param(6, $owner);
-        $sth->bind_param(7, 0);
-        $sth->execute();
+        $sth->execute(
+            lc $channel,
+            lc $name,
+            $description,
+            scalar gettimeofday,
+            scalar gettimeofday,
+            $owner,
+            0,
+        );
     };
 
     if ($@) {
@@ -118,9 +112,7 @@ sub add_counter {
     return 1;
 }
 
-sub reset_counter {
-    my ($self, $channel, $name) = @_;
-
+sub reset_counter($self, $channel, $name) {
     my ($description, $timestamp, $counter) = $self->get_counter($channel, $name);
     if (not defined $description) { return (undef, undef); }
 
@@ -140,9 +132,7 @@ sub reset_counter {
     return ($description, $timestamp);
 }
 
-sub delete_counter {
-    my ($self, $channel, $name) = @_;
-
+sub delete_counter($self, $channel, $name) {
     my ($description, $timestamp) = $self->get_counter($channel, $name);
     if (not defined $description) { return 0; }
 
@@ -160,9 +150,7 @@ sub delete_counter {
     return 1;
 }
 
-sub list_counters {
-    my ($self, $channel) = @_;
-
+sub list_counters($self, $channel) {
     my $counters = eval {
         my $sth = $self->{dbh}->prepare('SELECT name FROM Counters WHERE channel = ?');
         $sth->bind_param(1, lc $channel);
@@ -174,9 +162,7 @@ sub list_counters {
     return map { $_->[0] } @$counters;
 }
 
-sub get_counter {
-    my ($self, $channel, $name) = @_;
-
+sub get_counter($self, $channel, $name) {
     my ($description, $time, $counter, $created_on, $created_by) = eval {
         my $sth = $self->{dbh}->prepare('SELECT description, timestamp, counter, created_on, created_by FROM Counters WHERE channel = ? AND name = ?');
         $sth->bind_param(1, lc $channel);
@@ -193,9 +179,7 @@ sub get_counter {
     return ($description, $time, $counter, $created_on, $created_by);
 }
 
-sub add_trigger {
-    my ($self, $channel, $trigger, $target) = @_;
-
+sub add_trigger($self, $channel, $trigger, $target) {
     my $exists = $self->get_trigger($channel, $trigger);
     if (defined $exists) { return 0; }
 
@@ -214,9 +198,7 @@ sub add_trigger {
     return 1;
 }
 
-sub delete_trigger {
-    my ($self, $channel, $trigger) = @_;
-
+sub delete_trigger($self, $channel, $trigger) {
     my $target = $self->get_trigger($channel, $trigger);
     if (not defined $target) { return 0; }
 
@@ -227,9 +209,7 @@ sub delete_trigger {
     return 1;
 }
 
-sub list_triggers {
-    my ($self, $channel) = @_;
-
+sub list_triggers($self, $channel) {
     my $triggers = eval {
         my $sth = $self->{dbh}->prepare('SELECT trigger, target FROM Triggers WHERE channel = ?');
         $sth->bind_param(1, lc $channel);
@@ -241,9 +221,7 @@ sub list_triggers {
     return @$triggers;
 }
 
-sub get_trigger {
-    my ($self, $channel, $trigger) = @_;
-
+sub get_trigger($self, $channel, $trigger) {
     my $target = eval {
         my $sth = $self->{dbh}->prepare('SELECT target FROM Triggers WHERE channel = ? AND trigger = ?');
         $sth->bind_param(1, lc $channel);
@@ -260,8 +238,7 @@ sub get_trigger {
     return $target;
 }
 
-sub cmd_counteradd {
-    my ($self, $context) = @_;
+sub cmd_counteradd($self, $context) {
     return "Internal error." if not $self->dbi_begin;
     my ($channel, $name, $description);
 
@@ -273,24 +250,31 @@ sub cmd_counteradd {
     } else {
         $channel = $context->{from};
         ($name, $description) = split /\s+/, $context->{arguments}, 2;
-        if (not defined $name or not defined $description) { return "Usage: counteradd <name> <description>"; }
+        if (not defined $name or not defined $description) {
+            return "Usage: counteradd <name> <description>";
+        }
     }
 
     my $result;
-    if   ($self->add_counter($context->{hostmask}, $channel, $name, $description)) { $result = "Counter added."; }
-    else                                                                             { $result = "Counter '$name' already exists."; }
+    if ($self->add_counter($context->{hostmask}, $channel, $name, $description)) {
+        $result = "Counter added.";
+    } else {
+        $result = "Counter '$name' already exists.";
+    }
+
     $self->dbi_end;
     return $result;
 }
 
-sub cmd_counterdel {
-    my ($self, $context) = @_;
+sub cmd_counterdel($self, $context) {
     return "Internal error." if not $self->dbi_begin;
     my ($channel, $name);
 
     if ($context->{from} !~ m/^#/) {
         ($channel, $name) = split /\s+/, $context->{arguments}, 2;
-        if (not defined $channel or not defined $name or $channel !~ m/^#/) { return "Usage from private message: counterdel <channel> <name>"; }
+        if (not defined $channel or not defined $name or $channel !~ m/^#/) {
+            return "Usage from private message: counterdel <channel> <name>";
+        }
     } else {
         $channel = $context->{from};
         ($name) = split /\s+/, $context->{arguments}, 1;
@@ -298,20 +282,25 @@ sub cmd_counterdel {
     }
 
     my $result;
-    if   ($self->delete_counter($channel, $name)) { $result = "Counter removed."; }
-    else                                          { $result = "No such counter."; }
+    if ($self->delete_counter($channel, $name)) {
+        $result = "Counter removed.";
+    } else {
+        $result = "No such counter.";
+    }
+
     $self->dbi_end;
     return $result;
 }
 
-sub cmd_counterreset {
-    my ($self, $context) = @_;
+sub cmd_counterreset($self, $context) {
     return "Internal error." if not $self->dbi_begin;
     my ($channel, $name);
 
     if ($context->{from} !~ m/^#/) {
         ($channel, $name) = split /\s+/, $context->{arguments}, 2;
-        if (not defined $channel or not defined $name or $channel !~ m/^#/) { return "Usage from private message: counterreset <channel> <name>"; }
+        if (not defined $channel or not defined $name or $channel !~ m/^#/) {
+            return "Usage from private message: counterreset <channel> <name>";
+        }
     } else {
         $channel = $context->{from};
         ($name) = split /\s+/, $context->{arguments}, 1;
@@ -331,14 +320,15 @@ sub cmd_counterreset {
     return $result;
 }
 
-sub cmd_countershow {
-    my ($self, $context) = @_;
+sub cmd_countershow($self, $context) {
     return "Internal error." if not $self->dbi_begin;
     my ($channel, $name);
 
     if ($context->{from} !~ m/^#/) {
         ($channel, $name) = split /\s+/, $context->{arguments}, 2;
-        if (not defined $channel or not defined $name or $channel !~ m/^#/) { return "Usage from private message: countershow <channel> <name>"; }
+        if (not defined $channel or not defined $name or $channel !~ m/^#/) {
+            return "Usage from private message: countershow <channel> <name>";
+        }
     } else {
         $channel = $context->{from};
         ($name) = split /\s+/, $context->{arguments}, 1;
@@ -350,7 +340,7 @@ sub cmd_countershow {
     if (defined $description) {
         my $ago = duration gettimeofday - $timestamp;
         $created_on = duration gettimeofday - $created_on;
-        $result     = "It has been $ago since $description. It has been reset $counter time" . ($counter == 1 ? '' : 's') . " since its creation $created_on ago.";
+        $result = "It has been $ago since $description. It has been reset $counter time" . ($counter == 1 ? '' : 's') . " since its creation $created_on ago.";
     } else {
         $result = "No such counter.";
     }
@@ -359,13 +349,15 @@ sub cmd_countershow {
     return $result;
 }
 
-sub cmd_counterlist {
-    my ($self, $context) = @_;
+sub cmd_counterlist($self, $context) {
     return "Internal error." if not $self->dbi_begin;
     my $channel;
 
     if ($context->{from} !~ m/^#/) {
-        if (not length $context->{arguments} or $context->{arguments} !~ m/^#/) { return "Usage from private message: counterlist <channel>"; }
+        if (not length $context->{arguments} or $context->{arguments} !~ m/^#/) {
+            return "Usage from private message: counterlist <channel>";
+        }
+
         $channel = $context->{arguments};
     } else {
         $channel = $context->{from};
@@ -388,8 +380,7 @@ sub cmd_counterlist {
     return $result;
 }
 
-sub cmd_countertrigger {
-    my ($self, $context) = @_;
+sub cmd_countertrigger($self, $context) {
     return "Internal error." if not $self->dbi_begin;
     my $command;
     ($command, $context->{arguments}) = split / /, $context->{arguments}, 2;
@@ -398,9 +389,11 @@ sub cmd_countertrigger {
 
     given ($command) {
         when ('list') {
-            if ($context->{from} =~ m/^#/) { $channel = $context->{from}; }
-            else {
+            if ($context->{from} =~ m/^#/) {
+                $channel = $context->{from};
+            } else {
                 ($channel) = split / /, $context->{arguments}, 1;
+
                 if ($channel !~ m/^#/) {
                     $self->dbi_end;
                     return "Usage from private message: countertrigger list <channel>";
@@ -433,8 +426,12 @@ sub cmd_countertrigger {
             my ($trigger, $target) = split / /, $context->{arguments}, 2;
 
             if (not defined $trigger or not defined $target) {
-                if   ($context->{from} !~ m/^#/) { $result = "Usage from private message: countertrigger add <channel> <regex> <target>"; }
-                else                  { $result = "Usage: countertrigger add <regex> <target>"; }
+                if ($context->{from} !~ m/^#/) {
+                    $result = "Usage from private message: countertrigger add <channel> <regex> <target>";
+                } else {
+                    $result = "Usage: countertrigger add <regex> <target>";
+                }
+
                 $self->dbi_end;
                 return $result;
             }
@@ -446,8 +443,11 @@ sub cmd_countertrigger {
                 return "Trigger already exists.";
             }
 
-            if   ($self->add_trigger($channel, $trigger, $target)) { $result = "Trigger added."; }
-            else                                                   { $result = "Failed to add trigger."; }
+            if ($self->add_trigger($channel, $trigger, $target)) {
+                $result = "Trigger added.";
+            } else {
+                $result = "Failed to add trigger.";
+            }
         }
 
         when ('delete') {
@@ -485,8 +485,7 @@ sub cmd_countertrigger {
     return $result;
 }
 
-sub on_public {
-    my ($self, $event_type, $event) = @_;
+sub on_public($self, $event_type, $event) {
     my ($nick, $user, $host, $msg) = ($event->nick, $event->user, $event->host, $event->args);
     my $channel = $event->{to}[0];
 
@@ -506,8 +505,11 @@ sub on_public {
         eval {
             my $message;
 
-            if   ($trigger->{trigger} =~ m/^\^/) { $message = "$hostmask $msg"; }
-            else                                 { $message = $msg; }
+            if ($trigger->{trigger} =~ m/^\^/) {
+                $message = "$hostmask $msg";
+            } else {
+                $message = $msg;
+            }
 
             my $silent = 0;
 
@@ -527,6 +529,7 @@ sub on_public {
 
         if ($@) { $self->{pbot}->{logger}->log("Skipping bad trigger $trigger->{trigger}: $@"); }
     }
+
     $self->dbi_end;
     return 0;
 }

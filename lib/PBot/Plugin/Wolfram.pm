@@ -2,7 +2,7 @@
 #
 # Purpose: Query Wolfram|Alpha's Short Answers API.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2021-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Plugin::Wolfram;
@@ -13,9 +13,7 @@ use PBot::Imports;
 use LWP::UserAgent::Paranoid;
 use URI::Escape qw/uri_escape_utf8/;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # add default registry entry for `wolfram.appid`
     $self->{pbot}->{registry}->add_default('text', 'wolfram', 'appid', '');
 
@@ -30,14 +28,11 @@ sub initialize {
     );
 }
 
-sub unload {
-    my ($self) = @_;
+sub unload($self) {
     $self->{pbot}->{commands}->remove('wolfram');
 }
 
-sub cmd_wolfram {
-    my ($self, $context) = @_;
-
+sub cmd_wolfram($self, $context) {
     return "Usage: wolfram <query>\n" if not length $context->{arguments};
 
     my $appid = $self->{pbot}->{registry}->get_value('wolfram', 'appid');

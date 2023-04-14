@@ -10,8 +10,7 @@ use parent 'PBot::Plugin::Base';
 
 use PBot::Imports;
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{pbot}->{functions}->register(
         'sed',
         {
@@ -22,16 +21,14 @@ sub initialize {
     );
 }
 
-sub unload {
-    my $self = shift;
+sub unload($self) {
     $self->{pbot}->{functions}->unregister('sed');
 }
 
 # near-verbatim insertion of krok's `sed` factoid
 no warnings;
-sub func_sed {
-    my $self = shift;
-    my $text = "@_";
+sub func_sed($self, @rest) {
+    my $text = "@rest";
 
     my $result = eval {
         if ($text =~ /^s(.)(.*?)(?<!\\)\1(.*?)(?<!\\)\1(\S*)\s+(.*)/p) {

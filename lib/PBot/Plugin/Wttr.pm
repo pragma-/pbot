@@ -14,9 +14,7 @@ use PBot::Core::Utils::LWPUserAgentCached;
 use JSON;
 use URI::Escape qw/uri_escape_utf8/;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{pbot}->{commands}->add(
         name   => 'wttr',
         help   => 'Provides weather information via wttr.in',
@@ -24,14 +22,11 @@ sub initialize {
     );
 }
 
-sub unload {
-    my $self = shift;
+sub unload($self) {
     $self->{pbot}->{commands}->remove('wttr');
 }
 
-sub cmd_wttr {
-    my ($self, $context) = @_;
-
+sub cmd_wttr($self, $context) {
     my $arguments = $context->{arguments};
 
     my @wttr_options = (
@@ -104,9 +99,7 @@ sub cmd_wttr {
     return $self->get_wttr($arguments, \@opts, \@wttr_options);
 }
 
-sub get_wttr {
-    my ($self, $location, $options, $order) = @_;
-
+sub get_wttr($self, $location, $options, $order) {
     my %cache_opt = (
         'namespace'          => 'wttr',
         'default_expires_in' => 900

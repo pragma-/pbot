@@ -14,8 +14,7 @@ use String::LCSS qw/lcss/;
 use Time::HiRes qw/gettimeofday/;
 use POSIX qw/strftime/;
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{pbot}->{registry}->add_default('text', 'antiflood', 'antirepeat',           $conf{antirepeat}           // 1);
     $self->{pbot}->{registry}->add_default('text', 'antiflood', 'antirepeat_threshold', $conf{antirepeat_threshold} // 2.5);
     $self->{pbot}->{registry}->add_default('text', 'antiflood', 'antirepeat_match',     $conf{antirepeat_match}     // 0.5);
@@ -27,16 +26,13 @@ sub initialize {
     $self->{offenses} = {};
 }
 
-sub unload {
-    my $self = shift;
+sub unload($self) {
     $self->{pbot}->{event_queue}->dequeue_event('antirepeat .*');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.public');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.caction');
 }
 
-sub on_public {
-    my ($self, $event_type, $event) = @_;
-
+sub on_public($self, $event_type, $event) {
     my ($nick, $user, $host, $msg) = (
         $event->nick,
         $event->user,

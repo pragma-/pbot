@@ -11,9 +11,7 @@ use parent 'PBot::Plugin::Base';
 
 use PBot::Imports;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # load Plang module
     my $path = $self->{pbot}->{registry}->get_value('general', 'plang_dir') // 'Plang';
     unshift @INC, "$path/lib" if not grep { $_ eq "$path/lib" } @INC;
@@ -89,16 +87,13 @@ sub initialize {
 }
 
 # runs when plugin is unloaded
-sub unload {
-    my $self = shift;
+sub unload($self) {
     $self->{pbot}->{commands}->unregister('plang');
     $self->{pbot}->{commands}->unregister('plangrepl');
     delete $INC{"Plang/Interpreter.pm"};
 }
 
-sub cmd_plang {
-    my ($self, $context) = @_;
-
+sub cmd_plang($self, $context) {
     my $usage = "Usage: plang <code>; see https://github.com/pragma-/Plang and https://github.com/pragma-/pbot/blob/master/doc/Plugins/Plang.md";
     return $usage if not length $context->{arguments};
 
@@ -121,9 +116,7 @@ sub cmd_plang {
     return length $self->{output} ? $self->{output} : "No output.";
 }
 
-sub cmd_plangrepl {
-    my ($self, $context) = @_;
-
+sub cmd_plangrepl($self, $context) {
     my $usage = "Usage: plangrepl <code>; see https://github.com/pragma-/Plang and https://github.com/pragma-/pbot/blob/master/doc/Plugins/Plang.md";
     return $usage if not length $context->{arguments};
 
@@ -146,8 +139,7 @@ sub cmd_plangrepl {
 }
 
 # overridden `print` built-in
-sub plang_builtin_print {
-    my ($self, $plang, $context, $name, $arguments) = @_;
+sub plang_builtin_print($self, $plang, $context, $name, $arguments) {
     my ($expr, $end) = ($plang->output_value($arguments->[0]), $arguments->[1]->[1]);
     $self->{output} .= "$expr$end";
     return [['TYPE', 'Null'], undef];
@@ -159,13 +151,11 @@ sub plang_validate_builtin_print {
 
 # our custom PBot built-in functions for Plang
 
-sub is_locked {
-    my ($self, $channel, $keyword) = @_;
+sub is_locked($self, $channel, $keyword) {
     return $self->{pbot}->{factoids}->{data}->get_meta($channel, $keyword, 'locked');
 }
 
-sub plang_builtin_factget {
-    my ($self, $plang, $context, $name, $arguments) = @_;
+sub plang_builtin_factget($self, $plang, $context, $name, $arguments) {
     my ($channel, $keyword, $meta) = ($arguments->[0]->[1], $arguments->[1]->[1], $arguments->[2]->[1]);
     my $result = $self->{pbot}->{factoids}->{data}->get_meta($channel, $keyword, $meta);
     if (defined $result) {
@@ -179,8 +169,7 @@ sub plang_validate_builtin_factget {
     return [['TYPE', 'String'], ""];
 }
 
-sub plang_builtin_factset {
-    my ($self, $plang, $context, $name, $arguments) = @_;
+sub plang_builtin_factset($self, $plang, $context, $name, $arguments) {
     my ($channel, $keyword, $text) = ($arguments->[0]->[1], $arguments->[1]->[1], $arguments->[2]->[1]);
     die "Factoid $channel.$keyword is locked. Cannot set.\n" if $self->is_locked($channel, $keyword);
     $self->{pbot}->{factoids}->{data}->add('text', $channel, 'Plang', $keyword, $text);
@@ -191,8 +180,7 @@ sub plang_validate_builtin_factset {
     return [['TYPE', 'String'], ""];
 }
 
-sub plang_builtin_factappend {
-    my ($self, $plang, $context, $name, $arguments) = @_;
+sub plang_builtin_factappend($self, $plang, $context, $name, $arguments) {
     my ($channel, $keyword, $text) = ($arguments->[0]->[1], $arguments->[1]->[1], $arguments->[2]->[1]);
     die "Factoid $channel.$keyword is locked. Cannot append.\n" if $self->is_locked($channel, $keyword);
     my $action = $self->{pbot}->{factoids}->{data}->get_meta($channel, $keyword, 'action');
@@ -206,8 +194,7 @@ sub plang_validate_builtin_factappend {
     return [['TYPE', 'String'], ""];
 }
 
-sub plang_builtin_userget {
-    my ($self, $plang, $context, $name, $arguments) = @_;
+sub plang_builtin_userget($self, $plang, $context, $name, $arguments) {
     my ($username) = ($arguments->[0], $arguments->[1]);
 
     my $user = $self->{pbot}->{users}->{storage}->get_data($username->[1]);

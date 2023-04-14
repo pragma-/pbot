@@ -13,8 +13,7 @@ use PBot::Imports;
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration;
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{pbot}->{registry}->add_default('array', 'antikickautorejoin', 'punishment', '30,90,180,300,28800');
     $self->{pbot}->{registry}->add_default('text',  'antikickautorejoin', 'threshold',  '2');
 
@@ -23,14 +22,12 @@ sub initialize {
     $self->{kicks} = {};
 }
 
-sub unload {
-    my ($self) = @_;
+sub unload($self) {
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.kick');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.join');
 }
 
-sub on_kick {
-    my ($self, $event_type, $event) = @_;
+sub on_kick($self, $event_type, $event) {
     my ($nick, $user, $host) = ($event->nick, $event->user, $event->host);
     my ($target, $channel, $reason) = ($event->to, $event->{args}[0], $event->{args}[1]);
 
@@ -46,8 +43,7 @@ sub on_kick {
     return 0;
 }
 
-sub on_join {
-    my ($self, $event_type, $event) = @_;
+sub on_join($self, $event_type, $event) {
     my ($nick, $user, $host, $channel) = ($event->nick, $event->user, $event->host, $event->to);
 
     $channel = lc $channel;

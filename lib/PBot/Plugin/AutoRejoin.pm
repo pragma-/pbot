@@ -8,26 +8,24 @@
 package PBot::Plugin::AutoRejoin;
 use parent 'PBot::Plugin::Base';
 
+use PBot::Imports;
+
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration;
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{pbot}->{registry}->add_default('array', 'autorejoin', 'rejoin_delay', '900,1800,3600');
     $self->{pbot}->{event_dispatcher}->register_handler('irc.kick', sub { $self->on_kick(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.part', sub { $self->on_part(@_) });
     $self->{rejoins} = {};
 }
 
-sub unload {
-    my ($self) = @_;
+sub unload($self) {
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.kick');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.part');
 }
 
-sub rejoin_channel {
-    my ($self, $channel) = @_;
-
+sub rejoin_channel($self, $channel) {
     if (not exists $self->{rejoins}->{$channel}) {
         $self->{rejoins}->{$channel}->{rejoins} = 0;
     }
@@ -45,9 +43,7 @@ sub rejoin_channel {
     $self->{rejoins}->{$channel}->{last_rejoin} = gettimeofday;
 }
 
-sub on_kick {
-    my ($self, $event_type, $event) = @_;
-
+sub on_kick($self, $event_type, $event) {
     my ($nick, $user, $host, $target, $channel, $reason) = (
         $event->nick,
         $event->user,
@@ -67,9 +63,7 @@ sub on_kick {
     return 1;
 }
 
-sub on_part {
-    my ($self, $event_type, $event) = @_;
-
+sub on_part($self, $event_type, $event) {
     my ($nick, $user, $host, $channel) = (
         $event->nick,
         $event->user,

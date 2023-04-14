@@ -13,9 +13,7 @@ use PBot::Imports;
 use PBot::Core::Utils::LWPUserAgentCached;
 use XML::LibXML;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{pbot}->{commands}->add(
         name   => 'weather',
         help   => 'Provides weather service via AccuWeather',
@@ -23,14 +21,11 @@ sub initialize {
     );
 }
 
-sub unload {
-    my $self = shift;
+sub unload($self) {
     $self->{pbot}->{commands}->remove('weather');
 }
 
-sub cmd_weather {
-    my ($self, $context) = @_;
-
+sub cmd_weather($self, $context) {
     my $usage = "Usage: weather (<location> | -u <user account>)";
 
     my $arguments = $context->{arguments};
@@ -67,9 +62,7 @@ sub cmd_weather {
     return $self->get_weather($arguments);
 }
 
-sub get_weather {
-    my ($self, $location) = @_;
-
+sub get_weather($self, $location) {
     my %cache_opt = (
         'namespace'          => 'accuweather',
         'default_expires_in' => 3600
@@ -119,8 +112,7 @@ sub get_weather {
     return $result;
 }
 
-sub fix_temps {
-    my ($self, $text) = @_;
+sub fix_temps($self, $text) {
     $text =~ s|(-?\d+)\s*F|my $f = $1; my $c = ($f - 32 ) * 5 / 9; $c = sprintf("%.1d", $c); "${c}C/${f}F"|eg;
     return $text;
 }

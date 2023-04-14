@@ -14,20 +14,17 @@ use PBot::Imports;
 use Time::HiRes qw/gettimeofday/;
 use Time::Duration qw/duration/;
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.public', sub { $self->on_public(@_) });
     $self->{offenses} = {};
 }
 
-sub unload {
-    my ($self) = @_;
+sub unload($self) {
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.public');
     $self->{pbot}->{event_queue}->dequeue_event('antitwitter .*');
 }
 
-sub on_public {
-    my ($self, $event_type, $event) = @_;
+sub on_public($self, $event_type, $event) {
     my ($nick, $user, $host, $channel, $msg) = ($event->nick, $event->user, $event->host, $event->{to}[0], $event->args);
 
     return 0 if $event->{interpreted};

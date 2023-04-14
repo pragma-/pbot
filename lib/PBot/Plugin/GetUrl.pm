@@ -4,7 +4,7 @@
 #
 # TODO: add --useragent and --striphtml, etc, options
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2021-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Plugin::GetUrl;
@@ -14,23 +14,18 @@ use PBot::Imports;
 
 use LWP::UserAgent::Paranoid;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{pbot}->{registry}->add_default('text', 'geturl', 'enabled', 1);
     $self->{pbot}->{registry}->add_default('text', 'geturl', 'max_size', 1024 * 1024);
 
     $self->{pbot}->{commands}->register(sub { $self->cmd_geturl(@_) }, 'geturl', 0);
 }
 
-sub unload {
-    my ($self) = @_;
+sub unload($self) {
     $self->{pbot}->{commands}->unregister('geturl');
 }
 
-sub cmd_geturl {
-    my ($self, $context) = @_;
-
+sub cmd_geturl($self, $context) {
     return "Usage: geturl <url>\n" if not length $context->{arguments};
 
     my $enabled = $self->{pbot}->{registry}->get_value('geturl', 'enabled');

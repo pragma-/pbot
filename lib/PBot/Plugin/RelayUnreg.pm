@@ -16,22 +16,19 @@ use PBot::Imports;
 
 use Time::HiRes qw/gettimeofday/;
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.public', sub { $self->on_public(@_) });
     $self->{queue}    = [];
     $self->{notified} = {};
     $self->{pbot}->{event_queue}->enqueue(sub { $self->check_queue }, 1, 'RelayUnreg');
 }
 
-sub unload {
-    my $self = shift;
+sub unload($self) {
     $self->{pbot}->{event_queue}->dequeue('RelayUnreg');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.public');
 }
 
-sub on_public {
-    my ($self, $event_type, $event) = @_;
+sub on_public($self, $event_type, $event) {
     my ($nick, $user, $host, $msg) = ($event->nick, $event->user, $event->host, $event->args);
     my $channel = lc $event->{to}[0];
 
@@ -90,8 +87,7 @@ sub on_public {
     return 0;
 }
 
-sub check_queue {
-    my $self = shift;
+sub check_queue($self) {
     my $now  = gettimeofday;
 
     if (@{$self->{queue}}) {

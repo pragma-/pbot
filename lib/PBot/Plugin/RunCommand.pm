@@ -17,7 +17,7 @@
 #
 # This plugin is not in data/plugin_autoload. Load at your own risk.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2021-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Plugin::RunCommand;
@@ -27,9 +27,7 @@ use PBot::Imports;
 
 use IPC::Run qw/start pump finish/;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{pbot}->{commands}->add(
         name => 'runcmd',
         help => 'Executes a system command and outputs each line in real-time',
@@ -38,14 +36,11 @@ sub initialize {
     );
 }
 
-sub unload {
-    my $self = shift;
+sub unload($self) {
     $self->{pbot}->{commands}->remove('runcmd');
 }
 
-sub cmd_runcmd {
-    my ($self, $context) = @_;
-
+sub cmd_runcmd($self, $context) {
     my @args = $self->{pbot}->{interpreter}->split_line($context->{arguments}, strip_quotes => 1);
 
     my ($in, $out, $err);
@@ -71,9 +66,7 @@ sub cmd_runcmd {
     return "No output." if not $lines;
 }
 
-sub send_lines {
-    my ($self, $context, $buffer, $send_all) = @_;
-
+sub send_lines($self, $context, $buffer, $send_all) {
     my $lines = 0;
 
     my $regex;

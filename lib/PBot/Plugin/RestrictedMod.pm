@@ -16,9 +16,7 @@ use PBot::Imports;
 
 use Storable qw/dclone/;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{pbot}->{commands}->add(
         name   => 'mod',
         help   => 'Provides restricted moderation abilities to voiced users. They can kick/ban/etc only users that are not admins, whitelisted, voiced or opped.',
@@ -41,14 +39,12 @@ sub initialize {
     };
 }
 
-sub unload {
-    my ($self) = @_;
+sub unload($self) {
     $self->{pbot}->{commands}->remove('mod');
     $self->{pbot}->{capabilities}->remove('chanmod');
 }
 
-sub help {
-    my ($self, $context) = @_;
+sub help($self, $context) {
     my $command = $self->{pbot}->{interpreter}->shift_arg($context->{arglist}) // 'help';
 
     if (exists $self->{commands}->{$command}) {
@@ -58,14 +54,11 @@ sub help {
     }
 }
 
-sub list {
-    my ($self, $context) = @_;
+sub list($self, $context) {
     return "Available mod commands: " . join ', ', sort keys %{$self->{commands}};
 }
 
-sub generic_command {
-    my ($self, $context, $command) = @_;
-
+sub generic_command($self, $context, $command) {
     my $channel = $context->{from};
     if ($channel !~ m/^#/) {
         $channel = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
@@ -147,41 +140,33 @@ sub generic_command {
     return "";
 }
 
-sub kick {
-    my ($self, $context) = @_;
+sub kick($self, $context) {
     return $self->generic_command($context, 'kick');
 }
 
-sub ban {
-    my ($self, $context) = @_;
+sub ban($self, $context) {
     return $self->generic_command($context, 'ban');
 }
 
-sub mute {
-    my ($self, $context) = @_;
+sub mute($self, $context) {
     return $self->generic_command($context, 'mute');
 }
 
-sub unban {
-    my ($self, $context) = @_;
+sub unban($self, $context) {
     return $self->generic_command($context, 'unban');
 }
 
-sub unmute {
-    my ($self, $context) = @_;
+sub unmute($self, $context) {
     return $self->generic_command($context, 'unmute');
 }
 
-sub kb {
-    my ($self, $context) = @_;
+sub kb($self, $context) {
     my $result = $self->ban(dclone $context);    # note: using copy of $context to preserve $context->{arglist} for $self->kick($context)
     return $result if length $result;
     return $self->kick($context);
 }
 
-sub cmd_mod {
-    my ($self, $context) = @_;
-
+sub cmd_mod($self, $context) {
     my $command = $self->{pbot}->{interpreter}->shift_arg($context->{arglist}) // '';
     $command = lc $command;
 

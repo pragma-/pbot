@@ -1,8 +1,13 @@
 # File: Hashtable.pm
 #
 # Purpose: Hashtable backend for storing and retreiving quotegrabs.
+#
+# Note: This has not been maintained since the SQLite backend was created. It
+# is strongly recommended to use the SQLite backend instead since it contains
+# several improvements such as shuffling through random quotegrabs without
+# repeats, etc.
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2021-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Plugin::Quotegrabs::Storage::Hashtable;
@@ -16,30 +21,21 @@ use Getopt::Long qw(GetOptionsFromString);
 
 use POSIX qw(strftime);
 
-sub new {
-    if (ref($_[1]) eq 'HASH') { Carp::croak("Options to " . __FILE__ . " should be key/value pairs, not hash reference"); }
-
-    my ($class, %conf) = @_;
-
+sub new($class, %conf) {
     my $self = bless {}, $class;
     $self->initialize(%conf);
     return $self;
 }
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{pbot}       = delete $conf{pbot} // Carp::croak("Missing pbot reference in " . __FILE__);
     $self->{filename}   = delete $conf{filename};
     $self->{quotegrabs} = [];
 }
 
-sub begin {
-    my $self = shift;
+sub begin($self) {
     $self->load_quotegrabs;
 }
-
-sub end { }
 
 sub load_quotegrabs {
     my $self = shift;
@@ -96,37 +92,30 @@ sub save_quotegrabs {
     close(FILE);
 }
 
-sub add_quotegrab {
-    my ($self, $quotegrab) = @_;
-
+sub add_quotegrab($self, $quotegrab) {
     push @{$self->{quotegrabs}}, $quotegrab;
     $self->save_quotegrabs();
     return $#{$self->{quotegrabs}} + 1;
 }
 
-sub delete_quotegrab {
-    my ($self, $id) = @_;
-
+sub delete_quotegrab($self, $id) {
     if ($id < 1 || $id > $#{$self->{quotegrabs}} + 1) { return undef; }
 
     splice @{$self->{quotegrabs}}, $id - 1, 1;
 
-    for (my $i = $id - 1; $i <= $#{$self->{quotegrabs}}; $i++) { $self->{quotegrabs}[$i]->{id}--; }
+    for (my $i = $id - 1; $i <= $#{$self->{quotegrabs}}; $i++) {
+        $self->{quotegrabs}[$i]->{id}--;
+    }
 
     $self->save_quotegrabs();
 }
 
-sub get_quotegrab {
-    my ($self, $id) = @_;
-
+sub get_quotegrab($self, $id) {
     if ($id < 1 || $id > $#{$self->{quotegrabs}} + 1) { return undef; }
-
     return $self->{quotegrabs}[$id - 1];
 }
 
-sub get_random_quotegrab {
-    my ($self, $nick, $channel, $text) = @_;
-
+sub get_random_quotegrab($self, $nick, $channel, $text) {
     $nick    = '.*' if not defined $nick;
     $channel = '.*' if not defined $channel;
     $text    = '.*' if not defined $text;
@@ -153,8 +142,7 @@ sub get_random_quotegrab {
     return $quotes[int rand($#quotes + 1)];
 }
 
-sub get_all_quotegrabs {
-    my $self = shift;
+sub get_all_quotegrabs($self) {
     return $self->{quotegrabs};
 }
 

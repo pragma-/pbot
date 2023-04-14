@@ -10,9 +10,7 @@ use parent 'PBot::Plugin::Base';
 
 use PBot::Imports;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # add default registry entry for default timezone
     # this can be overridden via arguments or user metadata
     $self->{pbot}->{registry}->add_default('text', 'date', 'default_timezone', 'UTC');
@@ -25,14 +23,11 @@ sub initialize {
     );
 }
 
-sub unload {
-    my $self = shift;
+sub unload($self) {
     $self->{pbot}->{commands}->remove('date');
 }
 
-sub cmd_date {
-    my ($self, $context) = @_;
-
+sub cmd_date($self, $context) {
     my $usage = "Usage: date [-u <user account>] [timezone]";
 
     my %opts;

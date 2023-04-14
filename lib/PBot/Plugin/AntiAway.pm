@@ -10,9 +10,7 @@ use parent 'PBot::Plugin::Base';
 
 use PBot::Imports;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{pbot}->{registry}->add_default('text', 'antiaway', 'bad_nicks',
         $conf{bad_nicks} // '([[:punct:]](afk|brb|bbl|away|sleep|z+|work|gone|study|out|home|busy|off)[[:punct:]]*$|.+\[.*\]$)'
     );
@@ -24,15 +22,12 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.caction', sub { $self->on_action(@_) });
 }
 
-sub unload {
-    my ($self) = @_;
+sub unload($self) {
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.nick');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.caction');
 }
 
-sub on_nickchange {
-    my ($self, $event_type, $event) = @_;
-
+sub on_nickchange($self, $event_type, $event) {
     my ($nick, $user, $host, $newnick) = (
         $event->nick,
         $event->user,
@@ -60,9 +55,7 @@ sub on_nickchange {
     return 0;
 }
 
-sub on_action {
-    my ($self, $event_type, $event) = @_;
-
+sub on_action($self, $event_type, $event) {
     my ($nick, $user, $host, $msg, $channel) = (
         $event->nick,
         $event->user,

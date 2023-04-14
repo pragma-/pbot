@@ -13,8 +13,7 @@ use  PBot::Imports;
 
 use Time::Duration qw/duration/;
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{pbot}->{commands}->add(
         name   => 'pd',
         help   => 'Simple command to test ParseDate interface',
@@ -22,13 +21,11 @@ sub initialize {
     );
 }
 
-sub unload {
-    my $self = shift;
+sub unload($self) {
     $self->{pbot}->{commands}->remove('pd');
 }
 
-sub cmd_parsedate {
-    my ($self, $context) = @_;
+sub cmd_parsedate($self, $context) {
     my ($seconds, $error) = $self->{pbot}->{parsedate}->parsedate($context->{arguments});
     return $error if defined $error;
     return duration $seconds;

@@ -17,13 +17,11 @@ use HTML::Entities;
 use JSON::XS;
 
 use constant {
-    TIMEOUT    => 30,
-    MAX_SIZE   => 1024 * 800,
+    TIMEOUT  => 30,
+    MAX_SIZE => 1024 * 800,
 };
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     # remember recent titles so we don't repeat them too often
     my $filename = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/url-title.hist';
 
@@ -43,15 +41,12 @@ sub initialize {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.caction', sub { $self->show_url_titles(@_) });
 }
 
-sub unload {
-    my ($self) = @_;
+sub unload($self) {
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.public');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.caction');
 }
 
-sub is_ignored_url {
-    my ($self, $url) = @_;
-
+sub is_ignored_url($self, $url) {
     return 1 if $url =~ m{https://asciinema.org}i;
     return 1 if $url =~ m{https?://tpcg.io/}i;
     return 1 if $url =~ m/bootlin.com/i;
@@ -79,7 +74,7 @@ sub is_ignored_url {
     return 1 if $url =~ m{godbolt.org}i;
     return 1 if $url =~ m{man\.cgi}i;
     return 1 if $url =~ m{wandbox}i;
-    return 1 if $url =~ m{ebay.com/itm}i;
+    #return 1 if $url =~ m{ebay.com/itm}i;
     return 1 if $url =~ m/prntscr.com/i;
     return 1 if $url =~ m/imgbin.org/i;
     return 1 if $url =~ m/jsfiddle.net/i;
@@ -120,9 +115,8 @@ sub is_ignored_url {
     return 0;
 }
 
-sub is_ignored_title {
-    my ($self, $title) = @_;
-
+sub is_ignored_title($self, $title) {
+    return 1 if $title =~ m{reddit - dive into anything}i;
     return 1 if $title =~ m{dive into reddit}i;
     return 1 if $title =~ m{^Loading}i;
     return 1 if $title =~ m{streamable}i;
@@ -146,9 +140,7 @@ sub is_ignored_title {
     return  0;
 }
 
-sub get_title {
-    my ($self, $context) = @_;
-
+sub get_title($self, $context) {
     my $url = $context->{arguments};
 
     my $ua = LWP::UserAgent::Paranoid->new(request_timeout => TIMEOUT);
@@ -218,9 +210,7 @@ sub get_title {
     $context->{url}    = $url;
 }
 
-sub title_pipe_reader {
-    my ($self, $pid, $buf) = @_;
-
+sub title_pipe_reader($self, $pid, $buf) {
     # retrieve context object from child
     my $context = decode_json $buf or do {
         $self->{pbot}->{logger}->log("Failed to decode bad json: [$buf]\n");
@@ -260,9 +250,7 @@ sub title_pipe_reader {
     $self->{pbot}->{interpreter}->handle_result($context);
 }
 
-sub show_url_titles {
-    my ($self, $event_type, $event) = @_;
-
+sub show_url_titles($self, $event_type, $event) {
     my ($nick, $user, $host) = (
         $event->nick,
         $event->user,

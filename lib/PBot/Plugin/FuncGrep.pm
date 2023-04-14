@@ -10,8 +10,7 @@ use parent 'PBot::Plugin::Base';
 
 use PBot::Imports;
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{pbot}->{functions}->register(
         'grep',
         {
@@ -22,15 +21,12 @@ sub initialize {
     );
 }
 
-sub unload {
-    my $self = shift;
+sub unload($self) {
     $self->{pbot}->{functions}->unregister('grep');
 }
 
-sub func_grep {
-    my $self = shift @_;
-    my $regex = shift @_;
-    my $text = "@_";
+sub func_grep($self, $regex, @rest) {
+    my $text = "@rest";
 
     my $result = eval {
         my $result = '';

@@ -10,24 +10,19 @@ use parent 'PBot::Plugin::Base';
 
 use PBot::Imports;
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{pbot}->{event_dispatcher}->register_handler(
         'irc.public',
         sub { $self->on_public(@_) },
     );
 }
 
-sub unload {
-    my $self = shift;
-
+sub unload($self) {
     # perform plugin clean-up here
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.public');
 }
 
-sub on_public {
-    my ($self, $event_type, $event) = @_;
-
+sub on_public($self, $event_type, $event) {
     my ($nick, $user, $host, $msg) = (
         $event->nick,
         $event->user,

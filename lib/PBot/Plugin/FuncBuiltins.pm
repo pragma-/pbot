@@ -15,8 +15,7 @@ use PBot::Core::Utils::Indefinite;
 use Lingua::EN::Tagger;
 use URI::Escape qw/uri_escape_utf8/;
 
-sub initialize {
-    my ($self, %conf) = @_;
+sub initialize($self, %conf) {
     $self->{pbot}->{functions}->register(
         'title',
         {
@@ -85,8 +84,7 @@ sub initialize {
     $self->{tagger} = Lingua::EN::Tagger->new;
 }
 
-sub unload {
-    my $self = shift;
+sub unload($self) {
     $self->{pbot}->{functions}->unregister('title');
     $self->{pbot}->{functions}->unregister('ucfirst');
     $self->{pbot}->{functions}->unregister('uc');
@@ -97,26 +95,23 @@ sub unload {
     $self->{pbot}->{functions}->unregister('maybe-the');
 }
 
-sub func_unquote {
-    my $self = shift;
-    my $text = "@_";
+sub func_unquote($self, @rest) {
+    my $text = "@rest";
     $text =~ s/^"(.*?)(?<!\\)"$/$1/ || $text =~ s/^'(.*?)(?<!\\)'$/$1/;
     $text =~ s/(?<!\\)\\'/'/g;
     $text =~ s/(?<!\\)\\"/"/g;
     return $text;
 }
 
-sub func_title {
-    my $self = shift;
-    my $text = "@_";
+sub func_title($self, @rest) {
+    my $text = "@rest";
     $text = ucfirst lc $text;
     $text =~ s/ (\w)/' ' . uc $1/ge;
     return $text;
 }
 
-sub func_ucfirst {
-    my $self = shift;
-    my $text = "@_";
+sub func_ucfirst($self, @rest) {
+    my $text = "@rest";
 
     my ($word) = $text =~ m/^\s*([^',.;: ]+)/;
 
@@ -128,27 +123,23 @@ sub func_ucfirst {
     return ucfirst $text;
 }
 
-sub func_uc {
-    my $self = shift;
-    my $text = "@_";
+sub func_uc($self, @rest) {
+    my $text = "@rest";
     return uc $text;
 }
 
-sub func_lc {
-    my $self = shift;
-    my $text = "@_";
+sub func_lc($self, @rest) {
+    my $text = "@rest";
     return lc $text;
 }
 
-sub func_uri_escape {
-    my $self = shift;
-    my $text = "@_";
+sub func_uri_escape($self, @rest) {
+    my $text = "@rest";
     return uri_escape_utf8($text);
 }
 
-sub func_ana {
-    my $self = shift;
-    my $text = "@_";
+sub func_ana($self, @rest) {
+    my $text = "@rest";
 
     if ($text =~ s/\b(an?)(\s+)//i) {
         my ($article, $spaces) = ($1, $2);
@@ -166,9 +157,8 @@ sub func_ana {
     return $text;
 }
 
-sub func_maybe_the {
-    my $self = shift;
-    my $text = "@_";
+sub func_maybe_the($self, @rest) {
+    my $text = "@rest";
 
     my ($word) = $text =~ m/^\s*([^',.;: ]+)/;
 

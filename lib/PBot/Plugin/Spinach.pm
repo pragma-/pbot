@@ -6,7 +6,7 @@
 # bot. Then all "lies" are revealed along with the true answer. Players
 # gain points every time another player picks their lie. Very fun!
 
-# SPDX-FileCopyrightText: 2018-2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2018-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Plugin::Spinach;
@@ -39,9 +39,7 @@ $Data::Dumper::Sortkeys = sub {
 
 $Data::Dumper::Useqq = 1;
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{pbot}->{commands}->register(sub { $self->cmd_spinach(@_) }, 'spinach');
 
     $self->{pbot}->{event_dispatcher}->register_handler('irc.part', sub { $self->on_departure(@_) });
@@ -72,8 +70,7 @@ sub initialize {
     $self->{tock_duration}            = 30;
 }
 
-sub unload {
-    my $self = shift;
+sub unload($self) {
     $self->{pbot}->{commands}->unregister('spinach');
     $self->{pbot}->{event_queue}->dequeue_event('spinach loop');
     $self->{stats}->end if $self->{stats_running};
@@ -82,8 +79,7 @@ sub unload {
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.kick');
 }
 
-sub on_kick {
-    my ($self, $event_type, $event) = @_;
+sub on_kick($self, $event_type, $event) {
     my ($nick, $user, $host)  = ($event->nick, $event->user, $event->host);
     my ($victim, $reason) = ($event->to, $event->{args}[1]);
     my $channel = $event->{args}[0];
@@ -92,8 +88,7 @@ sub on_kick {
     return 0;
 }
 
-sub on_departure {
-    my ($self, $event_type, $event) = @_;
+sub on_departure($self, $event_type, $event) {
     my ($nick, $user, $host, $channel) = ($event->nick, $event->user, $event->host, $event->to);
     my $type = uc $event->type;
     return 0 if $type ne 'QUIT' and lc $channel ne $self->{channel};
@@ -101,11 +96,12 @@ sub on_departure {
     return 0;
 }
 
-sub load_questions {
-    my ($self, $filename) = @_;
-
-    if (not defined $filename) { $filename = exists $self->{loaded_filename} ? $self->{loaded_filename} : $self->{questions_filename}; }
-    else                       { $filename = $self->{pbot}->{registry}->get_value('general', 'data_dir') . "/spinach/$filename"; }
+sub load_questions($self, $filename) {
+    if (not defined $filename) {
+        $filename = exists $self->{loaded_filename} ? $self->{loaded_filename} : $self->{questions_filename};
+    } else {
+        $filename = $self->{pbot}->{registry}->get_value('general', 'data_dir') . "/spinach/$filename";
+    }
 
     $self->{pbot}->{logger}->log("Spinach: Loading questions from $filename...\n");
 
@@ -151,8 +147,7 @@ sub load_questions {
     return "Loaded $questions questions in $categories categories.";
 }
 
-sub save_questions {
-    my $self      = shift;
+sub save_questions($self) {
     my $json      = JSON->new;
     my $json_text = $json->pretty->canonical->utf8->encode($self->{questions});
     my $filename  = exists $self->{loaded_filename} ? $self->{loaded_filename} : $self->{questions_filename};
@@ -164,9 +159,7 @@ sub save_questions {
     close $fh;
 }
 
-sub load_stopwords {
-    my $self = shift;
-
+sub load_stopwords($self) {
     open my $fh, '<', $self->{stopwords_filename} or do {
         $self->{pbot}->{logger}->log("Spinach: Failed to open $self->{stopwords_filename}: $!\n");
         return;
@@ -179,8 +172,7 @@ sub load_stopwords {
     close $fh;
 }
 
-sub set_metadata_defaults {
-    my ($self) = @_;
+sub set_metadata_defaults($self) {
     my $defaults = {
         category_choices  => 7,
         category_autopick => 0,
@@ -193,10 +185,13 @@ sub set_metadata_defaults {
         debug_state       => 0,
     };
 
-    if ($self->{metadata}->exists('settings')) { $self->{metadata}->add('settings', $defaults, 1); }
-    else {
+    if ($self->{metadata}->exists('settings')) {
+        $self->{metadata}->add('settings', $defaults, 1);
+    } else {
         foreach my $key (keys %$defaults) {
-            if (not $self->{metadata}->exists('settings', $key)) { $self->{metadata}->set('settings', $key, $defaults->{$key}, 1); }
+            if (not $self->{metadata}->exists('settings', $key)) {
+                $self->{metadata}->set('settings', $key, $defaults->{$key}, 1);
+            }
         }
     }
 }
@@ -227,8 +222,7 @@ my %color = (
     reset => "\x0F",
 );
 
-sub cmd_spinach {
-    my ($self, $context) = @_;
+sub cmd_spinach($self, $context) {
     my $arguments = $context->{arguments};
     $arguments =~ s/^\s+|\s+$//g;
 
@@ -285,8 +279,11 @@ sub cmd_spinach {
                 when ('rank') { return "Help is coming soon."; }
 
                 default {
-                    if   (length $arguments) { return "Spinach has no such command '$arguments'. I can't help you with that."; }
-                    else                     { return "Usage: spinach help <command>"; }
+                    if (length $arguments) {
+                        return "Spinach has no such command '$arguments'. I can't help you with that.";
+                    } else {
+                        return "Usage: spinach help <command>";
+                    }
                 }
             }
         }
@@ -333,7 +330,10 @@ sub cmd_spinach {
 
         when ('load') {
             my $u = $self->{pbot}->{users}->loggedin($self->{channel}, $context->{hostmask});
-            if (not $u or not $self->{pbot}->{capabilities}->userhas($u, 'botowner')) { return "$context->{nick}: Sorry, only botowners may reload the questions."; }
+
+            if (not $u or not $self->{pbot}->{capabilities}->userhas($u, 'botowner')) {
+                return "$context->{nick}: Sorry, only botowners may reload the questions.";
+            }
 
             $arguments = undef if not length $arguments;
             return $self->load_questions($arguments);
@@ -413,7 +413,9 @@ sub cmd_spinach {
             }
 
             if ($removed) {
-                if ($self->{state_data}->{current_player} >= @{$self->{state_data}->{players}}) { $self->{state_data}->{current_player} = @{$self->{state_data}->{players}} - 1 }
+                if ($self->{state_data}->{current_player} >= @{$self->{state_data}->{players}}) {
+                    $self->{state_data}->{current_player} = @{$self->{state_data}->{players}} - 1;
+                }
 
                 if (not @{$self->{state_data}->{players}}) {
                     $self->{current_state} = 'nogame';
@@ -428,7 +430,9 @@ sub cmd_spinach {
         }
 
         when ('abort') {
-            if (not $self->{pbot}->{users}->loggedin_admin($self->{channel}, $context->{hostmask})) { return "$context->{nick}: Sorry, only admins may abort the game."; }
+            if (not $self->{pbot}->{users}->loggedin_admin($self->{channel}, $context->{hostmask})) {
+                return "$context->{nick}: Sorry, only admins may abort the game.";
+            }
 
             $self->{current_state} = 'gameover';
             return "/msg $self->{channel} $context->{nick}: The game has been aborted.";
@@ -438,8 +442,11 @@ sub cmd_spinach {
             if ($self->{current_state} eq 'getplayers') {
                 my @names;
                 foreach my $player (@{$self->{state_data}->{players}}) {
-                    if   (not $player->{ready}) { push @names, "$player->{name} $color{red}(not ready)$color{reset}"; }
-                    else                        { push @names, $player->{name}; }
+                    if (not $player->{ready}) {
+                        push @names, "$player->{name} $color{red}(not ready)$color{reset}";
+                    } else {
+                        push @names, $player->{name};
+                    }
                 }
 
                 my $players = join ', ', @names;
@@ -460,7 +467,9 @@ sub cmd_spinach {
         }
 
         when ('kick') {
-            if (not $self->{pbot}->{users}->loggedin_admin($self->{channel}, $context->{hostmask})) { return "$context->{nick}: Sorry, only admins may kick people from the game."; }
+            if (not $self->{pbot}->{users}->loggedin_admin($self->{channel}, $context->{hostmask})) {
+                return "$context->{nick}: Sorry, only admins may kick people from the game.";
+            }
 
             if (not length $arguments) { return "Usage: spinach kick <nick>"; }
 
@@ -474,7 +483,9 @@ sub cmd_spinach {
             }
 
             if ($removed) {
-                if ($self->{state_data}->{current_player} >= @{$self->{state_data}->{players}}) { $self->{state_data}->{current_player} = @{$self->{state_data}->{players}} - 1 }
+                if ($self->{state_data}->{current_player} >= @{$self->{state_data}->{players}}) {
+                    $self->{state_data}->{current_player} = @{$self->{state_data}->{players}} - 1;
+                }
                 return "/msg $self->{channel} $context->{nick}: $arguments has been kicked from the game.";
             } else {
                 return "$context->{nick}: $arguments isn't even in the game.";
@@ -596,7 +607,9 @@ sub cmd_spinach {
                     return "$context->{nick}: It is not your turn to choose a category.";
                 }
 
-                if ($arguments !~ /^[0-9]+$/) { return "$context->{nick}: Please choose a category number. $self->{state_data}->{categories_text}"; }
+                if ($arguments !~ /^[0-9]+$/) {
+                    return "$context->{nick}: Please choose a category number. $self->{state_data}->{categories_text}";
+                }
 
                 $arguments--;
 
@@ -636,16 +649,11 @@ sub cmd_spinach {
 
                 my @truth_count = split /\s/, $self->{state_data}->{current_question}->{answer};
                 my @lie_count   = split /\s/, $arguments;
-
-=cut
-        if (@truth_count > 1 and @lie_count == 1) {
-          return "/msg $context->{nick} Your lie cannot be one word for this question. Please try again.";
-        }
-=cut
-
                 my $found_truth = 0;
 
-                if (not $self->validate_lie($self->{state_data}->{current_question}->{answer}, $arguments)) { $found_truth = 1; }
+                if (not $self->validate_lie($self->{state_data}->{current_question}->{answer}, $arguments)) {
+                    $found_truth = 1;
+                }
 
                 foreach my $alt (@{$self->{state_data}->{current_question}->{alternativeSpellings}}) {
                     if (not $self->validate_lie($alt, $arguments)) {
@@ -654,7 +662,9 @@ sub cmd_spinach {
                     }
                 }
 
-                if (not $found_truth and ++$player->{lie_count} > 2) { return "/msg $context->{nick} You cannot change your lie again this round."; }
+                if (not $found_truth and ++$player->{lie_count} > 2) {
+                    return "/msg $context->{nick} You cannot change your lie again this round.";
+                }
 
                 if ($found_truth) {
                     $self->send_message($self->{channel}, "$color{yellow}$context->{nick} has found the truth!$color{reset}");
@@ -681,9 +691,13 @@ sub cmd_spinach {
                     }
                 }
 
-                if (not $player) { return "$context->{nick}: You are not playing in this game. Use `j` to start playing now!"; }
+                if (not $player) {
+                    return "$context->{nick}: You are not playing in this game. Use `j` to start playing now!";
+                }
 
-                if ($arguments !~ /^[0-9]+$/) { return "$context->{nick}: Please select a truth number. $self->{state_data}->{current_choices_text}"; }
+                if ($arguments !~ /^[0-9]+$/) {
+                    return "$context->{nick}: Please select a truth number. $self->{state_data}->{current_choices_text}";
+                }
 
                 $arguments--;
 
@@ -855,9 +869,7 @@ sub cmd_spinach {
     return $result;
 }
 
-sub player_left {
-    my ($self, $nick, $user, $host) = @_;
-
+sub player_left($self, $nick, $user, $host) {
     my $id      = $self->{pbot}->{messagehistory}->{database}->get_message_account_ancestor($nick, $user, $host);
     my $removed = 0;
 
@@ -869,14 +881,14 @@ sub player_left {
     }
 
     if ($removed) {
-        if ($self->{state_data}->{current_player} >= @{$self->{state_data}->{players}}) { $self->{state_data}->{current_player} = @{$self->{state_data}->{players}} - 1 }
+        if ($self->{state_data}->{current_player} >= @{$self->{state_data}->{players}}) {
+            $self->{state_data}->{current_player} = @{$self->{state_data}->{players}} - 1;
+        }
         $self->send_message($self->{channel}, "$nick has left the game!");
     }
 }
 
-sub send_message {
-    my ($self, $to, $text, $delay) = @_;
-    $delay = 0 if not defined $delay;
+sub send_message($self, $to, $text, $delay = 0) {
     my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
     my $message = {
         nick       => $botnick,
@@ -890,9 +902,7 @@ sub send_message {
     $self->{pbot}->{interpreter}->add_message_to_output_queue($to, $message, $delay);
 }
 
-sub add_new_suggestions {
-    my ($self, $state) = @_;
-
+sub add_new_suggestions($self, $state) {
     my $question = undef;
     my $modified = 0;
 
@@ -919,9 +929,7 @@ sub add_new_suggestions {
     if ($modified) { $self->save_questions; }
 }
 
-sub run_one_state {
-    my $self = shift;
-
+sub run_one_state($self) {
     # check for naughty or missing players
     if ($self->{current_state} =~ /r\dq\d/) {
         my $removed = 0;
@@ -992,7 +1000,6 @@ sub run_one_state {
 
     if (not exists $self->{states}{$self->{current_state}}{trans}{$state_data->{result}}) {
         $self->{pbot}->{logger}->log("Spinach: State broke: no such transistion to $state_data->{result} for state $self->{current_state}\n");
-
         # XXX: do something here
     }
 
@@ -1003,9 +1010,7 @@ sub run_one_state {
     $self->{state_data}->{ticks}++;
 }
 
-sub create_states {
-    my $self = shift;
-
+sub create_states($self) {
     $self->{pbot}->{logger}->log("Spinach: Creating game state machine\n");
 
     $self->{previous_state}  = '';
@@ -1339,30 +1344,28 @@ sub create_states {
     $self->{states}{'gameover'}{trans}{next} = 'getplayers';
 }
 
-sub commify {
-    my $self = shift;
+sub commify($self) {
     my $text = reverse $_[0];
     $text =~ s/(\d\d\d)(?=\d)(?!\d*\.)/$1,/g;
     return scalar reverse $text;
 }
 
-sub normalize_question {
-    my ($self, $text) = @_;
-
+sub normalize_question($self, $text) {
     my @words = split / /, $text;
     my $uc    = 0;
+
     foreach my $word (@words) {
         if ($word =~ m/^[A-Z]/) { $uc++; }
     }
 
-    if ($uc >= @words * .8) { $text = ucfirst lc $text; }
+    if ($uc >= @words * .8) {
+        $text = ucfirst lc $text;
+    }
 
     return $text;
 }
 
-sub normalize_text {
-    my ($self, $text) = @_;
-
+sub normalize_text($self, $text) {
     $text = unidecode $text;
 
     $text =~ s/^\s+|\s+$//g;
@@ -1432,9 +1435,7 @@ sub normalize_text {
     return substr $text, 0, 80;
 }
 
-sub validate_lie {
-    my ($self, $truth, $lie) = @_;
-
+sub validate_lie($self, $truth, $lie) {
     my %truth_words      = @{stem map { $_ => 1 } grep { /^\w+$/ and not exists $self->{stopwords}{lc $_} } split /\b/, $truth};
     my $truth_word_count = keys %truth_words;
 
@@ -1461,9 +1462,7 @@ sub validate_lie {
 
 # generic state subroutines
 
-sub choosecategory {
-    my ($self, $state) = @_;
-
+sub choosecategory($self, $state) {
     if ($state->{init} or $state->{reroll_category}) {
         delete $state->{current_category};
         $state->{current_player}++ unless $state->{reroll_category};
@@ -1521,7 +1520,6 @@ sub choosecategory {
 
         if (not @choices) {
             $self->{pbot}->{logger}->log("Out of questions with current settings!\n");
-
             # XXX: do something useful here
         }
 
@@ -1593,9 +1591,7 @@ sub choosecategory {
     else                                     { return 'wait'; }
 }
 
-sub getnewquestion {
-    my ($self, $state) = @_;
-
+sub getnewquestion($self, $state) {
     if ($state->{ticks} % 3 == 0) {
         my @questions = keys %{$self->{categories}{$state->{current_category}}};
 
@@ -1665,9 +1661,7 @@ sub getnewquestion {
     }
 }
 
-sub showquestion {
-    my ($self, $state, $show_category) = @_;
-
+sub showquestion($self, $state, $show_category) {
     return if $state->{reroll_category};
 
     if (exists $state->{current_question}) {
@@ -1687,9 +1681,7 @@ sub showquestion {
     }
 }
 
-sub getlies {
-    my ($self, $state) = @_;
-
+sub getlies($self, $state) {
     return 'skip' if $state->{reroll_category};
 
     my $tock;
@@ -1780,9 +1772,7 @@ sub getlies {
     return 'wait';
 }
 
-sub findtruth {
-    my ($self, $state) = @_;
-
+sub findtruth($self, $state) {
     my $tock;
     if   ($state->{first_tock}) { $tock = 3; }
     else                        { $tock = $self->{tock_duration}; }
@@ -1884,9 +1874,7 @@ sub findtruth {
     return 'wait';
 }
 
-sub showlies {
-    my ($self, $state) = @_;
-
+sub showlies($self, $state) {
     my @liars;
     my $player;
 
@@ -1972,9 +1960,7 @@ sub showlies {
     return 'wait';
 }
 
-sub showtruth {
-    my ($self, $state) = @_;
-
+sub showtruth($self, $state) {
     if ($state->{ticks} % 3 == 0) {
         my $player_id;
         my $player_data;
@@ -2019,9 +2005,7 @@ sub showtruth {
     }
 }
 
-sub reveallies {
-    my ($self, $state) = @_;
-
+sub reveallies($self, $state) {
     if ($state->{ticks} % 3 == 0) {
         my $text  = 'Revealing lies! ';
         my $comma = '';
@@ -2048,9 +2032,7 @@ sub reveallies {
     }
 }
 
-sub showscore {
-    my ($self, $state) = @_;
-
+sub showscore($self, $state) {
     if ($state->{ticks} % 3 == 0) {
         my $text  = '';
         my $comma = '';
@@ -2068,9 +2050,7 @@ sub showscore {
     }
 }
 
-sub showfinalscore {
-    my ($self, $state) = @_;
-
+sub showfinalscore($self, $state) {
     if ($state->{newstate}) {
         my $player_id;
 
@@ -2153,8 +2133,7 @@ sub showfinalscore {
 
 # state subroutines
 
-sub nogame {
-    my ($self, $state) = @_;
+sub nogame($self, $state) {
     if ($self->{stats_running}) {
         $self->{stats}->end;
         delete $self->{stats_running};
@@ -2164,9 +2143,7 @@ sub nogame {
     return $state;
 }
 
-sub getplayers {
-    my ($self, $state) = @_;
-
+sub getplayers($self, $state) {
     my $players = $state->{players};
 
     my @names;
@@ -2226,8 +2203,7 @@ sub getplayers {
     return $state;
 }
 
-sub round1 {
-    my ($self, $state) = @_;
+sub round1($self, $state) {
     if ($self->{metadata}->get_data('settings', 'stats')) {
         $self->{stats}->begin;
         $self->{stats_running} = 1;
@@ -2239,8 +2215,7 @@ sub round1 {
     return $state;
 }
 
-sub round1q1 {
-    my ($self, $state) = @_;
+sub round1q1($self, $state) {
     if ($state->{ticks} % 2 == 0 || $state->{reroll_category}) {
         $state->{init}      = 1;
         $state->{counter}   = 0;
@@ -2254,14 +2229,12 @@ sub round1q1 {
     return $state;
 }
 
-sub r1q1choosecategory {
-    my ($self, $state) = @_;
+sub r1q1choosecategory($self, $state) {
     $state->{result} = $self->choosecategory($state);
     return $state;
 }
 
-sub r1q1showquestion {
-    my ($self, $state) = @_;
+sub r1q1showquestion($self, $state) {
     my $result = $self->getnewquestion($state);
 
     if ($result eq 'next') {
@@ -2277,8 +2250,7 @@ sub r1q1showquestion {
     return $state;
 }
 
-sub r1q1getlies {
-    my ($self, $state) = @_;
+sub r1q1getlies($self, $state) {
     $state->{result} = $self->getlies($state);
 
     if ($state->{result} eq 'next') {
@@ -2289,38 +2261,32 @@ sub r1q1getlies {
     return $state;
 }
 
-sub r1q1findtruth {
-    my ($self, $state) = @_;
+sub r1q1findtruth($self, $state) {
     $state->{result} = $self->findtruth($state);
     return $state;
 }
 
-sub r1q1showlies {
-    my ($self, $state) = @_;
+sub r1q1showlies($self, $state) {
     $state->{result} = $self->showlies($state);
     return $state;
 }
 
-sub r1q1showtruth {
-    my ($self, $state) = @_;
+sub r1q1showtruth($self, $state) {
     $state->{result} = $self->showtruth($state);
     return $state;
 }
 
-sub r1q1reveallies {
-    my ($self, $state) = @_;
+sub r1q1reveallies($self, $state) {
     $state->{result} = $self->reveallies($state);
     return $state;
 }
 
-sub r1q1showscore {
-    my ($self, $state) = @_;
+sub r1q1showscore($self, $state) {
     $state->{result} = $self->showscore($state);
     return $state;
 }
 
-sub round1q2 {
-    my ($self, $state) = @_;
+sub round1q2($self, $state) {
     if ($state->{ticks} % 2 == 0 || $state->{reroll_category}) {
         $state->{init}      = 1;
         $state->{counter}   = 0;
@@ -2334,14 +2300,12 @@ sub round1q2 {
     return $state;
 }
 
-sub r1q2choosecategory {
-    my ($self, $state) = @_;
+sub r1q2choosecategory($self, $state) {
     $state->{result} = $self->choosecategory($state);
     return $state;
 }
 
-sub r1q2showquestion {
-    my ($self, $state) = @_;
+sub r1q2showquestion($self, $state) {
     my $result = $self->getnewquestion($state);
 
     if ($result eq 'next') {
@@ -2357,8 +2321,7 @@ sub r1q2showquestion {
     return $state;
 }
 
-sub r1q2getlies {
-    my ($self, $state) = @_;
+sub r1q2getlies($self, $state) {
     $state->{result} = $self->getlies($state);
 
     if ($state->{result} eq 'next') {
@@ -2369,38 +2332,32 @@ sub r1q2getlies {
     return $state;
 }
 
-sub r1q2findtruth {
-    my ($self, $state) = @_;
+sub r1q2findtruth($self, $state) {
     $state->{result} = $self->findtruth($state);
     return $state;
 }
 
-sub r1q2showlies {
-    my ($self, $state) = @_;
+sub r1q2showlies($self, $state) {
     $state->{result} = $self->showlies($state);
     return $state;
 }
 
-sub r1q2showtruth {
-    my ($self, $state) = @_;
+sub r1q2showtruth($self, $state) {
     $state->{result} = $self->showtruth($state);
     return $state;
 }
 
-sub r1q2reveallies {
-    my ($self, $state) = @_;
+sub r1q2reveallies($self, $state) {
     $state->{result} = $self->reveallies($state);
     return $state;
 }
 
-sub r1q2showscore {
-    my ($self, $state) = @_;
+sub r1q2showscore($self, $state) {
     $state->{result} = $self->showscore($state);
     return $state;
 }
 
-sub round1q3 {
-    my ($self, $state) = @_;
+sub round1q3($self, $state) {
     if ($state->{ticks} % 2 || $state->{reroll_category}) {
         $state->{init}      = 1;
         $state->{max_count} = $self->{choosecategory_max_count};
@@ -2414,14 +2371,12 @@ sub round1q3 {
     return $state;
 }
 
-sub r1q3choosecategory {
-    my ($self, $state) = @_;
+sub r1q3choosecategory($self, $state) {
     $state->{result} = $self->choosecategory($state);
     return $state;
 }
 
-sub r1q3showquestion {
-    my ($self, $state) = @_;
+sub r1q3showquestion($self, $state) {
     my $result = $self->getnewquestion($state);
 
     if ($result eq 'next') {
@@ -2437,8 +2392,7 @@ sub r1q3showquestion {
     return $state;
 }
 
-sub r1q3getlies {
-    my ($self, $state) = @_;
+sub r1q3getlies($self, $state) {
     $state->{result} = $self->getlies($state);
 
     if ($state->{result} eq 'next') {
@@ -2449,38 +2403,32 @@ sub r1q3getlies {
     return $state;
 }
 
-sub r1q3findtruth {
-    my ($self, $state) = @_;
+sub r1q3findtruth($self, $state) {
     $state->{result} = $self->findtruth($state);
     return $state;
 }
 
-sub r1q3showlies {
-    my ($self, $state) = @_;
+sub r1q3showlies($self, $state) {
     $state->{result} = $self->showlies($state);
     return $state;
 }
 
-sub r1q3showtruth {
-    my ($self, $state) = @_;
+sub r1q3showtruth($self, $state) {
     $state->{result} = $self->showtruth($state);
     return $state;
 }
 
-sub r1q3reveallies {
-    my ($self, $state) = @_;
+sub r1q3reveallies($self, $state) {
     $state->{result} = $self->reveallies($state);
     return $state;
 }
 
-sub r1q3showscore {
-    my ($self, $state) = @_;
+sub r1q3showscore($self, $state) {
     $state->{result} = $self->showscore($state);
     return $state;
 }
 
-sub round2 {
-    my ($self, $state) = @_;
+sub round2($self, $state) {
     $state->{truth_points}  = 750;
     $state->{lie_points}    = 1500;
     $state->{my_lie_points} = $state->{lie_points} * 0.25;
@@ -2488,8 +2436,7 @@ sub round2 {
     return $state;
 }
 
-sub round2q1 {
-    my ($self, $state) = @_;
+sub round2q1($self, $state) {
     if ($state->{ticks} % 2 == 0 || $state->{reroll_category}) {
         $state->{init}      = 1;
         $state->{max_count} = $self->{choosecategory_max_count};
@@ -2503,14 +2450,12 @@ sub round2q1 {
     return $state;
 }
 
-sub r2q1choosecategory {
-    my ($self, $state) = @_;
+sub r2q1choosecategory($self, $state) {
     $state->{result} = $self->choosecategory($state);
     return $state;
 }
 
-sub r2q1showquestion {
-    my ($self, $state) = @_;
+sub r2q1showquestion($self, $state) {
     my $result = $self->getnewquestion($state);
 
     if ($result eq 'next') {
@@ -2526,8 +2471,7 @@ sub r2q1showquestion {
     return $state;
 }
 
-sub r2q1getlies {
-    my ($self, $state) = @_;
+sub r2q1getlies($self, $state) {
     $state->{result} = $self->getlies($state);
 
     if ($state->{result} eq 'next') {
@@ -2538,38 +2482,32 @@ sub r2q1getlies {
     return $state;
 }
 
-sub r2q1findtruth {
-    my ($self, $state) = @_;
+sub r2q1findtruth($self, $state) {
     $state->{result} = $self->findtruth($state);
     return $state;
 }
 
-sub r2q1showlies {
-    my ($self, $state) = @_;
+sub r2q1showlies($self, $state) {
     $state->{result} = $self->showlies($state);
     return $state;
 }
 
-sub r2q1showtruth {
-    my ($self, $state) = @_;
+sub r2q1showtruth($self, $state) {
     $state->{result} = $self->showtruth($state);
     return $state;
 }
 
-sub r2q1reveallies {
-    my ($self, $state) = @_;
+sub r2q1reveallies($self, $state) {
     $state->{result} = $self->reveallies($state);
     return $state;
 }
 
-sub r2q1showscore {
-    my ($self, $state) = @_;
+sub r2q1showscore($self, $state) {
     $state->{result} = $self->showscore($state);
     return $state;
 }
 
-sub round2q2 {
-    my ($self, $state) = @_;
+sub round2q2($self, $state) {
     if ($state->{ticks} % 2 == 0 || $state->{reroll_category}) {
         $state->{init}      = 1;
         $state->{max_count} = $self->{choosecategory_max_count};
@@ -2583,14 +2521,12 @@ sub round2q2 {
     return $state;
 }
 
-sub r2q2choosecategory {
-    my ($self, $state) = @_;
+sub r2q2choosecategory($self, $state) {
     $state->{result} = $self->choosecategory($state);
     return $state;
 }
 
-sub r2q2showquestion {
-    my ($self, $state) = @_;
+sub r2q2showquestion($self, $state) {
     my $result = $self->getnewquestion($state);
 
     if ($result eq 'next') {
@@ -2606,8 +2542,7 @@ sub r2q2showquestion {
     return $state;
 }
 
-sub r2q2getlies {
-    my ($self, $state) = @_;
+sub r2q2getlies($self, $state) {
     $state->{result} = $self->getlies($state);
 
     if ($state->{result} eq 'next') {
@@ -2618,38 +2553,32 @@ sub r2q2getlies {
     return $state;
 }
 
-sub r2q2findtruth {
-    my ($self, $state) = @_;
+sub r2q2findtruth($self, $state) {
     $state->{result} = $self->findtruth($state);
     return $state;
 }
 
-sub r2q2showlies {
-    my ($self, $state) = @_;
+sub r2q2showlies($self, $state) {
     $state->{result} = $self->showlies($state);
     return $state;
 }
 
-sub r2q2showtruth {
-    my ($self, $state) = @_;
+sub r2q2showtruth($self, $state) {
     $state->{result} = $self->showtruth($state);
     return $state;
 }
 
-sub r2q2reveallies {
-    my ($self, $state) = @_;
+sub r2q2reveallies($self, $state) {
     $state->{result} = $self->reveallies($state);
     return $state;
 }
 
-sub r2q2showscore {
-    my ($self, $state) = @_;
+sub r2q2showscore($self, $state) {
     $state->{result} = $self->showscore($state);
     return $state;
 }
 
-sub round2q3 {
-    my ($self, $state) = @_;
+sub round2q3($self, $state) {
     if ($state->{ticks} % 2 == 0 || $state->{reroll_category}) {
         $state->{init}      = 1;
         $state->{max_count} = $self->{choosecategory_max_count};
@@ -2663,14 +2592,12 @@ sub round2q3 {
     return $state;
 }
 
-sub r2q3choosecategory {
-    my ($self, $state) = @_;
+sub r2q3choosecategory($self, $state) {
     $state->{result} = $self->choosecategory($state);
     return $state;
 }
 
-sub r2q3showquestion {
-    my ($self, $state) = @_;
+sub r2q3showquestion($self, $state) {
     my $result = $self->getnewquestion($state);
 
     if ($result eq 'next') {
@@ -2686,8 +2613,7 @@ sub r2q3showquestion {
     return $state;
 }
 
-sub r2q3getlies {
-    my ($self, $state) = @_;
+sub r2q3getlies($self, $state) {
     $state->{result} = $self->getlies($state);
 
     if ($state->{result} eq 'next') {
@@ -2698,38 +2624,32 @@ sub r2q3getlies {
     return $state;
 }
 
-sub r2q3findtruth {
-    my ($self, $state) = @_;
+sub r2q3findtruth($self, $state) {
     $state->{result} = $self->findtruth($state);
     return $state;
 }
 
-sub r2q3showlies {
-    my ($self, $state) = @_;
+sub r2q3showlies($self, $state) {
     $state->{result} = $self->showlies($state);
     return $state;
 }
 
-sub r2q3showtruth {
-    my ($self, $state) = @_;
+sub r2q3showtruth($self, $state) {
     $state->{result} = $self->showtruth($state);
     return $state;
 }
 
-sub r2q3reveallies {
-    my ($self, $state) = @_;
+sub r2q3reveallies($self, $state) {
     $state->{result} = $self->reveallies($state);
     return $state;
 }
 
-sub r2q3showscore {
-    my ($self, $state) = @_;
+sub r2q3showscore($self, $state) {
     $state->{result} = $self->showscore($state);
     return $state;
 }
 
-sub round3 {
-    my ($self, $state) = @_;
+sub round3($self, $state) {
     $state->{truth_points}  = 1000;
     $state->{lie_points}    = 2000;
     $state->{my_lie_points} = $state->{lie_points} * 0.25;
@@ -2737,8 +2657,7 @@ sub round3 {
     return $state;
 }
 
-sub round3q1 {
-    my ($self, $state) = @_;
+sub round3q1($self, $state) {
     if ($state->{ticks} % 2 == 0 || $state->{reroll_category}) {
         $state->{init}      = 1;
         $state->{max_count} = $self->{choosecategory_max_count};
@@ -2752,14 +2671,12 @@ sub round3q1 {
     return $state;
 }
 
-sub r3q1choosecategory {
-    my ($self, $state) = @_;
+sub r3q1choosecategory($self, $state) {
     $state->{result} = $self->choosecategory($state);
     return $state;
 }
 
-sub r3q1showquestion {
-    my ($self, $state) = @_;
+sub r3q1showquestion($self, $state) {
     my $result = $self->getnewquestion($state);
 
     if ($result eq 'next') {
@@ -2775,8 +2692,7 @@ sub r3q1showquestion {
     return $state;
 }
 
-sub r3q1getlies {
-    my ($self, $state) = @_;
+sub r3q1getlies($self, $state) {
     $state->{result} = $self->getlies($state);
 
     if ($state->{result} eq 'next') {
@@ -2787,38 +2703,32 @@ sub r3q1getlies {
     return $state;
 }
 
-sub r3q1findtruth {
-    my ($self, $state) = @_;
+sub r3q1findtruth($self, $state) {
     $state->{result} = $self->findtruth($state);
     return $state;
 }
 
-sub r3q1showlies {
-    my ($self, $state) = @_;
+sub r3q1showlies($self, $state) {
     $state->{result} = $self->showlies($state);
     return $state;
 }
 
-sub r3q1showtruth {
-    my ($self, $state) = @_;
+sub r3q1showtruth($self, $state) {
     $state->{result} = $self->showtruth($state);
     return $state;
 }
 
-sub r3q1reveallies {
-    my ($self, $state) = @_;
+sub r3q1reveallies($self, $state) {
     $state->{result} = $self->reveallies($state);
     return $state;
 }
 
-sub r3q1showscore {
-    my ($self, $state) = @_;
+sub r3q1showscore($self, $state) {
     $state->{result} = $self->showscore($state);
     return $state;
 }
 
-sub round3q2 {
-    my ($self, $state) = @_;
+sub round3q2($self, $state) {
     if ($state->{ticks} % 2 == 0 || $state->{reroll_category}) {
         $state->{init}      = 1;
         $state->{max_count} = $self->{choosecategory_max_count};
@@ -2832,14 +2742,12 @@ sub round3q2 {
     return $state;
 }
 
-sub r3q2choosecategory {
-    my ($self, $state) = @_;
+sub r3q2choosecategory($self, $state) {
     $state->{result} = $self->choosecategory($state);
     return $state;
 }
 
-sub r3q2showquestion {
-    my ($self, $state) = @_;
+sub r3q2showquestion($self, $state) {
     my $result = $self->getnewquestion($state);
 
     if ($result eq 'next') {
@@ -2855,8 +2763,7 @@ sub r3q2showquestion {
     return $state;
 }
 
-sub r3q2getlies {
-    my ($self, $state) = @_;
+sub r3q2getlies($self, $state) {
     $state->{result} = $self->getlies($state);
 
     if ($state->{result} eq 'next') {
@@ -2867,38 +2774,32 @@ sub r3q2getlies {
     return $state;
 }
 
-sub r3q2findtruth {
-    my ($self, $state) = @_;
+sub r3q2findtruth($self, $state) {
     $state->{result} = $self->findtruth($state);
     return $state;
 }
 
-sub r3q2showlies {
-    my ($self, $state) = @_;
+sub r3q2showlies($self, $state) {
     $state->{result} = $self->showlies($state);
     return $state;
 }
 
-sub r3q2showtruth {
-    my ($self, $state) = @_;
+sub r3q2showtruth($self, $state) {
     $state->{result} = $self->showtruth($state);
     return $state;
 }
 
-sub r3q2reveallies {
-    my ($self, $state) = @_;
+sub r3q2reveallies($self, $state) {
     $state->{result} = $self->reveallies($state);
     return $state;
 }
 
-sub r3q2showscore {
-    my ($self, $state) = @_;
+sub r3q2showscore($self, $state) {
     $state->{result} = $self->showscore($state);
     return $state;
 }
 
-sub round3q3 {
-    my ($self, $state) = @_;
+sub round3q3($self, $state) {
     if ($state->{ticks} % 2 == 0 || $state->{reroll_category}) {
         $state->{init}      = 1;
         $state->{max_count} = $self->{choosecategory_max_count};
@@ -2912,14 +2813,12 @@ sub round3q3 {
     return $state;
 }
 
-sub r3q3choosecategory {
-    my ($self, $state) = @_;
+sub r3q3choosecategory($self, $state) {
     $state->{result} = $self->choosecategory($state);
     return $state;
 }
 
-sub r3q3showquestion {
-    my ($self, $state) = @_;
+sub r3q3showquestion($self, $state) {
     my $result = $self->getnewquestion($state);
 
     if ($result eq 'next') {
@@ -2935,8 +2834,7 @@ sub r3q3showquestion {
     return $state;
 }
 
-sub r3q3getlies {
-    my ($self, $state) = @_;
+sub r3q3getlies($self, $state) {
     $state->{result} = $self->getlies($state);
 
     if ($state->{result} eq 'next') {
@@ -2947,38 +2845,32 @@ sub r3q3getlies {
     return $state;
 }
 
-sub r3q3findtruth {
-    my ($self, $state) = @_;
+sub r3q3findtruth($self, $state) {
     $state->{result} = $self->findtruth($state);
     return $state;
 }
 
-sub r3q3showlies {
-    my ($self, $state) = @_;
+sub r3q3showlies($self, $state) {
     $state->{result} = $self->showlies($state);
     return $state;
 }
 
-sub r3q3showtruth {
-    my ($self, $state) = @_;
+sub r3q3showtruth($self, $state) {
     $state->{result} = $self->showtruth($state);
     return $state;
 }
 
-sub r3q3reveallies {
-    my ($self, $state) = @_;
+sub r3q3reveallies($self, $state) {
     $state->{result} = $self->reveallies($state);
     return $state;
 }
 
-sub r3q3showscore {
-    my ($self, $state) = @_;
+sub r3q3showscore($self, $state) {
     $state->{result} = $self->showscore($state);
     return $state;
 }
 
-sub round4 {
-    my ($self, $state) = @_;
+sub round4($self, $state) {
     $state->{truth_points}  = 2000;
     $state->{lie_points}    = 3000;
     $state->{my_lie_points} = $state->{lie_points} * 0.25;
@@ -2986,8 +2878,7 @@ sub round4 {
     return $state;
 }
 
-sub round4q1 {
-    my ($self, $state) = @_;
+sub round4q1($self, $state) {
     if ($state->{ticks} % 2 == 0 || $state->{reroll_category}) {
         $state->{init}            = 1;
         $state->{random_category} = 1;
@@ -3002,14 +2893,12 @@ sub round4q1 {
     return $state;
 }
 
-sub r4q1choosecategory {
-    my ($self, $state) = @_;
+sub r4q1choosecategory($self, $state) {
     $state->{result} = $self->choosecategory($state);
     return $state;
 }
 
-sub r4q1showquestion {
-    my ($self, $state) = @_;
+sub r4q1showquestion($self, $state) {
     my $result = $self->getnewquestion($state);
 
     if ($result eq 'next') {
@@ -3025,8 +2914,7 @@ sub r4q1showquestion {
     return $state;
 }
 
-sub r4q1getlies {
-    my ($self, $state) = @_;
+sub r4q1getlies($self, $state) {
     $state->{result} = $self->getlies($state);
 
     if ($state->{result} eq 'next') {
@@ -3037,39 +2925,32 @@ sub r4q1getlies {
     return $state;
 }
 
-sub r4q1findtruth {
-    my ($self, $state) = @_;
+sub r4q1findtruth($self, $state) {
     $state->{result} = $self->findtruth($state);
     return $state;
 }
 
-sub r4q1showlies {
-    my ($self, $state) = @_;
+sub r4q1showlies($self, $state) {
     $state->{result} = $self->showlies($state);
     return $state;
 }
 
-sub r4q1showtruth {
-    my ($self, $state) = @_;
+sub r4q1showtruth($self, $state) {
     $state->{result} = $self->showtruth($state);
     return $state;
 }
 
-sub r4q1reveallies {
-    my ($self, $state) = @_;
+sub r4q1reveallies($self, $state) {
     $state->{result} = $self->reveallies($state);
     return $state;
 }
 
-sub r4q1showscore {
-    my ($self, $state) = @_;
+sub r4q1showscore($self, $state) {
     $state->{result} = $self->showfinalscore($state);
     return $state;
 }
 
-sub gameover {
-    my ($self, $state) = @_;
-
+sub gameover($self, $state) {
     if ($state->{ticks} % 3 == 0) {
         $self->send_message($self->{channel}, "Game over!");
 

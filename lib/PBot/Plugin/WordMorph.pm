@@ -3,7 +3,7 @@
 # Purpose: Word morph game. Solve a path between two words by changing one
 # letter at a time. love > shot = love > lose > lost > loot > soot > shot.
 
-# SPDX-FileCopyrightText: 2022 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2022-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Plugin::WordMorph;
@@ -14,9 +14,7 @@ use PBot::Imports;
 use Storable;
 use Text::Levenshtein::XS 'distance';
 
-sub initialize {
-    my ($self, %conf) = @_;
-
+sub initialize($self, %conf) {
     $self->{pbot}->{commands}->add(
         name => 'wordmorph',
         help => 'Word Morph game! Solve a path between two words by changing one letter at a time: love > shot = love > lose > lost > loot > soot > shot.',
@@ -29,8 +27,7 @@ sub initialize {
         or $self->{pbot}->{logger}->log($@);
 }
 
-sub unload {
-    my ($self) = @_;
+sub unload($self) {
     $self->{pbot}->{commands}->remove('wordmorph');
 }
 
@@ -47,9 +44,7 @@ use constant {
     MAX_WORD_LENGTH => 7,
 };
 
-sub wordmorph {
-    my ($self, $context) = @_;
-
+sub wordmorph($self, $context) {
     my @args = $self->{pbot}->{interpreter}->split_line($context->{arguments});
 
     my $command = shift @args;
@@ -303,9 +298,7 @@ sub wordmorph {
     }
 }
 
-sub load_db {
-    my ($self) = @_;
-
+sub load_db($self) {
     if (not -e $self->{db_path}) {
         die "Word morph database not available; run `/misc/wordmorph/wordmorph-mkdb` to create it.\n";
     }
@@ -313,9 +306,7 @@ sub load_db {
     return retrieve($self->{db_path});
 }
 
-sub show_morph_with_blanks {
-    my ($self, $channel) = @_;
-
+sub show_morph_with_blanks($self, $channel) {
     my @middle;
     for (1 .. @{$self->{$channel}->{morph}} - 2) {
         push @middle, '_' x length $self->{$channel}->{word1};
@@ -324,8 +315,7 @@ sub show_morph_with_blanks {
     return "$self->{$channel}->{word1} > " . join(' > ', @middle) . " > $self->{$channel}->{word2}";
 }
 
-sub set_up_new_morph {
-    my ($self, $morph, $channel) = @_;
+sub set_up_new_morph($self, $morph, $channel) {
     $self->{$channel}->{morph} = $morph;
     $self->{$channel}->{word1} = $morph->[0];
     $self->{$channel}->{word2} = $morph->[$#$morph];
@@ -333,9 +323,7 @@ sub set_up_new_morph {
     $self->{$channel}->{hintR} = $#$morph - 1;
 }
 
-sub form_hint {
-    my ($word1, $word2) = @_;
-
+sub form_hint($word1, $word2) {
     my $hint = '';
 
     for (0 .. length $word1) {
@@ -349,9 +337,7 @@ sub form_hint {
     return $hint;
 }
 
-sub validate_word {
-    my ($self, $word, $min, $max) = @_;
-
+sub validate_word($self, $word, $min, $max) {
     my $len = length $word;
 
     if ($len < $min) {
@@ -367,9 +353,7 @@ sub validate_word {
     return undef;
 }
 
-sub compare_suffix {
-    my ($word1, $word2) = @_;
-
+sub compare_suffix($word1, $word2) {
     my $length = 0;
 
     for (my $i = length($word1) - 1; $i >= 0; --$i) {
@@ -383,9 +367,7 @@ sub compare_suffix {
     return $length;
 }
 
-sub make_morph_by_steps {
-    my ($self, $db, $steps, $length) = @_;
-
+sub make_morph_by_steps($self, $db, $steps, $length) {
     $length //= int(rand(3)) + 5;
 
     my @words = keys %{$db->{$length}};
@@ -428,17 +410,14 @@ sub make_morph_by_steps {
 
 # the following subs are based on https://www.perlmonks.org/?node_id=558123
 
-sub makemorph {
-    my ($db, $left, $right) = @_;
+sub makemorph($db, $left, $right) {
     die "The length of given words are not equal.\n" if length($left) != length($right);
     my $list = $db->{length $left};
     my $morph = eval { [transform(lc $left, lc $right, $list)] } or die $@;
     return $morph;
 }
 
-sub transform {
-    my ($left, $right, $list) = @_;
-
+sub transform($left, $right, $list) {
     my (@left, %left, @right, %right);      # @left and @right- arrays containing word relation trees: ([foo], [0, foe], [0, fou], [0, 1, fie] ...)
                                             # %left and %right - indices containing word offsets in arrays @left and @right
 
@@ -502,9 +481,7 @@ sub transform {
     return @path;
 }
 
-sub print_rel {
-    my ($id, $ary) = @_;
-
+sub print_rel($id, $ary) {
     my @rel = @{$ary->[$id]};
     my @line;
 
