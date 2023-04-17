@@ -473,7 +473,7 @@ sub add_reminder($self, %args) {
 }
 
 # delete a reminder by its id, from SQLite and the PBot event queue
-sub delete_reminder($self, $id, $dont_dequeue) {
+sub delete_reminder($self, $id, $dont_dequeue = 0) {
     return if not $self->{dbh};
 
     # remove from SQLite database
