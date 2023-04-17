@@ -137,7 +137,7 @@ sub clear($self) {
     $self->{hash} = {};
 }
 
-sub levenshtein_matches($self, $primary_index, $secondary_index, $distance = 0.60, $strictnamespace = 0) {
+sub levenshtein_matches($self, $primary_index = undef, $secondary_index = undef, $distance = 0.60, $strictnamespace = 0) {
     my $comma  = '';
     my $result = "";
 

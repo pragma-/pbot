@@ -225,7 +225,7 @@ sub cmd_factundo($self, $context) {
         }
     }
 
-    $self->{pbot}->{factoids}->{data}->{storage}->add($channel, $trigger, $undos->{list}->[$undos->{idx}], 0, 1);
+    $self->{pbot}->{factoids}->{data}->{storage}->add($channel, $trigger, $undos->{list}->[$undos->{idx}]);
 
     my $changes = $self->hash_differences_as_string($undos->{list}->[$undos->{idx} + 1], $undos->{list}->[$undos->{idx}]);
     $self->log_factoid($channel, $trigger, $context->{hostmask}, "reverted (undo): $changes", 1);
@@ -315,7 +315,7 @@ sub cmd_factredo($self, $context) {
         $self->{pbot}->{logger}->log("Error storing undo: $@\n") if $@;
     }
 
-    $self->{pbot}->{factoids}->{data}->{storage}->add($channel, $trigger, $undos->{list}->[$undos->{idx}], 0, 1);
+    $self->{pbot}->{factoids}->{data}->{storage}->add($channel, $trigger, $undos->{list}->[$undos->{idx}]);
 
     my $changes = $self->hash_differences_as_string($undos->{list}->[$undos->{idx} - 1], $undos->{list}->[$undos->{idx}]);
 
@@ -585,7 +585,7 @@ sub cmd_factmove($self, $context) {
 
     my $data = $factoids->get_data($found_src_channel, $found_source);
     $factoids->remove($found_src_channel, $found_source, undef, 1);
-    $factoids->add($target_channel, $target, $data, 0, 1);
+    $factoids->add($target_channel, $target, $data);
 
     $found_src_channel = 'global' if $found_src_channel eq '.*';
     $target_channel    = 'global' if $target_channel eq '.*';
