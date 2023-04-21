@@ -1366,9 +1366,9 @@ sub cmd_factchange($self, $context) {
 
     $self->{pbot}->{logger}->log("($context->{from}) $context->{hostmask} changed '$trigger' 's/$tochange/$changeto/\n");
 
-    $factoids_data->set($channel, $trigger, 'action',    $action,              1);
-    $factoids_data->set($channel, $trigger, 'edited_by', $context->{hostmask}, 1);
-    $factoids_data->set($channel, $trigger, 'edited_on', gettimeofday);
+    $factoids_data->set($channel, $trigger, 'action',    $action);
+    $factoids_data->set($channel, $trigger, 'edited_by', $context->{hostmask});
+    $factoids_data->set($channel, $trigger, 'edited_on', scalar gettimeofday);
     $self->log_factoid($channel, $trigger, $context->{hostmask}, "changed to $action");
     return "Changed: $trigger_name is $action";
 }

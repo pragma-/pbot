@@ -32,7 +32,7 @@ sub cmd_load($self, $context) {
 
     $self->{pbot}->{factoids}->{data}->add('applet', '.*', $context->{hostmask}, $keyword, $applet, 1);
 
-    $factoids->set('.*', $keyword, 'add_nick',   1, 1);
+    $factoids->set('.*', $keyword, 'add_nick',   1);
     $factoids->set('.*', $keyword, 'nooverride', 1);
 
     $self->{pbot}->{logger}->log("$context->{hostmask} loaded applet $keyword => $applet\n");
