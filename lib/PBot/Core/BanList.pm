@@ -142,7 +142,7 @@ sub has_ban_timeout($self, $channel, $mask, $mode = 'b') {
     }
 }
 
-sub ban_user_timed($self, $channel, $mode, $mask, $length, $owner, $reason, $immediately = 0) {
+sub ban_user_timed($self, $channel, $mode, $mask, $length, $owner, $reason, $immediately = undef) {
     $channel = lc $channel;
     $mask    = lc $mask;
 
@@ -172,22 +172,22 @@ sub ban_user_timed($self, $channel, $mode, $mask, $length, $owner, $reason, $imm
     }
 }
 
-sub ban_user($self, $channel, $mode, $mask, $immediately = 0) {
+sub ban_user($self, $channel, $mode, $mask, $immediately = undef) {
     $self->{pbot}->{logger}->log("Banning $channel +$mode $mask\n");
     $self->add_to_ban_queue($channel, $mode, $mask);
-    if ($immediately) {
+    if (not defined $immediately or $immediately != 0) {
         $self->flush_ban_queue;
     }
 }
 
-sub unban_user($self, $channel, $mode, $mask, $immediately = 0) {
+sub unban_user($self, $channel, $mode, $mask, $immediately = undef) {
     $mask    = lc $mask;
     $channel = lc $channel;
     $self->{pbot}->{logger}->log("Unbanning $channel -$mode $mask\n");
     $self->unmode_user($channel, $mode, $mask, $immediately);
 }
 
-sub unmode_user($self, $channel, $mode, $mask, $immediately = 0) {
+sub unmode_user($self, $channel, $mode, $mask, $immediately = undef) {
     $mask    = lc $mask;
     $channel = lc $channel;
     $self->{pbot}->{logger}->log("Removing mode $mode from $mask in $channel\n");
