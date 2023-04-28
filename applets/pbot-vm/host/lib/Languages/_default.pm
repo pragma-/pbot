@@ -448,7 +448,7 @@ sub show_output($self) {
         exit 0;
     }
 
-    if ($self->{channel} =~ m/^#/ and length $output > 22 and open my $fh, '<:encoding(UTF-8)', "$RealBin/../history/$self->{channel}-$self->{lang}.last-output") {
+    if ($self->{channel} =~ m/^#/ and length $output > 50 and open my $fh, '<:encoding(UTF-8)', "$RealBin/../history/$self->{channel}-$self->{lang}.last-output") {
         my $last_output;
         my $time = <$fh>;
 
