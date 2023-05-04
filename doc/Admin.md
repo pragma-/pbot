@@ -498,18 +498,20 @@ Bans or mutes a user. If the argument is a nick instead of a hostmask, it will d
 The argument can be a comma-separated list of multiple nicks or masks.
 
 Usages:
-- `ban <nick or hostmask> [channel [timeout]]`
-- `mute <nick or hostmask> [channel [timeout]]`
+- `ban <mask> [timeout (default: 24h) [reason]] [-c <channel>] [-t <timeout>] [-r <reason>]`
+- `mute <mask> [timeout (default: 24h) [reason]] [-c <channel>] [-t <timeout>] [-r <reason>]`
 
 If `timeout` is omitted, PBot will ban the user for 24 hours. Timeout can be specified as an relative time in English; for instance, `5 minutes`, `1 month and 2 weeks`, `next thursday`, `friday after next`, `forever` and such.
+
+If a ban already exists, you may update the timeout or reason at any time.
 
 ### unban/unmute
 Unbans or unmutes a user. If the argument is a nick instead of a hostmask, it will find all bans that match any of that nick's hostmasks or NickServ accounts and unban them.
 The argument can be a comma-separated list of multiple nicks or masks. If the argument is `*` then all bans/mutes for the channel will be removed.
 
 Usages:
-- `unban <nick or hostmask> [channel]`
-- `unmute <nick or hostmask> [channel]`
+- `unban <nick/hostmask,...> [channel]`
+- `unmute <nick/hostmask,...> [channel]`
 
 ### checkban
 The `checkban` command displays information about an entry in PBot's internal banlist. PBot's internal banlist
@@ -523,7 +525,7 @@ If the `[channel]` option is omitted, the channel in which the command is invoke
 Example:
 
     <pragma-> checkban loser!*@*
-       <PBot> loser!*@* banned in #c on Tue Aug 31 06:41:24 2021 PDT (14d15h ago) by candide!~pbot3@about/c/bot/candide for chat-flooding (2h remaining)
+       <PBot> loser!*@* banned in #c on Tue Aug 31 06:41:24 2021 PDT (14d15h ago) by candide!~pbot3@about/c/bot/candide because chat-flooding (2h remaining)
 
 ### checkmute
 The `checkmute` command is identical to the [`checkban`](#checkban) command, except for mutes instead of bans.
@@ -538,8 +540,8 @@ Usage: `invite [channel] <nick>`
 ### kick
 Removes a user from the channel. `<nick>` can be a comma-separated list of multiple users, optionally containing wildcards. If `[reason]` is omitted, a random insult will be used.
 
-Usage from channel:   `kick <nick> [reason]`
-From private message: `kick <channel> <nick> [reason]`
+Usage from channel:   `kick <nick,...> [reason]`
+From private message: `kick <channel> <nick,...> [reason]`
 
 ## Applet-management
 Note that applets are "reloaded" each time they are executed. There is no need to `refresh` after editing an applet.

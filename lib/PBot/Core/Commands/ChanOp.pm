@@ -337,81 +337,7 @@ sub cmd_mode($self, $context) {
 }
 
 sub cmd_ban($self, $context) {
-    my ($target, $channel, $length) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 3);
-
-    $channel = '' if not defined $channel;
-    $length  = '' if not defined $length;
-
-    if (not defined $context->{from}) {
-        $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
-        return "";
-    }
-
-    if ($channel !~ m/^#/) {
-        $length  = "$channel $length";
-        $length  = undef if $length eq ' ';
-        $channel = exists $context->{admin_channel_override} ? $context->{admin_channel_override} : $context->{from};
-    }
-
-    if (not defined $channel or not length $channel) {
-        $channel = exists $context->{admin_channel_override} ? $context->{admin_channel_override} : $context->{from};
-    }
-
-    if (not defined $target) { return "Usage: ban <mask> [channel [timeout (default: 24 hours)]]"; }
-
-    my $no_length = 0;
-    if (not defined $length) {
-        # TODO: user account length override
-        $length = $self->{pbot}->{registry}->get_value($channel, 'default_ban_timeout', 0, $context)
-          // $self->{pbot}->{registry}->get_value('general', 'default_ban_timeout', 0, $context) // 60 * 60 * 24;    # 24 hours
-        $no_length = 1;
-    } else {
-        my $error;
-        ($length, $error) = $self->{pbot}->{parsedate}->parsedate($length);
-        return $error if defined $error;
-    }
-
-    $channel = lc $channel;
-    $target  = lc $target;
-
-    my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
-    return "I don't think so." if $target =~ /^\Q$botnick\E!/i;
-
-    my $result      = '';
-    my $sep         = '';
-    my @targets     = split /,/, $target;
-    my $immediately = @targets > 1 ? 0 : 1;
-    my $duration;
-
-    foreach my $t (@targets) {
-        my $mask = lc $self->{pbot}->{banlist}->nick_to_banmask($t);
-
-        my $timeout = $self->{pbot}->{banlist}->{banlist}->get_data($channel, $mask, 'timeout') // 0;
-
-        if ($no_length && $timeout > 0) {
-            my $d = duration($timeout - gettimeofday);
-            $result .= "$sep$mask has $d remaining on their $channel ban";
-            $sep = '; ';
-        } else {
-            $self->{pbot}->{banlist}->ban_user_timed($channel, 'b', $mask, $length, $context->{hostmask}, undef, $immediately);
-            $duration = $length > 0 ? duration $length : 'all eternity';
-            if ($immediately) {
-                $result .= "$sep$mask banned in $channel for $duration";
-                $sep = '; ';
-            } else {
-                $result .= "$sep$mask";
-                $sep = ', ';
-            }
-        }
-    }
-
-    if (not $immediately) {
-        $result .= " banned in $channel for $duration";
-        $self->{pbot}->{banlist}->flush_ban_queue;
-    }
-
-    $result = "/msg $context->{nick} $result" if $result !~ m/remaining on their/;
-    return $result;
+    return do_ban_or_mute($self, $context, 'ban');
 }
 
 sub cmd_unban($self, $context) {
@@ -428,7 +354,7 @@ sub cmd_unban($self, $context) {
         $channel = $temp;
     }
 
-    if (not defined $target) { return "Usage: unban <nick/mask> [channel [false value to use unban queue]]"; }
+    if (not defined $target) { return "Usage: unban <nick/mask,...> [channel [false value to use unban queue]]"; }
 
     if (not defined $channel) {
         $channel = exists $context->{admin_channel_override} ? $context->{admin_channel_override} : $context->{from};
@@ -436,7 +362,7 @@ sub cmd_unban($self, $context) {
 
     $immediately = 1 if not defined $immediately;
 
-    return "Usage for /msg: unban <nick/mask> <channel> [false value to use unban queue]" if $channel !~ /^#/;
+    return "Usage: unban <nick/mask,...> <channel> [false value to use unban queue]" if $channel !~ /^#/;
 
     my @targets = split /,/, $target;
     $immediately = 0 if @targets > 1;
@@ -465,83 +391,7 @@ sub cmd_unban($self, $context) {
 }
 
 sub cmd_mute($self, $context) {
-    my ($target, $channel, $length) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 3);
-
-    $channel = '' if not defined $channel;
-
-    if (not defined $context->{from}) {
-        $self->{pbot}->{logger}->log("Command missing ~from parameter!\n");
-        return "";
-    }
-
-    if (not length $channel and $context->{from} !~ m/^#/) {
-        return "Usage from private message: mute <mask> <channel> [timeout (default: 24 hours)]";
-    }
-
-    if ($channel !~ m/^#/) {
-        $length  = $channel . ' ' . (defined $length ? $length : '');
-        $length  = undef if $length eq ' ';
-        $channel = exists $context->{admin_channel_override} ? $context->{admin_channel_override} : $context->{from};
-    }
-
-    $channel = exists $context->{admin_channel_override} ? $context->{admin_channel_override} : $context->{from} if not defined $channel;
-
-    if ($channel !~ m/^#/) { return "Please specify a channel."; }
-
-    if (not defined $target) { return "Usage: mute <mask> [channel [timeout (default: 24 hours)]]"; }
-
-    my $no_length = 0;
-    if (not defined $length) {
-        $length = $self->{pbot}->{registry}->get_value($channel, 'default_mute_timeout', 0, $context)
-          // $self->{pbot}->{registry}->get_value('general', 'default_mute_timeout', 0, $context) // 60 * 60 * 24;    # 24 hours
-        $no_length = 1;
-    } else {
-        my $error;
-        ($length, $error) = $self->{pbot}->{parsedate}->parsedate($length);
-        return $error if defined $error;
-    }
-
-    $channel = lc $channel;
-    $target  = lc $target;
-
-    my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
-    return "I don't think so." if $target =~ /^\Q$botnick\E!/i;
-
-    my $result      = '';
-    my $sep         = '';
-    my @targets     = split /,/, $target;
-    my $immediately = @targets > 1 ? 0 : 1;
-    my $duration;
-
-    foreach my $t (@targets) {
-        my $mask = lc $self->{pbot}->{banlist}->nick_to_banmask($t);
-
-        my $timeout = $self->{pbot}->{banlist}->{quietlist}->get_data($channel, $mask, 'timeout') // 0;
-
-        if ($no_length && $timeout > 0) {
-            my $d = duration($timeout - gettimeofday);
-            $result .= "$sep$mask has $d remaining on their $channel mute";
-            $sep = '; ';
-        } else {
-            $self->{pbot}->{banlist}->ban_user_timed($channel, 'q', $t, $length, $context->{hostmask}, undef, $immediately);
-            $duration = $length > 0 ? duration $length : 'all eternity';
-            if ($immediately) {
-                $result .= "$sep$mask muted in $channel for $duration";
-                $sep = '; ';
-            } else {
-                $result .= "$sep$mask";
-                $sep = ', ';
-            }
-        }
-    }
-
-    if (not $immediately) {
-        $result .= " muted in $channel for $duration";
-        $self->{pbot}->{banlist}->flush_ban_queue;
-    }
-
-    $result = "/msg $context->{nick} $result" if $result !~ m/remaining on their/;
-    return $result;
+    return do_ban_or_mute($self, $context, 'mute');
 }
 
 sub cmd_unmute($self, $context) {
@@ -558,12 +408,12 @@ sub cmd_unmute($self, $context) {
         $channel = $temp;
     }
 
-    if (not defined $target) { return "Usage: unmute <nick/mask> [channel [false value to use unban queue]]"; }
+    if (not defined $target) { return "Usage: unmute <nick/mask,...> [channel [false value to use unban queue]]"; }
 
     $channel     = exists $context->{admin_channel_override} ? $context->{admin_channel_override} : $context->{from} if not defined $channel;
     $immediately = 1 if not defined $immediately;
 
-    return "Usage for /msg: unmute <nick/mask> <channel> [false value to use unban queue]" if $channel !~ /^#/;
+    return "Usage for /msg: unmute <nick/mask,...> <channel> [false value to use unban queue]" if $channel !~ /^#/;
 
     my @targets = split /,/, $target;
     $immediately = 0 if @targets > 1;
@@ -597,13 +447,13 @@ sub cmd_kick($self, $context) {
 
     if (not $context->{from} =~ /^#/) {
         # used in private message
-        if (not $arguments =~ s/^(^#\S+) (\S+)\s*//) { return "Usage from private message: kick <channel> <nick[,nicks...]> [reason]; <nick> may include wildcards"; }
+        if (not $arguments =~ s/^(^#\S+) (\S+)\s*//) { return "Usage from private message: kick <channel> <nick,...> [reason]; <nick> may include wildcards"; }
         ($channel, $victim) = ($1, $2);
     } else {
         # used in channel
         if    ($arguments =~ s/^(#\S+)\s+(\S+)\s*//) { ($channel, $victim) = ($1, $2); }
         elsif ($arguments =~ s/^(\S+)\s*//)          { ($victim, $channel) = ($1, exists $context->{admin_channel_override} ? $context->{admin_channel_override} : $context->{from}); }
-        else                                         { return "Usage: kick [channel] <nick[,nicks...]> [reason]; <nick> may include wildcards"; }
+        else                                         { return "Usage: kick [channel] <nick,...> [reason]; <nick> may include wildcards"; }
     }
 
     $reason = $arguments;
@@ -670,6 +520,133 @@ sub cmd_kick($self, $context) {
 
     $self->{pbot}->{chanops}->gain_ops($channel);
     return "";
+}
+
+sub do_ban_or_mute($self, $context, $mode) {
+    my ($target, $channel, $length, $reason);
+
+    my $usage = "usage: $mode <mask,...> [timeout (default: 24h) [reason]] [-c <channel>] [-t <timeout>] [-r <reason>]";
+
+    my %opts = (
+        channel => \$channel,
+        timeout => \$length,
+        reason => \$reason,
+    );
+
+    my ($opt_args, $opt_error) = $self->{pbot}->{interpreter}->getopt(
+        $context->{arguments},
+        \%opts,
+        ['bundling'],
+        'channel|c=s',
+        'timeout|t=s',
+        'reason|r=s',
+    );
+
+    return "$opt_error -- $usage" if defined $opt_error;
+
+    $target = shift @$opt_args;
+    $length = shift @$opt_args if not defined $length;
+    $reason = "@$opt_args"     if not defined $reason;
+
+    $channel = '' if not defined $channel;
+    $length  = '' if not defined $length;
+
+    $reason  = undef if not length $reason;
+
+    if (not defined $target) {
+        return $usage;
+    }
+
+   if (not length $channel) {
+        $channel = exists $context->{admin_channel_override} ? $context->{admin_channel_override} : $context->{from};
+    }
+
+    if ($channel eq $context->{nick}) {
+        return "Channel argument is required in private-message; $usage";
+    }
+
+    if ($channel !~ m/^#/) {
+        return "Bad channel '$channel'; $usage";
+    }
+
+    my $error;
+    ($length, $error) = $self->{pbot}->{parsedate}->parsedate($length);
+    return $error if defined $error;
+
+    $channel = lc $channel;
+    $target  = lc $target;
+
+    my $result      = '';
+    my $sep         = '';
+    my @targets     = split /,/, $target;
+    my $immediately = @targets > 1 ? 0 : 1;
+    my $duration;
+
+    foreach my $t (@targets) {
+        my $mask = lc $self->{pbot}->{banlist}->nick_to_banmask($t);
+
+        my $ban = $self->{pbot}->{banlist}->{banlist}->get_data($channel, $mask);
+
+        if (defined $ban) {
+            my $save = 0;
+
+            if (defined $reason) {
+                $ban->{reason} = $reason;
+                $save = 1;
+            }
+
+            if ($length) {
+                $ban->{timeout} = gettimeofday + $length;
+                $save = 1;
+            }
+
+            $self->{pbot}->{banlist}->{banlist}->save if $save;
+
+            $result .= "$sep$mask ";
+
+            if (not $save) {
+                $result .= 'is already ';
+            }
+
+            $result .= ($mode eq 'ban' ? 'banned' : 'muted') . " in $channel";
+
+            if (defined $ban->{reason}) {
+                $result .= " because $ban->{reason}";
+            }
+
+            if ($ban->{timeout} > 0) {
+                my $d = duration($ban->{timeout} - gettimeofday);
+                $result .= " ($d remaining)";
+            }
+
+            $sep = '; ';
+        } else {
+            if (not $length) {
+                # TODO: user account length override
+                $length = $self->{pbot}->{registry}->get_value($channel, "default_${mode}_timeout", 0, $context)
+                // $self->{pbot}->{registry}->get_value('general', "default_${mode}_timeout", 0, $context) // 60 * 60 * 24; # 24 hours
+            }
+
+            $self->{pbot}->{banlist}->ban_user_timed($channel, $mode eq 'ban' ? 'b' : 'q', $mask, $length, $context->{hostmask}, $reason, $immediately);
+            $duration = $length > 0 ? duration $length : 'all eternity';
+            if ($immediately) {
+                $result .= "$sep$mask " . ($mode eq 'ban' ? 'banned' : 'muted') . " in $channel ($duration)";
+                $result .= " because $reason" if defined $reason;
+                $sep = '; ';
+            } else {
+                $result .= "$sep$mask";
+                $sep = ', ';
+            }
+        }
+    }
+
+    if (not $immediately) {
+        $result .= ($mode eq 'ban' ? ' banned' : ' muted') . " in $channel for $duration";
+        $self->{pbot}->{banlist}->flush_ban_queue;
+    }
+
+    $result = "/msg $context->{nick} $result" if $result !~ m/remaining/;
+    return $result;
 }
 
 1;

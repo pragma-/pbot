@@ -17,15 +17,14 @@ use Time::Duration;
 use POSIX qw/strftime/;
 
 sub initialize($self, %conf) {
-    $self->{pbot}->{commands}->register(sub { $self->cmd_banlist(@_) },    "banlist",   0);
-    $self->{pbot}->{commands}->register(sub { $self->cmd_checkban(@_) },   "checkban",  0);
-    $self->{pbot}->{commands}->register(sub { $self->cmd_checkmute(@_) },  "checkmute", 0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_banlist(@_) },    "banlist",    0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_checkban(@_) },   "checkban",   0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_checkmute(@_) },  "checkmute",  0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_unbanme(@_) },    "unbanme",    0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_ban_exempt(@_) }, "ban-exempt", 1);
 
     # add capability to admin group
     $self->{pbot}->{capabilities}->add('admin', 'can-ban-exempt', 1);
-
 }
 
 sub cmd_banlist($self, $context) {
@@ -48,8 +47,8 @@ sub cmd_banlist($self, $context) {
                 $result .= "on $date ($ago) ";
             }
 
-            $result .= "by $data->{owner} "   if defined $data->{owner};
-            $result .= "for $data->{reason} " if defined $data->{reason};
+            $result .= "by $data->{owner} "       if defined $data->{owner};
+            $result .= "because $data->{reason} " if defined $data->{reason};
             if (defined $data->{timeout} and $data->{timeout} > 0) {
                 my $duration = concise duration($data->{timeout} - gettimeofday);
                 $result .= "($duration remaining)";
@@ -73,8 +72,8 @@ sub cmd_banlist($self, $context) {
                 $result .= "on $date ($ago) ";
             }
 
-            $result .= "by $data->{owner} "   if defined $data->{owner};
-            $result .= "for $data->{reason} " if defined $data->{reason};
+            $result .= "by $data->{owner} "       if defined $data->{owner};
+            $result .= "because $data->{reason} " if defined $data->{reason};
             if (defined $data->{timeout} and $data->{timeout} > 0) {
                 my $duration = concise duration($data->{timeout} - gettimeofday);
                 $result .= "($duration remaining)";

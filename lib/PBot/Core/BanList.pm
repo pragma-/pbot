@@ -82,8 +82,8 @@ sub checkban($self, $channel, $mode, $mask) {
         $result .= "on $date ($ago) ";
     }
 
-    $result .= "by $data->{owner} "   if defined $data->{owner};
-    $result .= "for $data->{reason} " if defined $data->{reason};
+    $result .= "by $data->{owner} "       if defined $data->{owner};
+    $result .= "because $data->{reason} " if defined $data->{reason};
 
     if (exists $data->{timeout} and $data->{timeout} > 0) {
         my $duration = concise duration($data->{timeout} - gettimeofday);
