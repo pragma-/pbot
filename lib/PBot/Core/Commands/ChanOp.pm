@@ -582,10 +582,12 @@ sub do_ban_or_mute($self, $context, $mode) {
     my $immediately = @targets > 1 ? 0 : 1;
     my $duration;
 
+    my $list = $mode eq 'ban' ? 'banlist' : 'quietlist';
+
     foreach my $t (@targets) {
         my $mask = lc $self->{pbot}->{banlist}->nick_to_banmask($t);
 
-        my $ban = $self->{pbot}->{banlist}->{banlist}->get_data($channel, $mask);
+        my $ban = $self->{pbot}->{banlist}->{$list}->get_data($channel, $mask);
 
         if (defined $ban) {
             my $save = 0;
@@ -600,7 +602,7 @@ sub do_ban_or_mute($self, $context, $mode) {
                 $save = 1;
             }
 
-            $self->{pbot}->{banlist}->{banlist}->save if $save;
+            $self->{pbot}->{banlist}->{$list}->save if $save;
 
             $result .= "$sep$mask ";
 
