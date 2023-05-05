@@ -498,8 +498,8 @@ Bans or mutes a user. If the argument is a nick instead of a hostmask, it will d
 The argument can be a comma-separated list of multiple nicks or masks.
 
 Usages:
-- `ban <mask> [timeout (default: 24h) [reason]] [-c <channel>] [-t <timeout>] [-r <reason>]`
-- `mute <mask> [timeout (default: 24h) [reason]] [-c <channel>] [-t <timeout>] [-r <reason>]`
+- `ban <nick/hostmask,...> [timeout (default: 24h) [reason]] [-c <channel>] [-t <timeout>] [-r <reason>]`
+- `mute <nick/hostmask,...> [timeout (default: 24h) [reason]] [-c <channel>] [-t <timeout>] [-r <reason>]`
 
 If `timeout` is omitted, PBot will ban the user for 24 hours. Timeout can be specified as an relative time in English; for instance, `5 minutes`, `1 month and 2 weeks`, `next thursday`, `friday after next`, `forever` and such.
 
