@@ -497,21 +497,25 @@ can do `!mode +o *|dev` in a channel.
 Bans or mutes a user. If the argument is a nick instead of a hostmask, it will determine an appropriate banmask for that nick.
 The argument can be a comma-separated list of multiple nicks or masks.
 
-Usages:
-- `ban <nick/hostmask,...> [timeout (default: 24h) [reason]] [-c <channel>] [-t <timeout>] [-r <reason>]`
-- `mute <nick/hostmask,...> [timeout (default: 24h) [reason]] [-c <channel>] [-t <timeout>] [-r <reason>]`
+Usage: `ban/mute <nick/hostmask,...> [timeout (default: 24h) [reason]] [-c <channel>] [-t <timeout>] [-r <reason>]`
 
 If `timeout` is omitted, PBot will ban the user for 24 hours. Timeout can be specified as an relative time in English; for instance, `5 minutes`, `1 month and 2 weeks`, `next thursday`, `friday after next`, `forever` and such.
 
 If a ban already exists, you may update the timeout or reason at any time.
 
+Examples:
+
+     <pragma-> ban bob 10m being a jerk
+        <PBot> *!*@user/bob banned in #channel (10 minutes) because being a jerk
+<!-- -->
+     <pragma-> mute joe -r "not very nice"
+        <PBot> *!*@user/joe muted in #channel (1 day) because not very nice
+
 ### unban/unmute
 Unbans or unmutes a user. If the argument is a nick instead of a hostmask, it will find all bans that match any of that nick's hostmasks or NickServ accounts and unban them.
 The argument can be a comma-separated list of multiple nicks or masks. If the argument is `*` then all bans/mutes for the channel will be removed.
 
-Usages:
-- `unban <nick/hostmask,...> [channel]`
-- `unmute <nick/hostmask,...> [channel]`
+Usage: `unban/unmute <nick/hostmask,...> [channel]`
 
 ### checkban
 The `checkban` command displays information about an entry in PBot's internal banlist. PBot's internal banlist
