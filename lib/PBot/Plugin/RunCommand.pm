@@ -66,7 +66,7 @@ sub cmd_runcmd($self, $context) {
     return "No output." if not $lines;
 }
 
-sub send_lines($self, $context, $buffer, $send_all) {
+sub send_lines($self, $context, $buffer, $send_all = 0) {
     my $lines = 0;
 
     my $regex;
