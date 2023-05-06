@@ -626,11 +626,14 @@ sub do_ban_or_mute($self, $context, $mode) {
             if (not $length) {
                 # TODO: user account length override
                 $length = $self->{pbot}->{registry}->get_value($channel, "default_${mode}_timeout", 0, $context)
-                // $self->{pbot}->{registry}->get_value('general', "default_${mode}_timeout", 0, $context) // 60 * 60 * 24; # 24 hours
+                    // $self->{pbot}->{registry}->get_value('general', "default_${mode}_timeout", 0, $context)
+                    // 60 * 60 * 24; # 24 hours
             }
 
             $self->{pbot}->{banlist}->ban_user_timed($channel, $mode eq 'ban' ? 'b' : 'q', $mask, $length, $context->{hostmask}, $reason, $immediately);
+
             $duration = $length > 0 ? duration $length : 'all eternity';
+
             if ($immediately) {
                 $result .= "$sep$mask " . ($mode eq 'ban' ? 'banned' : 'muted') . " in $channel ($duration)";
                 $result .= " because $reason" if defined $reason;
@@ -648,6 +651,7 @@ sub do_ban_or_mute($self, $context, $mode) {
     }
 
     $result = "/msg $context->{nick} $result" if $result !~ m/remaining/;
+
     return $result;
 }
 
