@@ -98,8 +98,7 @@ sub add($self, $type, $channel, $owner, $trigger, $action, $dont_save = 0) {
     $self->{storage}->add($channel, $trigger, $data, $dont_save);
 }
 
-sub remove($self) {
-    my ($channel, $trigger) = @_;
+sub remove($self, $channel, $trigger) {
     $channel = '.*' if $channel !~ /^#/;
     return $self->{storage}->remove($channel, $trigger);
 }
