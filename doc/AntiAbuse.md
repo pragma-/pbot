@@ -59,7 +59,7 @@ PBot performs its join-flood enforcement in a separate channel to reduce noise i
 
 Let's say you want to set up join-flood enforcement for channel `#bash`. Here are all of the steps required to do that.
 
-* Create and register the `#stop-join-flood` channel. This is where PBot will forward join-flooders. Give it a sensible title like "You have been forwarded here due to join-flooding. If your IRC client or network issues have been resolved, you may `/msg PBot unbanme` to remove the ban-forward."
+* Create and register the `#stop-join-flood` channel. This is where PBot will forward join-flooders. Give it a sensible `/topic` like "You have been forwarded here due to join-flooding. If your IRC client or network issues have been resolved, you may `/msg PBot unbanme` to remove the ban-forward."
 * Create and register the `#bash-floodbans` channel. This is where PBot do the banning/unbanning. Give PBot channel OPs here.
 * Set an extended-ban in `#bash`: `/mode #bash +b $j:#bash-floodbans$#stop-join-flood`. This will retrieve the bans from `#bash-floodbans` for use in `#bash`.
 * Join PBot to both `#bash` and `#bash-floodbans` so it can monitor `#bash` and set/remove the bans in `#bash-floodbans`.

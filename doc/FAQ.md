@@ -124,4 +124,4 @@ create a user account for you if one does not exist.
     my location <your location>
 
 ## How do I set up automatic join-flood enforcement?
-[See how to set up automatic join-flood enforcement here.(AntiAbuse.md#setting-up-automatic-join-flood-enforcement)
+[See how to set up automatic join-flood enforcement here.](AntiAbuse.md#setting-up-automatic-join-flood-enforcement)
