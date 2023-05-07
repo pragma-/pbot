@@ -388,6 +388,7 @@ PBot can perform the typical channel management tasks.
 * [user hostmask/alias tracking](doc/Admin.md#message-historyuser-tracking)
 * [ban-evasion detection](doc/Admin.md#akalink)
 * [flood detection](doc/AntiAbuse.md)
+* [silent join-flood enforcement](doc/AntiAbuse.md#setting-up-automatic-join-flood-enforcement)
 * whitelisting, blacklisting, etc
 * spam/advertisement detection
 * and much, much more!
