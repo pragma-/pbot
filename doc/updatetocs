@@ -1,0 +1,1 @@
+./git-md-toc -u -m 2 *.md

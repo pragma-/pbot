@@ -2,7 +2,6 @@
 
 ## Table of Contents
 
-
 <!-- md-toc-begin -->
 * [QuickStart](QuickStart.md#quickstart)
   * [Installation](QuickStart.md#installation)
@@ -315,6 +314,7 @@
   * [Anti-away/Nick-control](AntiAbuse.md#anti-awaynick-control)
   * [Anti-auto-rejoin control](AntiAbuse.md#anti-auto-rejoin-control)
   * [Opping/Deopping](AntiAbuse.md#oppingdeopping)
+  * [Setting up automatic join-flood enforcement](AntiAbuse.md#setting-up-automatic-join-flood-enforcement)
 <!-- md-toc-end -->
 <!-- md-toc-begin -->
 * [Virtual Machine](VirtualMachine.md#virtual-machine)
@@ -327,6 +327,8 @@
       * [Add libvirt group to your user](VirtualMachine.md#add-libvirt-group-to-your-user)
       * [Download Linux ISO](VirtualMachine.md#download-linux-iso)
     * [Create a new virtual machine](VirtualMachine.md#create-a-new-virtual-machine)
+      * [libvirt](VirtualMachine.md#libvirt)
+      * [QEMU](VirtualMachine.md#qemu)
       * [Install Linux in the virtual machine](VirtualMachine.md#install-linux-in-the-virtual-machine)
       * [Set up serial ports](VirtualMachine.md#set-up-serial-ports)
       * [Set up virtio-vsock](VirtualMachine.md#set-up-virtio-vsock)
@@ -351,4 +353,5 @@
   * [How do I change my password?](FAQ.md#how-do-i-change-my-password)
   * [How do I make PBot remember my `date` timezone?](FAQ.md#how-do-i-make-pbot-remember-my-date-timezone)
   * [How do I make PBot remember my `weather` location?](FAQ.md#how-do-i-make-pbot-remember-my-weather-location)
+  * [How do I set up automatic join-flood enforcement?](FAQ.md#how-do-i-set-up-automatic-join-flood-enforcement)
 <!-- md-toc-end -->

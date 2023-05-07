@@ -1,0 +1,1 @@
+./git-md-toc -x 4 -f  QuickStart.md Plugins.md Commands.md Admin.md Factoids.md Registry.md Applets.md AntiAbuse.md VirtualMachine.md FAQ.md > toc && vi README.md

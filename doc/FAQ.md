@@ -10,6 +10,7 @@ This is a work in progress. More questions coming soon!
 * [How do I change my password?](#how-do-i-change-my-password)
 * [How do I make PBot remember my `date` timezone?](#how-do-i-make-pbot-remember-my-date-timezone)
 * [How do I make PBot remember my `weather` location?](#how-do-i-make-pbot-remember-my-weather-location)
+* [How do I set up automatic join-flood enforcement?](#how-do-i-set-up-automatic-join-flood-enforcement)
 <!-- md-toc-end -->
 
 ## When I type `!version` it say "new version available"?
@@ -122,3 +123,5 @@ create a user account for you if one does not exist.
 
     my location <your location>
 
+## How do I set up automatic join-flood enforcement?
+[See how to set up automatic join-flood enforcement here.(AntiAbuse.md#setting-up-automatic-join-flood-enforcement)

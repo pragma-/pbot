@@ -3,13 +3,11 @@
 PBot can interact with a virtual machine to safely execute arbitrary user-submitted
 system commands and code.
 
-This document will guide you through installing and configuring a virtual machine
-by using the widely available [libvirt](https://libvirt.org) project tools, such as
-`virt-install`, `virsh`, `virt-manager`, `virt-viewer`, etc.
-
-If you're more comfortable working with QEMU directly instead, feel free to do that.
-I hope this guide will answer everything you need to know to set that up. If not,
-open an GitHub issue or /msg me on IRC.
+This document will guide you through installing and configuring a Linux
+virtual machine on a Linux host by using the widely available [libvirt](https://libvirt.org)
+project tools, such as `virt-install`, `virsh`, and `virt-viewer`. Additionally,
+if you'd prefer not to use libvirt, this guide will also demonstrate equivalent
+Linux system commands and QEMU commands.
 
 Some quick terminology:
 
@@ -37,6 +35,10 @@ PBOTVM_NOREVERT | not set | If set then the VM will not revert to previous snaps
 These steps need to be done only once during the first-time set-up.
 
 ### Prerequisites
+For full hardware-supported virtualization at near native system speeds, we
+need to ensure your system has enabled CPU Virtualization Technology and that
+KVM is set up and loaded.
+
 #### CPU Virtualization Technology
 Ensure CPU Virtualization Technology is enabled in your motherboard BIOS.
 
@@ -56,7 +58,7 @@ If you see the above, everything's set up. Otherwise, consult your operating
 system manual or KVM manual to install and load KVM.
 
 #### libvirt and QEMU
-Ensure libvirt and QEMU are installed and ready.
+If using libvirt, ensure it is installed and ready.
 
     host$ virsh version --daemon
     Compiled against library: libvirt 7.6.0
@@ -65,8 +67,14 @@ Ensure libvirt and QEMU are installed and ready.
     Running hypervisor: QEMU 6.0.0
     Running against daemon: 7.6.0
 
+Just QEMU (assuming x86_64):
+
+    host$ qemu-system-x86_64 --version
+    QEMU emulator version 6.0.0
+    Copyright (c) 2003-2021 Fabrice Bellard and the QEMU Project developers
+
 If there's anything missing, please consult your operating system manual to
-install the libvirt and QEMU packages.
+install the libvirt and/or QEMU packages.
 
 On Ubuntu: `sudo apt install qemu-kvm libvirt-daemon-system`
 
@@ -79,7 +87,8 @@ Add your user (or the `pbot-vm` user) to the `libvirt` group.
 
     host$ sudo adduser $USER libvirt
 
-Log out and then log back in for the new group to take effect.
+Log out and then log back in for the new group to take effect. Or use the
+`newgrp` command.
 
 #### Download Linux ISO
 Download a preferred Linux ISO. For this guide, we'll use Fedora. Why?
@@ -94,11 +103,21 @@ https://download.fedoraproject.org/pub/fedora/linux/releases/35/Server/x86_64/is
 is the Fedora Stable net-installer ISO used in this guide.
 
 ### Create a new virtual machine
-To create a new virtual machine we'll use the `virt-install` command.
+To create a new virtual machines, this guide offers two options. The first is
+libvirt's `virt-install` command. It greatly simplifies configuration by
+automatically creating networking bridges and setting up virtio devices. The
+second options is manually using Linux system commands to configure network
+bridges and execute QEMU with the correct options.
+
+#### libvirt
+To create a new virtual machine we'll use the `virt-install` command. This
+command takes care of setting up virtual networking bridges and virtual
+hardware for us. If you prefer to manually set things up and use QEMU directly,
+skip past the `virt-install` section.
 
 * First, ensure you are the `pbot-vm` user or that you have changed your current working directory to `pbot-vm`. The Linux ISO downloaded earlier should be present in this location.
 
-Execute the following command:
+If using libvirt, execute the following command:
 
     host$ virt-install --name=pbot-vm --disk=size=12,path=vm.qcow2 --cpu=host --os-variant=fedora34 --graphics=spice --video=virtio --location=Fedora-Server-netinst-x86_64-35-1.2.iso
 
@@ -111,8 +130,64 @@ For further information about `virt-install`, read its manual page. While the ab
 give sufficient performance and compatability, there are a great many options worth investigating
 if you want to fine-tune your virtual machine.
 
+#### QEMU
+If you prefer not to use libvirt, we may need to manually create the network
+bridge. Use the `ip link` command to list network interfaces:
+
+    host$ sudo ip link
+    1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+        link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+        link/ether 74:86:7a:4e:a1:95 brd ff:ff:ff:ff:ff:ff
+        altname enp1s0
+    3: virbr0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+        link/ether 52:54:00:83:3f:59 brd ff:ff:ff:ff:ff:ff
+        inet 192.168.123.1/24 brd 192.168.123.255 scope global virbr0
+           valid_lft forever preferred_lft forever
+
+
+Create a new bridged named `pbot-br0`:
+
+    host$ ip link add name pbot-br0 type bridge
+    host$ ip link set pbot-br0 up
+
+Add your network interface to the bridge:
+
+    host$ ip link set eth0 master pbot-br0
+
+Give the bridge an IP address (use an appropriate address for your network):
+
+    host$ ip addr add dev pbot-br0 192.168.50.2/24
+
+We will use the `qemu-bridge-helper` program from the `qemu-common` package to
+create the TAP interface for us when we start the virtual machine and to remove
+the interface when the virtual machine is shut-down. To set the program up, we
+need to create its access control list file:
+
+    host$ sudo mkdir /etc/qemu
+    host$ sudo chmod 755 /etc/qemu
+    host$ sudo echo allow pbot-br0 >> /etc/qemu/bridge.conf
+    host$ sudo chmod 640 /etc/qemu/bridge.conf
+
+To allow unprivileged users to create VMs using the network bridge, we must set
+the SUID bit on the `qemu-bridge-helper` program:
+
+    host$ chmod u+s /usr/lib/qemu/qemu-bridge-helper
+
+With the bridge configured, we move on to creating a sparse disk image for the
+virtual machine:
+
+    host$ qemu-img create -f qcow2 pbot-vm.qcow2 12G
+
+Then we can start QEMU (assuming x86_64) and tell it to boot the Fedora installer:
+
+    host$ qemu-system-x86_64 -enable-kvm -cpu host -mem 1024 -hda pbot-vm.qcow2 -cdrom Fedora-Server-netinst-x86_64-35-1.2.iso -boot d -nic bridge,br=pbot-br0 -usb -device usb-tablet
+
+This command is the bare minimum for performant virtualization with networking.
+See the QEMU documentation for interesting options to tweak your virtual machine.
+
 #### Install Linux in the virtual machine
-After executing the `virt-install` command above, you should now see a window
+After executing the `virt-install` or `qemu` command above, you should now see a window
 showing Linux booting up and launching an installer. For this guide, we'll walk
 through the Fedora 35 installer. You can adapt these steps for your own distribution
 of choice.
@@ -232,7 +307,7 @@ script.
 
     guest$ dnf install perl-interpreter perl-lib perl-IPC-Run perl-JSON-XS perl-English perl-IPC-Shareable
 
-That installs the minium packages for the Perl interpreter (note we used `perl-interpreter` instead of `perl`),
+This installs the minium packages for the Perl interpreter (note we used `perl-interpreter` instead of `perl`),
 as well as a few Perl modules.
 
 #### Install PBot VM Guest

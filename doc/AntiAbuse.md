@@ -11,6 +11,7 @@ PBot can monitor channels for abusive behavior and take appropriate action.
 * [Anti-away/Nick-control](#anti-awaynick-control)
 * [Anti-auto-rejoin control](#anti-auto-rejoin-control)
 * [Opping/Deopping](#oppingdeopping)
+* [Setting up automatic join-flood enforcement](#setting-up-automatic-join-flood-enforcement)
 <!-- md-toc-end -->
 
 ## Flood control
@@ -53,3 +54,15 @@ When such a case is detected, PBot will kickban the offender (with a kick messag
 ## Opping/Deopping
 ChanServ can op and deop PBot as necessary, unless the channel `permop` metadata is set to a true value. PBot will wait until about 5 minutes have elapsed before requesting a deop from ChanServ. This timeout can be controlled via the `general.deop_timeout` registry value, which can be overriden on a per-channel basis.
 
+## Setting up automatic join-flood enforcement
+PBot performs its join-flood enforcement in a separate channel to reduce noise in the main channel.
+
+Let's say you want to set up join-flood enforcement for channel `#bash`. Here are all of the steps required to do that.
+
+* Create and register the `#stop-join-flood` channel. This is where PBot will forward join-flooders. Give it a sensible title like "You have been forwarded here due to join-flooding. If your IRC client or network issues have been resolved, you may `/msg PBot unbanme` to remove the ban-forward."
+* Create and register the `#bash-floodbans` channel. This is where PBot do the banning/unbanning. Give PBot channel OPs here.
+* Set an extended-ban in `#bash`: `/mode #bash +b $j:#bash-floodbans$#stop-join-flood`. This will retrieve the bans from `#bash-floodbans` for use in `#bash`.
+* Join PBot to both `#bash` and `#bash-floodbans` so it can monitor `#bash` and set/remove the bans in `#bash-floodbans`.
+* Optionally, configure the `#bash.join_flood_threshold` and `#bash.join_flood_time_threshold` registry entries if the defaults are not desirable.
+
+When someone is banned for join-flooding, they will be forwarded to `#stop-join-flood`. That channel should have a sensible `/topic` and ChanServ `on-join` message that clearly explains the channel's purpose and how to /msg PBot to remove the join-flood ban. PBot's `unbanme` command can be used twice per day. Each time it is used, PBot will send the user a message explaining how many more uses they have that day and why their uses are limited.
