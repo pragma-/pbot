@@ -165,6 +165,7 @@ antiflood.enter_abuse_max_offenses | | 3
 antiflood.enter_abuse_punishment || 60,300,3600,86400,604800,2419200
 antiflood.enter_abuse_threshold || 4
 antiflood.enter_abuse_time_threshold || 15
+antiflood.join_flood_channel || #stop-join-flood
 antiflood.join_flood_punishment || 115200,3600,10800,604800
 antiflood.join_flood_threshold || 4
 antiflood.join_flood_time_threshold || 1800
