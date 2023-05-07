@@ -57,12 +57,12 @@ ChanServ can op and deop PBot as necessary, unless the channel `permop` metadata
 ## Setting up automatic join-flood enforcement
 PBot performs its join-flood enforcement in a separate channel to reduce noise in the main channel.
 
-Let's say you want to set up join-flood enforcement for channel `#bash`. Here are all of the steps required to do that.
+Let's say you want to set up join-flood enforcement for your channel, let's call it `#chan`. Here are all of the steps required to do that.
 
-* Create and register the `#stop-join-flood` channel. This is where PBot will forward join-flooders. Give it a sensible `/topic` like "You have been forwarded here due to join-flooding. If your IRC client or network issues have been resolved, you may `/msg PBot unbanme` to remove the ban-forward." If the channel already exists and has this `/topic`, great! It doesn't matter which PBot instance originally sets `#stop-join-flood` up, everyone can share it! See the next bullet-point for where your instance of PBot will perform its duties.
-* Create and register the `#bash-floodbans` channel. This is where PBot do the banning/unbanning. Give your instance of PBot channel OPs here.
-* Set an extended-ban in `#bash`: `/mode #bash +b $j:#bash-floodbans$#stop-join-flood`. This will retrieve the bans from `#bash-floodbans` for use in `#bash`.
-* Join PBot to both `#bash` and `#bash-floodbans` so it can monitor `#bash` and set/remove the bans in `#bash-floodbans`.
-* Optionally, configure the `#bash.join_flood_threshold` and `#bash.join_flood_time_threshold` registry entries if the defaults are not desirable.
+* Create and register the `#stop-join-flood` channel. This is where PBot will forward join-flooders. Give it a sensible `/topic` like "You have been forwarded here due to join-flooding. If your IRC client or network issues have been resolved, you may `/msg PBot unbanme` to remove the ban-forward." If the channel already exists, you may configure the `antiflood.join_flood_channel` registry entry to point at a different channel (see [regset](Registry.md#regset)).
+* Create and register the `#chan-floodbans` channel. This is where PBot do the banning/unbanning. Give your instance of PBot channel OPs here.
+* Set an extended-ban in `#chan`: `/mode #chan +b $j:#chan-floodbans$#stop-join-flood`. This will retrieve the bans from `#chan-floodbans` for use in `#chan`.
+* Join PBot to both `#chan` and `#chan-floodbans` so it can monitor `#chan` and set/remove the bans in `#chan-floodbans`.
+* Optionally, configure the `#chan.join_flood_threshold` and `#chan.join_flood_time_threshold` registry entries if the defaults are not desirable.
 
 When someone is banned for join-flooding, they will be forwarded to `#stop-join-flood`. That channel should have a sensible `/topic` and ChanServ `on-join` message that clearly explains the channel's purpose and how to /msg PBot to remove the join-flood ban. PBot's `unbanme` command can be used twice per day. Each time it is used, PBot will send the user a message explaining how many more uses they have that day and why their uses are limited.
