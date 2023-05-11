@@ -1090,6 +1090,8 @@ sub extract_bracketed($self, $string, $open_bracket = '{', $close_bracket = '}',
                 } elsif (@prefix) {
                     $prefix_match = 0;
                     $state = 'prefixgroup';
+                } else {
+                    $state = 'openbracket';
                 }
             }
 
