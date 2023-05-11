@@ -992,12 +992,18 @@ sub add_botcmd_to_command_queue($self, $channel, $command, $delay = 0) {
 # optional prefix may be or begin with a character group.
 sub extract_bracketed($self, $string, $open_bracket = '{', $close_bracket = '}', $optional_prefix = '', $allow_whitespace = 0) {
     my @prefix_group;
-
     if ($optional_prefix =~ s/^\[(.*?)\]//) { @prefix_group = split //, $1; }
 
-    my @prefixes = split //, $optional_prefix;
-    my @opens    = split //, $open_bracket;
-    my @closes   = split //, $close_bracket;
+    my @prefix;
+    my $prefix_max;
+
+    if (!@prefix_group && $optional_prefix ne '""' && $optional_prefix ne "''") {
+        @prefix     = split //, $optional_prefix;
+        $prefix_max = length $optional_prefix;
+    }
+
+    my @opens  = split //, $open_bracket;
+    my @closes = split //, $close_bracket;
 
     my $prefix_index = 0;
     my $open_index   = 0;
@@ -1015,7 +1021,7 @@ sub extract_bracketed($self, $string, $open_bracket = '{', $close_bracket = '}',
     my $bracket_pos;
     my $bracket_level      = 0;
     my $prefix_group_match = @prefix_group ? 0 : 1;
-    my $prefix_match       = @prefixes ? 0 : 1;
+    my $prefix_match       = @prefix ? 0 : 1;
     my $match              = 0;
 
     my @chars = split //, $string;
@@ -1058,30 +1064,32 @@ sub extract_bracketed($self, $string, $open_bracket = '{', $close_bracket = '}',
 
         if (not $extracted) {
             if ($state eq 'prefixgroup' and @prefix_group and not $extracting) {
+                $prefix_group_match = 0;
                 foreach my $prefix_ch (@prefix_group) {
                     if ($ch eq $prefix_ch) {
                         $prefix_group_match = 1;
-                        $state              = 'prefixes';
+                        $state = 'openbracket';
                         last;
-                    } else {
-                        $prefix_group_match = 0;
                     }
                 }
                 next if $prefix_group_match;
             } elsif ($state eq 'prefixgroup' and not @prefix_group) {
-                $state        = 'prefixes';
+                $state = 'prefix';
                 $prefix_index = 0;
             }
 
-            if ($state eq 'prefixes') {
-                if (@prefixes and $ch eq $prefixes[$prefix_index]) {
+            if ($state eq 'prefix') {
+                if (@prefix and $prefix_index < $prefix_max and $ch eq $prefix[$prefix_index]) {
                     $token .= $ch if $extracting;
                     $prefix_match = 1;
                     $prefix_index++;
-                    $state = 'openbracket';
+                    if ($prefix_index >= $prefix_max) {
+                        $state = 'openbracket';
+                    }
                     next;
-                } elsif ($state eq 'prefixes' and not @prefixes) {
-                    $state = 'openbracket';
+                } elsif (@prefix) {
+                    $prefix_match = 0;
+                    $state = 'prefixgroup';
                 }
             }
 
@@ -1102,7 +1110,7 @@ sub extract_bracketed($self, $string, $open_bracket = '{', $close_bracket = '}',
             if ($match) {
                 $state              = 'prefixgroup';
                 $prefix_group_match = 0 unless not @prefix_group;
-                $prefix_match       = 0 unless not @prefixes;
+                $prefix_match       = 0 unless not @prefix;
                 $match              = 0;
                 $bracket_pos        = $i if not $extracting;
                 if ($open_index == @opens) {
