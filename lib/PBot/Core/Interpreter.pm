@@ -795,9 +795,6 @@ sub truncate_result($self, $context, $text, $paste_text) {
 
 my @dehighlight_exclusions = qw/auto if unsigned break inline void case int volatile char long while const register _Alignas continue restrict _Alignof default return _Atomic do short _Bool double signed _Complex else sizeof _Generic enum static _Imaginary extern struct _Noreturn float switch _Static_assert for typedef _Thread_local goto union/;
 
-sub dehighlight_nicks {
-    my ($self, $line, $channel) = @_;
-
 sub dehighlight_nicks($self, $line, $channel) {
     return $line if $self->{pbot}->{registry}->get_value('general', 'no_dehighlight_nicks');
 
