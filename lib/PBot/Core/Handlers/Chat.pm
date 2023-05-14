@@ -10,6 +10,8 @@ package PBot::Core::Handlers::Chat;
 use PBot::Imports;
 use parent 'PBot::Core::Class';
 
+use PBot::Core::MessageHistory::Constants ':all';
+
 sub initialize($self, %conf) {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.notice',  sub { $self->on_notice (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.public',  sub { $self->on_public (@_) });
@@ -32,8 +34,32 @@ sub on_notice($self, $event_type, $event) {
     # log notice
     $self->{pbot}->{logger}->log("NOTICE from $nick!$user\@$host to $to: $text\n");
 
+    # handle NOTICE to channel (message history and anti-flood)
+    if ($to =~ /^#/) {
+        # add hostmask to user/message tracking database and get their account id
+        my $message_account = $self->{pbot}->{messagehistory}->get_message_account($nick, $user, $host);
+
+        # add message to message history as a chat message
+        $self->{pbot}->{messagehistory}->add_message($message_account, "$nick!$user\@$host", $to, $text, MSG_CHAT);
+
+        # look up channel-specific flood threshold settings from registry
+        my $flood_threshold      = $self->{pbot}->{registry}->get_value($to, 'chat_flood_threshold');
+        my $flood_time_threshold = $self->{pbot}->{registry}->get_value($to, 'chat_flood_time_threshold');
+
+        # get general flood threshold settings if there are no channel-specific settings
+        $flood_threshold       //= $self->{pbot}->{registry}->get_value('antiflood', 'chat_flood_threshold');
+        $flood_time_threshold  //= $self->{pbot}->{registry}->get_value('antiflood', 'chat_flood_time_threshold');
+
+        # perform anti-flood processing on this message
+        $self->{pbot}->{antiflood}->check_flood(
+            $to, $nick, $user, $host, $text,
+            $flood_threshold, $flood_time_threshold,
+            MSG_CHAT
+        );
+    }
+
     # nothing further to do with NOTICEs
-    return undef;
+    return 0;
 }
 
 sub on_public($self, $event_type, $event) {
