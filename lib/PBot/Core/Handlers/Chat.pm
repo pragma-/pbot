@@ -26,23 +26,14 @@ sub on_notice($self, $event_type, $event) {
         $event->{args}[0],
     );
 
-    # don't handle non-chat NOTICE
+    # don't handle server NOTICE
     return undef if $to eq '*';
 
     # log notice
     $self->{pbot}->{logger}->log("NOTICE from $nick!$user\@$host to $to: $text\n");
 
-    # if NOTICE is sent to the bot then replace the `to` field with the
-    # sender's nick instead so when we pass it on to on_public ...
-    if ($to eq $self->{pbot}->{registry}->get_value('irc', 'botnick')) {
-        $event->{to}[0] = $nick;
-    }
-
-    # handle this NOTICE as a public message
-    # (check for bot commands, anti-flooding, etc)
-    $self->on_public($event_type, $event);
-
-    return 1;
+    # nothing further to do with NOTICEs
+    return undef;
 }
 
 sub on_public($self, $event_type, $event) {

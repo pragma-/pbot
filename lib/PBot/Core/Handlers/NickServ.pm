@@ -67,7 +67,7 @@ sub on_notice($self, $event_type, $event) {
     # notice from NickServ
     if (lc $nick eq lc $nickserv) {
         # log notice
-        $self->{pbot}->{logger}->log("NOTICE from $nick!$user\@$host to $to: $text\n");
+        $self->{pbot}->{logger}->log("Services NOTICE from $nick!$user\@$host to $to: $text\n");
 
         # if we have enabled NickServ GUARD protection and we're not identified yet,
         # NickServ will warn us to identify -- this is our cue to identify.
