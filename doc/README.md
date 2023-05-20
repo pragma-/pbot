@@ -52,6 +52,7 @@
     * [Chaining](Commands.md#chaining)
     * [Piping](Commands.md#piping)
     * [Substitution](Commands.md#substitution)
+    * [Nesting Pipes and Substitutions](Commands.md#nesting-pipes-and-substitutions)
     * [Variables](Commands.md#variables)
     * [Selectors](Commands.md#selectors)
     * [Background processing](Commands.md#background-processing)
@@ -342,6 +343,7 @@
     * [Initial virtual machine set-up complete](VirtualMachine.md#initial-virtual-machine-set-up-complete)
   * [Start PBot VM Host](VirtualMachine.md#start-pbot-vm-host)
     * [Test PBot](VirtualMachine.md#test-pbot)
+  * [QEMU command from libvirt](VirtualMachine.md#qemu-command-from-libvirt)
 <!-- md-toc-end -->
 <!-- md-toc-begin -->
 * [Frequently Asked Questions](FAQ.md#frequently-asked-questions)

@@ -9,6 +9,7 @@
   * [Chaining](#chaining)
   * [Piping](#piping)
   * [Substitution](#substitution)
+  * [Nesting Pipes and Substitutions](#nesting-pipes-and-substitutions)
   * [Variables](#variables)
   * [Selectors](#selectors)
   * [Background processing](#background-processing)
@@ -294,6 +295,16 @@ factoid otherwise it will be expanded first.
 
     <pragma-> !img spaces & stuff
        <PBot> https://google.com/search?tbm=isch&q=spaces%20%26%20stuff
+
+### Nesting Pipes and Substitutions
+Both [Piping](#Piping) and [Substitutions](#Substitution) can be nested.
+
+For example:
+
+     <pragma-> !echo $randomnick's IQ is &{roll 1d50+70}
+        <PBot> mnrmnaugh's IQ is rolled 1d50+70 for 85.
+     <pragma-> !echo $randomnick's IQ is &{roll 1d50+70 | {sed s/rolled.*for //}}
+        <PBot> ntwk's IQ is 110.
 
 ### Variables
 You can use factoids as variables and interpolate them within commands.
