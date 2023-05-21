@@ -152,7 +152,7 @@ sub process_line($self, $from, $nick, $user, $host, $text, $tags = '', $is_comma
     } elsif ($cmd_text =~ m/^.?\s*$botnick\s*[[:punct:]]?\s+(.+)$/i) {
         # "botnick: command"
         $command = $1;
-    } elsif ($cmd_text =~ m/^(.+?),?\s*$botnick[?!.]*$/i) {
+    } elsif ($cmd_text =~ m/^(.+?),?\s+$botnick[?!.]*$/i) {
         # "command, botnick?"
         $command = $1;
     }
