@@ -202,7 +202,7 @@ sub get_title($self, $context) {
     my $distance = distance(lc $file, lc $title);
     my $length   = (length $file > length $title) ? length $file : length $title;
 
-    # disregard title if 75%+ similiar to file
+    # disregard title if 75%+ similar to file
     if ($distance / $length < 0.75) {
         $self->{pbot}->{logger}->log("URL ($url) is 75% similar to title ($title), disregarding\n");
         return 0;
@@ -210,7 +210,7 @@ sub get_title($self, $context) {
 
     # disregard ignored titles
     if ($self->is_ignored_title($title)) {
-        $self->{pbot}->{logger}->log("Disregarding ignored title\n");
+        $self->{pbot}->{logger}->log("Disregarding ignored title ($title)\n");
         return 0;
     }
 
