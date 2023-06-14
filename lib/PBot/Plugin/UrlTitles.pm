@@ -184,7 +184,10 @@ sub get_title($self, $context) {
 
     # disregard one-word titles; these aren't usually interesting
     # (and are usually already present in the URL itself)
-    return 0 if $title !~ /\s/;
+    if ($title !~ /\s/) {
+        $self->{pbot}->{logger}->log("Disregarding one-word title ($title)\n");
+        return 0;
+    }
 
     # truncate long title
     if (length $title > 400) {
@@ -200,10 +203,16 @@ sub get_title($self, $context) {
     my $length   = (length $file > length $title) ? length $file : length $title;
 
     # disregard title if 75%+ similiar to file
-    return 0 if $distance / $length < 0.75;
+    if ($distance / $length < 0.75) {
+        $self->{pbot}->{logger}->log("URL ($url) is 75% similar to title ($title), disregarding\n");
+        return 0;
+    }
 
     # disregard ignored titles
-    return 0 if $self->is_ignored_title($title);
+    if ($self->is_ignored_title($title)) {
+        $self->{pbot}->{logger}->log("Disregarding ignored title\n");
+        return 0;
+    }
 
     # send result back to parent
     $context->{result} = $title;
