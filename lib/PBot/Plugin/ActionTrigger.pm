@@ -313,14 +313,7 @@ sub delete_trigger($self, $channel, $trigger) {
 sub list_triggers($self, $channel) {
     my $triggers = eval {
         my $sth;
-
-        if ($channel eq '*') {
-            $channel = 'global';
-            $sth = $self->{dbh}->prepare('SELECT * FROM Triggers WHERE channel != ?');
-        } else {
-            $sth = $self->{dbh}->prepare('SELECT * FROM Triggers WHERE channel = ?');
-        }
-
+        $sth = $self->{dbh}->prepare('SELECT * FROM Triggers WHERE channel = ?');
         $sth->execute(lc $channel);
         return $sth->fetchall_arrayref({});
     };
@@ -456,8 +449,20 @@ sub check_trigger($self, $nick, $user, $host, $channel, $text) {
     $channel = lc $channel;
 
     # TODO: cache these instead of loading them again every message
-    my @triggers = $self->list_triggers($channel);
-    my @globals  = $self->list_triggers('global');
+    my @triggers;
+
+    if ($channel =~ /^#/) {
+        @triggers = $self->list_triggers($channel);
+    } else {
+        my $channels = $self->{pbot}->{nicklist}->get_channels($nick);
+
+        foreach my $c (@$channels) {
+            next if not $self->{pbot}->{channels}->is_active($c);
+            push @triggers, $self->list_triggers($c);
+        }
+    }
+
+    my @globals = $self->list_triggers('global');
     push @triggers, @globals;
 
     $text = "$nick!$user\@$host $text";
@@ -479,13 +484,12 @@ sub check_trigger($self, $nick, $user, $host, $channel, $text) {
                 my $i;
                 map { ++$i; $action =~ s/\$$i/$_/g; } @stuff;
 
-                my ($n, $u, $h) = $trigger->{owner} =~ /^([^!]+)!([^@]+)\@(.*)$/;
 
                 my $command = {
-                    nick     => $n,
-                    user     => $u,
-                    host     => $h,
-                    hostmask => "$n!$u\@$host",
+                    nick     => $nick,
+                    user     => $user,
+                    host     => $host,
+                    hostmask => "$nick!$user\@$host",
                     command  => $action,
                 };
 
@@ -493,11 +497,19 @@ sub check_trigger($self, $nick, $user, $host, $channel, $text) {
                     $command->{'cap-override'} = $trigger->{cap_override};
                 }
 
+                my $target_channel;
+
+                if ($trigger->{channel} eq 'global') {
+                    $target_channel = $channel;
+                } else {
+                    $target_channel = $trigger->{channel};
+                }
+
                 my $cap = '';
                 $cap = " (capability=$command->{'cap-override'})" if exists $command->{'cap-override'};
-                $self->{pbot}->{logger}->log("ActionTrigger: ($channel) $trigger->{trigger} -> $action$cap\n");
+                $self->{pbot}->{logger}->log("ActionTrigger: ($target_channel) $trigger->{trigger} -> $action$cap\n");
 
-                $self->{pbot}->{interpreter}->add_to_command_queue($channel, $command);
+                $self->{pbot}->{interpreter}->add_to_command_queue($target_channel, $command);
             }
         };
 

@@ -98,7 +98,7 @@ sub add($self, $cap, $subcap, $dontsave = 0) {
     }
 }
 
-sub remove($self, $cap, $subcap) {
+sub remove($self, $cap, $subcap = undef) {
     $cap = lc $cap;
 
     if (not defined $subcap) {
