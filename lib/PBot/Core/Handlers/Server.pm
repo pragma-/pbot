@@ -131,7 +131,7 @@ sub on_nickchange($self, $event_type, $event) {
     }
 
     my $message_account = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
-    $self->{pbot}->{messagehistory}->{database}->devalidate_all_channels($message_account, $self->{pbot}->{antiflood}->{NEEDS_CHECKBAN});
+    $self->{pbot}->{messagehistory}->{database}->devalidate_all_channels($message_account, $self->{pbot}->{antiflood}->NEEDS_CHECKBAN);
     my $channels = $self->{pbot}->{nicklist}->get_channels($newnick);
     foreach my $channel (@$channels) {
         next if $channel !~ m/^#/;
@@ -140,7 +140,7 @@ sub on_nickchange($self, $event_type, $event) {
     $self->{pbot}->{messagehistory}->{database}->update_hostmask_data("$nick!$user\@$host", {last_seen => scalar time});
 
     my $newnick_account = $self->{pbot}->{messagehistory}->{database}->get_message_account($newnick, $user, $host, $nick);
-    $self->{pbot}->{messagehistory}->{database}->devalidate_all_channels($newnick_account, $self->{pbot}->{antiflood}->{NEEDS_CHECKBAN});
+    $self->{pbot}->{messagehistory}->{database}->devalidate_all_channels($newnick_account, $self->{pbot}->{antiflood}->NEEDS_CHECKBAN);
     $self->{pbot}->{messagehistory}->{database}->update_hostmask_data("$newnick!$user\@$host", {last_seen => scalar time});
 
     $self->{pbot}->{antiflood}->check_flood(
