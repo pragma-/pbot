@@ -862,7 +862,7 @@ sub output_result($self, $context) {
         # /me stripped off
         $type = 'action';
     }
-    elsif ($output =~ s/^\/msg\s+([^\s]+) //i) {
+    elsif ($context->{keyword} ne 'vm-client' && $output =~ s/^\/msg\s+([^\s]+) //i) {
         # /msg somenick stripped off
 
         $to = $1;  # reset $to to output to somenick
