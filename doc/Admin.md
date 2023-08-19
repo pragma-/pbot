@@ -165,7 +165,8 @@ list all users from all channels, including global users.
 
 ## User capabilities
 PBot uses a user-capability system to control what users can and cannot do. User-capabilities
-provides fine-grained permissions over various PBot functionality.
+provides fine-grained permissions over various PBot functionality. User-capabilities may be
+grouped into roles such as Admin, ChanOp, Moderator, and other user-defined roles.
 
 ### Introduction
 For example, imagine a user named alice. alice has no capabilities granted yet.
@@ -238,7 +239,7 @@ If `[capability]` is omitted, the command will list all available capabilities.
 
 
 #### Grouping capabilities
-Capabilities can be grouped together into a collection, which can then be applied to a user.
+Capabilities can be grouped together into a collection or role, which can then be applied to a user.
 Capability groups can contain nested groups.
 
 In the [listing capabilities](#listing-capabilities) example, the `admin` capability is

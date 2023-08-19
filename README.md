@@ -272,7 +272,7 @@ Applet | Description
 [C-to-English translator](applets/c2english) | Translates C code to natural English sentences.
 [C precedence analyzer](applets/paren) | Adds parentheses to C code to demonstrate precedence.
 [C Jeopardy! game](applets/cjeopardy) | C programming trivia game based on the Jeopardy! TV game show.
-[C Standard citations](applets/c11std.pl) | Cite specified sections/paragraphs from the C standard.
+[C Standard citations](applets/cstd.pl) | Cite specified sections/paragraphs from the C standard.
 [Virtual machine](applets/pbot-vm) | Executes arbitrary code and commands within a virtual machine.
 [dict.org Dictionary](applets/dict.org.pl) | Interface to dict.org for definitions, translations, acronyms, etc.
 [Urban Dictionary](applets/urban) | Search Urban Dictionary for definitions.
@@ -362,7 +362,7 @@ For more information about the virtual machine, see the [Virtual Machine documen
 ### Powerful user management
 PBot has powerful yet simple user management functionality and commands.
 
-* instead of generic access-levels, [fine-grained user capabilities](doc/Admin.md#user-capabilities) limit what users may do
+* instead of generic access-levels, PBot uses [fine-grained user capabilities](doc/Admin.md#user-capabilities), which can be grouped into roles such as Admin, ChanOp, Moderator, etc
 * user accounts can be global or channel-specific
 * users can be recognized by hostmask or required to login with password
 * users can adjust their [user-metadata](doc/Admin.md#user-metadata-list) with the [`my`](doc/Commands.md#my) command
