@@ -25,8 +25,8 @@ use PBot::Imports;
 # These are set by the /misc/update_version script
 use constant {
     BUILD_NAME     => "PBot",
-    BUILD_REVISION => 4683,
-    BUILD_DATE     => "2023-08-19",
+    BUILD_REVISION => 4685,
+    BUILD_DATE     => "2023-09-21",
 };
 
 sub initialize {}

@@ -424,7 +424,7 @@ labeled_statement:
       identifier ':' statement[context => 'label'] (';')(?)
           { "Let there be a label $item{identifier}.\n$item{statement}" }
     | ('case' constant_expression
-          { $item{constant_expression} }
+          { $return = $item{constant_expression} }
         ':')(s)
           {
             my @items = @{$item[1]};
@@ -444,7 +444,7 @@ labeled_statement:
             } elsif (not length $statements and not $last) {
               $statements = "Do nothing.\n";
             }
-            $return = "If it has the value $item[-2], ^L$statements$last";
+            $return = "If it has the value $item[1]->[0], ^L$statements$last";
           }
     | 'default' ':' statement
           { "In the default case, ^L$item{statement}" }
