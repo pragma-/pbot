@@ -1504,8 +1504,8 @@ abstract_declarator:
       pointer(?) direct_abstract_declarator(s)
           {
             my $pointer = join(' ', @{$item{'pointer(?)'}});
-            $return = "$pointer " if $pointer;
-            $return .= join(' ', @{$item{'direct_abstract_declarator(s)'}});
+            $return = join(' ', @{$item{'direct_abstract_declarator(s)'}});
+            $return .= " $pointer" if $pointer;
           }
     | pointer
 
