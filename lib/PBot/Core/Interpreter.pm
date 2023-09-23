@@ -121,15 +121,18 @@ sub process_line($self, $from, $nick, $user, $host, $text, $tags = '', $is_comma
         # but for now let's see how this goes and if people can figure it
         # out with minimal confusion.
         $command = $cmd_text if not length $command;
+        $context->{addressed} = 1;
         goto CHECK_EMBEDDED_CMD;
     }
 
     # otherwise try to parse any potential commands
     if ($cmd_text =~ m/^\s*($nick_regex)[,:]?\s+$bot_trigger\{\s*(.+?)\s*\}\s*$/) {
         # "somenick: !{command}"
+        $context->{addressed} = 1;
         goto CHECK_EMBEDDED_CMD;
     } elsif ($cmd_text =~ m/^\s*$bot_trigger\{\s*(.+?)\s*\}\s*$/) {
         # "!{command}"
+        $context->{addressed} = 1;
         goto CHECK_EMBEDDED_CMD;
     } elsif ($cmd_text =~ m/^\s*($nick_regex)[,:]\s+$bot_trigger\s*(.+)$/) {
         # "somenick: !command"
@@ -146,15 +149,27 @@ sub process_line($self, $from, $nick, $user, $host, $text, $tags = '', $is_comma
             $self->{pbot}->{logger}->log("No similar nick for $possible_nick_prefix; disregarding command.\n");
             return 0;
         }
+        $context->{addressed} = 1;
     } elsif ($cmd_text =~ m/^$bot_trigger\s*(.+)$/) {
         # "!command"
         $command = $1;
-    } elsif ($cmd_text =~ m/^.?\s*$botnick\s*[[:punct:]]?\s+(.+)$/i) {
+        $context->{addressed} = 1;
+    } elsif ($cmd_text =~ m/^.?\s*$botnick\s*[,:]\s+(.+)$/i) {
         # "botnick: command"
         $command = $1;
-    } elsif ($cmd_text =~ m/^(.+?),?\s+$botnick[?!.]*$/i) {
+        $context->{addressed} = 1;
+    } elsif ($cmd_text =~ m/^.?\s*$botnick\s+(.+)$/i) {
+        # "botnick command"
+        $command = $1;
+        $context->{addressed} = 0;
+    } elsif ($cmd_text =~ m/^(.+?),\s+$botnick[?!.]*$/i) {
         # "command, botnick?"
         $command = $1;
+        $context->{addressed} = 1;
+    } elsif ($cmd_text =~ m/^(.+?)\s+$botnick[?!.]*$/i) {
+        # "command botnick?"
+        $command = $1;
+        $context->{addressed} = 0;
     }
 
     # check for embedded commands

@@ -95,6 +95,11 @@ sub interpreter($self, $context) {
 
         # if multiple channels have this keyword, then ask user to disambiguate
         if (@chanlist> 1) {
+            # but only if the bot is explicitly invoked
+            if (not $context->{addressed}) {
+                $self->{pbot}->{logger}->log("Factoid found in multiple channels; disregarding disambiguation because bot not explicitly invoked\n");
+                return '';
+            }
             return "Factoid `$original_keyword` exists in " . join(', ', @chanlist) . "; use `fact <channel> $original_keyword` to choose one.";
         }
 
@@ -107,7 +112,12 @@ sub interpreter($self, $context) {
             return $self->interpreter($context);
         }
 
-        # keyword still not found, try regex factoids
+        # keyword still not found, try regex factoids if the bot was explicitly invoked
+        if (not $context->{addressed}) {
+            $self->{pbot}->{logger}->log("No factoid found; disregarding error message because bot not explicitly invoked\n");
+            return '';
+        }
+
         ($channel, $keyword) =
         $self->{pbot}->{factoids}->{data}->find(
             $context->{ref_from} ? $context->{ref_from} : $context->{from},
