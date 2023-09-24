@@ -112,12 +112,7 @@ sub interpreter($self, $context) {
             return $self->interpreter($context);
         }
 
-        # keyword still not found, try regex factoids if the bot was explicitly invoked
-        if (not $context->{addressed}) {
-            $self->{pbot}->{logger}->log("No factoid found; disregarding error message because bot not explicitly invoked\n");
-            return '';
-        }
-
+        # keyword still not found, try regex factoids
         ($channel, $keyword) =
         $self->{pbot}->{factoids}->{data}->find(
             $context->{ref_from} ? $context->{ref_from} : $context->{from},
@@ -128,6 +123,12 @@ sub interpreter($self, $context) {
 
         # no such keyword, display similiar matches for all channels
         if (not defined $keyword) {
+            # but only if the bot is explicitly invoked
+            if (not $context->{addressed}) {
+                $self->{pbot}->{logger}->log("No factoid found; disregarding error message because bot not explicitly invoked\n");
+                return '';
+            }
+
             my $namespace = $context->{from};
             $namespace = '.*' if $namespace !~ /^#/;
 
