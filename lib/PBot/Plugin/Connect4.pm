@@ -367,8 +367,7 @@ sub player_left($self, $nick, $user, $host) {
     }
 }
 
-sub send_message($self, $to, $text, $delay) {
-    $delay = 0 if not defined $delay;
+sub send_message($self, $to, $text, $delay = 0) {
     my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
     my $message = {
         nick       => $botnick,
