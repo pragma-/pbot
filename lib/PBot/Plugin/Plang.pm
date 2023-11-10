@@ -104,7 +104,7 @@ sub cmd_plang($self, $context) {
 
         # check to see if we need to append final result to output
         if (defined $result->[1]) {
-            $self->{output} .= $self->{plang}->{interpreter}->output_value($result, literal => 1);
+            $self->{output} .= $self->{plang}->{interpreter}->output_value({}, $result, literal => 1);
         }
     };
 
@@ -126,11 +126,11 @@ sub cmd_plangrepl($self, $context) {
         my $result = $self->{plang}->interpret_string($context->{arguments}, repl => 1);
 
         # check to see if we need to append final result to output
-        $self->{output} .= $self->{plang}->{interpreter}->output_value($result, repl => 1) if defined $result->[1];
+        $self->{output} .= $self->{plang}->{interpreter}->output_value({}, $result, repl => 1) if defined $result->[1];
     };
 
     if (my $exception = $@) {
-        $exception = $self->{plang}->{interpreter}->output_value($exception);
+        $exception = $self->{plang}->{interpreter}->output_value({}, $exception);
         $self->{output} .= "Run-time error: unhandled exception: $exception";
     }
 
@@ -139,8 +139,8 @@ sub cmd_plangrepl($self, $context) {
 }
 
 # overridden `print` built-in
-sub plang_builtin_print($self, $plang, $context, $name, $arguments) {
-    my ($expr, $end) = ($plang->output_value($arguments->[0]), $arguments->[1]->[1]);
+sub plang_builtin_print($self, $plang, $scope, $name, $arguments) {
+    my ($expr, $end) = ($plang->output_value($scope, $arguments->[0]), $arguments->[1]->[1]);
     $self->{output} .= "$expr$end";
     return [['TYPE', 'Null'], undef];
 }
@@ -155,7 +155,7 @@ sub is_locked($self, $channel, $keyword) {
     return $self->{pbot}->{factoids}->{data}->get_meta($channel, $keyword, 'locked');
 }
 
-sub plang_builtin_factget($self, $plang, $context, $name, $arguments) {
+sub plang_builtin_factget($self, $plang, $scope, $name, $arguments) {
     my ($channel, $keyword, $meta) = ($arguments->[0]->[1], $arguments->[1]->[1], $arguments->[2]->[1]);
     my $result = $self->{pbot}->{factoids}->{data}->get_meta($channel, $keyword, $meta);
     if (defined $result) {
@@ -169,7 +169,7 @@ sub plang_validate_builtin_factget {
     return [['TYPE', 'String'], ""];
 }
 
-sub plang_builtin_factset($self, $plang, $context, $name, $arguments) {
+sub plang_builtin_factset($self, $plang, $scope, $name, $arguments) {
     my ($channel, $keyword, $text) = ($arguments->[0]->[1], $arguments->[1]->[1], $arguments->[2]->[1]);
     die "Factoid $channel.$keyword is locked. Cannot set.\n" if $self->is_locked($channel, $keyword);
     $self->{pbot}->{factoids}->{data}->add('text', $channel, 'Plang', $keyword, $text);
@@ -180,7 +180,7 @@ sub plang_validate_builtin_factset {
     return [['TYPE', 'String'], ""];
 }
 
-sub plang_builtin_factappend($self, $plang, $context, $name, $arguments) {
+sub plang_builtin_factappend($self, $plang, $scope, $name, $arguments) {
     my ($channel, $keyword, $text) = ($arguments->[0]->[1], $arguments->[1]->[1], $arguments->[2]->[1]);
     die "Factoid $channel.$keyword is locked. Cannot append.\n" if $self->is_locked($channel, $keyword);
     my $action = $self->{pbot}->{factoids}->{data}->get_meta($channel, $keyword, 'action');
@@ -194,7 +194,7 @@ sub plang_validate_builtin_factappend {
     return [['TYPE', 'String'], ""];
 }
 
-sub plang_builtin_userget($self, $plang, $context, $name, $arguments) {
+sub plang_builtin_userget($self, $plang, $scope, $name, $arguments) {
     my ($username) = ($arguments->[0], $arguments->[1]);
 
     my $user = $self->{pbot}->{users}->{storage}->get_data($username->[1]);
