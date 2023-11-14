@@ -360,12 +360,11 @@ sub cmd_unban($self, $context) {
         $channel = exists $context->{admin_channel_override} ? $context->{admin_channel_override} : $context->{from};
     }
 
-    $immediately = 1 if not defined $immediately;
-
     return "Usage: unban <nick/mask,...> <channel> [false value to use unban queue]" if $channel !~ /^#/;
 
     my @targets = split /,/, $target;
-    $immediately = 0 if @targets > 1;
+    $immediately = 0 if @targets > 1 && not defined $immediately;
+    $immediately //= 1;
 
     foreach my $t (@targets) {
         if ($t eq '*') {
@@ -386,7 +385,7 @@ sub cmd_unban($self, $context) {
         }
     }
 
-    $self->{pbot}->{banlist}->flush_unban_queue if not $immediately;
+    $self->{pbot}->{banlist}->flush_unban_queue if $immediately;
     return "/msg $context->{nick} $target has been unbanned from $channel.";
 }
 
@@ -411,12 +410,12 @@ sub cmd_unmute($self, $context) {
     if (not defined $target) { return "Usage: unmute <nick/mask,...> [channel [false value to use unban queue]]"; }
 
     $channel     = exists $context->{admin_channel_override} ? $context->{admin_channel_override} : $context->{from} if not defined $channel;
-    $immediately = 1 if not defined $immediately;
 
     return "Usage for /msg: unmute <nick/mask,...> <channel> [false value to use unban queue]" if $channel !~ /^#/;
 
     my @targets = split /,/, $target;
-    $immediately = 0 if @targets > 1;
+    $immediately = 0 if @targets > 1 && not defined $immediately;
+    $immediately //= 1;
 
     foreach my $t (@targets) {
         if ($t eq '*') {
@@ -437,7 +436,7 @@ sub cmd_unmute($self, $context) {
         }
     }
 
-    $self->{pbot}->{banlist}->flush_unban_queue if not $immediately;
+    $self->{pbot}->{banlist}->flush_unban_queue if $immediately;
     return "/msg $context->{nick} $target has been unmuted in $channel.";
 }
 
