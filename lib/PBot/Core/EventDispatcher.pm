@@ -94,7 +94,7 @@ sub dispatch_event($self, $name, $data = undef) {
     my $debug = $self->{pbot}->{registry}->get_value('eventdispatcher', 'debug') // 0;
 
     # undef means no handlers have handled this event
-    my $dispatch_result= undef;
+    my $dispatch_result = undef;
 
     # if the event-name has handlers
     if (exists $self->{handlers}->{$name}) {
