@@ -32,14 +32,14 @@ sub unload($self) {
 }
 
 use constant {
-    USAGE => 'Usage: wordmorph start [steps to solve [word length]] | custom <word1> <word2> | solve <solution> | hint [from direction] | check <word> | neighbors <word> | show | giveup',
+    USAGE => 'Usage: wordmorph start [steps to solve [word length]] | custom <word1> (<word2> | <integer steps>) | solve <solution> | hint [from direction] | check <word> | neighbors <word> | show | giveup',
     NO_MORPH_AVAILABLE => "There is no word morph available. Use `wordmorph start [steps to solve [word length]]` to create one.",
     DB_UNAVAILABLE => "Word morph database not available.",
     LEFT  => 0,
     RIGHT => 1,
     MIN_STEPS => 2,
     MAX_STEPS => 8,
-    DEFAULT_STEPS => 4,
+    DEFAULT_STEPS => 3,
     MIN_WORD_LENGTH => 3,
     MAX_WORD_LENGTH => 7,
 };
@@ -218,19 +218,54 @@ sub wordmorph($self, $context) {
         }
 
         when ('custom') {
-            return "Usage: wordmorph custom <word1> <word2>" if @args != 2;
+            return "Usage: wordmorph custom <word1> (<word2> | <integer steps>)" if @args != 2;
             return DB_UNAVAILABLE if not $self->{db};
 
             if (my $err = $self->validate_word($args[0], MIN_WORD_LENGTH, MAX_WORD_LENGTH)) {
                 return $err;
             }
 
-            if (my $err = $self->validate_word($args[1], MIN_WORD_LENGTH, MAX_WORD_LENGTH)) {
-                return $err;
+            my $morph;
+
+            if ($args[1] =~ /^\d+$/) {
+                my $steps = DEFAULT_STEPS;
+                my $length = length $args[0];
+
+                if ($args[1] < MIN_STEPS || $args[1] > MAX_STEPS) {
+                    return "Invalid number of steps `$args[1]`; must be integer >= ".MIN_STEPS." and <= ".MAX_STEPS.".";
+                }
+
+                $steps = $args[1];
+
+                return DB_UNAVAILABLE if not $self->{db};
+
+                my $attempts = 100;
+
+                while (--$attempts > 0) {
+                    $morph = eval {
+                        $self->make_morph_by_steps($self->{db}, $steps + 2, $length, $args[0])
+                    };
+
+                    if (my $err = $@) {
+                        next if $err eq "Too many attempts\n";
+                        return $err;
+                    }
+
+                    last if @$morph;
+                }
+
+                if (!$morph || !@$morph) {
+                    return "Failed to create Word Morph with given parameters, in reasonable time. Try again.";
+                }
+            } else {
+                if (my $err = $self->validate_word($args[1], MIN_WORD_LENGTH, MAX_WORD_LENGTH)) {
+                    return $err;
+                }
+
+                $morph = eval { makemorph($self->{db}, $args[0], $args[1]) } or return $@;
+                return "Failed to find a path between `$args[0]` and `$args[1]`." if !$morph || !@$morph;
             }
 
-            my $morph = eval { makemorph($self->{db}, $args[0], $args[1]) } or return $@;
-            return "Failed to find a path between `$args[0]` and `$args[1]`." if not @$morph;
             $self->set_up_new_morph($morph, $channel);
             return "New word morph: " . $self->show_morph_with_blanks($channel) . " (Fill in the blanks)";
         }
@@ -367,16 +402,16 @@ sub compare_suffix($word1, $word2) {
     return $length;
 }
 
-sub make_morph_by_steps($self, $db, $steps, $length) {
+sub make_morph_by_steps($self, $db, $steps, $length, $word1 = undef) {
     $length //= int(rand(3)) + 5;
 
     my @words = keys %{$db->{$length}};
-    my $word  = $words[rand $#words];
+    my $word  = $word1 // $words[rand $#words];
     my $morph = [];
 
     push @$morph, $word;
 
-    my $attempts = 1000;
+    my $attempts = 100;
 
     while (--$attempts > 0) {
         my @list = @{$db->{$length}->{$word}};
