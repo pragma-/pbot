@@ -32,7 +32,7 @@ sub unload($self) {
 }
 
 use constant {
-    USAGE => 'Usage: wordmorph start [steps to solve [word length]] | custom <word1> (<word2> | <integer steps>) | solve <solution> | hint [from direction] | check <word> | neighbors <word> | show | giveup',
+    USAGE => 'Usage: wordmorph start [steps to solve [word length]] | custom <word1> (<word2> | <integer steps>) | solve <solution> | hint [from direction] | check <word> | neighbors <word> | search <regex> | show | giveup',
     NO_MORPH_AVAILABLE => "There is no word morph available. Use `wordmorph start [steps to solve [word length]]` to create one.",
     DB_UNAVAILABLE => "Word morph database not available.",
     LEFT  => 0,
@@ -268,6 +268,38 @@ sub wordmorph($self, $context) {
 
             $self->set_up_new_morph($morph, $channel);
             return "New word morph: " . $self->show_morph_with_blanks($channel) . " (Fill in the blanks)";
+        }
+
+        when ('search') {
+            if (not @args) {
+                return "Usage: wordmorph search <regex>";
+            }
+
+            return DB_UNAVAILABLE if not $self->{db};
+
+            my @words;
+
+            eval {
+                foreach my $length (keys $self->{db}->%*) {
+                    foreach my $word (keys $self->{db}->{$length}->%*) {
+
+                        if ($word =~ m/$args[0]/) {
+                            push @words, $word;
+                        }
+                    }
+                }
+            };
+
+            if (my $except = $@) {
+                $except =~ s/ at \/home.*$//;
+                return "Error: $except";
+            }
+
+            if (not @words) {
+                return "No matching words found.";
+            }
+
+            return scalar @words . (@words == 1 ? ' word' : ' words') . ': ' . join(' ', @words);
         }
 
         when ('solve') {
