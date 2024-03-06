@@ -75,7 +75,7 @@ sub add_player($self, $id, $nick, $channel) {
     return $id;
 }
 
-sub get_player_id($self, $nick, $channel, $dont_create_new) {
+sub get_player_id($self, $nick, $channel, $dont_create_new = undef) {
     my ($account_id) = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_nick($nick);
     $account_id = $self->{pbot}->{messagehistory}->{database}->get_ancestor_id($account_id);
 

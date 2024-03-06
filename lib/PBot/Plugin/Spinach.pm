@@ -1345,8 +1345,8 @@ sub create_states($self) {
     $self->{states}{'gameover'}{trans}{next} = 'getplayers';
 }
 
-sub commify($self) {
-    my $text = reverse $_[0];
+sub commify($self, $value) {
+    my $text = reverse $value;
     $text =~ s/(\d\d\d)(?=\d)(?!\d*\.)/$1,/g;
     return scalar reverse $text;
 }
@@ -1662,7 +1662,7 @@ sub getnewquestion($self, $state) {
     }
 }
 
-sub showquestion($self, $state, $show_category) {
+sub showquestion($self, $state, $show_category = undef) {
     return if $state->{reroll_category};
 
     if (exists $state->{current_question}) {

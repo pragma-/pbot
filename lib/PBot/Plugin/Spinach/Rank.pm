@@ -28,34 +28,34 @@ sub initialize($self, %conf) {
     $self->{stats} = PBot::Plugin::Spinach::Stats->new(pbot => $self->{pbot}, filename => $self->{filename});
 }
 
-sub sort_generic($self, $key) {
+sub sort_generic($self, $key, @rest) {
     if   ($self->{rank_direction} eq '+') { return $b->{$key} <=> $a->{$key}; }
     else                                  { return $a->{$key} <=> $b->{$key}; }
 }
 
-sub print_generic($self, $key, $player) {
+sub print_generic($self, $key, $player, @rest) {
     return undef if $player->{games_played} == 0;
     return "$player->{nick}: $player->{$key}";
 }
 
-sub print_avg_score($self, $player) {
+sub print_avg_score($self, $player, @rest) {
     return undef if $player->{games_played} == 0;
     my $result = int $player->{avg_score};
     return "$player->{nick}: $result";
 }
 
-sub sort_bad_lies($self) {
+sub sort_bad_lies($self, @rest) {
     if   ($self->{rank_direction} eq '+') { return $b->{questions_played} - $b->{good_lies} <=> $a->{questions_played} - $a->{good_lies}; }
     else                                  { return $a->{questions_played} - $a->{good_lies} <=> $b->{questions_played} - $b->{good_lies}; }
 }
 
-sub print_bad_lies($self, $player) {
+sub print_bad_lies($self, $player, @rest) {
     return undef if $player->{games_played} == 0;
     my $result = $player->{questions_played} - $player->{good_lies};
     return "$player->{nick}: $result";
 }
 
-sub sort_mentions($self) {
+sub sort_mentions($self, @rest) {
     if ($self->{rank_direction} eq '+') {
         return $b->{games_played} - $b->{times_first} - $b->{times_second} - $b->{times_third} <=> $a->{games_played} - $a->{times_first} - $a->{times_second} -
           $a->{times_third};
@@ -65,13 +65,13 @@ sub sort_mentions($self) {
     }
 }
 
-sub print_mentions($self, $player) {
+sub print_mentions($self, $player, @rest) {
     return undef if $player->{games_played} == 0;
     my $result = $player->{games_played} - $player->{times_first} - $player->{times_second} - $player->{times_third};
     return "$player->{nick}: $result";
 }
 
-sub sort_expr($self) {
+sub sort_expr($self, @rest) {
     my $result = eval {
         my $result_a = $self->{expr}->val(
             {
@@ -123,7 +123,7 @@ sub sort_expr($self) {
     return $result;
 }
 
-sub print_expr($self, $player) {
+sub print_expr($self, $player, @rest) {
     return undef if $player->{games_played} == 0;
 
     my $result = eval {
@@ -155,7 +155,7 @@ sub print_expr($self, $player) {
     return "$player->{nick}: $result";
 }
 
-sub rank($self, $arguments) {
+sub rank($self, $arguments, @rest) {
     my %ranks = (
         highscore => {
             sort  => sub { $self->sort_generic('high_score', @_) },
