@@ -378,6 +378,14 @@ sub cmd_battleship($self, $context) {
                 return "You are not playing in this game.";
             }
 
+            if ($player->{lost}) {
+                return "You have been knocked out of this game. Try again next game.";
+            }
+
+            if ($player->{removed}) {
+                return "You have been removed from this game. Try again next game.";
+            }
+
             # no arguments provided
             if (not length $arguments) {
                 if (delete $player->{location}) {
@@ -399,7 +407,7 @@ sub cmd_battleship($self, $context) {
 
             $x = ord($x) - 65;
 
-            if ($x < 0 || $x > $self->{N_Y} || $y < 0 || $y > $self->{N_X}) {
+            if ($x < 0 || $x > $self->{N_Y} - 1 || $y < 1 || $y > $self->{N_X}) {
                 return "$nick: Target out of range, try again.";
             }
 
