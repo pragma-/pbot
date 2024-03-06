@@ -970,7 +970,7 @@ sub show_scoreboard($self) {
     }
 }
 
-sub show_battlefield($self, $player_index, $nick) {
+sub show_battlefield($self, $player_index, $nick = undef) {
     $self->{pbot}->{logger}->log("Showing battlefield for player $player_index\n");
 
     my $player;
