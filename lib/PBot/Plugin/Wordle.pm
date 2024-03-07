@@ -27,7 +27,7 @@ use constant {
     USAGE => 'Usage: wordle start [word length] | guess <word> | show | giveup',
     NO_WORDLE => 'There is no Wordle yet. Use `wordle start` to begin a game.',
     DEFAULT_LENGTH => 5,
-    MIN_LENGTH => 4,
+    MIN_LENGTH => 3,
     MAX_LENGTH => 10,
     WORDLIST => '/usr/share/dict/words',
 };
@@ -90,10 +90,10 @@ sub wordle($self, $context) {
                 return "Failed to load words: $@";
             }
 
-            my @words = keys $self->{$channel}->{words}->%*;
+            my @words  = keys $self->{$channel}->{words}->%*;
             my @wordle = split //, $words[rand @words];
-            $self->{$channel}->{wordle} = \@wordle;
 
+            $self->{$channel}->{wordle}  = \@wordle;
             $self->{$channel}->{guesses} = [];
             $self->{$channel}->{correct} = 0;
 
@@ -115,7 +115,7 @@ sub wordle($self, $context) {
                 return "Wordle already solved. " . $self->show_wordle($channel);
             }
 
-            return $self->guess_wordle($channel, uc $args[0]);
+            return $self->guess_wordle($channel, $args[0]);
         }
 
         default {
@@ -133,7 +133,8 @@ sub load_words($self, $length) {
 
     my %words;
 
-    while (chomp(my $line = <$fh>)) {
+    while (my $line = <$fh>) {
+        chomp $line;
         next if $line !~ /^[a-z]+$/;
 
         if (length $line == $length) {
@@ -167,20 +168,17 @@ sub guess_wordle($self, $channel, $guess) {
     my %seen;
     my %correct;
 
-    foreach my $letter (@wordle) {
-        $count{$letter}++;
-        $seen{$letter} = 0;
-        $correct{$letter} = 0;
-    }
-
-    my @result;
-    my $correct = 0;
-
     for (my $i = 0; $i < @wordle; $i++) {
+        $count{$wordle[$i]}++;
+        $seen{$wordle[$i]} = 0;
+
         if ($guess[$i] eq $wordle[$i]) {
             $correct{$guess[$i]}++;
         }
     }
+
+    my @result;
+    my $correct = 0;
 
     for (my $i = 0; $i < @wordle; $i++) {
         if ($guess[$i] eq $wordle[$i]) {
