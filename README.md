@@ -239,9 +239,11 @@ There are even a few games!
 
 Plugin | Description
 --- | ---
-[Battleship](lib/PBot/Plugin/Battleship.pm) | The classic Battleship board game, simplified for IRC
-[Connect4](lib/PBot/Plugin/Connect4.pm) | The classic Connect-4 game.
+[Battleship](lib/PBot/Plugin/Battleship.pm) | The classic Battleship board game, simplified for IRC. Multiple players can compete at once on the same battlefield!
+[Connect4](lib/PBot/Plugin/Connect4.pm) | The classic two-player Connect-4 game.
 [Spinach](lib/PBot/Plugin/Spinach.pm) | An advanced multiplayer Trivia game engine with a twist! A question is shown. Everybody privately submits a false answer. All false answers and the true answer is shown. Everybody tries to guess the true answer. Points are gained when people pick your false answer!
+[Wordle](lib/PBot/Plugin/Wordle.pm) | Guess a word by submitting words for clues about which letters belong to the word.
+[WordMorph](lib/PBot/Plugin/WordMorph.pm) | Solve a path between two words by changing one letter at a time.
 
 #### Applets
 Applets are external command-line executable programs and scripts that can be
