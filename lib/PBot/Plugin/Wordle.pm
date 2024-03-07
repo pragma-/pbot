@@ -49,7 +49,7 @@ sub wordle($self, $context) {
                 return NO_WORDLE;
             }
 
-            return "Wordle: " . $self->show_wordle($channel);
+            return $self->show_wordle($channel);
         }
 
         when ('giveup') {
@@ -96,6 +96,7 @@ sub wordle($self, $context) {
             $self->{$channel}->{wordle}  = \@wordle;
             $self->{$channel}->{guesses} = [];
             $self->{$channel}->{correct} = 0;
+            $self->{$channel}->{guess_count} = 0;
 
             push $self->{$channel}->{guesses}->@*, '? ' x $self->{$channel}->{wordle}->@*;
 
@@ -161,6 +162,13 @@ sub guess_wordle($self, $channel, $guess) {
         return "I don't know that word. Try again."
     }
 
+    $self->{$channel}->{guess_count}++;
+
+    if ($self->{$channel}->{guess_count} == 1) {
+        # remove initial "? ? ? ? ?"
+        shift $self->{$channel}->{guesses}->@*;
+    }
+
     my @guess  = split //, $guess;
     my @wordle = $self->{$channel}->{wordle}->@*;
 
@@ -212,7 +220,10 @@ sub guess_wordle($self, $channel, $guess) {
 
     if ($correct == length $guess) {
         $self->{$channel}->{correct} = 1;
-        return "Correct! " . $self->show_wordle($channel);
+
+        my $guesses = $self->{$channel}->{guess_count};
+
+        return "Correct in $guesses guess" . ($guesses != 1 ? 'es! ' : '! ') . $self->show_wordle($channel);
     } else {
         return $self->show_wordle($channel);
     }
