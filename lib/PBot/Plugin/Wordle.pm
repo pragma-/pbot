@@ -24,7 +24,7 @@ sub unload($self) {
 }
 
 use constant {
-    USAGE => 'Usage: wordle start [word length] | guess <word> | show | giveup',
+    USAGE => 'Usage: wordle start [word length] | custom <word> <channel> | guess <word> | show | giveup',
     NO_WORDLE => 'There is no Wordle yet. Use `wordle start` to begin a game.',
     DEFAULT_LENGTH => 5,
     MIN_LENGTH => 3,
@@ -82,25 +82,55 @@ sub wordle($self, $context) {
                 $length = $args[0];
             }
 
-            eval {
-                $self->{$channel}->{words} = $self->load_words($length);
-            };
+            return $self->make_wordle($channel, $length);
+        }
 
-            if ($@) {
-                return "Failed to load words: $@";
+        when ('custom') {
+            if (@args != 2) {
+                return "Usage: wordle custom <word> <channel>";
             }
 
-            my @words  = keys $self->{$channel}->{words}->%*;
-            my @wordle = split //, $words[rand @words];
+            my $custom_word    = $args[0];
+            my $custom_channel = $args[1];
+            my $length         = length $custom_word;
 
-            $self->{$channel}->{wordle}  = \@wordle;
-            $self->{$channel}->{guesses} = [];
-            $self->{$channel}->{correct} = 0;
-            $self->{$channel}->{guess_count} = 0;
+            if ($custom_word !~ /[a-z]/) {
+                return "Word must be all lowercase and cannot contain numbers or symbols.";
+            }
 
-            push $self->{$channel}->{guesses}->@*, '? ' x $self->{$channel}->{wordle}->@*;
+            if ($length < MIN_LENGTH || $length > MAX_LENGTH) {
+                return "Invalid word length; must be >= ".MIN_LENGTH." and <= ".MAX_LENGTH.".";
+            }
 
-            return "Wordle: " . $self->show_wordle($channel) . " (Guess the word! ?X? means correct letter in wrong position. *X* means correct letter in right position. X means letter is not in the word.)";
+            if (not $self->{pbot}->{channels}->is_active($custom_channel)) {
+                return "I'm not on that channel!";
+            }
+
+            if (defined $self->{$custom_channel}->{wordle} && $self->{$custom_channel}->{correct} == 0) {
+                return "There is already a Wordle underway! Use `wordle show` to see the current progress or `wordle giveup` to end it.";
+            }
+
+            my $result = $self->make_wordle($custom_channel, $length, uc $custom_word);
+
+            if ($result !~ /^Wordle:/) {
+                return $result;
+            }
+
+            my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+
+            my $message = {
+                nick       => $botnick,
+                user       => 'wordle',
+                host       => 'localhost',
+                hostmask   => "$botnick!wordle\@localhost",
+                command    => 'wordle',
+                checkflood => 1,
+                message    => "$context->{nick} started a custom $result";
+            };
+
+            $self->{pbot}->{interpreter}->add_message_to_output_queue($custom_channel, $message, 0);
+
+            return "Custom Wordle started!";
         }
 
         when ('guess') {
@@ -145,6 +175,37 @@ sub load_words($self, $length) {
 
     close $fh;
     return \%words;
+}
+
+sub make_wordle($self, $channel, $length, $word = undef) {
+    eval {
+        $self->{$channel}->{words} = $self->load_words($length);
+    };
+
+    if ($@) {
+        return "Failed to load words: $@";
+    }
+
+    my @wordle;
+
+    if (defined $word) {
+        if (not exists $self->{$channel}->{words}->{$word}) {
+            return "I don't know that word.";
+        }
+        @wordle = split //, $word;
+    } else {
+        my @words = keys $self->{$channel}->{words}->%*;
+        @wordle = split //, $words[rand @words];
+    }
+
+    $self->{$channel}->{wordle}  = \@wordle;
+    $self->{$channel}->{guesses} = [];
+    $self->{$channel}->{correct} = 0;
+    $self->{$channel}->{guess_count} = 0;
+
+    push $self->{$channel}->{guesses}->@*, '? ' x $self->{$channel}->{wordle}->@*;
+
+    return "Wordle: " . $self->show_wordle($channel) . " (Guess the word! Legend: X not in word; ?X? wrong position; *X* correct position)";
 }
 
 sub show_wordle($self, $channel) {
