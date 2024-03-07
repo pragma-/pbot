@@ -171,6 +171,7 @@ sub guess_wordle($self, $channel, $guess) {
     for (my $i = 0; $i < @wordle; $i++) {
         $count{$wordle[$i]}++;
         $seen{$wordle[$i]} = 0;
+        $correct{$wordle[$i]} = 0 unless exists $correct{$wordle[$i]};
 
         if ($guess[$i] eq $wordle[$i]) {
             $correct{$guess[$i]}++;
