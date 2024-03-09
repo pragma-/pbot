@@ -51,13 +51,17 @@ jobs:
       run: |
         kubectl get pods
 
-    # - name: Build image
-    #   run: |-
-    #     docker build --tag "gcr.io/$PROJECT_ID/$REPOSITORY/$IMAGE:$GITHUB_SHA" .
-    # 
-    # - name: Push image
-    #   run: |-
-    #     docker push "gcr.io/$PROJECT_ID/$REPOSITORY/$IMAGE:$GITHUB_SHA"
+    - name: Authenticate Docker
+      run: |
+        gcloud auth configure-docker
+
+    - name: Build image
+      run: |-
+        docker build --tag "gcr.io/$PROJECT_ID/$REPOSITORY/$IMAGE:$GITHUB_SHA" .
+    
+    - name: Push image
+      run: |-
+        docker push "gcr.io/$PROJECT_ID/$REPOSITORY/$IMAGE:$GITHUB_SHA"
     
     # - name: Set up Kustomize
     #   run: |-
