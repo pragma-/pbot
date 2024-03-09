@@ -125,7 +125,7 @@ sub wordle($self, $context) {
                 hostmask   => "$botnick!wordle\@localhost",
                 command    => 'wordle',
                 checkflood => 1,
-                message    => "$context->{nick} started a custom $result";
+                message    => "$context->{nick} started a custom $result",
             };
 
             $self->{pbot}->{interpreter}->add_message_to_output_queue($custom_channel, $message, 0);
