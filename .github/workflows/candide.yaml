@@ -57,16 +57,31 @@ jobs:
       run: |-
         docker push "gcr.io/$PROJECT_ID/$REPOSITORY/$IMAGE:$GITHUB_SHA"
 
-    - uses: jitterbit/get-changed-files@v1
-      id: changed_files
+    - name: Get all changed non-plugin files
+      id: changed-non-plugin-files
+      uses: tj-actions/changed-files@v42
+      with:
+        files_ignore: |
+          lib/PBot/Plugin/**.pm
+            
+    - name: Get all changed plugin files
+      id: changed-plugin-files
+      uses: tj-actions/changed-files@v42
+      with:
+        files: |
+          lib/PBot/Plugin/**.pm
 
-    - name: List changed files
+    - name: Hot-reload plugin files
+      if: steps.changed-plugin-files.outputs.any_changed == 'true' && steps.changed-non-plugin-files.outputs.any_changed == 'false'
+      env:
+        ALL_CHANGED_FILES: ${{ steps.changed-plugin-files.outputs.all_changed_files }}
       run: |
-        for changed_file in ${{ steps.changed_files.outputs.all }}; do
-          echo "Modified: ${changed_file}"
+        for file in ${ALL_CHANGED_FILES}; do
+          echo "$file was changed"
         done
   
-    - name: Deploy
+    - name: Deploy with restart
+      if: steps.changed-non-plugin-files.outputs.any_changed == 'true'
       run: |-
         sed -i -e "s/PROJECT_ID/$PROJECT_ID/g" -e "s/REPOSITORY/$REPOSITORY/g" -e "s/IMAGE/$IMAGE/g" -e "s/GITHUB_SHA/$GITHUB_SHA/g" k8s/deployment.yaml
         kubectl apply -f k8s/deployment.yaml
