@@ -199,7 +199,7 @@ sub initialize($self, %conf) {
     $self->{plugins}          = PBot::Core::Plugins->new(pbot => $self, %conf);
     $self->{process_manager}  = PBot::Core::ProcessManager->new(pbot => $self, %conf);
     $self->{select_handler}   = PBot::Core::SelectHandler->new(pbot => $self, %conf);
-    $self->{stdin_reader}     = PBot::Core::StdinReader->new(pbot => $self, %conf);
+    # $self->{stdin_reader}     = PBot::Core::StdinReader->new(pbot => $self, %conf);
     $self->{webpaste}         = PBot::Core::WebPaste->new(pbot => $self, %conf);
 
     # load commands in Commands directory
