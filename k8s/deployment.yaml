@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: candide
-          image: IMAGE_PLACEHOLDER
+          image: gcr.io/PROJECT_ID/REPOSITORY/IMAGE:GITHUB_SHA
           volumeMounts:
             - mountPath: /mnt/persistent
               name: persistent
@@ -30,6 +30,9 @@ spec:
             limits:
               cpu: "0.5"
               memory: 500Mi
+          args:
+            - "data_dir=/mnt/persistent"
+            - "irc.botnick=candide_"
       volumes:
         - name: persistent
           persistentVolumeClaim:
