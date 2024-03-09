@@ -20,6 +20,8 @@ spec:
       containers:
         - name: candide
           image: gcr.io/PROJECT_ID/REPOSITORY/IMAGE:GITHUB_SHA
+          workingDir: "/opt/pbot"
+          command: ["/opt/pbot/bin/pbot"]
           args: ["data_dir=/mnt/persistent", "irc.botnick=candide2"]
           volumeMounts:
             - mountPath: /mnt/persistent
