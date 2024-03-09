@@ -1,4 +1,4 @@
-name: Deploy candide for Libera
+name: Deploy cantdidnt for Libera
 
 on:
   push:
@@ -14,10 +14,9 @@ env:
   IMAGE: candide
 
 jobs:
-  setup-build-publish-deploy:
-    name: Setup, Build, Publish, and Deploy
+  build-deploy-gke-prod:
+    name: Build & Deploy to GKE in Production
     runs-on: ubuntu-latest
-    environment: production
 
     permissions:
       contents: 'read'
