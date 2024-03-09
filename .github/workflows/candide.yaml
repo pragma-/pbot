@@ -56,8 +56,17 @@ jobs:
     - name: Push image
       run: |-
         docker push "gcr.io/$PROJECT_ID/$REPOSITORY/$IMAGE:$GITHUB_SHA"
+
+    - uses: jitterbit/get-changed-files@v1
+      id: changed_files
+
+    - name: List changed files
+      run: |
+        for changed_file in ${{ steps.changed_files.outputs.all }}; do
+          echo "Modified: ${changed_file}"
+        done
   
     - name: Deploy
       run: |-
-        sed -e "s/PROJECT_ID/$PROJECT_ID/g" -e "s/REPOSITORY/$REPOSITORY/g" -e "s/IMAGE/$IMAGE/g" -e "s/GITHUB_SHA/$GITHUB_SHA/g" k8s/deployment.yaml
+        sed -i -e "s/PROJECT_ID/$PROJECT_ID/g" -e "s/REPOSITORY/$REPOSITORY/g" -e "s/IMAGE/$IMAGE/g" -e "s/GITHUB_SHA/$GITHUB_SHA/g" k8s/deployment.yaml
         kubectl apply -f k8s/deployment.yaml
