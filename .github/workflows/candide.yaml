@@ -1,4 +1,4 @@
-name: Deploy cantdidnt for Libera
+name: Deploy candide for Libera
 
 on:
   push:
@@ -10,8 +10,9 @@ env:
   GKE_CLUSTER: pragma
   GKE_ZONE: us-central1-c
   DEPLOYMENT_NAME: candide
+  NAMESPACE: candide
   REPOSITORY: pbot
-  IMAGE: candide
+  IMAGE: pbot
 
 jobs:
   build-deploy-gke-prod:
@@ -75,3 +76,8 @@ jobs:
     #     ./kustomize build . | kubectl apply -f -
     #     kubectl rollout status deployment/$DEPLOYMENT_NAME
     #     kubectl get services -o wide
+
+    - name: Deploy image
+      run: |-
+        sed -i -e 's/IMAGE_PLACEHOLDER/'$PROJECT_ID/$REPOSITORY/$IMAGE:${{ github.sha }}'/' k8s/deployment.yaml
+        kubectl apply -f k8s/deployment.yaml

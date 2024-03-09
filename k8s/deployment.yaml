@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: candide
+  namespace: candide
+  labels:
+    app: candide
+spec:
+  selector:
+    matchLabels:
+      app: candide
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: candide
+    spec:
+      containers:
+        - name: candide
+          image: IMAGE_PLACEHOLDER
+          volumeMounts:
+            - mountPath: /mnt/persistent
+              name: persistent
+          resources:
+            requests:
+              cpu: "0.1"
+              memory: 100Mi
+            limits:
+              cpu: "0.5"
+              memory: 500Mi
+      volumes:
+        - name: persistent
+          persistentVolumeClaim:
+            claimName: candide-storage
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: candide-storage
+  namespace: candide
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
