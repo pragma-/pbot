@@ -26,6 +26,7 @@ requires 'File::HomeDir';
 requires 'File::Spec';
 requires 'Getopt::Long';
 requires 'HTML::Entities';
+requires 'Import::Into';
 requires 'IO::File';
 requires 'IO::Select';
 requires 'IO::Socket';

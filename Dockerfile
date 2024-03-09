@@ -4,11 +4,9 @@ FROM perl:5.34
 RUN apt-get update && apt-get install -y make gcc clang cpanminus dos2unix wamerican
 
 # Install pbot and its own dependencies.
-RUN cd /opt && git clone --recursive https://github.com/pragma-/pbot
+# FIXME: Replace nitrix with pragma-.
+RUN cd /opt && git clone --recursive https://github.com/nitrix/pbot
 RUN cd /opt/pbot && cpanm -n --installdeps . --with-all-features --without-feature=compiler_vm_win32
-
-# HACK: Missing from the cpanfile.
-RUN cpanm Import::Into
 
 # Mount point for to persist the bot's data.
 RUN mkdir /mnt/persistent
