@@ -26,6 +26,7 @@ requires 'File::HomeDir';
 requires 'File::Spec';
 requires 'Getopt::Long';
 requires 'HTML::Entities';
+requires 'Import::Into';
 requires 'IO::File';
 requires 'IO::Select';
 requires 'IO::Socket';
@@ -133,6 +134,7 @@ feature FuncSed => sub {
 };
 
 feature GoogleSearch => sub {
+    requires 'WWW::Google::UserAgent';
     requires 'WWW::Google::CustomSearch';
     requires 'HTML::Entities';
 };
