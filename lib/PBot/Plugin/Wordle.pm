@@ -24,12 +24,15 @@ sub unload($self) {
 }
 
 use constant {
-    USAGE => 'Usage: wordle start [word length] | custom <word> <channel> | guess <word> | show | giveup',
+    USAGE => 'Usage: wordle start [word length] | custom <word> <channel> | guess <word> | letters | show | giveup',
     NO_WORDLE => 'There is no Wordle yet. Use `wordle start` to begin a game.',
     DEFAULT_LENGTH => 5,
     MIN_LENGTH => 3,
     MAX_LENGTH => 10,
     WORDLIST => '/usr/share/dict/words',
+    LETTER_CORRECT => 1,
+    LETTER_PRESENT => 2,
+    LETTER_INVALID => 3,
 };
 
 sub wordle($self, $context) {
@@ -149,6 +152,30 @@ sub wordle($self, $context) {
             return $self->guess_wordle($channel, $args[0]);
         }
 
+        when ('letters') {
+            if (@args > 1) {
+                return "Usage: wordle letters";
+            }
+
+            if (not defined $self->{$channel}->{wordle}) {
+                return NO_WORDLE;
+            }
+
+            my $result = 'Good/unknown letters: ';
+
+            foreach my $letter (sort keys $self->{$channel}->{letters}->%*) {
+                if ($self->{$channel}->{letters}->{$letter} == LETTER_CORRECT) {
+                    $result .= "*$letter* ";
+                } elsif ($self->{$channel}->{letters}->{$letter} == LETTER_PRESENT) {
+                    $result .= "?$letter? ";
+                } elsif ($self->{$channel}->{letters}->{$letter} == 0) {
+                    $result .= "$letter ";
+                }
+            }
+
+            return $result;
+        }
+
         default {
             return "Unknown command `$command`; " . USAGE;
         }
@@ -198,10 +225,15 @@ sub make_wordle($self, $channel, $length, $word = undef) {
         @wordle = split //, $words[rand @words];
     }
 
-    $self->{$channel}->{wordle}  = \@wordle;
-    $self->{$channel}->{guesses} = [];
-    $self->{$channel}->{correct} = 0;
+    $self->{$channel}->{wordle}      = \@wordle;
+    $self->{$channel}->{guesses}     = [];
+    $self->{$channel}->{correct}     = 0;
     $self->{$channel}->{guess_count} = 0;
+    $self->{$channel}->{letters}     = {};
+
+    foreach my $letter ('A'..'Z') {
+        $self->{$channel}->{letters}->{$letter} = 0;
+    }
 
     push $self->{$channel}->{guesses}->@*, '? ' x $self->{$channel}->{wordle}->@*;
 
@@ -255,6 +287,7 @@ sub guess_wordle($self, $channel, $guess) {
             $seen{$guess[$i]}++;
             $correct++;
             push @result, "*$guess[$i]*";
+            $self->{$channel}->{letters}->{$guess[$i]} = LETTER_CORRECT;
         } else {
             my $present = 0;
 
@@ -271,8 +304,10 @@ sub guess_wordle($self, $channel, $guess) {
 
             if ($present) {
                 push @result, "?$guess[$i]?";
+                $self->{$channel}->{letters}->{$guess[$i]} = LETTER_PRESENT;
             } else {
                 push @result, "$guess[$i]";
+                $self->{$channel}->{letters}->{$guess[$i]} = LETTER_INVALID;
             }
         }
     }

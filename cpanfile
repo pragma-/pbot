@@ -134,6 +134,7 @@ feature FuncSed => sub {
 };
 
 feature GoogleSearch => sub {
+    requires 'WWW::Google::UserAgent';
     requires 'WWW::Google::CustomSearch';
     requires 'HTML::Entities';
 };
