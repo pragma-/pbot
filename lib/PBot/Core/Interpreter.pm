@@ -953,6 +953,7 @@ sub add_message_to_output_queue($self, $channel, $message, $delay = 0) {
                 hostmask   => $message->{hostmask},
                 output     => $message->{message},
                 command    => $message->{command},
+                keyword    => $message->{keyword},
                 checkflood => $message->{checkflood}
             };
 

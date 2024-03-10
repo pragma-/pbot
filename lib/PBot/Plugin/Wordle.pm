@@ -127,6 +127,7 @@ sub wordle($self, $context) {
                 host       => 'localhost',
                 hostmask   => "$botnick!wordle\@localhost",
                 command    => 'wordle',
+                keyword    => 'wordle',
                 checkflood => 1,
                 message    => "$context->{nick} started a custom $result",
             };
@@ -284,7 +285,6 @@ sub guess_wordle($self, $channel, $guess) {
 
     for (my $i = 0; $i < @wordle; $i++) {
         if ($guess[$i] eq $wordle[$i]) {
-            $seen{$guess[$i]}++;
             $correct++;
             push @result, "*$guess[$i]*";
             $self->{$channel}->{letters}->{$guess[$i]} = LETTER_CORRECT;
@@ -307,7 +307,10 @@ sub guess_wordle($self, $channel, $guess) {
                 $self->{$channel}->{letters}->{$guess[$i]} = LETTER_PRESENT;
             } else {
                 push @result, "$guess[$i]";
-                $self->{$channel}->{letters}->{$guess[$i]} = LETTER_INVALID;
+
+                if ($self->{$channel}->{letters}->{$guess[$i]} == 0) {
+                    $self->{$channel}->{letters}->{$guess[$i]} = LETTER_INVALID;
+                }
             }
         }
     }
