@@ -271,11 +271,11 @@ sub show_url_titles($self, $event_type, $event) {
         $event->{args}[0]
     );
 
-    # get show_url_titles for channel or true if not defined
-    my $enabled = $self->{pbot}->{registry}->get_value($channel, 'show_url_titles') // 1;
+    # get show_url_titles for channel
+    my $enabled = $self->{pbot}->{registry}->get_value($channel, 'show_url_titles');
 
     # disabled in channel
-    return 0 if !$enabled;
+    return 0 if defined $enabled && !$enabled;
     return 0 if $self->{pbot}->{registry}->get_value($channel, 'no_url_titles');
 
     # disabled globally (unless allowed by channel)
