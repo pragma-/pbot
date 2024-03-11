@@ -1,21 +1,21 @@
 FROM perl:5.34
 
-# Install system dependencies.
+# Install major dependencies.
 RUN apt-get update && apt-get install -y libssl-dev libexpat1-dev zlib1g libdbd-sqlite3-perl cpanminus wamerican pip
+# Enable contrib packages.
+RUN apt-get install -y software-properties-common && apt-add-repository contrib && apt-get update
+# Translate shell.
+RUN apt-get install -y libfribidi0 libfribidi-bin gawk libsigsegv2 translate-shell
 
 # Prefer a non-root user.
 RUN useradd -ms /bin/bash pbot
 
-# Install pbot and its own dependencies (replace nitrix with pragma- eventually).
-RUN cd /opt && git clone --recursive --depth=1 https://github.com/nitrix/pbot
-
-# Perl dependencies.
+# Location for perl libraries.
 RUN cpanm --local-lib=/home/pbot/perl5 local::lib && eval $(perl -I /home/pbot/perl5/lib/perl5/ -Mlocal::lib)
-RUN cd /opt/pbot && cpanm -n --installdeps . --with-all-features --without-feature=compiler_vm_win32
 
-# Translate shell.
-RUN sed -i 's/^Components: main$/& contrib/' /etc/apt/sources.list.d/debian.sources
-RUN apt-get update && apt-get install -y libfribidi0 libfribidi-bin gawk libsigsegv2 translate-shell
+# Install pbot from sources and get dependencies (replace nitrix with pragma- eventually).
+RUN cd /opt && git clone --recursive --depth=1 https://github.com/nitrix/pbot
+RUN cd /opt/pbot && cpanm -n --installdeps . --with-all-features --without-feature=compiler_vm_win32
 
 # Wiktionary parser.
 RUN pip install git+https://github.com/pragma-/WiktionaryParser --break-system-packages
