@@ -22,13 +22,7 @@ spec:
           image: gcr.io/PROJECT_ID/REPOSITORY/IMAGE:GITHUB_SHA
           workingDir: "/opt/pbot"
           command: ["/opt/pbot/bin/pbot"]
-          args:
-            [
-              "data_dir=/mnt/persistent",
-              "irc.botnick=cantdide",
-              "irc.username=cantdide",
-              "irc.sasl=1",
-            ]
+          args: ["data_dir=/mnt/persistent"]
           volumeMounts:
             - mountPath: /mnt/persistent
               name: persistent

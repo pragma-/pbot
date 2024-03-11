@@ -1,7 +1,7 @@
 FROM perl:5.34
 
 # Install system dependencies.
-RUN apt-get update && apt-get install -y make gcc clang cpanminus wamerican
+RUN apt-get update && apt-get install -y cpanminus wamerican
 
 # Install pbot and its own dependencies.
 # FIXME: Replace nitrix with pragma-.
