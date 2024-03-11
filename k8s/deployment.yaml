@@ -22,7 +22,7 @@ spec:
           image: gcr.io/PROJECT_ID/REPOSITORY/IMAGE:GITHUB_SHA
           workingDir: "/opt/pbot"
           command: ["/opt/pbot/bin/pbot"]
-          args: ["data_dir=/mnt/persistent", "general.daemon=1"]
+          args: ["data_dir=/mnt/persistent"]
           volumeMounts:
             - mountPath: /mnt/persistent
               name: persistent
