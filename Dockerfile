@@ -11,8 +11,12 @@ RUN cd /opt/pbot && cpanm -n --installdeps . --with-all-features --without-featu
 # Mount point to persist the bot's data.
 RUN mkdir /mnt/persistent
 
+# Prefer a non-root user to run the bot.
+RUN useradd -ms /bin/bash pbot
+USER pbot
+
 # Just in case files are created in the working directory. 
-WORKDIR /tmp
+WORKDIR /home/pbot
 
 # Executable.
 ENTRYPOINT /opt/pbot/bin/pbot
