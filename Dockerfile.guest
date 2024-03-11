@@ -1,0 +1,14 @@
+FROM debian:bookworm
+
+# Install system dependencies.
+RUN apt-get update && apt-get install -y clang gcc clang g++ tcl ghc
+
+# Prefer a non-root user to run the guest.
+RUN useradd -ms /bin/bash dummy
+USER dummy
+
+# Just in case files are created in the working directory. 
+WORKDIR /home/dummy
+
+# Executable.
+ENTRYPOINT /usr/bin/bash
