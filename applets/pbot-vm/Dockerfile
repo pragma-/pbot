@@ -26,6 +26,11 @@ RUN sed -i -e "s/\/etc\/polkit-1\/rules.d\//\/usr\/share\/polkit-1\/rules.d\//g"
 # Give well-known host as CID.
 RUN sed -i -e "s/\"cid\" : 7,/\"cid\" : 2,/g" /opt/pbot/applets/pbot-vm/host/config/vm-exec.json
 
+# Permissions on some folders.
+RUN chmod 777 /opt/pbot/applets/pbot-vm/host/history
+RUN touch /opt/pbot/applets/pbot-vm/host/log.txt
+RUN chmod 666 /opt/pbot/applets/pbot-vm/host/log.txt
+
 # Setup the guest.
 RUN cd /opt/pbot/applets/pbot-vm && ./guest/bin/setup-guest
 
