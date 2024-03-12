@@ -209,6 +209,8 @@ sub execute {
     my $date = time;
     my $stdin = $self->{options}->{'-stdin'};
 
+    print "111\n";
+
     if (not length $stdin) {
         $stdin = decode('UTF-8', `fortune -u -s`);
         $stdin =~ s/[\n\r\t]/ /msg;
@@ -217,6 +219,8 @@ sub execute {
         $stdin =~ s/^\s+//;
         $stdin =~ s/\s+$//;
     }
+
+    print "222\n";
 
     $stdin =~ s/(?<!\\)\\n/\n/mg;
     $stdin =~ s/(?<!\\)\\r/\r/mg;
@@ -228,6 +232,8 @@ sub execute {
     my $pretty_code = $self->pretty_format($self->{code});
 
     my $cmdline = $self->{cmdline};
+
+    print "333\n";
 
     $cmdline =~ s/\$sourcefile/$self->{sourcefile}/g;
     $cmdline =~ s/\$execfile/$self->{execfile}/g;
@@ -245,6 +251,8 @@ sub execute {
             $options .= $self->{options_paste};
         }
     }
+
+    print "444\n";
 
     if (length $options) {
         $cmdline =~ s/\$options/$options/;
@@ -269,6 +277,8 @@ sub execute {
     $compile_in->{'factoid'} = $self->{'factoid'} if length $self->{'factoid'};
     $compile_in->{'persist-key'} = $self->{'persist-key'} if length $self->{'persist-key'};
 
+    print "555\n";
+
     my $compile_json = encode_json($compile_in);
     $compile_json .= "\n:end:\n";
 
@@ -281,6 +291,8 @@ sub execute {
     # $self->debug("Sending $length bytes [$compile_json] to vm_server\n");
 
     $chunk_size -= 1; # account for newline in syswrite
+
+    print "666\n";
 
     while ($chunks_sent < $length) {
         my $chunk = substr $compile_json, $chunks_sent, $chunk_size;
@@ -306,6 +318,8 @@ sub execute {
         $sent += $ret;
     }
 
+    print "777\n";
+
     my $result = "";
     my $got_result = 0;
 
@@ -328,6 +342,8 @@ sub execute {
     }
 
     close $input;
+
+    print "888\n";
 
     $self->{output} = $result;
 
