@@ -23,8 +23,8 @@ spec:
               cpu: "0.1"
               memory: 100Mi
             limits:
-              cpu: "0.5"
-              memory: 200Mi
+              cpu: "0.1"
+              memory: 100Mi
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy

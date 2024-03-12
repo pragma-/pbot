@@ -23,6 +23,9 @@ RUN chmod +x /opt/pbot/applets/pbot-vm/entrypoint.sh
 # Different location for Policykit
 RUN sed -i -e "s/\/etc\/polkit-1\/rules.d\//\/usr\/share\/polkit-1\/rules.d\//g" /opt/pbot/applets/pbot-vm/guest/bin/setup-guest
 
+# Give well-known host as CID.
+RUN sed -i -e "s/\"cid\" : 7,/\"cid\" : 2,/g" /opt/pbot/applets/pbot-vm/host/config/vm-exec.json
+
 # Setup the guest.
 RUN cd /opt/pbot/applets/pbot-vm && ./guest/bin/setup-guest
 

@@ -31,8 +31,8 @@ spec:
               cpu: "0.1"
               memory: 100Mi
             limits:
-              cpu: "0.5"
-              memory: 500Mi
+              cpu: "0.3"
+              memory: 300Mi
       volumes:
         - name: persistent
           persistentVolumeClaim:
