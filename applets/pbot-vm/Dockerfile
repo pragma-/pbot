@@ -1,7 +1,7 @@
 FROM perl:5.34
 
 # Install system dependencies.
-RUN apt-get update && apt-get install -y clang gcc clang g++ tcl ghc git cpanminus dos2unix policykit-1 fortune-mod astyle
+RUN apt-get update && apt-get install -y clang gcc clang g++ tcl ghc git cpanminus dos2unix policykit-1 fortune-mod astyle socat
 
 # Need the sources.
 COPY . /opt/pbot
