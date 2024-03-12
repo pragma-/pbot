@@ -26,6 +26,9 @@ spec:
           volumeMounts:
             - mountPath: /mnt/persistent
               name: persistent
+          env:
+            - name: PBOTVM_HOST
+              value: "candide-vm"
           resources:
             requests:
               cpu: "0.1"
