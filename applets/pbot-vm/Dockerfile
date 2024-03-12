@@ -8,9 +8,9 @@ COPY . /opt/pbot
 RUN cd /opt/pbot && cpanm -n --installdeps . --with-all-features --without-feature=compiler_vm_win32
 
 # Serial emulation.
-RUN apt-get install -y socat
-RUN sed -i -e "s/\/dev\/ttyS2/\/tmp\/ttyS2/g" /opt/pbot/applets/pbot-vm/guest/bin/guest-server
-RUN sed -i -e "s/\/dev\/ttyS3/\/tmp\/ttyS3/g" /opt/pbot/applets/pbot-vm/guest/bin/guest-server
+# RUN apt-get install -y socat
+# RUN sed -i -e "s/\/dev\/ttyS2/\/tmp\/ttyS2/g" /opt/pbot/applets/pbot-vm/guest/bin/guest-server
+# RUN sed -i -e "s/\/dev\/ttyS3/\/tmp\/ttyS3/g" /opt/pbot/applets/pbot-vm/guest/bin/guest-server
 
 # Line endings on other platforms.
 RUN find . -type f -print0 | xargs -0 dos2unix /opt/pbot/applets/pbot-vm/guest/bin/*
@@ -23,7 +23,7 @@ RUN chmod +x /opt/pbot/applets/pbot-vm/entrypoint.sh
 # Different location for Policykit
 RUN sed -i -e "s/\/etc\/polkit-1\/rules.d\//\/usr\/share\/polkit-1\/rules.d\//g" /opt/pbot/applets/pbot-vm/guest/bin/setup-guest
 
-# Give well-known host as CID.
+# Use well-known host as CID for VSOCK.
 RUN sed -i -e "s/\"cid\" : 7,/\"cid\" : 2,/g" /opt/pbot/applets/pbot-vm/host/config/vm-exec.json
 
 # Permissions on some folders.
