@@ -1,7 +1,7 @@
 FROM perl:5.34
 
 # Install system dependencies.
-RUN apt-get update && apt-get install -y clang gcc clang g++ tcl ghc git cpanminus dos2unix
+RUN apt-get update && apt-get install -y clang gcc clang g++ tcl ghc git cpanminus dos2unix policykit-1
 
 # Need the sources.
 COPY . /opt/pbot
@@ -11,6 +11,9 @@ RUN cd /opt/pbot && cpanm -n --installdeps . --with-all-features --without-featu
 RUN apt-get install -y socat
 RUN sed -i -e "s/\/dev\/ttyS2/\/tmp\/ttyS2/g" /opt/pbot/applets/pbot-vm/guest/bin/guest-server
 RUN sed -i -e "s/\/dev\/ttyS3/\/tmp\/ttyS3/g" /opt/pbot/applets/pbot-vm/guest/bin/guest-server
+
+# Different location for Policykit
+RUN sed -i -e "s/\/etc\/polkit-1\/rules.d\//\/usr\/share\/polkit-1\/rules.d\//g" /opt/pbot/apples/pbot-vm/guest/bin/setup-guest
 
 # Line endings on other platforms.
 RUN find . -type f -print0 | xargs -0 dos2unix /opt/pbot/applets/pbot-vm/guest/bin/*
