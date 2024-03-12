@@ -13,15 +13,15 @@ RUN sed -i -e "s/\/dev\/ttyS2/\/tmp\/ttyS2/g" /opt/pbot/applets/pbot-vm/guest/bi
 RUN sed -i -e "s/\/dev\/ttyS3/\/tmp\/ttyS3/g" /opt/pbot/applets/pbot-vm/guest/bin/guest-server
 
 # Setup the guest server.
-RUN cd /opt/pbot/applets/pbot-vm/guest/bin && ln -al
+RUN cd /opt/pbot/applets/pbot-vm/guest/bin && ls -al
 RUN cd /opt/pbot/applets/pbot-vm && ./guest/bin/setup-guest
 
 # Prefer a non-root user.
 RUN useradd -ms /bin/bash vm
-USER vm
 
 # Just in case files are created in the working directory. 
 WORKDIR /home/vm
 
 # Single entry point for both the host and the guest.
+USER vm
 ENTRYPOINT ["/opt/pbot/applets/pbot-vm/entrypoint.sh"]
