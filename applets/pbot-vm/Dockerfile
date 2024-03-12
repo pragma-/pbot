@@ -1,7 +1,7 @@
 FROM perl:5.34
 
 # Install system dependencies.
-RUN apt-get update && apt-get install -y clang gcc clang g++ tcl ghc git cpanminus dos2unix policykit-1
+RUN apt-get update && apt-get install -y clang gcc clang g++ tcl ghc git cpanminus dos2unix policykit-1 fortune-mod
 
 # Need the sources.
 COPY . /opt/pbot
@@ -28,8 +28,12 @@ RUN sed -i -e "s/\"cid\" : 7,/\"cid\" : 2,/g" /opt/pbot/applets/pbot-vm/host/con
 
 # Permissions on some folders.
 RUN chmod 777 /opt/pbot/applets/pbot-vm/host/history
+RUN chmod 777 /opt/pbot/applets/pbot-vm/host/bin
 RUN touch /opt/pbot/applets/pbot-vm/host/log.txt
 RUN chmod 666 /opt/pbot/applets/pbot-vm/host/log.txt
+
+# Fortunes
+RUN ln -s /usr/games/fortune /usr/bin/fortune
 
 # Setup the guest.
 RUN cd /opt/pbot/applets/pbot-vm && ./guest/bin/setup-guest
