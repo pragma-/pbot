@@ -80,7 +80,7 @@ jobs:
     - name: Deploy with restart
       if: steps.changed-non-plugin-files.outputs.any_changed == 'true'
       run: |-
-        sed -i -e "s/PROJECT_ID/$PROJECT_ID/g" -e "s/REPOSITORY/$REPOSITORY/g" -e "s/IMAGE/$IMAGE_PBOT/g" -e "s/GITHUB_SHA/$GITHUB_SHA/g" k8s/deployment.yaml
+        sed -i -e "s/PROJECT_ID/$PROJECT_ID/g" -e "s/REPOSITORY/$REPOSITORY/g" -e "s/IMAGE/$IMAGE_PBOT/g" -e "s/GITHUB_SHA/$GITHUB_SHA/g" k8s/candide-pbot.yaml
         kubectl apply -f k8s/candide-pbot.yaml
   
   vms:
@@ -118,5 +118,5 @@ jobs:
 
     - name: Deploy
       run: |-
-        sed -i -e "s/PROJECT_ID/$PROJECT_ID/g" -e "s/REPOSITORY/$REPOSITORY/g" -e "s/IMAGE/$IMAGE_VM/g" -e "s/GITHUB_SHA/$GITHUB_SHA/g" k8s/deployment.yaml
+        sed -i -e "s/PROJECT_ID/$PROJECT_ID/g" -e "s/REPOSITORY/$REPOSITORY/g" -e "s/IMAGE/$IMAGE_VM/g" -e "s/GITHUB_SHA/$GITHUB_SHA/g" k8s/candide-vm.yaml
         kubectl apply -f k8s/candide-vm.yaml

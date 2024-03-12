@@ -1,7 +1,7 @@
 FROM perl:5.34
 
 # Install system dependencies.
-RUN apt-get update && apt-get install -y clang gcc clang g++ tcl ghc git cpanminus
+RUN apt-get update && apt-get install -y clang gcc clang g++ tcl ghc git cpanminus dos2unix
 
 # Need the sources.
 COPY . /opt/pbot
@@ -12,8 +12,15 @@ RUN apt-get install -y socat
 RUN sed -i -e "s/\/dev\/ttyS2/\/tmp\/ttyS2/g" /opt/pbot/applets/pbot-vm/guest/bin/guest-server
 RUN sed -i -e "s/\/dev\/ttyS3/\/tmp\/ttyS3/g" /opt/pbot/applets/pbot-vm/guest/bin/guest-server
 
-# Setup the guest server.
-RUN cd /opt/pbot/applets/pbot-vm/guest/bin && ls -al
+# Line endings on other platforms.
+RUN find . -type f -print0 | xargs -0 dos2unix /opt/pbot/applets/pbot-vm/guest/bin/*
+RUN find . -type f -print0 | xargs -0 dos2unix /opt/pbot/applets/pbot-vm/host/bin/*
+RUN dos2unix /opt/pbot/applets/pbot-vm/entrypoint.sh
+RUN chmod +x /opt/pbot/applets/pbot-vm/guest/bin/*
+RUN chmod +x /opt/pbot/applets/pbot-vm/host/bin/*
+RUN chmod +x /opt/pbot/applets/pbot-vm/entrypoint.sh
+
+# Setup the guest.
 RUN cd /opt/pbot/applets/pbot-vm && ./guest/bin/setup-guest
 
 # Prefer a non-root user.
