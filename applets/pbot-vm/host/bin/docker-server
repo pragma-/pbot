@@ -1,0 +1,188 @@
+#!/usr/bin/env perl
+
+# File: docker-server
+#
+# Purpose: Unlike the `vm-server`, the `docker-server` does not manage virtual machines and leaves that task to
+# orchestration (e.g. Kubernetes) outside of its own control. Meaning the host and guest are one and the same.
+# The rest of the code remains similar, listening for incoming commands from vm-client and invoking `vm-exec` to
+# send commands to the `guest-server`.
+
+# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileContributor: 2024 Alex Belanger for Docker support
+# SPDX-License-Identifier: MIT
+
+use 5.020;
+
+use warnings;
+use strict;
+
+use feature qw(signatures);
+no warnings qw(experimental::signatures);
+
+use IO::Socket;
+use Net::hostent;
+use IPC::Shareable;
+use Time::HiRes qw/gettimeofday/;
+use Encode;
+
+use constant {
+    SERVER_PORT     => $ENV{SERVER_PORT}  // 9000,
+    COMPILE_TIMEOUT => $ENV{COMPILE_TIMEOUT} // 10,
+};
+
+sub execute($command) {
+    print "execute ($command)\n";
+
+    # to get $? from pipe
+    local $SIG{CHLD} = 'DEFAULT';
+
+    my $pid = open(my $fh, '-|', split / /, encode('UTF-8', $command));
+
+    if (not defined $pid) {
+        print "Couldn't fork: $!\n";
+        return (-13, "[Fatal error]");
+    }
+
+    my $result = eval {
+        my $output = '';
+        local $SIG{ALRM} = sub { kill 9, $pid; die "Timed-out: $output\n"; };
+        alarm(COMPILE_TIMEOUT);
+
+        while (my $line = decode('UTF-8', <$fh>)) {
+            $output .= $line;
+        }
+
+        return $output;
+    };
+
+    alarm 0;
+    close $fh;
+
+    my $ret = $? >> 8;
+
+    if (my $exception = $@) {
+        # handle time-out exception
+        if ($exception =~ /Timed-out: (.*)/) {
+            return (-13, "[Timed-out] $1");
+        }
+
+        # propagate unhandled exception
+        die $exception;
+    }
+
+    return ($ret, $result);
+}
+
+sub server_listen($port) {
+    my $server = IO::Socket::INET->new (
+        Proto     => 'tcp',
+        LocalPort => $port,
+        Listen    => SOMAXCONN,
+        ReuseAddr => 1,
+        Reuse     => 1,
+    );
+    die "Can't setup server: $!" unless $server;
+    print "Server $0 accepting clients at :$port\n";
+    return $server;
+}
+
+sub do_server() {
+    print "Starting PBot VM Server on port " . SERVER_PORT . "\n";
+    my $server = eval { server_listen(SERVER_PORT) };
+
+    if ($@) {
+        print STDERR $@;
+        return;
+    }
+
+    while ($running and my $client = $server->accept) {
+        print '-' x 20, "\n";
+        my $hostinfo = gethostbyaddr($client->peeraddr);
+        print "Connect from ", $client->peerhost, " at ", scalar localtime, "\n";
+        handle_client($client);
+    }
+
+    print "Shutting down server.\n";
+}
+
+sub handle_client($client) {
+    my ($timed_out, $killed) = (0, 0);
+
+    my $r = fork;
+
+    if (not defined $r) {
+        print "Could not fork to handle client: $!\n";
+        print $client "Fatal error.\n";
+        close $client;
+        return;
+    }
+
+    if ($r > 0) {
+        # nothing for parent to do with client
+        close $client;
+        return;
+    }
+
+    $client->autoflush(1);
+
+    eval {
+        # give client 5 seconds to send a line
+        local $SIG{ALRM} = sub { die "Client I/O timed-out\n"; };
+        alarm 5;
+
+        while (my $line = decode('UTF-8', <$client>)) {
+            $line =~ s/[\r\n]+$//;
+            next if $line =~ m/^\s*$/;
+
+            # give client 5 more seconds
+            alarm 5;
+
+            print "[$$] Read [$line]\n";
+
+            # disable client time-out
+            alarm 0;
+
+            my ($ret, $result) = execute("perl vm-exec $line");
+
+            $result =~ s/\s+$//;
+            print "Ret: $ret; result: [$result]\n";
+
+            if ($result =~ m/\[Killed\]$/) {
+                $killed = 1;
+                $ret = -14;
+            }
+
+            if ($ret == -13 && $result =~ m/\[Timed-out\]/) {
+                $timed_out = 1;
+            }
+
+            print $client encode('UTF-8', $result . "\n");
+            last;
+        }
+    };
+
+    # print client time-out exception
+    print "[$$] $@" if $@;
+
+    alarm 0;
+    close $client;
+
+    print "[$$] timed out: $timed_out; killed: $killed\n";
+
+    # child done
+    print "[$$] client exiting\n";
+    print "=" x 20, "\n";
+    exit;
+}
+
+sub main() {
+    binmode(STDOUT, ':utf8');
+    binmode(STDERR, ':utf8');
+
+    # let OS clean-up child exits
+    $SIG{CHLD} = 'IGNORE';
+
+    do_server();
+}
+
+main();

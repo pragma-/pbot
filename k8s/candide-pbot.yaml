@@ -1,24 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: candide
+  name: candide-pbot
   namespace: candide
   labels:
-    app: candide
+    app: candide-pbot
 spec:
   selector:
     matchLabels:
-      app: candide
+      app: candide-pbot
   replicas: 1
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app: candide
+        app: candide-pbot
     spec:
       containers:
-        - name: candide
+        - name: candide-pbot
           image: gcr.io/PROJECT_ID/REPOSITORY/IMAGE:GITHUB_SHA
           workingDir: "/opt/pbot"
           command: ["/opt/pbot/bin/pbot"]

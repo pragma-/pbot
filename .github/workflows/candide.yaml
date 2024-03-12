@@ -1,4 +1,4 @@
-name: candide
+name: candide on Libera
 
 on:
   push:
@@ -12,11 +12,12 @@ env:
   DEPLOYMENT_NAME: candide
   NAMESPACE: candide
   REPOSITORY: pbot
-  IMAGE: pbot
+  IMAGE_PBOT: pbot
+  IMAGE_VM: pbot-vm
 
 jobs:
-  build:
-    name: Build & Deploy
+  pbot:
+    name: PBot
     runs-on: ubuntu-latest
 
     permissions:
@@ -41,21 +42,17 @@ jobs:
         cluster_name: ${{ env.GKE_CLUSTER }}
         location: ${{ env.GKE_ZONE }}
 
-    - name: Testing
-      run: |
-        kubectl get pods
-
     - name: Authenticate Docker
       run: |
         gcloud auth configure-docker
 
     - name: Build image
       run: |-
-        docker build --tag "gcr.io/$PROJECT_ID/$REPOSITORY/$IMAGE:$GITHUB_SHA" .
+        docker build --tag "gcr.io/$PROJECT_ID/$REPOSITORY/$IMAGE_PBOT:$GITHUB_SHA" .
     
     - name: Push image
       run: |-
-        docker push "gcr.io/$PROJECT_ID/$REPOSITORY/$IMAGE:$GITHUB_SHA"
+        docker push "gcr.io/$PROJECT_ID/$REPOSITORY/$IMAGE_PBOT:$GITHUB_SHA"
 
     - name: Get all changed non-plugin files
       id: changed-non-plugin-files
@@ -83,5 +80,43 @@ jobs:
     - name: Deploy with restart
       if: steps.changed-non-plugin-files.outputs.any_changed == 'true'
       run: |-
-        sed -i -e "s/PROJECT_ID/$PROJECT_ID/g" -e "s/REPOSITORY/$REPOSITORY/g" -e "s/IMAGE/$IMAGE/g" -e "s/GITHUB_SHA/$GITHUB_SHA/g" k8s/deployment.yaml
-        kubectl apply -f k8s/deployment.yaml
+        sed -i -e "s/PROJECT_ID/$PROJECT_ID/g" -e "s/REPOSITORY/$REPOSITORY/g" -e "s/IMAGE/$IMAGE_PBOT/g" -e "s/GITHUB_SHA/$GITHUB_SHA/g" k8s/deployment.yaml
+        kubectl apply -f k8s/candide-pbot.yaml
+  
+  vms:
+    name: VMs
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with: 
+        submodules: recursive
+
+    - name: 'Authenticate to Google Cloud'
+      id: 'auth'
+      uses: 'google-github-actions/auth@v1'
+      with:
+        credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+
+    - name: Set up GKE credentials
+      uses: google-github-actions/get-gke-credentials@v2
+      with:
+        cluster_name: ${{ env.GKE_CLUSTER }}
+        location: ${{ env.GKE_ZONE }}
+
+    - name: Authenticate Docker
+      run: |
+        gcloud auth configure-docker
+
+    - name: Build image
+      run: |-
+        docker build --tag "gcr.io/$PROJECT_ID/$REPOSITORY/$IMAGE_VM:$GITHUB_SHA" -f applets/pbot-vm/Dockerfile .
+
+    - name: Push image
+      run: |-
+        docker push "gcr.io/$PROJECT_ID/$REPOSITORY/$IMAGE_VM:$GITHUB_SHA"
+
+    - name: Deploy
+      run: |-
+        sed -i -e "s/PROJECT_ID/$PROJECT_ID/g" -e "s/REPOSITORY/$REPOSITORY/g" -e "s/IMAGE/$IMAGE_VM/g" -e "s/GITHUB_SHA/$GITHUB_SHA/g" k8s/deployment.yaml
+        kubectl apply -f k8s/candide-vm.yaml

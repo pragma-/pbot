@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: candide-vm
+  namespace: candide
+  labels:
+    app: candide-vm
+spec:
+  selector:
+    matchLabels:
+      app: candide-vm
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: candide-vm
+    spec:
+      containers:
+        - name: candide-vm
+          image: gcr.io/PROJECT_ID/REPOSITORY/IMAGE:GITHUB_SHA
+          resources:
+            requests:
+              cpu: "0.1"
+              memory: 100Mi
+            limits:
+              cpu: "0.5"
+              memory: 500Mi

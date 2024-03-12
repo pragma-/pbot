@@ -11,14 +11,14 @@ RUN apt-get install -y libfribidi0 libfribidi-bin gawk libsigsegv2 translate-she
 RUN useradd -ms /bin/bash pbot
 
 # Location for perl libraries.
-RUN cpanm --local-lib=/home/pbot/perl5 local::lib && eval $(perl -I /home/pbot/perl5/lib/perl5/ -Mlocal::lib)
+RUN su -u pbot cpanm --local-lib=/home/pbot/perl5 local::lib && eval $(perl -I /home/pbot/perl5/lib/perl5/ -Mlocal::lib)
 
-# Install pbot from sources and get dependencies (replace nitrix with pragma- eventually).
-RUN cd /opt && git clone --recursive --depth=1 https://github.com/nitrix/pbot
+# Install pbot from sources and get dependencies.
+COPY . /opt/pbot
 RUN cd /opt/pbot && cpanm -n --installdeps . --with-all-features --without-feature=compiler_vm_win32
 
 # Wiktionary parser.
-RUN pip install git+https://github.com/pragma-/WiktionaryParser --break-system-packages
+RUN pip install git+https://github.com/pragma-/WiktionaryParser
 
 # Mount point to persist the bot's data.
 RUN mkdir /mnt/persistent
