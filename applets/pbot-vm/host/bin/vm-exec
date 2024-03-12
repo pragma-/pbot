@@ -247,18 +247,29 @@ sub main() {
     }
 
     # run the language
+    print "aaa\n";
     $lang->process_interactive_edit;
+    print "bbb\n"
     $lang->process_standard_options;
+    print "ccc\n";
     $lang->process_custom_options;
+    print "ddd\n";
     $lang->process_cmdline_options;
+    print "eee\n";
     $lang->preprocess_code;
+    print "fff\n";
 
     ($lang->{'vm-input'}, $lang->{'vm-output'}) = connect_vm($context);
+    printf "ggg\n";
     $lang->execute;
+    print "hhh\n";
 
     $lang->postprocess_output;
+    print "iii\n";
     $lang->show_output;
+    print "jjj\n";
     $lang->done;
+    print "kkk\n";
 }
 
 main();
