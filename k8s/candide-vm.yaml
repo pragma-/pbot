@@ -9,7 +9,7 @@ spec:
   selector:
     matchLabels:
       app: candide-vm
-  replicas: 3
+  replicas: 2
   template:
     metadata:
       labels:
@@ -24,4 +24,4 @@ spec:
               memory: 100Mi
             limits:
               cpu: "0.5"
-              memory: 500Mi
+              memory: 200Mi

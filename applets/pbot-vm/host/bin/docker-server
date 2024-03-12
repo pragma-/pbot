@@ -95,7 +95,7 @@ sub do_server() {
         return;
     }
 
-    while ($running and my $client = $server->accept) {
+    while (my $client = $server->accept) {
         print '-' x 20, "\n";
         my $hostinfo = gethostbyaddr($client->peeraddr);
         print "Connect from ", $client->peerhost, " at ", scalar localtime, "\n";
