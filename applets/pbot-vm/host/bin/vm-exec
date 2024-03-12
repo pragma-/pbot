@@ -249,7 +249,7 @@ sub main() {
     # run the language
     print "aaa\n";
     $lang->process_interactive_edit;
-    print "bbb\n"
+    print "bbb\n";
     $lang->process_standard_options;
     print "ccc\n";
     $lang->process_custom_options;
