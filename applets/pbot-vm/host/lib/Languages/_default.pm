@@ -229,7 +229,9 @@ sub execute {
     $stdin =~ s/(?<!\\)\\x([a-f0-9]+)/chr hex $1/igme;
     $stdin =~ s/(?<!\\)\\([0-7]+)/chr oct $1/gme;
 
-    my $pretty_code = $self->pretty_format($self->{code});
+    # FIXME: Bring back formatting.
+    # my $pretty_code = $self->pretty_format($self->{code});
+    my $pretty_code = $self->{code};
 
     my $cmdline = $self->{cmdline};
 
