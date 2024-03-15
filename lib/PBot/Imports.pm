@@ -29,6 +29,10 @@ sub import {
 
     # no warnings => 'experimental';
     warnings->unimport::out_of($target, 'experimental');
+
+    # no warnings => 'deprecated';
+    # note: I will be monitoring deprecations and will update PBot accordingly
+    warnings->unimport::out_of($target, 'deprecated');
 }
 
 sub unimport {}
