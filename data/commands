@@ -1,6 +1,6 @@
 {
    "$metadata$" : {
-      "name" : "Commands",
+      "name" : "Command metadata",
       "update_version" : 3503
    },
    "actiontrigger" : {
@@ -528,6 +528,15 @@
    "wolfram" : {
       "help" : "Queries Wolfram|Alpha Short Answers API",
       "requires_cap" : 0
+   },
+   "wordle" : {
+      "help" : "Wordle game! Guess target word by submitting words for clues about which letters belong to the word!",
+      "preserve_whitespace" : "1",
+      "requires_cap" : null
+   },
+   "wordmorph" : {
+      "help" : "Word Morph game! Solve a path between two words by changing one letter at a time: love > shot = love > lose > lost > loot > soot > shot.",
+      "requires_cap" : null
    },
    "wttr" : {
       "background-process" : "1",

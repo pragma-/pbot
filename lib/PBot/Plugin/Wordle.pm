@@ -212,7 +212,6 @@ sub wordle($self, $context) {
 }
 
 sub load_words($self, $length, $wordlist = 'default') {
-    print "datadir: $self->{datadir}; wordlist = $wordlist; path = $wordlists{$wordlist}\n";
     $wordlist = $self->{datadir} . $wordlists{$wordlist};
 
     if (not -e $wordlist) {
