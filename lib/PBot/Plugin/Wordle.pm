@@ -17,6 +17,8 @@ sub initialize($self, %conf) {
         help => 'Wordle game! Guess target word by submitting words for clues about which letters belong to the word!',
         subref => sub { $self->wordle(@_) },
     );
+
+    $self->{datadir} = $self->{pbot}->{registry}->get_value('general', 'data_dir');
 }
 
 sub unload($self) {
@@ -24,16 +26,41 @@ sub unload($self) {
 }
 
 use constant {
-    USAGE => 'Usage: wordle start [word length] | custom <word> <channel> | guess <word> | letters | show | giveup',
+    USAGE     => 'Usage: wordle start [length [wordlist]] | custom <word> <channel> [wordlist] | guess <word> | letters | show | giveup',
     NO_WORDLE => 'There is no Wordle yet. Use `wordle start` to begin a game.',
+
     DEFAULT_LENGTH => 5,
-    MIN_LENGTH => 3,
-    MAX_LENGTH => 10,
-    WORDLIST => '/usr/share/dict/words',
+    MIN_LENGTH     => 3,
+    MAX_LENGTH     => 22,
+
     LETTER_CORRECT => 1,
     LETTER_PRESENT => 2,
     LETTER_INVALID => 3,
 };
+
+my %wordlists = (
+    default   => '/wordle/american',
+    american  => '/wordle/american',
+    insane    => '/wordle/american-insane',
+    british   => '/wordle/british',
+    canadian  => '/wordle/canadian',
+    french    => '/wordle/french',
+    german    => '/wordle/german',
+    italian   => '/wordle/italian',
+    spanish   => '/wordle/spanish',
+);
+
+my %color = (
+    correct   => "\x0301,03",
+    correct_a => "\x0303,03",
+
+    present   => "\x0301,07",
+    present_a => "\x0307,07",
+
+    invalid   => "\x0301,15",
+
+    reset     => "\x0F",
+);
 
 sub wordle($self, $context) {
     my @args = $self->{pbot}->{interpreter}->split_line($context->{arguments});
@@ -52,7 +79,7 @@ sub wordle($self, $context) {
                 return NO_WORDLE;
             }
 
-            return $self->show_wordle($channel);
+            return $self->show_wordle($channel, 1);
         }
 
         when ('giveup') {
@@ -67,8 +94,8 @@ sub wordle($self, $context) {
         }
 
         when ('start') {
-            if (@args > 1) {
-                return "Invalid arguments; Usage: wordle start [word length]";
+            if (@args > 2) {
+                return "Invalid arguments; Usage: wordle start [word length [wordlist]]";
             }
 
             if (defined $self->{$channel}->{wordle} && $self->{$channel}->{correct} == 0) {
@@ -85,17 +112,24 @@ sub wordle($self, $context) {
                 $length = $args[0];
             }
 
-            return $self->make_wordle($channel, $length);
+            my $wordlist = $args[1] // 'default';
+
+            if (not exists $wordlists{$wordlist}) {
+                return 'Invalid wordlist; options are: ' . (join ', ', sort keys %wordlists);
+            }
+
+            return $self->make_wordle($channel, $length, undef, $wordlist);
         }
 
         when ('custom') {
-            if (@args != 2) {
-                return "Usage: wordle custom <word> <channel>";
+            if (@args < 2 || @args > 3) {
+                return "Usage: wordle custom <word> <channel> [wordlist]";
             }
 
-            my $custom_word    = $args[0];
-            my $custom_channel = $args[1];
-            my $length         = length $custom_word;
+            my $custom_word     = $args[0];
+            my $custom_channel  = $args[1];
+            my $custom_wordlist = $args[2];
+            my $length          = length $custom_word;
 
             if ($custom_word !~ /[a-z]/) {
                 return "Word must be all lowercase and cannot contain numbers or symbols.";
@@ -113,9 +147,15 @@ sub wordle($self, $context) {
                 return "There is already a Wordle underway! Use `wordle show` to see the current progress or `wordle giveup` to end it.";
             }
 
-            my $result = $self->make_wordle($custom_channel, $length, uc $custom_word);
+            my $wordlist = $custom_wordlist // 'default';
 
-            if ($result !~ /^Wordle:/) {
+            if (not exists $wordlists{$wordlist}) {
+                return 'Invalid wordlist; options are: ' . (join ', ', sort keys %wordlists);
+            }
+
+            my $result = $self->make_wordle($custom_channel, $length, uc $custom_word, $wordlist);
+
+            if ($result !~ /Guess/) {
                 return $result;
             }
 
@@ -129,7 +169,7 @@ sub wordle($self, $context) {
                 command    => 'wordle',
                 keyword    => 'wordle',
                 checkflood => 1,
-                message    => "$context->{nick} started a custom $result",
+                message    => "$result (started by $context->{nick})",
             };
 
             $self->{pbot}->{interpreter}->add_message_to_output_queue($custom_channel, $message, 0);
@@ -162,19 +202,7 @@ sub wordle($self, $context) {
                 return NO_WORDLE;
             }
 
-            my $result = 'Good/unknown letters: ';
-
-            foreach my $letter (sort keys $self->{$channel}->{letters}->%*) {
-                if ($self->{$channel}->{letters}->{$letter} == LETTER_CORRECT) {
-                    $result .= "*$letter* ";
-                } elsif ($self->{$channel}->{letters}->{$letter} == LETTER_PRESENT) {
-                    $result .= "?$letter? ";
-                } elsif ($self->{$channel}->{letters}->{$letter} == 0) {
-                    $result .= "$letter ";
-                }
-            }
-
-            return $result;
+	    return $self->show_letters($channel);
         }
 
         default {
@@ -183,12 +211,15 @@ sub wordle($self, $context) {
     }
 }
 
-sub load_words($self, $length) {
-    if (not -e WORDLIST) {
-        die "Wordle database `" . WORDLIST . "` not available. Set WORDLIST to a valid location of a wordlist file.\n";
+sub load_words($self, $length, $wordlist = 'default') {
+    print "datadir: $self->{datadir}; wordlist = $wordlist; path = $wordlists{$wordlist}\n";
+    $wordlist = $self->{datadir} . $wordlists{$wordlist};
+
+    if (not -e $wordlist) {
+        die "Wordle database `" . $wordlist . "` not available. Set WORDLIST to a valid location of a wordlist file.\n";
     }
 
-    open my $fh, '<', WORDLIST or die "Failed to open Wordle database.";
+    open my $fh, '<', $wordlist or die "Failed to open Wordle database.";
 
     my %words;
 
@@ -205,9 +236,9 @@ sub load_words($self, $length) {
     return \%words;
 }
 
-sub make_wordle($self, $channel, $length, $word = undef) {
+sub make_wordle($self, $channel, $length, $word = undef, $wordlist = 'default') {
     eval {
-        $self->{$channel}->{words} = $self->load_words($length);
+        $self->{$channel}->{words} = $self->load_words($length, $wordlist);
     };
 
     if ($@) {
@@ -227,7 +258,7 @@ sub make_wordle($self, $channel, $length, $word = undef) {
     }
 
     $self->{$channel}->{wordle}      = \@wordle;
-    $self->{$channel}->{guesses}     = [];
+    $self->{$channel}->{guess}       = '';
     $self->{$channel}->{correct}     = 0;
     $self->{$channel}->{guess_count} = 0;
     $self->{$channel}->{letters}     = {};
@@ -236,13 +267,37 @@ sub make_wordle($self, $channel, $length, $word = undef) {
         $self->{$channel}->{letters}->{$letter} = 0;
     }
 
-    push $self->{$channel}->{guesses}->@*, '? ' x $self->{$channel}->{wordle}->@*;
+    $self->{$channel}->{guess}  = $color{invalid};
+    $self->{$channel}->{guess} .= ' ? ' x $self->{$channel}->{wordle}->@*;
+    $self->{$channel}->{guess} .= $color{reset};
 
-    return "Wordle: " . $self->show_wordle($channel) . " (Guess the word! Legend: X not in word; ?X? wrong position; *X* correct position)";
+    return $self->show_wordle($channel) . " Guess the word! Legend: $color{invalid}X $color{reset} not in word; $color{present}X$color{present_a}?$color{reset} wrong position; $color{correct}X$color{correct_a}*$color{reset} correct position";
 }
 
-sub show_wordle($self, $channel) {
-    return join ' -> ', $self->{$channel}->{guesses}->@*;
+sub show_letters($self, $channel) {
+            my $result = 'Letters: ';
+
+            foreach my $letter (sort keys $self->{$channel}->{letters}->%*) {
+                if ($self->{$channel}->{letters}->{$letter} == LETTER_CORRECT) {
+                    $result .= "$color{correct}$letter$color{correct_a}*";
+                    $result .= "$color{reset} ";
+                } elsif ($self->{$channel}->{letters}->{$letter} == LETTER_PRESENT) {
+                    $result .= "$color{present}$letter$color{present_a}?";
+                    $result .= "$color{reset} ";
+                } elsif ($self->{$channel}->{letters}->{$letter} == 0) {
+                    $result .= "$letter ";
+                }
+            }
+
+            return $result . "$color{reset}";
+}
+
+sub show_wordle($self, $channel, $with_letters = 0) {
+	if ($with_letters) {
+		return $self->{$channel}->{guess} . "$color{reset} " . $self->show_letters($channel);
+	} else {
+		return $self->{$channel}->{guess} . "$color{reset}";
+	}
 }
 
 sub guess_wordle($self, $channel, $guess) {
@@ -257,11 +312,6 @@ sub guess_wordle($self, $channel, $guess) {
     }
 
     $self->{$channel}->{guess_count}++;
-
-    if ($self->{$channel}->{guess_count} == 1) {
-        # remove initial "? ? ? ? ?"
-        shift $self->{$channel}->{guesses}->@*;
-    }
 
     my @guess  = split //, $guess;
     my @wordle = $self->{$channel}->{wordle}->@*;
@@ -280,13 +330,13 @@ sub guess_wordle($self, $channel, $guess) {
         }
     }
 
-    my @result;
+    my $result = '';
     my $correct = 0;
 
     for (my $i = 0; $i < @wordle; $i++) {
         if ($guess[$i] eq $wordle[$i]) {
             $correct++;
-            push @result, "*$guess[$i]*";
+            $result .= "$color{correct} $guess[$i]$color{correct_a}*";
             $self->{$channel}->{letters}->{$guess[$i]} = LETTER_CORRECT;
         } else {
             my $present = 0;
@@ -303,10 +353,10 @@ sub guess_wordle($self, $channel, $guess) {
             }
 
             if ($present) {
-                push @result, "?$guess[$i]?";
+                $result .= "$color{present} $guess[$i]$color{present_a}?";
                 $self->{$channel}->{letters}->{$guess[$i]} = LETTER_PRESENT;
             } else {
-                push @result, "$guess[$i]";
+                $result .= "$color{invalid} $guess[$i] ";
 
                 if ($self->{$channel}->{letters}->{$guess[$i]} == 0) {
                     $self->{$channel}->{letters}->{$guess[$i]} = LETTER_INVALID;
@@ -315,16 +365,14 @@ sub guess_wordle($self, $channel, $guess) {
         }
     }
 
-    push $self->{$channel}->{guesses}->@*, join ' ', @result;
+    $self->{$channel}->{guess} = $result;
 
     if ($correct == length $guess) {
         $self->{$channel}->{correct} = 1;
-
         my $guesses = $self->{$channel}->{guess_count};
-
-        return "Correct in $guesses guess" . ($guesses != 1 ? 'es! ' : '! ') . $self->show_wordle($channel);
+        return $self->show_wordle($channel) . " Correct in $guesses guess" . ($guesses != 1 ? 'es! ' : '! ');
     } else {
-        return $self->show_wordle($channel);
+        return $self->show_wordle($channel, 1);
     }
 }
 
