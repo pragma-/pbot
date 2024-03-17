@@ -11,6 +11,8 @@ use parent 'PBot::Plugin::Base';
 
 use PBot::Imports;
 
+use Text::Unidecode;
+
 sub initialize($self, %conf) {
     $self->{pbot}->{commands}->add(
         name => 'wordle',
@@ -126,14 +128,10 @@ sub wordle($self, $context) {
                 return "Usage: wordle custom <word> <channel> [wordlist]";
             }
 
-            my $custom_word     = $args[0];
+            my $custom_word     = unidecode $args[0];
             my $custom_channel  = $args[1];
             my $custom_wordlist = $args[2];
             my $length          = length $custom_word;
-
-            if ($custom_word !~ /[a-z]/) {
-                return "Word must be all lowercase and cannot contain numbers or symbols.";
-            }
 
             if ($length < MIN_LENGTH || $length > MAX_LENGTH) {
                 return "Invalid word length; must be >= ".MIN_LENGTH." and <= ".MAX_LENGTH.".";
@@ -218,14 +216,13 @@ sub load_words($self, $length, $wordlist = 'default') {
         die "Wordle database `" . $wordlist . "` not available. Set WORDLIST to a valid location of a wordlist file.\n";
     }
 
-    open my $fh, '<', $wordlist or die "Failed to open Wordle database.";
+    open my $fh, '<:encoding(UTF-8)', $wordlist or die "Failed to open Wordle database.";
 
     my %words;
 
     while (my $line = <$fh>) {
         chomp $line;
-        next if $line !~ /^[a-z]+$/;
-
+        $line = unidecode $line;
         if (length $line == $length) {
             $words{uc $line} = 1;
         }
@@ -270,7 +267,11 @@ sub make_wordle($self, $channel, $length, $word = undef, $wordlist = 'default') 
     $self->{$channel}->{guess} .= ' ? ' x $self->{$channel}->{wordle}->@*;
     $self->{$channel}->{guess} .= $color{reset};
 
-    return $self->show_wordle($channel) . " Guess the word! Legend: $color{invalid}X $color{reset} not in word; $color{present}X$color{present_a}?$color{reset} wrong position; $color{correct}X$color{correct_a}*$color{reset} correct position";
+    my $language = $wordlist;
+    $language = ucfirst $language;
+    $language = 'American' if $language eq 'Default';
+
+    return $self->show_wordle($channel) . " Guess the $language word! Legend: $color{invalid}X $color{reset} not in word; $color{present}X$color{present_a}?$color{reset} wrong position; $color{correct}X$color{correct_a}*$color{reset} correct position";
 }
 
 sub show_letters($self, $channel) {
@@ -304,6 +305,7 @@ sub guess_wordle($self, $channel, $guess) {
         return "The length of your guess does not match length of current Wordle. Try again.";
     }
 
+    $guess = unidecode $guess;
     $guess = uc $guess;
 
     if (not exists $self->{$channel}->{words}->{$guess}) {
