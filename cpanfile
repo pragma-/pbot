@@ -200,6 +200,15 @@ feature Weather => sub {
     requires 'Getopt::Long';
 };
 
+feature Wordle => sub {
+    requires 'Text::Unidecode';
+};
+
+feature WordMorph => sub {
+    requires 'Storable';
+    requires 'Text::Levenshtein::XS';
+};
+
 feature Wolfram => sub {
     requires 'LWP::UserAgent::Paranoid';
     requires 'URI::Escape';
