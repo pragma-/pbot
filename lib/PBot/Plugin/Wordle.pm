@@ -11,8 +11,6 @@ use parent 'PBot::Plugin::Base';
 
 use PBot::Imports;
 
-use Text::Unidecode;
-
 sub initialize($self, %conf) {
     $self->{pbot}->{commands}->add(
         name => 'wordle',
@@ -46,11 +44,21 @@ my %wordlists = (
     insane    => '/wordle/american-insane',
     british   => '/wordle/british',
     canadian  => '/wordle/canadian',
+    finnish   => '/wordle/finnish',
     french    => '/wordle/french',
     german    => '/wordle/german',
     italian   => '/wordle/italian',
-    spanish   => '/wordle/spanish',
     polish    => '/wordle/polish',
+    spanish   => '/wordle/spanish',
+);
+
+my %accents = (
+    finnish => 'åäöšž',
+    french  => 'éàèùçâêîôûëïü',
+    german  => 'äöüß',
+    italian => 'èéìòù',
+    polish  => 'ćńóśźżąęł',
+    spanish => 'áéíóúüñ',
 );
 
 my %color = (
@@ -129,7 +137,7 @@ sub wordle($self, $context) {
                 return "Usage: wordle custom <word> <channel> [wordlist]";
             }
 
-            my $custom_word     = unidecode $args[0];
+            my $custom_word     = $args[0];
             my $custom_channel  = $args[1];
             my $custom_wordlist = $args[2];
             my $length          = length $custom_word;
@@ -152,6 +160,7 @@ sub wordle($self, $context) {
                 return 'Invalid wordlist; options are: ' . (join ', ', sort keys %wordlists);
             }
 
+            $custom_word =~ s/ß/ẞ/g; # avoid uppercasing to SS in German
             my $result = $self->make_wordle($custom_channel, $length, uc $custom_word, $wordlist);
 
             if ($result !~ /Guess/) {
@@ -223,8 +232,8 @@ sub load_words($self, $length, $wordlist = 'default') {
 
     while (my $line = <$fh>) {
         chomp $line;
-        $line = unidecode $line;
         if (length $line == $length) {
+            $line =~ s/ß/ẞ/g; # avoid uppercasing to SS in German
             $words{uc $line} = 1;
         }
     }
@@ -262,6 +271,14 @@ sub make_wordle($self, $channel, $length, $word = undef, $wordlist = 'default') 
 
     foreach my $letter ('A'..'Z') {
         $self->{$channel}->{letters}->{$letter} = 0;
+    }
+
+    if (exists $accents{$wordlist}) {
+        foreach my $letter (split //, $accents{$wordlist}) {
+            $letter =~ s/ß/ẞ/g; # avoid uppercasing to SS in German
+            $letter = uc $letter;
+            $self->{$channel}->{letters}->{$letter} = 0;
+        }
     }
 
     $self->{$channel}->{guess}  = $color{invalid};
@@ -302,12 +319,14 @@ sub show_wordle($self, $channel, $with_letters = 0) {
 }
 
 sub guess_wordle($self, $channel, $guess) {
-    if (length $guess != $self->{$channel}->{wordle}->@*) {
-        return "The length of your guess does not match length of current Wordle. Try again.";
-    }
-
-    $guess = unidecode $guess;
+    $guess =~ s/ß/ẞ/g; # avoid uppercasing to SS in German
     $guess = uc $guess;
+
+    if (length $guess != $self->{$channel}->{wordle}->@*) {
+        my $guess_length  = length $guess;
+        my $wordle_length = $self->{$channel}->{wordle}->@*;
+        return "Guess length ($guess_length) unequal to Wordle length ($wordle_length). Try again.";
+    }
 
     if (not exists $self->{$channel}->{words}->{$guess}) {
         return "I don't know that word. Try again."
