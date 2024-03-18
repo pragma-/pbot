@@ -50,6 +50,7 @@ my %wordlists = (
     german    => '/wordle/german',
     italian   => '/wordle/italian',
     spanish   => '/wordle/spanish',
+    polish    => '/wordle/polish',
 );
 
 my %color = (
@@ -275,21 +276,21 @@ sub make_wordle($self, $channel, $length, $word = undef, $wordlist = 'default') 
 }
 
 sub show_letters($self, $channel) {
-            my $result = 'Letters: ';
+    my $result = 'Letters: ';
 
-            foreach my $letter (sort keys $self->{$channel}->{letters}->%*) {
-                if ($self->{$channel}->{letters}->{$letter} == LETTER_CORRECT) {
-                    $result .= "$color{correct}$letter$color{correct_a}*";
-                    $result .= "$color{reset} ";
-                } elsif ($self->{$channel}->{letters}->{$letter} == LETTER_PRESENT) {
-                    $result .= "$color{present}$letter$color{present_a}?";
-                    $result .= "$color{reset} ";
-                } elsif ($self->{$channel}->{letters}->{$letter} == 0) {
-                    $result .= "$letter ";
-                }
-            }
+    foreach my $letter (sort keys $self->{$channel}->{letters}->%*) {
+        if ($self->{$channel}->{letters}->{$letter} == LETTER_CORRECT) {
+            $result .= "$color{correct}$letter$color{correct_a}*";
+            $result .= "$color{reset} ";
+        } elsif ($self->{$channel}->{letters}->{$letter} == LETTER_PRESENT) {
+            $result .= "$color{present}$letter$color{present_a}?";
+            $result .= "$color{reset} ";
+        } elsif ($self->{$channel}->{letters}->{$letter} == 0) {
+            $result .= "$letter ";
+        }
+    }
 
-            return $result . "$color{reset}";
+    return $result . "$color{reset}";
 }
 
 sub show_wordle($self, $channel, $with_letters = 0) {
