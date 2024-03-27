@@ -370,7 +370,7 @@ Tumbleweed:
 
 The Tumbleweed installer will automatically reboot to a shell after the installation. Login
 as `root` and run `shutdown now -h`. Then run `virsh start pbot-vm`. (Using `shutdown now -r` to reboot
-will not initialize the new serial/vsock devices.)
+will not initialize the new serial/vsock devices.) Login as `root` when the virtual machine boots back up.
 
 #### Install software
 Now we can install any software and programming languages we want to make available
@@ -436,7 +436,7 @@ Once that's done, run the following command:
 This will install `guest-server` to `/usr/local/bin/`, set up some environment variables and
 harden the guest system. After running the `setup-guest` script, we need to make the environment
 changes take effect:
-perl
+
     guest$ source /root/.bashrc
 
 We no longer need the `/tmp/guest/` stuff. We can delete it:
