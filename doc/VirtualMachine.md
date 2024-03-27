@@ -57,6 +57,8 @@ Ensure KVM is set up and loaded.
 If you see the above, everything's set up. Otherwise, consult your operating
 system manual or KVM manual to install and load KVM.
 
+If you do not have the `kvm-ok` command, you can `ls /dev/kvm` to ensure the KVM device exists.
+
 #### libvirt and QEMU
 If using libvirt, ensure it is installed and ready.
 
@@ -78,6 +80,8 @@ install the libvirt and/or QEMU packages.
 
 On Ubuntu: `sudo apt install qemu-kvm libvirt-daemon-system`
 
+On OpenSUSE Tumbleweed: `sudo zypper in libvirt virt-install virt-viewer`
+
 #### Make a pbot-vm user or directory
 You can either make a new user account or make a new directory in your current user account.
 In either case, name it `pbot-vm` so we'll have a home for the virtual machine.
@@ -87,26 +91,38 @@ Add your user (or the `pbot-vm` user) to the `libvirt` group.
 
     host$ sudo adduser $USER libvirt
 
+or
+
+    host$ sudo usermod -aG libvirt $USER
+
 Log out and then log back in for the new group to take effect. Or use the
 `newgrp` command.
 
 #### Download Linux ISO
-Download a preferred Linux ISO. For this guide, we'll use Fedora. Why?
-I'm using Fedora Rawhide for my PBot VM because I want convenient and reliable
-access to the latest bleeding-edge versions of software.
+Download a preferred Linux ISO. For this guide, we'll provide instructions for Fedora
+and OpenSUSE Tumbleweed. Why? I was initially using Fedora Rawhide for my PBot VM because
+I wanted convenient and reliable access to the latest bleeding-edge versions of software.
+I've since switched to OpenSUSE Tumbleweed for easy access to packages that are even more
+bleeding-edge than Fedora Rawhide.
 
-I recommend using the Fedora Stable net-installer for this guide unless you
-are more comfortable in another Linux distribution. Make sure you choose
-the minimal install option without a graphical desktop.
+If you are more comfortable in another Linux distribution then feel free to choose that instead.
+Make sure you choose the minimal install option without a graphical desktop.
+
+The ISOs used in this guide are (you may instead prefer to navigate to the websites to download a more current image):
 
 https://download.fedoraproject.org/pub/fedora/linux/releases/35/Server/x86_64/iso/Fedora-Server-netinst-x86_64-35-1.2.iso
-is the Fedora Stable net-installer ISO used in this guide.
+
+or
+
+https://download.opensuse.org/tumbleweed/iso/openSUSE-Tumbleweed-NET-x86_64-Snapshot20240321-Media.iso
+
+I recommend using OpenSUSE Tumbleweed since that's what I've tested on most recently.
 
 ### Create a new virtual machine
 To create a new virtual machines, this guide offers two options. The first is
 libvirt's `virt-install` command. It greatly simplifies configuration by
 automatically creating networking bridges and setting up virtio devices. The
-second options is manually using Linux system commands to configure network
+second option is manually using Linux system commands to configure network
 bridges and execute QEMU with the correct options.
 
 #### libvirt
@@ -117,9 +133,17 @@ skip past the `virt-install` section.
 
 * First, ensure you are the `pbot-vm` user or that you have changed your current working directory to `pbot-vm`. The Linux ISO downloaded earlier should be present in this location.
 
-If using libvirt, execute the following command:
+Execute the following command:
+
+Fedora (using Spice graphical display):
 
     host$ virt-install --name=pbot-vm --disk=size=12,path=vm.qcow2 --cpu=host --os-variant=fedora34 --graphics=spice --video=virtio --location=Fedora-Server-netinst-x86_64-35-1.2.iso
+
+OpenSUSE Tumbleweed (using PTY serial console):
+
+    host$ virt-install --name=pbot-vm --disk=size=12,path=vm.qcow2 --cpu=host --os-variant=opensusetumbleweed --graphics=none --console=pty,target.type=virtio --serial=pty --extra-args=console=ttyS0,115200n8 --video=virtio --location=openSUSE-Tumbleweed-NET-x86_64-Snapshot20240321-Media.iso
+
+You may use `virt-install --os-variant list` to list the available `--os-variant` options present on your machine.
 
 Note that `disk=size=12` will create a 12 GB sparse file. Sparse means the file
 won't actually take up 12 GB. It will start at 0 bytes and grow as needed. You can
@@ -129,6 +153,12 @@ approximately 1.7 GB. It will grow to about 2.5 GB with all PBot features instal
 For further information about `virt-install`, read its manual page. While the above command should
 give sufficient performance and compatability, there are a great many options worth investigating
 if you want to fine-tune your virtual machine.
+
+To list virtual machines and their state use `virsh list --all`.
+
+If you need to ungracefully shutdown the virtual machine use `virsh destroy pbot-vm`.
+
+If you need to delete the virtual machine and its storage volume use: `virsh undefine pbot-vm --storage vda --snapshots-metadata`.
 
 #### QEMU
 If you prefer not to use libvirt, we may need to manually create the network
@@ -179,18 +209,25 @@ virtual machine:
 
     host$ qemu-img create -f qcow2 pbot-vm.qcow2 12G
 
-Then we can start QEMU (assuming x86_64) and tell it to boot the Fedora installer:
+Then we can start QEMU (assuming x86_64) and tell it to boot the installer ISO:
+
+Fedora:
 
     host$ qemu-system-x86_64 -enable-kvm -cpu host -mem 1024 -hda pbot-vm.qcow2 -cdrom Fedora-Server-netinst-x86_64-35-1.2.iso -boot d -nic bridge,br=pbot-br0 -usb -device usb-tablet
+
+OpenSUSE Tumbleweed:
+
+    host$ qemu-system-x86_64 -enable-kvm -cpu host -mem 1024 -hda pbot-vm.qcow2 -cdrom openSUSE-Tumbleweed-NET-x86_64-Snapshot20240321-Media.iso -boot d -nic bridge,br=pbot-br0 -usb -device usb-tablet
 
 This command is the bare minimum for performant virtualization with networking.
 See the QEMU documentation for interesting options to tweak your virtual machine.
 
 #### Install Linux in the virtual machine
-After executing the `virt-install` or `qemu` command above, you should now see a window
-showing Linux booting up and launching an installer. For this guide, we'll walk
-through the Fedora 35 installer. You can adapt these steps for your own distribution
-of choice.
+After executing the `virt-install` or `qemu` command above, you should now see Linux booting up and launching an installer.
+For this guide, we'll walk through the Fedora 35 and the OpenSUSE Tumbleweed installers. You can adapt these steps for your
+own distribution of choice.
+
+Fedora:
 
  * Click `Partition disks`. Don't change anything. Click `Done`.
  * Click `Root account`. Click `Enable root account`. Set a password. Click `Done`.
@@ -198,8 +235,24 @@ of choice.
  * Wait until `Software selection` is done processing and is no longer greyed out. Click it. Change install from `Server` to `Minimal`. Click `Done`.
  * Click `Begin installation`.
 
-Installation will need to download about 328 RPMs consisting of about 425 MB. It'll take 5 minutes to an hour or longer
-depending on your hardware and network configuration.
+Installation will download about 328 RPMs consisting of about 425 MB. The `vm.qcow2` file should be about 2 GB after installation completes. You can close the Spice window. To reattach
+use `virt-viewer pbot-vm`.
+
+Tumbleweed:
+
+ * Follow on-screen instructions and TAB to `Next` until you reach the `System Role` screen.
+ * Ensure you select the `Server` role to install a small set of packages suitable for servers with a text mode interface.
+ * On `Suggested Partitioning` TAB to `Guided Setup`.
+ * Select `Next` until you reach `Filesystem Options`.
+ * TAB to `Btrfs` and press SPACE and then arrow-keys to change this to `Ext4` to improve random-access IO performance and reduce writes. Then TAB to `Next` and continue.
+ * Continue following on-screen instructions until you reach the `Local User` screen.
+ * Enter `vm` for `Username` and set a password. Then TAB to `Next` and continue.
+ * At the `Installation Settings` tab to `Change` and select `Security`. Untick `Enable Firewall` to make things easier. Then TAB to `Next` and continue.
+ * Verify installation settings and then TAB to `Install` and begin the installation.
+
+Installation will download about 800 packages consisting of about 1.7 GiB. The `vm.qcow2` file should be about 2.4 GB after installation completes.
+
+The VM will automatically reboot into a shell after installation. You can press `^]` to exit the VM's serial PTY console. To reattach use `virsh console pbot-vm`.
 
 #### Set up serial ports
 While the installation is in progress, switch to a terminal on your host system.
@@ -210,10 +263,10 @@ Go into the `applets/pbot-vm/host/devices` directory and run the `add-serials` s
 
     host$ ./add-serials
 
-This will enable the `/dev/ttyS1` and `/dev/ttyS2` serial ports in the guest and connect them
+This will enable the `/dev/ttyS2` and `/dev/ttyS3` serial ports in the guest and connect them
 to the following TCP addresses on the host: `127.0.0.1:5555` and `127.0.0.1:5556`,
-respectively. `ttyS1/5555` is the data channel used to send commands or code to the
-virtual machine and to read back output. `ttyS2/5556` is simply a newline sent every
+respectively. `ttyS2/5555` is the data channel used to send commands or code to the
+virtual machine and to read back output. `ttyS3/5556` is simply a newline sent every
 5 seconds, representing a heartbeat, used to ensure that the PBot communication
 channel is healthy.
 
@@ -305,28 +358,60 @@ In the VM guest (once it reboots), there should be a `/dev/vsock` device:
     crw-rw-rw- 1 root root 10, 55 May  4 13:21 /dev/vsock
 
 #### Reboot virtual machine
-Once the Linux installation completes inside the virtual machine, click the `Reboot` button
+
+* First ensure you set-up serial/vsock as described above! We are rebooting to ensure the new devices are loaded.
+
+Fedora:
+
+Once the Fedora installation completes inside the virtual machine, click the `Reboot` button
 in the installer window. Login as `root` when the virtual machine boots back up.
+
+Tumbleweed:
+
+The Tumbleweed installer will automatically reboot to a shell after the installation. Login
+as `root` and run `shutdown now -h`. Then run `virsh start pbot-vm`. (Using `shutdown now -r` to reboot
+will not initialize the new serial/vsock devices.)
 
 #### Install software
 Now we can install any software and programming languages we want to make available
-in the virtual machine. Use the `dnf search` command or your distribution's documentation
+in the virtual machine. Use the `dnf search` or `zypper se` command or your distribution's documentation
 to find packages. I will soon make available a script to install all package necessary for all
 languages supported by PBot.
 
 To make use of VM sockets, install the `socat` package:
 
+Fedora:
+
     guest$ dnf install socat
+
+OpenSUSE Tumbleweed:
+
+    guest$ zypper in socat
 
 For the C programming language you will need at least these:
 
+Fedora:
+
     guest$ dnf install libubsan libasan gdb gcc clang
+
+OpenSUSE Tumbleweed:
+
+    guest$ zypper in libubsan1 libasan8 gdb gcc clang
+
+Install packages for other languages as desired.
 
 #### Install Perl
 Now we need to install Perl on the guest. This allows us to run the PBot VM Guest server
 script.
 
+Fedora:
+
     guest$ dnf install perl-interpreter perl-lib perl-IPC-Run perl-JSON-XS perl-English perl-IPC-Shareable
+
+OpenSUSE Tumbleweed:
+
+    guest$ zypper in perl-IPC-Run perl-JSON-XS make gcc
+    guest$ cpan i IPC::Shareable
 
 This installs the minium packages for the Perl interpreter (note we used `perl-interpreter` instead of `perl`),
 as well as a few Perl modules.
@@ -351,7 +436,7 @@ Once that's done, run the following command:
 This will install `guest-server` to `/usr/local/bin/`, set up some environment variables and
 harden the guest system. After running the `setup-guest` script, we need to make the environment
 changes take effect:
-
+perl
     guest$ source /root/.bashrc
 
 We no longer need the `/tmp/guest/` stuff. We can delete it:
@@ -409,6 +494,10 @@ will revert the virtual machine to this saved snapshot.
 This concludes the initial one-time set-up. You can close the `virt-viewer` window. The
 virtual machine will continue running in the background until it is manually shutdown (via
 `shutdown now -h` inside the VM or via `virsh shutdown pbot-vm` on the host).
+
+## Install Fortune package
+The PBot VM Host server uses the `fortune` command to generate random STDIN input to use when no `-stdin`
+argument is provided to the bot's `cc` command. Ensure you have it installed.
 
 ## Start PBot VM Host
 To start the PBot VM Host server, change your current working directory to `applets/pbot-vm/host/bin`

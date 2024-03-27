@@ -8,7 +8,7 @@ use warnings;
 use strict;
 
 use feature qw(switch  signatures);
-no warnings qw(experimental::smartmatch experimental::signatures);
+no warnings qw(experimental::smartmatch experimental::signatures deprecated);
 
 use LWP::UserAgent;
 use FindBin qw($RealBin);

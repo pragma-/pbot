@@ -14,8 +14,8 @@
       }
    },
    "aliases" : {
-      "fedora-amd64" : "pbot-vm",
+      "openSUSE" : "pbot-vm",
       "test" : "pbot-test-vm"
    },
-   "default-machine" : "fedora-amd64"
+   "default-machine" : "openSUSE"
 }

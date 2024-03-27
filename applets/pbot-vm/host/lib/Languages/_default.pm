@@ -9,7 +9,7 @@ use warnings;
 use strict;
 
 use feature qw(switch unicode_strings signatures);
-no warnings qw(experimental::smartmatch experimental::signatures);
+no warnings qw(experimental::smartmatch experimental::signatures deprecated);
 
 package Languages::_default;
 
@@ -210,7 +210,7 @@ sub execute {
     my $stdin = $self->{options}->{'-stdin'};
 
     if (not length $stdin) {
-        $stdin = decode('UTF-8', `fortune -u -s`);
+        $stdin = decode('UTF-8', `fortune -s`);
         $stdin =~ s/[\n\r\t]/ /msg;
         $stdin =~ s/:/ - /g;
         $stdin =~ s/\s+/ /g;
