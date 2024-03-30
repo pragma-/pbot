@@ -20,7 +20,8 @@ sub initialize {
   $self->{cmdline}         = 'javac $options $sourcefile';
 
   $self->{prelude} = <<'END';
-import java.*;
+import java.lang.*;
+import java.util.*;
 
 END
 }
