@@ -9,15 +9,15 @@
 # SPDX-License-Identifier: MIT
 
 # for virt-io socket
-zypper in socat
+zypper -n in socat
 
 # for `cc` C language support
-zypper in libubsan1 libasan8 gdb gcc-32bit glibc-32bit
+zypper -n in libubsan1 libasan8 gdb gcc-32bit glibc-32bit clang
 
 # for pbot-vm guest-server support
-zypper in perl-IPC-Run perl-JSON-XS make
-cpan i IPC::Shareable
+zypper -n in perl-IPC-Run perl-JSON-XS make
+PERL_MM_USE_DEFAULT=1 cpan IPC::Shareable
 
 # for `cc` additional languages
-zypper in ksh zsh tcl lua php8-cli nodejs-common guile bff bc gcc-c++
-zypper in --no-recommends clisp gcc-go java java-devel
+zypper -n in ksh zsh tcl lua php8-cli nodejs-common guile bff bc gcc-c++
+zypper -n in --no-recommends clisp gcc-go java java-devel
