@@ -1,3 +1,7 @@
+# Docker instructions
+
+### Install Docker
+
 Install docker:
 
     zypper install docker docker-compose docker-compose-switch
@@ -25,6 +29,8 @@ Log in to the docker group:
     newgrp docker
 
 If the above does not work, e.g. because you are in a tmux session, you can `su $USER` instead.
+
+### Build image and configure PBot
 
 Build image:
 
@@ -60,6 +66,8 @@ to create your bot-admin account, add channels, etc.
 
 To shutdown the bot, press `^C` (ctrl-c) or enter `die` into the PBot terminal console.
 
+### Running PBot
+
 To start the bot again in the future:
 
     docker start pbot
@@ -69,5 +77,7 @@ This will start the bot in the background. You can reattach to its PBot terminal
     docker attach --detach-keys="ctrl-x" pbot
 
 Press `^X` (ctrl-x) to detach or `^C` (ctrl-c) to shutdown the bot.
+
+### Further Reading
 
 See [Further Reading](../doc/QuickStart.md#further-reading) in the [QuickStart guide](../doc/QuickStart.md) for additional information.
