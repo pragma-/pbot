@@ -12,7 +12,7 @@
 zypper -n in socat
 
 # for `cc` C language support
-zypper -n in libubsan1 libasan8 gdb gcc-32bit glibc-32bit clang
+zypper -n in libubsan1 libasan8 gdb gcc gcc-32bit glibc-32bit clang
 
 # for pbot-vm guest-server support
 zypper -n in perl-IPC-Run perl-JSON-XS make
