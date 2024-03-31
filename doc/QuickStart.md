@@ -2,6 +2,7 @@
 
 <!-- md-toc-begin -->
 * [Installation](#installation)
+  * [Docker](#docker)
   * [Installing Perl](#installing-perl)
   * [Installing PBot](#installing-pbot)
     * [git (recommended)](#git-recommended)
@@ -41,6 +42,10 @@
 <!-- md-toc-end -->
 
 ## Installation
+
+### Docker
+If you prefer to use Docker/Podman/etc to run PBot, follow the [Docker guide](../Docker/README.md) instead.
+The set-up is much easier and will install packages/dependencies into a container instead.
 
 ### Installing Perl
 PBot uses the [Perl programming language](https://www.perl.org/). Perl is usually
