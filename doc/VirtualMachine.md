@@ -434,8 +434,12 @@ Once that's done, run the following command:
     guest$ ./guest/bin/setup-guest
 
 This will install `guest-server` to `/usr/local/bin/`, set up some environment variables and
-harden the guest system. After running the `setup-guest` script, we need to make the environment
-changes take effect:
+harden the guest system. Additionally, it'll autodetect your chosen OS/distribution and attempt
+to run any provisioning scripts from the `./guest/provision` directory. If no provisioning
+scripts are available, it will warn you to manually install the packages for the `cc` languages
+you want to use. You may use `./guest/provision/tumbleweed` as a reference.
+
+After running the `setup-guest` script, we need to make the environment changes take effect:
 
     guest$ source /root/.bashrc
 

@@ -2,8 +2,8 @@
 
 # File: tumbleweed
 #
-# Purpose: Orchestration script to install packages and set-up environment
-# on OpenSUSE Tumbleweed for pbot-vim.
+# Purpose: Provisioning script to install packages and set-up environment
+# on OpenSUSE Tumbleweed for pbot-vm.
 
 # SPDX-FileCopyrightText: 2024 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
