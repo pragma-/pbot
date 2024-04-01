@@ -4,7 +4,7 @@
 
 Install docker:
 
-    zypper install docker docker-compose docker-compose-switch
+    zypper install docker
 
 If not using openSUSE, replace `zypper` with appropriate package manager, e.g. `apt`, `yum`, `dnf`, `apk`, etc.
 
@@ -46,7 +46,7 @@ I like to use `<server>-<nick>` when naming my data directories. For example:
     copy -r ../data libera-candide
     copy -r ../data libera-cantest
 
-Create and start a new container the for the first time with options configuring the botnick and IRC server. We will use the `-ti`
+Create and start a new container for the first time with options configuring the botnick and IRC server. We will use the `-ti`
 flags for `docker run` so we can access PBot's terminal console to run commands like `useradd` to create
 your bot-admin account, etc.
 

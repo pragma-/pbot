@@ -45,7 +45,7 @@
 
 ### Docker
 If you prefer to use Docker/Podman/etc to run PBot, follow the [Docker guide](../Docker/README.md) instead.
-The set-up is much easier and will install packages/dependencies into a container instead.
+The set-up is much easier and will install packages/dependencies into a container.
 
 ### Installing Perl
 PBot uses the [Perl programming language](https://www.perl.org/). Perl is usually
