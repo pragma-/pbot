@@ -17,12 +17,13 @@ use strict;
 use IO::Socket;
 
 use constant {
-    SERVER_PORT => $ENV{PBOTVM_SERVER} // 9000,
+    SERVER_ADDR => $ENV{PBOTVM_ADDR} // '127.0.0.1',
+    SERVER_PORT => $ENV{PBOTVM_PORT} // 9000,
 };
 
 # TODO: extend to take a list of server/ports to cycle for load-balancing
 my $sock = IO::Socket::INET->new(
-    PeerAddr => '127.0.0.1',
+    PeerAddr => SERVER_ADDR,
     PeerPort => SERVER_PORT,
     Proto    => 'tcp'
 );

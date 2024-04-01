@@ -61,6 +61,9 @@ For example, to connect securely via TLS to irc.libera.chat with botnick `coolbo
 
     docker run --name pbot -ti -v $DATA_DIR:/opt/pbot/persist-data pbot irc.botnick=coolbot irc.server=irc.libera.chat irc.port=6697 irc.tls=1
 
+If you are using the pbot-vm virtual machine, be sure to add (after `-ti`) `-e PBOTVM_ADDR=$ADDR` where `$ADDR` is the IP address or hostname of the machine
+where `vm-server` is running. See [Virtual Machine](../doc/VirtualMachine.md) for more information.
+
 Follow the steps in [Additional configuration](../doc/QuickStart.md#additional-configuration) in the [QuickStart guide](../doc/QuickStart.md)
 to create your bot-admin account, add channels, etc.
 

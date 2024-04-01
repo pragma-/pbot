@@ -21,15 +21,16 @@ Many commands can be configured with environment variables. If a variable is
 not defined, a sensible default value will be used.
 
 Environment variable | Default value | Description
---- | --- | ---
-PBOTVM_DOMAIN | `pbot-vm` | The libvirt domain identifier
-PBOTVM_SERVER | `9000` | `vm-server` port for incoming `vm-client` commands
-PBOTVM_SERIAL | `5555` | TCP port for serial communication
-PBOTVM_HEART  | `5556` | TCP port for serial heartbeats
-PBOTVM_CID    | `7` | Context ID for VM socket (if using VSOCK)
-PBOTVM_VPORT  | `5555` | VM socket service port (if using VSOCK)
-PBOTVM_TIMEOUT | `10` | Duration before command times out (in seconds)
-PBOTVM_NOREVERT | not set | If set then the VM will not revert to previous snapshot
+-------------------- | ------------- | -----------
+PBOTVM_DOMAIN        | `pbot-vm`     | The libvirt domain identifier
+PBOTVM_ADDR          | `127.0.0.1`   | `vm-server` address for incoming `vm-client` commands
+PBOTVM_PORT          | `9000`        | `vm-server` port for incoming `vm-client` commands
+PBOTVM_SERIAL        | `5555`        | TCP port for serial communication
+PBOTVM_HEART         | `5556`        | TCP port for serial heartbeats
+PBOTVM_CID           | `7`           | Context ID for VM socket (if using VSOCK)
+PBOTVM_VPORT         | `5555`        | VM socket service port (if using VSOCK)
+PBOTVM_TIMEOUT       | `10`          | Duration before command times out (in seconds)
+PBOTVM_NOREVERT      | not set       | If set then the VM will not revert to previous snapshot
 
 ## Initial virtual machine set-up
 These steps need to be done only once during the first-time set-up.

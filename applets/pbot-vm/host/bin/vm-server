@@ -24,7 +24,7 @@ use Time::HiRes qw/gettimeofday/;
 use Encode;
 
 use constant {
-    SERVER_PORT     => $ENV{PBOTVM_SERVER}  // 9000,
+    SERVER_PORT     => $ENV{PBOTVM_PORT}    // 9000,
     HEARTBEAT_PORT  => $ENV{PBOTVM_HEART}   // 5556,
     DOMAIN_NAME     => $ENV{PBOTVM_DOMAIN}  // 'pbot-vm',
     COMPILE_TIMEOUT => $ENV{PBOTVM_TIMEOUT} // 10,

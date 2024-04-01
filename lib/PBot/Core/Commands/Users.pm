@@ -193,7 +193,7 @@ sub cmd_usershow($self, $context) {
         return "There is no user account $name.";
     }
 
-    if (lc $key eq 'password') {
+    if (defined $key && lc $key eq 'password') {
         return "I don't think so.";
     }
 
