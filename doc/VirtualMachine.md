@@ -393,50 +393,6 @@ The Tumbleweed installer will automatically reboot to a shell after the installa
 as `root` and run `shutdown now -h`. Then run `virsh start pbot-vm`. (Using `shutdown now -r` to reboot
 will not initialize the new serial/vsock devices.) Login as `root` when the virtual machine boots back up.
 
-### Install software
-Now we can install any software and programming languages we want to make available
-in the virtual machine. Use the `dnf search` or `zypper se` command or your distribution's documentation
-to find packages. I will soon make available a script to install all package necessary for all
-languages supported by PBot.
-
-To make use of VM sockets, install the `socat` package:
-
-Fedora:
-
-    guest$ dnf install socat
-
-OpenSUSE Tumbleweed:
-
-    guest$ zypper in socat
-
-For the C programming language you will need at least these:
-
-Fedora:
-
-    guest$ dnf install libubsan libasan gdb gcc clang
-
-OpenSUSE Tumbleweed:
-
-    guest$ zypper in libubsan1 libasan8 gdb gcc clang
-
-Install packages for other languages as desired.
-
-### Install Perl
-Now we need to install Perl on the guest. This allows us to run the PBot VM Guest server
-script.
-
-Fedora:
-
-    guest$ dnf install perl-interpreter perl-lib perl-IPC-Run perl-JSON-XS perl-English perl-IPC-Shareable
-
-OpenSUSE Tumbleweed:
-
-    guest$ zypper in perl-IPC-Run perl-JSON-XS make gcc
-    guest$ cpan i IPC::Shareable
-
-This installs the minium packages for the Perl interpreter (note we used `perl-interpreter` instead of `perl`),
-as well as a few Perl modules.
-
 ### Install PBot VM Guest
 Next we install the PBot VM Guest server script that fosters communication between the virtual machine guest
 and the physical host system. We'll do this inside the virtual machine guest system, logged on as `root`
@@ -456,17 +412,16 @@ Once that's done, run the following command:
 
 This will install `guest-server` to `/usr/local/bin/`, set up some environment variables and
 harden the guest system. Additionally, it'll autodetect your chosen OS/distribution and attempt
-to run any provisioning scripts from the `./guest/provision` directory. If no provisioning
-scripts are available, it will warn you to manually install the packages for the `cc` languages
-you want to use. You may use `./guest/provision/tumbleweed` as a reference.
+to run any provisioning scripts from the [`./guest/provision`](../applets/pbot-vm/guest/provision) directory.
 
 After running the `setup-guest` script, we need to make the environment changes take effect:
 
     guest$ source /root/.bashrc
 
-We no longer need the `/tmp/guest/` stuff. We can delete it:
-
-    guest$ rm -rf guest/
+### Install software
+If you received the message `!! No provisioning script available for $OS. Install packages manually. !!`,
+you must manually install any software and programming languages you want to make available
+in the virtual machine. To do so, follow one of the [PBot VM provisioning scripts](../applets/pbot-vm/guest/provision/) as a guide.
 
 ### Start PBot VM Guest
 We're ready to start the PBot VM Guest server. On the guest, as `root`, execute the command:
@@ -478,7 +433,8 @@ this running.
 
 ### Test PBot VM Guest
 Let's make sure everything's working up to this point. On the host, there should
-be two open TCP ports on `5555` and `5556`. On the host, execute the command:
+be two open TCP ports on `PBOTVM_SERIAL` and `PBOTVM_HEART` (default values `5555` and `5556`).
+On the host, execute the command:
 
     host$ nc -zv 127.0.0.1 5555-5556
 
