@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# File: debian-trixie
+#
+# Purpose: Provisioning script to install packages and set-up environment
+# on Debian Testing (trixie) for pbot-vm.
+
+# SPDX-FileCopyrightText: 2024 Pragmatic Software <pragma78@gmail.com>
+# SPDX-License-Identifier: MIT
+
+apt update
+
+# for virt-io socket
+apt install -y socat
+
+# for `cc` C language support
+apt install -y libubsan1 libasan8 gdb gcc gcc-multilib clang
+
+# for pbot-vm guest-server support
+apt install -y --no-install-recommends libipc-shareable-perl libipc-run-perl libjson-xs-perl
+
+# for `cc` additional languages
+apt install -y ksh zsh tcl lua5.4 php8.2-cli nodejs guile3.0 beef bc g++
+apt install -y clisp golang-go
+apt install -y --no-install-recommends default-jre default-jdk

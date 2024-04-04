@@ -62,7 +62,7 @@ sub preprocess {
         $stdin .= "$self->{cmdline} $quoted_args";
     }
 
-    my ($retval, $stdout, $stderr) = $self->execute(60, $stdin, '/bin/sh');
+    my ($retval, $stdout, $stderr) = $self->execute(60, $stdin, '/bin/bash');
 
     $self->{output} = $stderr;
     $self->{output} .= ' ' if length $self->{output};

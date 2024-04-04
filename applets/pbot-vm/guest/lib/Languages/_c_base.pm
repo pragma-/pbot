@@ -97,10 +97,10 @@ sub postprocess {
     if ($self->{cmdline} =~ /-fsanitize=(?:[^ ]+,)?address/) {
         # leak sanitizer doesn't work under ptrace/gdb
         # ASAN_OPTIONS=strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1
-        ($exitval, $stdout, $stderr) = $self->execute(60, "$ulimits; ./prog $quoted_args\n", '/bin/sh');
+        ($exitval, $stdout, $stderr) = $self->execute(60, "$ulimits; ./prog $quoted_args\n", '/bin/bash');
     } else {
         my $input = "$ulimits; guest-gdb ./prog $quoted_args";
-        ($exitval, $stdout, $stderr) = $self->execute(60, $input, '/bin/sh');
+        ($exitval, $stdout, $stderr) = $self->execute(60, $input, '/bin/bash');
     }
 
     $self->{error} = $exitval;

@@ -3,20 +3,34 @@
 PBot can interact with a virtual machine to safely execute arbitrary user-submitted
 system commands and code.
 
+## Installation methods
+
+### libvirt and QEMU (recommended)
 This document will guide you through installing and configuring a Linux
 virtual machine on a Linux host by using the widely available [libvirt](https://libvirt.org)
-project tools, such as `virt-install`, `virsh`, and `virt-viewer`. Additionally,
-if you'd prefer not to use libvirt, this guide will also demonstrate equivalent
+project tools, such as `virt-install`, `virsh`, and `virt-viewer`.
+
+Additionally, if you'd prefer not to use libvirt, this guide will also demonstrate equivalent
 Linux system commands and QEMU commands.
 
-Some quick terminology:
+### Vagrant (experimental)
+A much simpler and easier method to install the virtual machine is to use the Vagrant virtual machine
+management and provisioning framework. Under the [pbot-vm/vagrant/](../applets/pbot-vm/vagrant) directory
+I have created a few `Vagrantfile` VM configuration and provisioning scripts.
 
- * host: your physical Linux system hosting the virtual machine
- * guest: the Linux system installed inside the virtual machine
+These scripts are currently highly experimental and some pbot-vm features are not yet fully implemented,
+such as snapshotting and disabling the network. However, if you want to quickly test out the PBot
+virtual machine with just a couple of simple easy commands, read the [PBot Vagrant guide](../applets/pbot-vm/vagrant/README.md)
+instead.
+
+## Host vs guest
+ * `host`: your physical Linux system hosting the virtual machine
+ * `guest`: the Linux system installed inside the virtual machine
 
 The commands below will be prefixed with `host$` or `guest$` to reflect where
 the command should be executed.
 
+## Environment variables
 Many commands can be configured with environment variables. If a variable is
 not defined, a sensible default value will be used.
 
@@ -32,15 +46,15 @@ PBOTVM_VPORT         | `5555`        | VM socket service port (if using VSOCK)
 PBOTVM_TIMEOUT       | `10`          | Duration before command times out (in seconds)
 PBOTVM_NOREVERT      | not set       | If set then the VM will not revert to previous snapshot
 
-## Initial virtual machine set-up
+# Initial virtual machine set-up
 These steps need to be done only once during the first-time set-up.
 
-### Prerequisites
+## Prerequisites
 For full hardware-supported virtualization at near native system speeds, we
 need to ensure your system has enabled CPU Virtualization Technology and that
 KVM is set up and loaded.
 
-#### CPU Virtualization Technology
+### CPU Virtualization Technology
 Ensure CPU Virtualization Technology is enabled in your motherboard BIOS.
 
     host$ egrep '(vmx|svm)' /proc/cpuinfo
@@ -48,7 +62,7 @@ Ensure CPU Virtualization Technology is enabled in your motherboard BIOS.
 If you see your CPUs listed with `vmx` or `svm` flags, you're good to go.
 Otherwise, consult your motherboard manual to see how to enable VT.
 
-#### KVM
+### KVM
 Ensure KVM is set up and loaded.
 
     host$ kvm-ok
@@ -60,7 +74,7 @@ system manual or KVM manual to install and load KVM.
 
 If you do not have the `kvm-ok` command, you can `ls /dev/kvm` to ensure the KVM device exists.
 
-#### libvirt and QEMU
+### libvirt and QEMU
 If using libvirt, ensure it is installed and ready.
 
     host$ virsh version --daemon
@@ -83,11 +97,11 @@ On Ubuntu: `sudo apt install qemu-kvm libvirt-daemon-system`
 
 On OpenSUSE Tumbleweed: `sudo zypper in libvirt virt-install virt-viewer`
 
-#### Make a pbot-vm user or directory
+### Make a pbot-vm user or directory
 You can either make a new user account or make a new directory in your current user account.
 In either case, name it `pbot-vm` so we'll have a home for the virtual machine.
 
-#### Add libvirt group to your user
+### Add libvirt group to your user
 Add your user (or the `pbot-vm` user) to the `libvirt` group.
 
     host$ sudo adduser $USER libvirt
@@ -99,7 +113,7 @@ or
 Log out and then log back in for the new group to take effect. Or use the
 `newgrp` command.
 
-#### Download Linux ISO
+### Download Linux ISO
 Download a preferred Linux ISO. For this guide, we'll provide instructions for Fedora
 and OpenSUSE Tumbleweed. Why? I was initially using Fedora Rawhide for my PBot VM because
 I wanted convenient and reliable access to the latest bleeding-edge versions of software.
@@ -119,14 +133,14 @@ https://download.opensuse.org/tumbleweed/iso/openSUSE-Tumbleweed-NET-x86_64-Snap
 
 I recommend using OpenSUSE Tumbleweed since that's what I've tested on most recently.
 
-### Create a new virtual machine
+## Create a new virtual machine
 To create a new virtual machines, this guide offers two options. The first is
 libvirt's `virt-install` command. It greatly simplifies configuration by
 automatically creating networking bridges and setting up virtio devices. The
 second option is manually using Linux system commands to configure network
 bridges and execute QEMU with the correct options.
 
-#### libvirt
+### libvirt
 To create a new virtual machine we'll use the `virt-install` command. This
 command takes care of setting up virtual networking bridges and virtual
 hardware for us. If you prefer to manually set things up and use QEMU directly,
@@ -161,7 +175,7 @@ If you need to ungracefully shutdown the virtual machine use `virsh destroy pbot
 
 If you need to delete the virtual machine and its storage volume use: `virsh undefine pbot-vm --storage vda --snapshots-metadata`.
 
-#### QEMU
+### QEMU
 If you prefer not to use libvirt, we may need to manually create the network
 bridge. Use the `ip link` command to list network interfaces:
 
@@ -223,7 +237,7 @@ OpenSUSE Tumbleweed:
 This command is the bare minimum for performant virtualization with networking.
 See the QEMU documentation for interesting options to tweak your virtual machine.
 
-#### Install Linux in the virtual machine
+### Install Linux in the virtual machine
 After executing the `virt-install` or `qemu` command above, you should now see Linux booting up and launching an installer.
 For this guide, we'll walk through the Fedora 35 and the OpenSUSE Tumbleweed installers. You can adapt these steps for your
 own distribution of choice.
@@ -253,12 +267,12 @@ Tumbleweed:
 
 Installation will download about 800 packages consisting of about 1.7 GiB. The `vm.qcow2` file should be about 2.4 GB after installation completes.
 
-The VM will automatically reboot into a shell after installation. You can press `^]` to exit the VM's serial PTY console. To reattach use `virsh console pbot-vm`.
+The VM will automatically reboot into a shell after installation. You can press `^]` to detach from the VM's serial PTY console. To reattach use `virsh console pbot-vm`.
 
-#### Set up serial ports
+### Set up serial ports
 While the installation is in progress, switch to a terminal on your host system.
 
-##### libvirt
+#### libvirt
 Go into the `applets/pbot-vm/host/devices` directory and run the `add-serials` script to add the `serial-2.xml` and
 `serial-3.xml` files to the configuration for the `pbot-vm` libvirt machine.
 
@@ -280,12 +294,17 @@ If you later want to change the serial ports or the TCP ports, execute the comma
 `virsh edit pbot-vm` on the host. This will open the `pbot-vm` XML configuration
 in your default system editor. Find the `<serial>` tags and edit their attributes.
 
-##### QEMU
-Add `-chardev socket,id=charserial1,host=127.0.0.1,port=5555,server=on,wait=off -chardev socket,id=charserial2,host=127.0.0.1,port=5556,server=on,wait=off` to your `qemu` command-line arguments.
+#### QEMU
+Add the following options to your `qemu` command-line arguments:
 
-See full QEMU command-line arguments [here.](#qemu-command-from-libvirt)
+    -chardev socket,id=charserial1,host=127.0.0.1,port=5555,server=on,wait=off
+    -device {"driver":"isa-serial","chardev":"charserial1","id":"serial1","index":2}
+    -chardev socket,id=charserial2,host=127.0.0.1,port=5556,server=on,wait=off
+    -device {"driver":"isa-serial","chardev":"charserial2","id":"serial2","index":3}
 
-#### Set up virtio-vsock
+If necessary, replace `5555` and `5556` with your preferred `PBOTVM_SERIAL` and `PBOTVM_HEART` values.
+
+### Set up virtio-vsock
 VM sockets (AF_VSOCK) are a Linux-specific feature (at the time of this writing). They
 are the preferred way for PBot to communicate with the PBot VM Guest server. Serial communication
 has several limitations. See https://vmsplice.net/~stefan/stefanha-kvm-forum-2015.pdf for an excellent
@@ -325,13 +344,13 @@ A VM sockets address is comprised of a context ID (CID) and a port; just like an
 The CID is represented using an unsigned 32-bit integer. It identifies a given machine as either a hypervisor
 or a virtual machine. Several addresses are reserved, including 0, 1, and the maximum value for a 32-bit
 integer: 0xffffffff. The hypervisor is always assigned a CID of 2, and VMs can be assigned any CID between 3
-and 0xffffffff — 1.
+and 0xffffffff - 1.
 
 We must attach a `vhost-vsock-pci` device to the guest to enable VM sockets communication.
 Each VM on a hypervisor must have a unique context ID (CID). Each service within the VM must
 have a unique port. The PBot VM Guest defaults to `7` for the CID and `5555` for the port.
 
-##### libvirt
+#### libvirt
 
 While still in the `applets/pbot-vm/host/devices` directory, run the `add-vsock` script:
 
@@ -346,10 +365,11 @@ In the VM guest (once it reboots), there should be a `/dev/vsock` device:
     guest$ ls -l /dev/vsock
     crw-rw-rw- 1 root root 10, 55 May  4 13:21 /dev/vsock
 
-##### QEMU
+#### QEMU
 
-Add `-device {"driver":"vhost-vsock-pci","id":"vsock0","guest-cid":7,"vhostfd":"28","bus":"pci.7","addr":"0x0"}`
-to your `qemu` command-line arguments.
+Add the following option to your `qemu` command-line arguments.
+
+    -device {"driver":"vhost-vsock-pci","id":"vsock0","guest-cid":7,"vhostfd":"28","bus":"pci.7","addr":"0x0"}
 
 See full QEMU command-line arguments [here.](#qemu-command-from-libvirt)
 
@@ -358,7 +378,7 @@ In the VM guest (once it reboots), there should be a `/dev/vsock` device:
     guest$ ls -l /dev/vsock
     crw-rw-rw- 1 root root 10, 55 May  4 13:21 /dev/vsock
 
-#### Reboot virtual machine
+### Reboot virtual machine
 
 * First ensure you set-up serial/vsock as described above! We are rebooting to ensure the new devices are loaded.
 
@@ -373,7 +393,7 @@ The Tumbleweed installer will automatically reboot to a shell after the installa
 as `root` and run `shutdown now -h`. Then run `virsh start pbot-vm`. (Using `shutdown now -r` to reboot
 will not initialize the new serial/vsock devices.) Login as `root` when the virtual machine boots back up.
 
-#### Install software
+### Install software
 Now we can install any software and programming languages we want to make available
 in the virtual machine. Use the `dnf search` or `zypper se` command or your distribution's documentation
 to find packages. I will soon make available a script to install all package necessary for all
@@ -401,7 +421,7 @@ OpenSUSE Tumbleweed:
 
 Install packages for other languages as desired.
 
-#### Install Perl
+### Install Perl
 Now we need to install Perl on the guest. This allows us to run the PBot VM Guest server
 script.
 
@@ -417,7 +437,7 @@ OpenSUSE Tumbleweed:
 This installs the minium packages for the Perl interpreter (note we used `perl-interpreter` instead of `perl`),
 as well as a few Perl modules.
 
-#### Install PBot VM Guest
+### Install PBot VM Guest
 Next we install the PBot VM Guest server script that fosters communication between the virtual machine guest
 and the physical host system. We'll do this inside the virtual machine guest system, logged on as `root`
 while in the `/tmp` directory.
@@ -448,7 +468,7 @@ We no longer need the `/tmp/guest/` stuff. We can delete it:
 
     guest$ rm -rf guest/
 
-#### Start PBot VM Guest
+### Start PBot VM Guest
 We're ready to start the PBot VM Guest server. On the guest, as `root`, execute the command:
 
     guest$ guest-server
@@ -456,7 +476,7 @@ We're ready to start the PBot VM Guest server. On the guest, as `root`, execute 
 This starts up a server to listen for incoming commands or code and to handle them. We'll leave
 this running.
 
-#### Test PBot VM Guest
+### Test PBot VM Guest
 Let's make sure everything's working up to this point. On the host, there should
 be two open TCP ports on `5555` and `5556`. On the host, execute the command:
 
@@ -482,7 +502,7 @@ If you have multiple PBot VM Guests, or if you used a different TCP port, you ca
 
     host$ PBOTVM_SERIAL=7777 ./vm-exec -lang=sh echo test
 
-#### Save initial state
+### Save initial state
 Switch back to an available terminal on the physical host machine. Enter the following command
 to save a snapshot of the virtual machine waiting for incoming commands.
 
@@ -495,16 +515,18 @@ to save a snapshot of the virtual machine waiting for incoming commands.
 If the virtual machine ever times-out or its heartbeat stops responding, PBot
 will revert the virtual machine to this saved snapshot.
 
-### Initial virtual machine set-up complete
-This concludes the initial one-time set-up. You can close the `virt-viewer` window. The
-virtual machine will continue running in the background until it is manually shutdown (via
-`shutdown now -h` inside the VM or via `virsh shutdown pbot-vm` on the host).
+## Install host packages
+Ensure the following packages are installed on the host machine:
 
-## Install Fortune package
-The PBot VM Host server uses the `fortune` command to generate random STDIN input to use when no `-stdin`
-argument is provided to the bot's `cc` command. Ensure you have it installed.
+* fortune -- used to generate STDIN input when no `-stdin` flag is provided to the bot's `cc` command
+* astyle -- used to pretty-format C-family languages
 
-## Start PBot VM Host
+## Initial virtual machine set-up complete
+This concludes the initial one-time set-up. You can close the `virt-viewer` window or press `^]` to detach
+from the VM's serial PTY console. The virtual machine will continue running in the background until it is
+manually shutdown (via `shutdown now -h` inside the VM or via `virsh shutdown pbot-vm` on the host).
+
+# Start PBot VM Host
 To start the PBot VM Host server, change your current working directory to `applets/pbot-vm/host/bin`
 and execute the `vm-server` script:
 
@@ -520,7 +542,7 @@ use `other-vm` with a longer `30` second timeout, on different serial and heartb
 
     host$ PBOTVM_DOMAIN="other-vm" PBOTVM_SERVER=9001 PBOTVM_SERIAL=7777 PBOTVM_HEART=7778 PBOTVM_TIMEOUT=30 ./vm-server
 
-### Test PBot
+## Test PBot
 All done. Everything is set up now.
 
 PBot is already preconfigured with commands that invoke the `host/bin/vm-client`
@@ -538,7 +560,7 @@ In your instance of PBot, the `sh echo hello` command should output `hello`.
     <pragma-> sh echo hello
        <PBot> hello
 
-## QEMU command from libvirt
+# QEMU command from libvirt
 This is the QEMU command-line arguments used by libvirt. Extract flags as needed, e.g. `-chardev`.
 
     /usr/bin/qemu-system-x86_64 -name guest=pbot-vm,debug-threads=on -S -object {"qom-type":"secret","id":"masterKey0","format":"raw","file":"/var/lib/libvirt/qemu/domain-2-pbot-vm/master-key.aes"} -machine pc-q35-6.2,usb=off,vmport=off,dump-guest-core=off,memory-backend=pc.ram -accel kvm -cpu IvyBridge-IBRS,ss=on,vmx=on,pdcm=on,pcid=on,hypervisor=on,arat=on,tsc-adjust=on,umip=on,md-clear=on,stibp=on,arch-capabilities=on,ssbd=on,xsaveopt=on,ibpb=on,ibrs=on,amd-stibp=on,amd-ssbd=on,skip-l1dfl-vmentry=on,pschange-mc-no=on,aes=off,rdrand=off -m 2048 -object {"qom-type":"memory-backend-ram","id":"pc.ram","size":2147483648} -overcommit mem-lock=off -smp 2,sockets=2,cores=1,threads=1 -uuid ec9eebba-8ba1-4de3-8ec0-caa6fd808ad4 -no-user-config -nodefaults -chardev socket,id=charmonitor,fd=38,server=on,wait=off -mon chardev=charmonitor,id=monitor,mode=control -rtc base=utc,driftfix=slew -global kvm-pit.lost_tick_policy=delay -no-hpet -no-shutdown -global ICH9-LPC.disable_s3=1 -global ICH9-LPC.disable_s4=1 -boot strict=on -device {"driver":"pcie-root-port","port":16,"chassis":1,"id":"pci.1","bus":"pcie.0","multifunction":true,"addr":"0x2"} -device {"driver":"pcie-root-port","port":17,"chassis":2,"id":"pci.2","bus":"pcie.0","addr":"0x2.0x1"} -device {"driver":"pcie-root-port","port":18,"chassis":3,"id":"pci.3","bus":"pcie.0","addr":"0x2.0x2"} -device {"driver":"pcie-root-port","port":19,"chassis":4,"id":"pci.4","bus":"pcie.0","addr":"0x2.0x3"} -device {"driver":"pcie-root-port","port":20,"chassis":5,"id":"pci.5","bus":"pcie.0","addr":"0x2.0x4"} -device {"driver":"pcie-root-port","port":21,"chassis":6,"id":"pci.6","bus":"pcie.0","addr":"0x2.0x5"} -device {"driver":"pcie-root-port","port":22,"chassis":7,"id":"pci.7","bus":"pcie.0","addr":"0x2.0x6"} -device {"driver":"pcie-root-port","port":23,"chassis":8,"id":"pci.8","bus":"pcie.0","addr":"0x2.0x7"} -device {"driver":"pcie-root-port","port":24,"chassis":9,"id":"pci.9","bus":"pcie.0","multifunction":true,"addr":"0x3"} -device {"driver":"pcie-root-port","port":25,"chassis":10,"id":"pci.10","bus":"pcie.0","addr":"0x3.0x1"} -device {"driver":"pcie-root-port","port":26,"chassis":11,"id":"pci.11","bus":"pcie.0","addr":"0x3.0x2"} -device {"driver":"pcie-root-port","port":27,"chassis":12,"id":"pci.12","bus":"pcie.0","addr":"0x3.0x3"} -device {"driver":"pcie-root-port","port":28,"chassis":13,"id":"pci.13","bus":"pcie.0","addr":"0x3.0x4"} -device {"driver":"pcie-root-port","port":29,"chassis":14,"id":"pci.14","bus":"pcie.0","addr":"0x3.0x5"} -device {"driver":"qemu-xhci","p2":15,"p3":15,"id":"usb","bus":"pci.2","addr":"0x0"} -device {"driver":"virtio-serial-pci","id":"virtio-serial0","bus":"pci.3","addr":"0x0"} -blockdev {"driver":"file","filename":"/home/pbot/pbot-vms/openSUSE-Tumbleweed-Minimal-VM.x86_64-kvm-and-xen.qcow2","node-name":"libvirt-1-storage","auto-read-only":true,"discard":"unmap"} -blockdev {"node-name":"libvirt-1-format","read-only":false,"driver":"qcow2","file":"libvirt-1-storage","backing":null} -device {"driver":"virtio-blk-pci","bus":"pci.4","addr":"0x0","drive":"libvirt-1-format","id":"virtio-disk0","bootindex":1} -netdev {"type":"tap","fd":"39","vhost":true,"vhostfd":"41","id":"hostnet0"} -device {"driver":"virtio-net-pci","netdev":"hostnet0","id":"net0","mac":"52:54:00:03:16:5a","bus":"pci.1","addr":"0x0"} -chardev pty,id=charserial0 -device {"driver":"isa-serial","chardev":"charserial0","id":"serial0","index":0} -chardev socket,id=charserial1,host=127.0.0.1,port=5555,server=on,wait=off -device {"driver":"isa-serial","chardev":"charserial1","id":"serial1","index":2} -chardev socket,id=charserial2,host=127.0.0.1,port=5556,server=on,wait=off -device {"driver":"isa-serial","chardev":"charserial2","id":"serial2","index":3} -chardev socket,id=charchannel0,fd=37,server=on,wait=off -device {"driver":"virtserialport","bus":"virtio-serial0.0","nr":1,"chardev":"charchannel0","id":"channel0","name":"org.qemu.guest_agent.0"} -chardev spicevmc,id=charchannel1,name=vdagent -device {"driver":"virtserialport","bus":"virtio-serial0.0","nr":2,"chardev":"charchannel1","id":"channel1","name":"com.redhat.spice.0"} -device {"driver":"usb-tablet","id":"input0","bus":"usb.0","port":"1"} -audiodev {"id":"audio1","driver":"spice"} -spice port=5901,addr=127.0.0.1,disable-ticketing=on,image-compression=off,seamless-migration=on -device {"driver":"virtio-vga","id":"video0","max_outputs":1,"bus":"pcie.0","addr":"0x1"} -device {"driver":"ich9-intel-hda","id":"sound0","bus":"pcie.0","addr":"0x1b"} -device {"driver":"hda-duplex","id":"sound0-codec0","bus":"sound0.0","cad":0,"audiodev":"audio1"} -chardev spicevmc,id=charredir0,name=usbredir -device {"driver":"usb-redir","chardev":"charredir0","id":"redir0","bus":"usb.0","port":"2"} -chardev spicevmc,id=charredir1,name=usbredir -device {"driver":"usb-redir","chardev":"charredir1","id":"redir1","bus":"usb.0","port":"3"} -device {"driver":"virtio-balloon-pci","id":"balloon0","bus":"pci.5","addr":"0x0"} -object {"qom-type":"rng-random","id":"objrng0","filename":"/dev/urandom"} -device {"driver":"virtio-rng-pci","rng":"objrng0","id":"rng0","bus":"pci.6","addr":"0x0"} -loadvm 1 -sandbox on,obsolete=deny,elevateprivileges=deny,spawn=deny,resourcecontrol=deny -device {"driver":"vhost-vsock-pci","id":"vsock0","guest-cid":7,"vhostfd":"28","bus":"pci.7","addr":"0x0"} -msg timestamp=on

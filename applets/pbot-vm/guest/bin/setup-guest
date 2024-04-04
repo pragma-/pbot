@@ -12,33 +12,33 @@
 if [ -f /etc/os-release ]; then
     # freedesktop.org and systemd
     . /etc/os-release
-    OS=$NAME
-    VER=$VERSION_ID
+    OS=$PRETTY_NAME
 elif type lsb_release >/dev/null 2>&1; then
     # linuxbase.org
     OS=$(lsb_release -si)
-    VER=$(lsb_release -sr)
 elif [ -f /etc/lsb-release ]; then
     # For some versions of Debian/Ubuntu without lsb_release command
     . /etc/lsb-release
     OS=$DISTRIB_ID
-    VER=$DISTRIB_RELEASE
 else
     # Fall back to uname, e.g. "Linux <version>", also works for BSD, etc.
     OS=$(uname -s)
-    VER=$(uname -r)
 fi
 
-echo "Detected OS: $OS ($VER)"
+echo "Detected OS: $OS"
 
 # run known provisioning scripts
 case $OS in
     'openSUSE Tumbleweed')
-        echo "Provisioning for openSUSE Tumbleweed"
+        echo "Provisioning for $OS"
         ./guest/provision/tumbleweed
         ;;
+    'Debian GNU/Linux trixie/sid')
+        echo "Provisioning for $OS"
+        ./guest/provision/debian-trixie
+        ;;
     *)
-        echo "!! No automatic provisioning script for $OS ($VER). Install packages manually. !!"
+        echo "!! No automatic provisioning script for $OS. Install packages manually. !!"
         echo
         ;;
 esac

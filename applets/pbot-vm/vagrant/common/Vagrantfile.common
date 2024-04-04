@@ -1,0 +1,30 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box_check_update = false
+
+  config.vm.hostname = PBOTVM_NAME
+
+  config.vm.provider :libvirt do |libvirt|
+    libvirt.qemuargs :value => "-chardev"
+    libvirt.qemuargs :value => "socket,id=charserial1,host=127.0.0.1,port=#{PBOTVM_SERIAL},server=on,wait=off"
+    libvirt.qemuargs :value => "-device"
+    libvirt.qemuargs :value => '{"driver":"isa-serial","chardev":"charserial1","id":"serial1","index":2}'
+    libvirt.qemuargs :value => "-chardev"
+    libvirt.qemuargs :value => "socket,id=charserial2,host=127.0.0.1,port=#{PBOTVM_HEART},server=on,wait=off"
+    libvirt.qemuargs :value => "-device"
+    libvirt.qemuargs :value => '{"driver":"isa-serial","chardev":"charserial2","id":"serial2","index":3}'
+  end
+
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  config.vm.synced_folder "../../guest", "/home/vagrant/guest", type: "rsync",
+    rsync__auto: false
+
+  config.vm.provision "shell", inline: "useradd -m vm -s /bin/bash"
+
+  config.vm.provision "shell", inline: "/home/vagrant/guest/bin/setup-guest"
+
+  config.vm.post_up_message = "To start the PBot-VM Guest Server, run `vagrant ssh` to log into the pbot-vagrant-vm and then run `sudo guest-server`."
+end

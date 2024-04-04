@@ -1,0 +1,16 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+ENV['VAGRANT_DEFAULT_PROVIDER'] = 'libvirt'
+
+PBOTVM_SERIAL = ENV['PBOTVM_SERIAL'] || 5555
+PBOTVM_HEART  = ENV['PBOTVM_HEART']  || 5556
+PBOTVM_NAME   = ENV['PBOTVM_NAME']   || 'pbot-vagrant-vm'
+
+Vagrant.configure("2") do |config|
+  # Every Vagrant development environment requires a box. You can search for
+  # boxes at https://vagrantcloud.com/search.
+  config.vm.box = "opensuse/Tumbleweed.x86_64"
+end
+
+load '../common/Vagrantfile.common'

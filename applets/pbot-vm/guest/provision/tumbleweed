@@ -15,8 +15,8 @@ zypper -n in socat
 zypper -n in libubsan1 libasan8 gdb gcc gcc-32bit glibc-32bit clang
 
 # for pbot-vm guest-server support
-zypper -n in perl-IPC-Run perl-JSON-XS make
-PERL_MM_USE_DEFAULT=1 cpan IPC::Shareable
+zypper -n in perl-IPC-Run perl-JSON-XS make cpanm
+cpanm -n IPC::Shareable
 
 # for `cc` additional languages
 zypper -n in ksh zsh tcl lua php8-cli nodejs-common guile bff bc gcc-c++
