@@ -50,7 +50,7 @@ sub on_modeflag($self, $event_type, $event) {
     $channel = defined $channel ? lc $channel : '';
     $target  = defined $target ? lc $target : '';
 
-    if ($target eq lc $self->{pbot}->{registry}->get_value('irc', 'botnick')) {
+    if ($target eq lc $self->{pbot}->{conn}->nick) {
         if ($mode eq '+o') {
             $self->{pbot}->{logger}->log("$source opped me in $channel\n");
 

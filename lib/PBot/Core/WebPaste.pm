@@ -20,7 +20,8 @@ sub initialize($self, %conf) {
     # many have died off. :-(
 
     $self->{paste_sites} = [
-        sub { $self->paste_0x0st(@_) },
+        sub { $self->paste_0x0st(@_)   },
+        sub { $self->paste_sprunge(@_) },
         # sub { $self->paste_ixio(@_) }, # removed due to being too slow (temporarily hopefully)
     ];
 
@@ -90,13 +91,22 @@ sub paste_0x0st($self, $text) {
     );
 }
 
-sub paste_ixio($self, $text) {
-    my $ua = LWP::UserAgent::Paranoid->new(request_timeout => 10);
+sub paste_sprunge($self, $text) {
+    my $ua = LWP::UserAgent::Paranoid->new(request_timeout => 10, agent => 'Mozilla/5.0');
 
     push @{$ua->requests_redirectable}, 'POST';
 
-    my %post = ('f:1' => $text);
+    return $ua->post(
+        "http://sprunge.us",
+        Content => [(sprunge => $text)],
+        Content_Type => 'form-data'
+    );
+}
 
+sub paste_ixio($self, $text) {
+    my $ua = LWP::UserAgent::Paranoid->new(request_timeout => 10);
+    push @{$ua->requests_redirectable}, 'POST';
+    my %post = ('f:1' => $text);
     return $ua->post("http://ix.io", \%post);
 }
 

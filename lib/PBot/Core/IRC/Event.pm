@@ -341,7 +341,7 @@ sub trans {
     375 => "motdstart",
     376 => "endofmotd",
     377 => "motd2",              # 1997-10-16 -- tkil
-    378 => "austmotd",           # (July01-01)Austnet Extension, found by Andypoo <andypoo@secret.com.au>
+    378 => "whoishost",          # 2024-04-07 pragma- libera.chat
     379 => "whoismodes",         # UnrealIrcd, Hendrik Frenzel
     381 => "youreoper",
     382 => "rehashing",

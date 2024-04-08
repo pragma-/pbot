@@ -29,6 +29,8 @@ sub initialize($self, %conf) {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.n_global',      sub { $self->log_third_arg    (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.nononreg',      sub { $self->on_nononreg      (@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.chghost',       sub { $self->on_chghost       (@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.whoisuser',     sub { $self->on_whoisuser     (@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.whoishost',     sub { $self->on_whoishost     (@_) });
 }
 
 sub on_init($self, $conn, $event) {
@@ -39,7 +41,7 @@ sub on_init($self, $conn, $event) {
 }
 
 sub on_welcome($self, $event_type, $event) {
-    $self->{pbot}->{logger}->log("Welcome!\n");
+    $self->{pbot}->{logger}->log($event->{args}[1] . "\n");
 
     if ($self->{pbot}->{irc_capabilities}->{sasl}) {
         # using SASL; go ahead and auto-join channels now
@@ -47,7 +49,26 @@ sub on_welcome($self, $event_type, $event) {
         $self->{pbot}->{channels}->autojoin;
     }
 
+    $self->{pbot}->{logger}->log("Getting self-WHOIS for $event->{args}[0] ...\n");
+    $self->{pbot}->{conn}->whois($event->{args}[0]);
     return 1;
+}
+
+sub on_whoisuser($self, $event_type, $event) {
+    my $nick = $event->{args}[1];
+    my $user = $event->{args}[2];
+    my $host = $event->{args}[3];
+
+    my $botnick = $self->{pbot}->{conn}->nick;
+
+    if ($nick eq $botnick) {
+        $self->{pbot}->{hostmask} = "$nick!$user\@$host";
+        $self->{pbot}->{logger}->log("Set hostmask to $self->{pbot}->{hostmask}\n");
+    }
+}
+
+sub on_whoishost($self, $event_type, $event) {
+    $self->{pbot}->{logger}->log("$event->{args}[1] $event->{args}[2]\n");
 }
 
 sub on_disconnect($self, $event_type, $event) {
@@ -125,8 +146,13 @@ sub on_nickchange($self, $event_type, $event) {
 
     $self->{pbot}->{logger}->log("[NICKCHANGE] $nick!$user\@$host changed nick to $newnick\n");
 
-    if ($newnick eq $self->{pbot}->{registry}->get_value('irc', 'botnick') and not $self->{pbot}->{joined_channels}) {
-        $self->{pbot}->{channels}->autojoin;
+    if ($newnick eq $self->{pbot}->{registry}->get_value('irc', 'botnick')) {
+        if (not $self->{pbot}->{joined_channels}) {
+            $self->{pbot}->{channels}->autojoin;
+        }
+
+        $self->{pbot}->{hostmask} = "$newnick!$user\@$host";
+        $self->{pbot}->{logger}->log("Set hostmask to $self->{pbot}->{hostmask}\n");
         return 1;
     }
 
@@ -184,6 +210,11 @@ sub on_chghost($self, $event_type, $event) {
     }
 
     $self->{pbot}->{logger}->log("[CHGHOST] ($account) $nick!$user\@$host changed host to ($id) $nick!$newuser\@$newhost\n");
+
+    if ("$nick!$user\@$host" eq $self->{pbot}->{hostmask}) {
+        $self->{pbot}->{logger}->log("Set hostmask to $nick!$newuser\@$newhost\n");
+        $self->{hostmask} = "$nick!$newuser\@$newhost";
+    }
 
     my $channels = $self->{pbot}->{nicklist}->get_channels($nick);
 

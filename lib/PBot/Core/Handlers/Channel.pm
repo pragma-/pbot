@@ -167,7 +167,7 @@ sub on_invite($self, $event_type, $event) {
     $self->{pbot}->{logger}->log("$nick!$user\@$host invited $target to $channel!\n");
 
     # if invited to a channel on our channel list, go ahead and join it
-    if ($target eq $self->{pbot}->{registry}->get_value('irc', 'botnick')) {
+    if ($target eq $self->{pbot}->{conn}->nick) {
         if ($self->{pbot}->{channels}->is_active($channel)) {
             $self->{pbot}->{interpreter}->add_botcmd_to_command_queue($channel, "join $channel", 0);
         }

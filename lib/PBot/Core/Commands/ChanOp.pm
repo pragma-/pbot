@@ -291,7 +291,7 @@ sub cmd_mode($self, $context) {
 
                     if ($modifier eq '-') {
                         # removing mode -- check against whitelist, etc
-                        next if $nick_data->{nick} eq $self->{pbot}->{registry}->get_value('irc', 'botnick');
+                        next if $nick_data->{nick} eq $self->{pbot}->{conn}->nick;
                         my $u = $self->{pbot}->{users}->loggedin($channel, $nick_data->{hostmask});
                         next if $self->{pbot}->{capabilities}->userhas($u, 'is-whitelisted');
                     }
@@ -498,7 +498,7 @@ sub cmd_kick($self, $context) {
                 if ($nl =~ m/^$q_target$/) {
                     my $nick_data = $self->{pbot}->{nicklist}->{nicklist}->{$channel}->{$nl};
 
-                    next if $nick_data->{nick} eq $self->{pbot}->{registry}->get_value('irc', 'botnick');
+                    next if $nick_data->{nick} eq $self->{pbot}->{conn}->nick;
                     my $u = $self->{pbot}->{users}->loggedin($channel, $nick_data->{hostmask});
                     next if $self->{pbot}->{capabilities}->userhas($u, 'is-whitelisted');
 

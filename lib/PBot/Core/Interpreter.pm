@@ -82,7 +82,7 @@ sub process_line($self, $from, $nick, $user, $host, $text, $tags = '', $is_comma
     );
 
     # get bot nickname
-    my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+    my $botnick = $self->{pbot}->{conn}->nick;
 
     # get channel-specific bot trigger if available
     my $bot_trigger = $self->{pbot}->{registry}->get_value($from, 'trigger');
@@ -484,7 +484,7 @@ sub interpret($self, $context) {
     if (not $self->{pbot}->{commands}->get_meta($keyword, 'dont-protect-self')
             and not $self->{pbot}->{factoids}->{data}->get_meta($context->{from}, $keyword, 'dont-protect-self'))
     {
-        my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+        my $botnick = $self->{pbot}->{conn}->nick;
 
         if ($arguments =~ m/^(your|him|her|its|it|them|their)(self|selves)$/i || $arguments =~ m/^$botnick$/i) {
             # build message structure
@@ -641,7 +641,7 @@ sub handle_result($self, $context, $result = $context->{result}) {
 
     # finish command split
     if ($context->{command_split}) {
-        my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+        my $botnick = $self->{pbot}->{conn}->nick;
 
         # update contextual command with next command in split
         $context->{command} = delete $context->{command_split};
@@ -664,7 +664,7 @@ sub handle_result($self, $context, $result = $context->{result}) {
 
     # join command split
     if ($context->{split_result}) {
-        my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+        my $botnick = $self->{pbot}->{conn}->nick;
 
         # reformat result to be more suitable for joining together
         $result =~ s!^/say !\n!i;
@@ -753,15 +753,18 @@ sub handle_result($self, $context, $result = $context->{result}) {
 # $paste_text is the version of text (e.g. with whitespace formatting preserved, etc)
 # to send to the paste site.
 sub truncate_result($self, $context, $text, $paste_text) {
-    my $max_msg_len = $self->{pbot}->{registry}->get_value('irc', 'max_msg_len');
+    my $max_msg_len = $self->{pbot}->{registry}->get_value('irc', 'max_msg_len') // 510;
 
-    $max_msg_len -= length "PRIVMSG $context->{from} :";
+    # reduce max msg len by length of hostmask and PRIVMSG command
+    $max_msg_len -= length ":$self->{pbot}->{hostmask} PRIVMSG $context->{from} :";
 
     # encode text to utf8 for byte length truncation
     $text       = encode('UTF-8', $text);
     $paste_text = encode('UTF-8', $paste_text);
 
-    if (length $text > $max_msg_len) {
+    my $text_len = length $text;
+
+    if ($text_len > $max_msg_len) {
         my $paste_result;
 
         if (defined $paste_text) {
@@ -780,11 +783,7 @@ sub truncate_result($self, $context, $text, $paste_text) {
         if (not defined $paste_result) {
             # no paste
             $trunc .= '>';
-        } elsif ($paste_result =~ m/^http/) {
-            # a link
-            $trunc .= "; $paste_result>";
         } else {
-            # an error or something else
             $trunc .= "; $paste_result>";
         }
 
@@ -793,7 +792,6 @@ sub truncate_result($self, $context, $text, $paste_text) {
 
         # make room to append the truncation text to the message text
         # (third argument to truncate_egc is '' to prevent appending its own ellipsis)
-        my $text_len = length $text;
         my $trunc_len = $text_len < $max_msg_len ? $text_len : $max_msg_len;
 
         $text = truncate_egc $text, $trunc_len - length $trunc, '';
@@ -850,7 +848,7 @@ sub output_result($self, $context) {
     # nothing more to do here if the command came from STDIN
     return if $context->{from} eq 'stdin@pbot';
 
-    my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+    my $botnick = $self->{pbot}->{conn}->nick;
     my $to      = $context->{from};
 
     # log the message if requested
@@ -904,7 +902,7 @@ sub output_result($self, $context) {
         }
     }
 
-    my $bot_nick     = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+    my $bot_nick     = $self->{pbot}->{conn}->nick;
     my $bot_hostmask = "$bot_nick!pbot3\@pbot";
     my $bot_account  = $self->{pbot}->{messagehistory}->get_message_account($bot_nick, 'pbot3', 'pbot');
 
@@ -992,7 +990,7 @@ sub add_to_command_queue($self, $channel, $command, $delay = 0, $repeating = 0) 
 
 sub add_botcmd_to_command_queue($self, $channel, $command, $delay = 0) {
     my $botcmd = {
-        nick     => $self->{pbot}->{registry}->get_value('irc', 'botnick'),
+        nick     => $self->{pbot}->{conn}->nick,
         user     => 'stdin',
         host     => 'pbot',
         command  => $command

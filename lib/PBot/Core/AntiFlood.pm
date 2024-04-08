@@ -155,7 +155,7 @@ sub check_flood($self, $channel, $nick, $user, $host, $text, $max_messages, $max
     }
 
     # do not do flood processing for bot messages
-    if ($nick eq $self->{pbot}->{registry}->get_value('irc', 'botnick')) {
+    if ($nick eq $self->{pbot}->{conn}->nick) {
         $self->{channels}->{$channel}->{last_spoken_nick} = $nick;
         return;
     }

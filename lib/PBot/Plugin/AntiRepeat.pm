@@ -68,7 +68,7 @@ sub on_public($self, $event_type, $event) {
 
     my $messages = $self->{pbot}->{messagehistory}->{database}->get_recent_messages($account, $channel, 6, $self->{pbot}->{messagehistory}->{MSG_CHAT});
 
-    my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+    my $botnick = $self->{pbot}->{conn}->nick;
 
     my $bot_trigger = $self->{pbot}->{registry}->get_value($channel, 'trigger') // $self->{pbot}->{registry}->get_value('general', 'trigger');
 

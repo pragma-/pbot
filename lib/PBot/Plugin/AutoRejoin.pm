@@ -56,7 +56,7 @@ sub on_kick($self, $event_type, $event) {
     return 0 if not $self->{pbot}->{channels}->is_active($channel);
     return 0 if $self->{pbot}->{channels}->{storage}->get_data($channel, 'noautorejoin');
 
-    if ($target eq $self->{pbot}->{registry}->get_value('irc', 'botnick')) {
+    if ($target eq $self->{pbot}->{conn}->nick) {
         $self->rejoin_channel($channel);
     }
 
@@ -74,7 +74,7 @@ sub on_part($self, $event_type, $event) {
     return 0 if not $self->{pbot}->{channels}->is_active($channel);
     return 0 if $self->{pbot}->{channels}->{storage}->get_data($channel, 'noautorejoin');
 
-    if ($nick eq $self->{pbot}->{registry}->get_value('irc', 'botnick')) {
+    if ($nick eq $self->{pbot}->{conn}->nick) {
         $self->rejoin_channel($channel);
     }
 

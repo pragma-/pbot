@@ -276,7 +276,7 @@
       },
       "max_msg_len" : {
          "type" : "text",
-         "value" : "460"
+         "value" : "510"
       },
       "port" : {
          "type" : "text",

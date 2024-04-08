@@ -69,7 +69,7 @@ sub gain_ops($self, $channel) {
 # removes OP status in $channel
 sub lose_ops($self, $channel) {
     $channel = lc $channel;
-    $self->{pbot}->{conn}->mode($channel, '-o ' . $self->{pbot}->{registry}->get_value('irc', 'botnick'));
+    $self->{pbot}->{conn}->mode($channel, '-o ' . $self->{pbot}->{conn}->nick);
 }
 
 # adds a command to the OP command queue
@@ -84,7 +84,7 @@ sub perform_op_commands($self, $channel) {
 
     $self->{pbot}->{logger}->log("Performing op commands in $channel:\n");
 
-    my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+    my $botnick = $self->{pbot}->{conn}->nick;
 
     while (my $command = shift @{$self->{op_commands}->{$channel}}) {
         if ($command =~ /^mode (.*?) (.*)/i) {

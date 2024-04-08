@@ -57,6 +57,8 @@ sub on_sasl_authenticate($self, $event_type, $event) {
 
 sub on_rpl_loggedin($self, $event_type, $event) {
     $self->{pbot}->{logger}->log($event->{args}[3] . "\n");
+    $self->{pbot}->{hostmask} = $event->{args}[1];
+    $self->{pbot}->{logger}->log("Set hostmask to $event->{args}[1]\n");
     return 1;
 }
 

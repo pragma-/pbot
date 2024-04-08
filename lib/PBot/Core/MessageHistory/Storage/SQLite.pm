@@ -1059,7 +1059,7 @@ sub recall_message_by_count($self, $id, $channel, $count, $ignore_command = unde
     $self->{pbot}->{logger}->log("EXCEPT: $@\n") if $@;
 
     if (defined $ignore_command) {
-        my $botnick     = $self->{pbot}->{registry}->get_value('irc',     'botnick');
+        my $botnick     = $self->{pbot}->{conn}->nick;
         my $bot_trigger = $self->{pbot}->{registry}->get_value('general', 'trigger');
         foreach my $message (@$messages) {
             next if $message->{msg} =~ m/^$botnick.? $ignore_command/ or $message->{msg} =~ m/^$bot_trigger$ignore_command/;
@@ -1126,7 +1126,7 @@ sub recall_message_by_text($self, $id, $channel, $text, $ignore_command = undef,
 
     if (defined $ignore_command) {
         my $bot_trigger = $self->{pbot}->{registry}->get_value('general', 'trigger');
-        my $botnick     = $self->{pbot}->{registry}->get_value('irc',     'botnick');
+        my $botnick     = $self->{pbot}->{conn}->nick;
         foreach my $message (@$messages) {
             next
               if $message->{msg} =~ m/^$botnick.? $ignore_command/i

@@ -222,7 +222,7 @@ sub initialize($self, %conf) {
     $self->{logger}->log("PBot::Core initialized.\n");
 }
 
-sub random_nick($self, $length) {
+sub random_nick($self, $length = undef) {
     $length //= 9;
     my @chars = ("A" .. "Z", "a" .. "z", "0" .. "9");
     my $nick  = $chars[rand @chars - 10];               # nicks cannot start with a digit
