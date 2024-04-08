@@ -134,7 +134,7 @@ https://download.opensuse.org/tumbleweed/iso/openSUSE-Tumbleweed-NET-x86_64-Snap
 I recommend using OpenSUSE Tumbleweed since that's what I've tested on most recently.
 
 ## Create a new virtual machine
-To create a new virtual machines, this guide offers two options. The first is
+To create a new virtual machine, this guide offers two options. The first is
 libvirt's `virt-install` command. It greatly simplifies configuration by
 automatically creating networking bridges and setting up virtio devices. The
 second option is manually using Linux system commands to configure network

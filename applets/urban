@@ -19,7 +19,7 @@ local $SIG{__WARN__} = sub {
   chomp $getopt_error;
 };
 
-my $usage = "Usage: udict [-m <show definition matching this regex>] [-n <entry number>] [-s <up/down (sort by thumbs up/down)>] <phrase>\n";
+my $usage = "Usage: udict [-a] [-m <show definition matching this regex>] [-n <entry number>] [-s <up/down (sort by thumbs up/down)>] <phrase>\n";
 
 binmode(STDOUT, ":utf8");
 binmode(STDERR, ":utf8");
@@ -71,12 +71,7 @@ sub sort_entries {
   }
 }
 
-my @entries;
-if (defined $sort) {
-  @entries = sort sort_entries @{ $results->definitions };
-} else {
-  @entries = @{ $results->definitions };
-}
+my @entries = sort sort_entries @{ $results->definitions };
 my $num_entries = @entries;
 
 if ($num_entries == 0) {
