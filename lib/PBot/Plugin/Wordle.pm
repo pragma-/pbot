@@ -50,6 +50,7 @@ my %wordlists = (
     italian   => '/wordle/italian',
     polish    => '/wordle/polish',
     spanish   => '/wordle/spanish',
+    urban     => '/wordle/urban',
 );
 
 my %accents = (
