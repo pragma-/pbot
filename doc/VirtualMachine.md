@@ -511,8 +511,10 @@ In your instance of PBot, the `sh echo hello` command should output `hello`.
        <PBot> hello
 
 ## Adding additional VMs
-You may add as many virtual machines as your system can handle. Edit the [`vm-exec.json`](../applets/pbot-vm/host/config/vm-exec.json) configuration
-file to do so. Then use the `-vm=...` option to select them with the `sh`, `cc`, etc, commands.
+You may add as many virtual machines as you like. The virtual machines can exist on different physical machines.
+Edit the [`vm-exec.json`](../applets/pbot-vm/host/config/vm-exec.json) configuration file with the details (IP addresses
+of remote machines hosting the virtual machines, etc). Then use the `-vm=...` option to select the machine with the
+`sh`, `cc`, etc, commands.
 
 For instance, if you create a FreeBSD VM and have added it to [`vm-exec.json`](../applets/pbot-vm/host/config/vm-exec.json) with an alias of `freebsd`:
 
