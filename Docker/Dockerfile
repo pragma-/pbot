@@ -41,6 +41,9 @@ RUN pip install git+https://github.com/garabik/unicode --break-system-packages
 # paren/prec
 RUN pip install 'pycparser==2.10' --break-system-packages
 
+# cdecl
+RUN apt-get -y install cdecl
+
 WORKDIR /opt
 
 # Get PBot from GitHub

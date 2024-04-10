@@ -16,7 +16,7 @@ if (@args < 2) {
 $command = quotemeta($command);
 $command =~ s/\\ / /g;
 
-my $result = `/usr/bin/cdecl -c $command`;
+my $result = `cdecl $command`;
 
 chomp $result;
 $result =~ s/\n/, /g;
