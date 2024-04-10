@@ -2,8 +2,10 @@
 
 ### Install libvirt and QEMU/KVM
 
-Follow [PBot VM Prerequisites](../../../doc/VirtualMachine.md#prerequisites) up to the [libvirt and QEMU](../../../doc/VirtualMachine.md#libvirt-and-qemu)
-section, then return to this guide.
+Follow [PBot VM Prerequisites](../../../doc/VirtualMachine.md#prerequisites) up to the [libvirt and QEMU](../../../doc/VirtualMachine.md#libvirt-and-qemu-1)
+section, then return to this guide. If you've reached the section about making
+a `pbot-vm` user, adding yourself to the `libvirt` group or downloading any ISOs
+then you've read too far!
 
 ### Install Vagrant
 
