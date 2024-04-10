@@ -83,6 +83,14 @@ In your instance of PBot, the `sh` and `cc`, etc, commands should now produce ou
     <pragma-> sh echo Hello world!
        <PBot> Hello world!
 
+### Starting PBot VM again
+To start the PBot VM again, e.g. after a reboot:
+
+    cd applets/pbot-vm/host/bin
+    virsh -c qemu:///system net-start vagrant-libvirt
+    virsh -c qemu:///system snapshot-revert $PBOTVM_DOMAIN 1   # for each $PBOTVM_DOMAIN you need to start
+    ./vm-server
+
 ### Shutdown Vagrant Box
 
     vagrant halt

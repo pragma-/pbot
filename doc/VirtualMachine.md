@@ -510,6 +510,13 @@ In your instance of PBot, the `sh echo hello` command should output `hello`.
     <pragma-> sh echo hello
        <PBot> hello
 
+## Starting PBot VM again
+To start the PBot VM again, e.g. after a reboot:
+
+    cd applets/pbot-vm/host/bin
+    virsh snapshot-revert $PBOTVM_DOMAIN 1  # for each $PBOTVM_DOMAIN you need to start
+    ./vm-server
+
 ## Adding additional VMs
 You may add as many virtual machines as you like. The virtual machines can exist on different physical machines.
 Edit the [`vm-exec.json`](../applets/pbot-vm/host/config/vm-exec.json) configuration file with the details (IP addresses
