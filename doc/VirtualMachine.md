@@ -5,7 +5,7 @@ system commands and code.
 
 ## Installation methods
 
-### libvirt and QEMU (recommended)
+### libvirt and QEMU
 This document will guide you through installing and configuring a Linux
 virtual machine on a Linux host by using the widely available [libvirt](https://libvirt.org)
 project tools, such as `virt-install`, `virsh`, and `virt-viewer`.
@@ -13,15 +13,10 @@ project tools, such as `virt-install`, `virsh`, and `virt-viewer`.
 Additionally, if you'd prefer not to use libvirt, this guide will also demonstrate equivalent
 Linux system commands and QEMU commands.
 
-### Vagrant (experimental)
+### Vagrant
 A much simpler and easier method to install the virtual machine is to use the Vagrant virtual machine
-management and provisioning framework. Under the [pbot-vm/vagrant/](../applets/pbot-vm/vagrant) directory
-I have created a few `Vagrantfile` VM configuration and provisioning scripts.
-
-These scripts are currently highly experimental and some pbot-vm features are not yet fully implemented,
-such as snapshotting and disabling the network. However, if you want to quickly test out the PBot
-virtual machine with just a couple of simple easy commands, read the [PBot Vagrant guide](../applets/pbot-vm/vagrant/README.md)
-instead.
+management and provisioning framework. To install the PBot virtual machine with just a couple of simple
+easy commands, read the [PBot Vagrant guide](../applets/pbot-vm/vagrant/README.md) instead.
 
 ## Host vs guest
  * `host`: your physical Linux system hosting the virtual machine
