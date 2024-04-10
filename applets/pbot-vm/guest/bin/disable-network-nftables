@@ -1,0 +1,8 @@
+#!/bin/sh
+# disables all incoming, outgoing and forwarded traffic except incoming/established SSH
+nft add table ip filter
+nft add chain ip filter INPUT '{ type filter hook input priority 0; policy drop; }'
+nft add chain ip filter OUTPUT '{ type filter hook output priority 0; policy drop; }'
+nft 'add rule ip filter INPUT ct state related,established counter accept'
+nft 'add rule ip filter INPUT tcp dport 22 counter accept'
+nft 'add rule ip filter OUTPUT ct state related,established counter accept'

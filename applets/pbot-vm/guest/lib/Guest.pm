@@ -5,7 +5,7 @@
 # Purpose: Collection of functions to interface with the PBot VM Guest and
 # execute VM commands.
 
-# SPDX-FileCopyrightText: 2022 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2022-2024 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package Guest;
@@ -22,7 +22,6 @@ use English;
 use Encode;
 use File::Basename;
 use JSON::XS;
-use IPC::Shareable;
 use Data::Dumper;
 
 sub read_input($input, $buffer, $tag) {
@@ -59,7 +58,13 @@ sub read_input($input, $buffer, $tag) {
     print STDERR "-" x 40, "\n";
     print STDERR "$tag got [$line]\n";
 
-    my $command = decode_json($line);
+    my $command = eval { decode_json($line) };
+
+    if ($@) {
+        print STDERR "Failed to decode JSON: $@\n";
+        return undef;
+    }
+
     $command->{arguments} //= '';
     $command->{input}     //= '';
 

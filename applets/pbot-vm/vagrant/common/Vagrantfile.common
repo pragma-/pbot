@@ -4,15 +4,18 @@
 Vagrant.configure("2") do |config|
   config.vm.box_check_update = false
 
-  config.vm.hostname = PBOTVM_NAME
+  config.vm.define PBOTVM_DOMAIN
+  config.vm.hostname = PBOTVM_DOMAIN
 
   config.vm.provider :libvirt do |libvirt|
+    libvirt.title = PBOTVM_DOMAIN
+    libvirt.default_prefix = ""
     libvirt.qemuargs :value => "-chardev"
     libvirt.qemuargs :value => "socket,id=charserial1,host=127.0.0.1,port=#{PBOTVM_SERIAL},server=on,wait=off"
     libvirt.qemuargs :value => "-device"
     libvirt.qemuargs :value => '{"driver":"isa-serial","chardev":"charserial1","id":"serial1","index":2}'
     libvirt.qemuargs :value => "-chardev"
-    libvirt.qemuargs :value => "socket,id=charserial2,host=127.0.0.1,port=#{PBOTVM_HEART},server=on,wait=off"
+    libvirt.qemuargs :value => "socket,id=charserial2,host=127.0.0.1,port=#{PBOTVM_HEALTH},server=on,wait=off"
     libvirt.qemuargs :value => "-device"
     libvirt.qemuargs :value => '{"driver":"isa-serial","chardev":"charserial2","id":"serial2","index":3}'
   end

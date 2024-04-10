@@ -353,7 +353,8 @@
   * [Initial virtual machine set-up complete](VirtualMachine.md#initial-virtual-machine-set-up-complete)
 * [Start PBot VM Host](VirtualMachine.md#start-pbot-vm-host)
   * [Test PBot](VirtualMachine.md#test-pbot)
-* [QEMU command from libvirt](VirtualMachine.md#qemu-command-from-libvirt)
+  * [Adding additional VMs](VirtualMachine.md#adding-additional-vms)
+  * [QEMU command from libvirt](VirtualMachine.md#qemu-command-from-libvirt)
 <!-- md-toc-end -->
 <!-- md-toc-begin -->
 * [Frequently Asked Questions](FAQ.md#frequently-asked-questions)

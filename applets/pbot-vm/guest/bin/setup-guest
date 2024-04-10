@@ -1,11 +1,11 @@
-#!/bin/sh
+#!/bin/bash
 
 # File: setup-guest
 #
 # Purpose: Sets up PBot VM Guest. Copies necessary files to the appropriate
 # location, sets up environment variables and various configuration details.
 
-# SPDX-FileCopyrightText: 2022 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2022-2024 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 # determine OS/distribution
@@ -56,9 +56,6 @@ cp guest/include/prelude.h /usr/include
 # require root password for polkit actions
 cp guest/polkit/* /etc/polkit-1/rules.d/
 
-# disable networking
-nmcli networking off
-
 # set environment variables
 if ! grep -qF "pbot-vm" /root/.bashrc; then
   echo '# pbot-vm' >> /root/.bashrc
@@ -66,8 +63,12 @@ if ! grep -qF "pbot-vm" /root/.bashrc; then
   echo export ASAN_OPTIONS=detect_leaks=0 >> /root/.bashrc
 fi
 
-echo PBot Guest VM is now set up.
+export DEBUGINFOD_URLS
+export ASAN_OPTIONS=detect_leaks=0
+
+echo PBot Guest VM is set up.
 echo
-echo !! Networking is now disabled. To re-enable networking run: nmcli networking on
-echo
-echo For changes to take effect, run this command now: source /root/.bashrc
+echo To start PBot Guest Server: guest-server
+
+# make environment variables take effect
+exec /bin/bash

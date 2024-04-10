@@ -1,21 +1,25 @@
 {
    "machines" : {
       "pbot-vm" : {
+         "addr" : "127.0.0.1",
          "serial" : 5555,
-         "heart" : 5556,
+         "health" : 5556,
          "cid" : 7,
-         "vport" : 5555
+         "vport" : 5555,
+         "vagrant" : 0
       },
       "pbot-test-vm" : {
+         "addr" : "127.0.0.1",
          "serial" : 7777,
-         "heart" : 7778,
+         "health" : 7778,
          "cid" : 42,
-         "vport" : 5555
+         "vport" : 5555,
+         "vagrant" : 1
       }
    },
    "aliases" : {
-      "openSUSE" : "pbot-vm",
+      "main" : "pbot-vm",
       "test" : "pbot-test-vm"
    },
-   "default-machine" : "openSUSE"
+   "default-machine" : "main"
 }

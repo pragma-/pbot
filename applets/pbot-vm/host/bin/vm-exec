@@ -2,15 +2,18 @@
 
 # File: vm-exec
 #
-# Purpose: Process and send commands to the PBot Guest server (guest-server) on
-# the default VM socket CID/port (7/5555) or the default serial TCP port (5555).
+# Purpose: Process and send commands to the PBot Guest server (guest-server)
+# using the details from the config/vm-exec.json configuration file.
+#
+# Additionally, takes `-revert` and `-health` options to revert VM or check
+# VM's health.
 #
 # Use the PBOTVM_CID, PBOTVM_VPORT and/or PBOTVM_SERIAL environment variables to
-# override these defaults. E.g.:
+# override the config/vm-exec.json values. E.g.:
 #
 # $ PBOTVM_CID=42 PBOTVM_SERIAL=7777 vm-exec -lang=sh echo test
 
-# SPDX-FileCopyrightText: 2021 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2021-2024 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 use 5.020;
@@ -22,9 +25,13 @@ use feature qw(signatures);
 no warnings qw(experimental::signatures);
 
 use constant {
-    SERIAL => $ENV{PBOTVM_SERIAL} // 5555,
-    CID    => $ENV{PBOTVM_CID}    // 7,
-    VPORT  => $ENV{PBOTVM_VPORT}  // 5555,
+    DOMAIN  => $ENV{PBOTVM_DOMAIN} // 'pbot-vm',
+    ADDR    => $ENV{PBOTVM_ADDR}   // '127.0.0.1',
+    SERIAL  => $ENV{PBOTVM_SERIAL} // 5555,
+    HEALTH  => $ENV{PBOTVM_HEALTH} // 5556,
+    CID     => $ENV{PBOTVM_CID}    // 7,
+    VPORT   => $ENV{PBOTVM_VPORT}  // 5555,
+    VAGRANT => $ENV{PBOTVM_VAGRANT} // 0,
 };
 
 use File::Basename;
@@ -64,7 +71,7 @@ sub connect_serial($context) {
     print STDERR "Connecting to remote VM serial port $context->{'vm-serial'}\n";
 
     my $vm = IO::Socket::INET->new(
-        PeerAddr => '127.0.0.1',
+        PeerAddr => $context->{'vm-addr'},
         PeerPort => $context->{'vm-serial'},
         Proto => 'tcp',
         Type => SOCK_STREAM
@@ -96,6 +103,12 @@ sub connect_vm($context) {
 sub make_context_from_args(@args_in) {
     my $args = join ' ', @args_in;
 
+    # extract leading options
+    my %opts;
+    while ($args =~ s/^-(revert|health)\s+//) {
+        $opts{$1} = 1;
+    }
+
     my $context = eval { decode_json $args };
 
     if ($@) {
@@ -108,8 +121,14 @@ sub make_context_from_args(@args_in) {
         }
     }
 
+    # set extracted leading options
+    foreach my $opt (keys %opts) {
+        print STDERR "Setting option `$opt`.\n";
+        $context->{$opt} = 1;
+    }
+
     # parse options specific to vm-exec
-    while ($context->{code} =~ s/^-(lang|vm-cid|vm-vport|vm-serial|vm)=([^ ]+)\s*//) {
+    while ($context->{code} =~ s/^-(lang|revert|health|vm-domain|vm-health|vm-cid|vm-vport|vm-serial|vm)=([^ ]+)\s*//) {
         my ($option, $value) = ($1, $2);
         print STDERR "Overriding `$option` to `$value`.\n";
         $context->{$option} = lc $value;
@@ -190,13 +209,17 @@ sub configure_context($context, $config) {
         if (not defined $entry) {
             my $machines = list_machines($config);
             print "Unknown machine '$machine'; available machines are: $machines\n";
-            exit 1;
+            exit 3;
         }
 
         # override values
-        $context->{'vm-serial'} = $entry->{'serial'};
-        $context->{'vm-cid'}    = $entry->{'cid'};
-        $context->{'vm-vport'}  = $entry->{'vport'};
+        $context->{'vm-domain'}  = $machine;
+        $context->{'vm-addr'}    = $entry->{'addr'};
+        $context->{'vm-health'}  = $entry->{'health'};
+        $context->{'vm-serial'}  = $entry->{'serial'};
+        $context->{'vm-cid'}     = $entry->{'cid'};
+        $context->{'vm-vport'}   = $entry->{'vport'};
+        $context->{'vm-vagrant'} = $entry->{'vagrant'};
     } else {
         # otherwise configure any undefined values as default machine
         my $machine = $config->{'default-machine'};
@@ -207,22 +230,30 @@ sub configure_context($context, $config) {
         if (not defined $entry) {
             my $machines = list_machines($config);
             print "Unknown machine '$machine'; available machines are: $machines\n";
-            exit 1;
+            exit 3;
         }
 
         # update any undefined values, preserving any existing values
-        $context->{'vm-serial'} //= $entry->{'serial'};
-        $context->{'vm-cid'}    //= $entry->{'cid'};
-        $context->{'vm-vport'}  //= $entry->{'vport'};
+        $context->{'vm-domain'}  //= $machine;
+        $context->{'vm-addr'}    //= $entry->{'addr'};
+        $context->{'vm-health'}  //= $entry->{'health'};
+        $context->{'vm-serial'}  //= $entry->{'serial'};
+        $context->{'vm-cid'}     //= $entry->{'cid'};
+        $context->{'vm-vport'}   //= $entry->{'vport'};
+        $context->{'vm-vagrant'} //= $entry->{'vagrant'};
     }
 
     # set any undefined values to default values
-    $context->{nick}        //= 'vm';
-    $context->{channel}     //= 'vm';
-    $context->{lang}        //= 'c2x';
-    $context->{'vm-serial'} //= SERIAL;
-    $context->{'vm-cid'}    //= CID;
-    $context->{'vm-vport'}  //= VPORT;
+    $context->{nick}         //= 'vm';
+    $context->{channel}      //= 'vm';
+    $context->{lang}         //= 'c2x';
+    $context->{'vm-domain'}  //= DOMAIN;
+    $context->{'vm-addr'}    //= ADDR;
+    $context->{'vm-health'}  //= HEALTH;
+    $context->{'vm-serial'}  //= SERIAL;
+    $context->{'vm-cid'}     //= CID;
+    $context->{'vm-vport'}   //= VPORT;
+    $context->{'vm-vagrant'} //= VAGRANT;
 }
 
 sub main() {
@@ -231,6 +262,59 @@ sub main() {
     my $config = load_config("$RealBin/../config/vm-exec.json");
 
     configure_context($context, $config);
+
+    # instructed to revert machine
+    if ($context->{revert}) {
+        if (exists $config->{aliases}->{$context->{'vm-domain'}}) {
+            $context->{'vm-domain'} = $config->{aliases}->{$context->{'vm-domain'}};
+        }
+
+        print STDERR "REVERT $context->{'vm-domain'}\n";
+
+        if ($context->{'vm-vagrant'}) {
+            system("virsh -c qemu:///system snapshot-revert $context->{'vm-domain'} 1");
+        } else {
+            system("virsh snapshot-revert $context->{'vm-domain'} 1");
+        }
+
+        exit 0;
+    }
+
+    # instructed to check health
+    if ($context->{health}) {
+        my $health = IO::Socket::INET->new(
+            PeerAddr => $context->{'vm-addr'},
+            PeerPort => $context->{'vm-health'},
+            Proto => 'tcp',
+            Type => SOCK_STREAM
+        );
+
+        if (not defined $health) {
+            print STDERR "Unable to connect to health $context->{'vm-addr'} $context->{'vm-health'}\n";
+            exit 2;
+        }
+
+        print $health "\n";
+
+
+        eval {
+            alarm 2;
+            local $SIG{ALRM} = sub { die "Health timed-out\n"; };
+
+            while (my $output = <$health>) {
+                last if $output eq ":END\r\n";
+                print $output;
+            }
+            close $health;
+        };
+
+        if ($@) {
+            print STDERR "Failed to get health: $@\n";
+            exit 1;
+        }
+
+        exit 0;
+    }
 
     # load language before checking usage in order to handle -lang=? flag
     # to list languages instead of showing a usage message

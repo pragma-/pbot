@@ -40,11 +40,12 @@ PBOTVM_DOMAIN        | `pbot-vm`     | The libvirt domain identifier
 PBOTVM_ADDR          | `127.0.0.1`   | `vm-server` address for incoming `vm-client` commands
 PBOTVM_PORT          | `9000`        | `vm-server` port for incoming `vm-client` commands
 PBOTVM_SERIAL        | `5555`        | TCP port for serial communication
-PBOTVM_HEART         | `5556`        | TCP port for serial heartbeats
+PBOTVM_HEALTH        | `5556`        | TCP port for serial health-check
 PBOTVM_CID           | `7`           | Context ID for VM socket (if using VSOCK)
 PBOTVM_VPORT         | `5555`        | VM socket service port (if using VSOCK)
 PBOTVM_TIMEOUT       | `10`          | Duration before command times out (in seconds)
 PBOTVM_NOREVERT      | not set       | If set then the VM will not revert to previous snapshot
+PBOTVM_VAGRANT       | not set       | If set then commands suitable for Vagrant VMs will be used
 
 # Initial virtual machine set-up
 These steps need to be done only once during the first-time set-up.
@@ -281,14 +282,13 @@ Go into the `applets/pbot-vm/host/devices` directory and run the `add-serials` s
 This will enable the `/dev/ttyS2` and `/dev/ttyS3` serial ports in the guest and connect them
 to the following TCP addresses on the host: `127.0.0.1:5555` and `127.0.0.1:5556`,
 respectively. `ttyS2/5555` is the data channel used to send commands or code to the
-virtual machine and to read back output. `ttyS3/5556` is simply a newline sent every
-5 seconds, representing a heartbeat, used to ensure that the PBot communication
-channel is healthy.
+virtual machine and to read back output. `ttyS3/5556` responds with the output of the `vmstat`
+command to let us know about the virtual machine's health.
 
-You may use the `PBOTVM_DOMAIN`, `PBOTVM_SERIAL` and `PBOTVM_HEART` environment variables to override
+You may use the `PBOTVM_DOMAIN`, `PBOTVM_SERIAL` and `PBOTVM_HEALTH` environment variables to override
 the default values. To use ports `7777` and `7778` instead:
 
-    host$ PBOTVM_SERIAL=7777 PBOTVM_HEART=7778 ./add-serials
+    host$ PBOTVM_SERIAL=7777 PBOTVM_HEALTH=7778 ./add-serials
 
 If you later want to change the serial ports or the TCP ports, execute the command
 `virsh edit pbot-vm` on the host. This will open the `pbot-vm` XML configuration
@@ -302,7 +302,7 @@ Add the following options to your `qemu` command-line arguments:
     -chardev socket,id=charserial2,host=127.0.0.1,port=5556,server=on,wait=off
     -device {"driver":"isa-serial","chardev":"charserial2","id":"serial2","index":3}
 
-If necessary, replace `5555` and `5556` with your preferred `PBOTVM_SERIAL` and `PBOTVM_HEART` values.
+If necessary, replace `5555` and `5556` with your preferred `PBOTVM_SERIAL` and `PBOTVM_HEALTH` values.
 
 ### Set up virtio-vsock
 VM sockets (AF_VSOCK) are a Linux-specific feature (at the time of this writing). They
@@ -433,7 +433,7 @@ this running.
 
 ### Test PBot VM Guest
 Let's make sure everything's working up to this point. On the host, there should
-be two open TCP ports on `PBOTVM_SERIAL` and `PBOTVM_HEART` (default values `5555` and `5556`).
+be two open TCP ports on `PBOTVM_SERIAL` and `PBOTVM_HEALTH` (default values `5555` and `5556`).
 On the host, execute the command:
 
     host$ nc -zv 127.0.0.1 5555-5556
@@ -468,8 +468,7 @@ to save a snapshot of the virtual machine waiting for incoming commands.
 
     host$ virsh snapshot-create-as pbot-vm 1
 
-If the virtual machine ever times-out or its heartbeat stops responding, PBot
-will revert the virtual machine to this saved snapshot.
+If the virtual machine times-out, PBot will revert to this saved snapshot.
 
 ## Install host packages
 Ensure the following packages are installed on the host machine:
@@ -491,12 +490,12 @@ and execute the `vm-server` script:
 
 This will start a TCP server on port `9000`. It will listen for incoming commands and
 pass them along to the virtual machine's TCP serial port `5555`. It will also monitor
-the heartbeat port `5556` to ensure the PBot VM Guest server is alive.
+the health-check port `5556` to ensure the PBot VM Guest server is alive.
 
 You may override any of the defaults by setting environment variables. For example, to
-use `other-vm` with a longer `30` second timeout, on different serial and heartbeat ports:
+use `pbot-test-vm` with a longer `30` second timeout, on different serial and health-check ports:
 
-    host$ PBOTVM_DOMAIN="other-vm" PBOTVM_SERVER=9001 PBOTVM_SERIAL=7777 PBOTVM_HEART=7778 PBOTVM_TIMEOUT=30 ./vm-server
+    host$ PBOTVM_DOMAIN="pbot-test-vm" PBOTVM_SERVER=9001 PBOTVM_SERIAL=7777 PBOTVM_HEALTH=7778 PBOTVM_TIMEOUT=30 ./vm-server
 
 ## Test PBot
 All done. Everything is set up now.
@@ -516,7 +515,22 @@ In your instance of PBot, the `sh echo hello` command should output `hello`.
     <pragma-> sh echo hello
        <PBot> hello
 
-# QEMU command from libvirt
+## Adding additional VMs
+You may add as many virtual machines as your system can handle. Edit the [`vm-exec.json`](../applets/pbot-vm/host/config/vm-exec.json) configuration
+file to do so. Then use the `-vm=...` option to select them with the `sh`, `cc`, etc, commands.
+
+For instance, if you create a FreeBSD VM and have added it to [`vm-exec.json`](../applets/pbot-vm/host/config/vm-exec.json) with an alias of `freebsd`:
+
+    <pragma-> sh -vm=freebsd echo testing
+       <PBot> testing
+
+You can create aliases to omit the `-vm=...` option:
+
+    <pragma-> factalias bsd-sh sh -vm=freebsd $args
+    <pragma-> bsd-sh foobar
+       <PBot> foobar
+
+## QEMU command from libvirt
 This is the QEMU command-line arguments used by libvirt. Extract flags as needed, e.g. `-chardev`.
 
     /usr/bin/qemu-system-x86_64 -name guest=pbot-vm,debug-threads=on -S -object {"qom-type":"secret","id":"masterKey0","format":"raw","file":"/var/lib/libvirt/qemu/domain-2-pbot-vm/master-key.aes"} -machine pc-q35-6.2,usb=off,vmport=off,dump-guest-core=off,memory-backend=pc.ram -accel kvm -cpu IvyBridge-IBRS,ss=on,vmx=on,pdcm=on,pcid=on,hypervisor=on,arat=on,tsc-adjust=on,umip=on,md-clear=on,stibp=on,arch-capabilities=on,ssbd=on,xsaveopt=on,ibpb=on,ibrs=on,amd-stibp=on,amd-ssbd=on,skip-l1dfl-vmentry=on,pschange-mc-no=on,aes=off,rdrand=off -m 2048 -object {"qom-type":"memory-backend-ram","id":"pc.ram","size":2147483648} -overcommit mem-lock=off -smp 2,sockets=2,cores=1,threads=1 -uuid ec9eebba-8ba1-4de3-8ec0-caa6fd808ad4 -no-user-config -nodefaults -chardev socket,id=charmonitor,fd=38,server=on,wait=off -mon chardev=charmonitor,id=monitor,mode=control -rtc base=utc,driftfix=slew -global kvm-pit.lost_tick_policy=delay -no-hpet -no-shutdown -global ICH9-LPC.disable_s3=1 -global ICH9-LPC.disable_s4=1 -boot strict=on -device {"driver":"pcie-root-port","port":16,"chassis":1,"id":"pci.1","bus":"pcie.0","multifunction":true,"addr":"0x2"} -device {"driver":"pcie-root-port","port":17,"chassis":2,"id":"pci.2","bus":"pcie.0","addr":"0x2.0x1"} -device {"driver":"pcie-root-port","port":18,"chassis":3,"id":"pci.3","bus":"pcie.0","addr":"0x2.0x2"} -device {"driver":"pcie-root-port","port":19,"chassis":4,"id":"pci.4","bus":"pcie.0","addr":"0x2.0x3"} -device {"driver":"pcie-root-port","port":20,"chassis":5,"id":"pci.5","bus":"pcie.0","addr":"0x2.0x4"} -device {"driver":"pcie-root-port","port":21,"chassis":6,"id":"pci.6","bus":"pcie.0","addr":"0x2.0x5"} -device {"driver":"pcie-root-port","port":22,"chassis":7,"id":"pci.7","bus":"pcie.0","addr":"0x2.0x6"} -device {"driver":"pcie-root-port","port":23,"chassis":8,"id":"pci.8","bus":"pcie.0","addr":"0x2.0x7"} -device {"driver":"pcie-root-port","port":24,"chassis":9,"id":"pci.9","bus":"pcie.0","multifunction":true,"addr":"0x3"} -device {"driver":"pcie-root-port","port":25,"chassis":10,"id":"pci.10","bus":"pcie.0","addr":"0x3.0x1"} -device {"driver":"pcie-root-port","port":26,"chassis":11,"id":"pci.11","bus":"pcie.0","addr":"0x3.0x2"} -device {"driver":"pcie-root-port","port":27,"chassis":12,"id":"pci.12","bus":"pcie.0","addr":"0x3.0x3"} -device {"driver":"pcie-root-port","port":28,"chassis":13,"id":"pci.13","bus":"pcie.0","addr":"0x3.0x4"} -device {"driver":"pcie-root-port","port":29,"chassis":14,"id":"pci.14","bus":"pcie.0","addr":"0x3.0x5"} -device {"driver":"qemu-xhci","p2":15,"p3":15,"id":"usb","bus":"pci.2","addr":"0x0"} -device {"driver":"virtio-serial-pci","id":"virtio-serial0","bus":"pci.3","addr":"0x0"} -blockdev {"driver":"file","filename":"/home/pbot/pbot-vms/openSUSE-Tumbleweed-Minimal-VM.x86_64-kvm-and-xen.qcow2","node-name":"libvirt-1-storage","auto-read-only":true,"discard":"unmap"} -blockdev {"node-name":"libvirt-1-format","read-only":false,"driver":"qcow2","file":"libvirt-1-storage","backing":null} -device {"driver":"virtio-blk-pci","bus":"pci.4","addr":"0x0","drive":"libvirt-1-format","id":"virtio-disk0","bootindex":1} -netdev {"type":"tap","fd":"39","vhost":true,"vhostfd":"41","id":"hostnet0"} -device {"driver":"virtio-net-pci","netdev":"hostnet0","id":"net0","mac":"52:54:00:03:16:5a","bus":"pci.1","addr":"0x0"} -chardev pty,id=charserial0 -device {"driver":"isa-serial","chardev":"charserial0","id":"serial0","index":0} -chardev socket,id=charserial1,host=127.0.0.1,port=5555,server=on,wait=off -device {"driver":"isa-serial","chardev":"charserial1","id":"serial1","index":2} -chardev socket,id=charserial2,host=127.0.0.1,port=5556,server=on,wait=off -device {"driver":"isa-serial","chardev":"charserial2","id":"serial2","index":3} -chardev socket,id=charchannel0,fd=37,server=on,wait=off -device {"driver":"virtserialport","bus":"virtio-serial0.0","nr":1,"chardev":"charchannel0","id":"channel0","name":"org.qemu.guest_agent.0"} -chardev spicevmc,id=charchannel1,name=vdagent -device {"driver":"virtserialport","bus":"virtio-serial0.0","nr":2,"chardev":"charchannel1","id":"channel1","name":"com.redhat.spice.0"} -device {"driver":"usb-tablet","id":"input0","bus":"usb.0","port":"1"} -audiodev {"id":"audio1","driver":"spice"} -spice port=5901,addr=127.0.0.1,disable-ticketing=on,image-compression=off,seamless-migration=on -device {"driver":"virtio-vga","id":"video0","max_outputs":1,"bus":"pcie.0","addr":"0x1"} -device {"driver":"ich9-intel-hda","id":"sound0","bus":"pcie.0","addr":"0x1b"} -device {"driver":"hda-duplex","id":"sound0-codec0","bus":"sound0.0","cad":0,"audiodev":"audio1"} -chardev spicevmc,id=charredir0,name=usbredir -device {"driver":"usb-redir","chardev":"charredir0","id":"redir0","bus":"usb.0","port":"2"} -chardev spicevmc,id=charredir1,name=usbredir -device {"driver":"usb-redir","chardev":"charredir1","id":"redir1","bus":"usb.0","port":"3"} -device {"driver":"virtio-balloon-pci","id":"balloon0","bus":"pci.5","addr":"0x0"} -object {"qom-type":"rng-random","id":"objrng0","filename":"/dev/urandom"} -device {"driver":"virtio-rng-pci","rng":"objrng0","id":"rng0","bus":"pci.6","addr":"0x0"} -loadvm 1 -sandbox on,obsolete=deny,elevateprivileges=deny,spawn=deny,resourcecontrol=deny -device {"driver":"vhost-vsock-pci","id":"vsock0","guest-cid":7,"vhostfd":"28","bus":"pci.7","addr":"0x0"} -msg timestamp=on

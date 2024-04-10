@@ -5,7 +5,7 @@
 # Purpose: PBot VM Guest server. Runs inside PBot VM Guest and processes
 # incoming VM commands from vm-exec.
 
-# SPDX-FileCopyrightText: 2022 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2022-2024 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 use 5.020;
@@ -20,7 +20,7 @@ use constant {
     USERNAME  => 'vm',
     MOD_DIR   => '/usr/local/share/pbot-vm/',
     SERIAL    => '/dev/ttyS2',
-    HEARTBEAT => '/dev/ttyS3',
+    HEALTH    => '/dev/ttyS3',
     VPORT     => $ENV{PBOTVM_VPORT} // 5555,
 };
 
@@ -30,7 +30,6 @@ use lib MOD_DIR . "Languages";
 use Guest;
 
 use File::Basename;
-use IPC::Shareable;
 
 my %languages;
 
@@ -68,11 +67,9 @@ sub serial_server() {
     open(my $input,  '<', SERIAL) or die $!;
     open(my $output, '>', SERIAL) or die $!;
 
-    tie my $running, 'IPC::Shareable', { key => 'running' };
-
     my $buffer = '';
 
-    while ($running) {
+    while (1) {
         my $command = Guest::read_input($input, \$buffer, 'Serial');
 
         if (not defined $command) {
@@ -119,19 +116,20 @@ sub do_server() {
     }
 }
 
-sub do_heartbeat() {
-    open(my $heartbeat, '>', HEARTBEAT) or die $!;
+sub do_healthcheck() {
+    open(my $health_in,  '<', HEALTH) or die $!;
+    open(my $health_out, '>', HEALTH) or die $!;
 
-    tie my $running, 'IPC::Shareable', { key => 'running' };
+    print "Healthcheck listening on PID $$...\n";
 
-    print "Heart beating on PID $$...\n";
-
-    while ($running) {
-        print $heartbeat "\n";
-        sleep 5;
+    while (1) {
+        my $input = <$health_in>;
+        my $vmstat = `vmstat`;
+        print $health_out "$vmstat\n";
+        print $health_out ":END\n";
     }
 
-    print "Heart beat stopped.\n";
+    print "Healthcheck stopped.\n";
     exit; # exit child process
 }
 
@@ -160,14 +158,10 @@ sub main() {
 
     install_signal_handlers();
 
-    tie my $running, 'IPC::Shareable', { key => 'running', create => 1, destroy => 1 };
-
-    $running = 1;
-
     my $pid = fork // die "Fork failed: $!";
 
     if ($pid == 0) {
-        do_heartbeat();
+        do_healthcheck();
     } else {
         do_server();
     }

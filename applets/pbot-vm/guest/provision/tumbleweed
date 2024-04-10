@@ -14,10 +14,16 @@ zypper -n in socat
 # for `cc` C language support
 zypper -n in libubsan1 libasan8 gdb gcc gcc-32bit glibc-32bit clang
 
-# for pbot-vm guest-server support
-zypper -n in perl-IPC-Run perl-JSON-XS make cpanm
-cpanm -n IPC::Shareable
-
 # for `cc` additional languages
 zypper -n in ksh zsh tcl lua php8-cli nodejs-common guile bff bc gcc-c++
 zypper -n in --no-recommends clisp gcc-go java java-devel
+
+# for pbot-vm guest-server support
+zypper -n in perl-IPC-Run perl-JSON-XS
+
+# disable networking
+./guest/bin/disable-network-nftables
+
+echo 'Networking disabled.'
+echo 'To re-enable, run ./guest/bin/enable-networking-nftables'
+echo 'To disable again, run ./guest/bin/disable-network-nftables'

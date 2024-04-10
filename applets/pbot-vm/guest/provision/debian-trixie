@@ -16,10 +16,17 @@ apt install -y socat
 # for `cc` C language support
 apt install -y libubsan1 libasan8 gdb gcc gcc-multilib clang
 
-# for pbot-vm guest-server support
-apt install -y --no-install-recommends libipc-shareable-perl libipc-run-perl libjson-xs-perl
-
 # for `cc` additional languages
 apt install -y ksh zsh tcl lua5.4 php8.2-cli nodejs guile3.0 beef bc g++
 apt install -y clisp golang-go
 apt install -y --no-install-recommends default-jre default-jdk
+
+# for pbot-vm guest-server support
+apt install -y --no-install-recommends libipc-run-perl libjson-xs-perl
+
+# disable networking
+./guest/bin/disable-network-iptables
+
+echo 'Networking disabled.'
+echo 'To re-enable, run ./guest/bin/enable-networking-iptables'
+echo 'To disable again, run ./guest/bin/disable-network-iptables'
