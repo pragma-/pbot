@@ -263,6 +263,11 @@ sub main() {
 
     configure_context($context, $config);
 
+    if ($context->{revert} && $context->{health}) {
+        print STDERR "-health and -revert cannot be used together; aborting.\n";
+        exit 0;
+    }
+
     # instructed to revert machine
     if ($context->{revert}) {
         if (exists $config->{aliases}->{$context->{'vm-domain'}}) {
