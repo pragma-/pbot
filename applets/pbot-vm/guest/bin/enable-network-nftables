@@ -1,3 +1,0 @@
-#!/bin/sh
-# deletes filter table to re-enable networking
-nft delete table ip filter

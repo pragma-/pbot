@@ -1,0 +1,70 @@
+#!/bin/bash
+
+Usage="$0 <on|off> [iptables|ipt|nftables|nft]"
+
+DefaultMode="iptables"
+
+EnableNetwork() {
+    case $1 in
+        iptables)
+            iptables -F ;;
+        nftables)
+            nft delete table ip filter ;;
+    esac
+}
+
+DisableNetwork() {
+    case $1 in
+        iptables)
+            iptables -F
+            iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+            iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+            iptables -P INPUT DROP
+            iptables -P FORWARD DROP
+            iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+            iptables -P OUTPUT DROP
+            ;;
+        nftables)
+            nft add table ip filter
+            nft add chain ip filter INPUT '{ type filter hook input priority 0; policy drop; }'
+            nft add chain ip filter OUTPUT '{ type filter hook output priority 0; policy drop; }'
+            nft add rule ip filter INPUT ct state related,established counter accept
+            nft add rule ip filter INPUT tcp dport 22 counter accept
+            nft add rule ip filter OUTPUT ct state related,established counter accept
+            ;;
+    esac
+}
+
+Main() {
+    case $1 in
+        on|off) ;;
+        *)
+            echo "Invalid command \`$1\`; usage: $Usage"
+            exit 1 ;;
+    esac
+
+    Toggle="$1"
+
+    case $2 in
+        iptables|ipt)
+            Mode="iptables" ;;
+        nftables|nft)
+            Mode="nftables" ;;
+        "")
+            Mode=$DefaultMode ;;
+        *)
+            echo "Invalid mode \`$2\`; usage: $Usage"
+            exit 1 ;;
+    esac
+
+    case $Toggle in
+        "on")
+            echo "Enabling networking with $Mode"
+            EnableNetwork "$Mode" ;;
+            "off")
+            echo "Disabling networking with $Mode"
+            DisableNetwork "$Mode" ;;
+    esac
+}
+
+Main "$@"

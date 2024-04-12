@@ -22,8 +22,8 @@ zypper -n in --no-recommends clisp gcc-go java java-devel
 zypper -n in perl-IPC-Run perl-JSON-XS
 
 # disable networking
-./guest/bin/disable-network-nftables
+./guest/bin/network off nftables
 
 echo 'Networking disabled.'
-echo 'To re-enable, run ./guest/bin/enable-networking-nftables'
-echo 'To disable again, run ./guest/bin/disable-network-nftables'
+echo 'To re-enable, run ./guest/bin/network on nftables'
+echo 'To disable again, run ./guest/bin/network off nftables'

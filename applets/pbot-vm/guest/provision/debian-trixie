@@ -25,8 +25,8 @@ apt install -y --no-install-recommends default-jre default-jdk
 apt install -y --no-install-recommends libipc-run-perl libjson-xs-perl
 
 # disable networking
-./guest/bin/disable-network-iptables
+./guest/bin/network off iptables
 
 echo 'Networking disabled.'
-echo 'To re-enable, run ./guest/bin/enable-networking-iptables'
-echo 'To disable again, run ./guest/bin/disable-network-iptables'
+echo 'To re-enable, run ./guest/bin/network on iptables'
+echo 'To disable again, run ./guest/bin/network off iptables'

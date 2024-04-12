@@ -1,3 +1,0 @@
-#!/bin/sh
-# removes all iptables rules to re-enable networking
-iptables -F
