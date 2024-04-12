@@ -36,15 +36,6 @@ DisableNetwork() {
 }
 
 Main() {
-    case $1 in
-        on|off) ;;
-        *)
-            echo "Invalid command \`$1\`; usage: $Usage"
-            exit 1 ;;
-    esac
-
-    Toggle="$1"
-
     case $2 in
         iptables|ipt)
             Mode="iptables" ;;
@@ -57,13 +48,16 @@ Main() {
             exit 1 ;;
     esac
 
-    case $Toggle in
-        "on")
+    case $1 in
+        on)
             echo "Enabling networking with $Mode"
             EnableNetwork "$Mode" ;;
-            "off")
+        off)
             echo "Disabling networking with $Mode"
             DisableNetwork "$Mode" ;;
+        *)
+            echo "Invalid command \`$1\`; usage: $Usage"
+            exit 1 ;;
     esac
 }
 
