@@ -88,7 +88,7 @@ __attribute__ (( constructor )) static void printf_binary_register(void)
 }
 
 __attribute__((optnone))
-void gdb(char *cmd) { asm volatile ("" : "+r" (cmd)); }
+void gdb(char *cmd) { __asm__ volatile ("" : "+r" (cmd)); }
 #define dump(...)                 gdb("print "  #__VA_ARGS__)
 #define print(...)                gdb("print "  #__VA_ARGS__)
 #define ptype(...)                gdb("ptype "  #__VA_ARGS__)
