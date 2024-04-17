@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <printf.h>
 #include <locale.h>
- 
+
 static int printf_binary_handler(FILE *s, const struct printf_info *info, const void *const *args)
 {
     const char *g = 0;
@@ -14,9 +14,9 @@ static int printf_binary_handler(FILE *s, const struct printf_info *info, const 
                                info->is_char        ? *(const unsigned char *)     args[0] :
                                info->is_short       ? *(const unsigned short *)    args[0] :
                                                       *(const unsigned int *)      args[0] ;
- 
+
     char buf[sizeof value * CHAR_BIT], *p = buf;
- 
+
     while(value) *p++ = '0' + (value & 1), value >>= 1;
     len = p - buf;
     digits = info->prec < 0 ? 1 : info->prec;
@@ -47,31 +47,31 @@ static int printf_binary_handler(FILE *s, const struct printf_info *info, const 
         } else {
             int j = (digits - arr) % g[-1];
             if(!j) j = g[-1];
- 
+
             while(j--) fputc(digits-- > len ? '0' : *--p, s);
             while(digits > arr) {
                 fputs(loc->thousands_sep, s);
                 for(j = 0; j < g[-1]; ++j) fputc(digits-- > len ? '0' : *--p, s);
             }
         }
- 
+
         while(digits) {
             int i = *--g;
             fputs(loc->thousands_sep, s);
             while(i--) fputc(digits-- > len ? '0' : *--p, s);
         }
- 
+
     } else while(digits) fputc(digits-- > len ? '0' : *--p, s);
- 
+
     while(info->left && info->width > total++) fputc(' ', s);
     return total - 1;
 }
- 
+
 static int printf_binary_arginfo(const struct printf_info *info, size_t n, int *types, int *sizes)
 {
     if(n < 1) return -1;
     (void)sizes;
- 
+
     types[0] = info->is_long_double ? PA_INT | PA_FLAG_LONG_LONG :
                info->is_long        ? PA_INT | PA_FLAG_LONG      :
                info->is_char        ? PA_CHAR                    :
@@ -79,7 +79,7 @@ static int printf_binary_arginfo(const struct printf_info *info, size_t n, int *
                                       PA_INT                     ;
     return 1;
 }
- 
+
 __attribute__ (( constructor )) static void printf_binary_register(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -87,7 +87,8 @@ __attribute__ (( constructor )) static void printf_binary_register(void)
     register_printf_specifier('b', printf_binary_handler, printf_binary_arginfo);
 }
 
-void gdb(char *cmd) { __asm__(""); }
+__attribute__((optnone))
+void gdb(char *cmd) { asm volatile ("" : "+r" (cmd)); }
 #define dump(...)                 gdb("print "  #__VA_ARGS__)
 #define print(...)                gdb("print "  #__VA_ARGS__)
 #define ptype(...)                gdb("ptype "  #__VA_ARGS__)
