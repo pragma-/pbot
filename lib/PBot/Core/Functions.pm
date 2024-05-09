@@ -86,7 +86,7 @@ sub func_list($self, $regex = '.*') {
     return $result;
 }
 
-sub func_help($self, $func) {
+sub func_help($self, $func = undef) {
     if (not length $func) {
         return "func: invoke built-in functions; usage: func <keyword> [arguments]; to list available functions: func list [regex]";
     }
