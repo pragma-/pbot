@@ -53,6 +53,12 @@ my %wordlists = (
         prompt  => 'Guess the American English (Insanely Huge List) word!',
         list    => '/wordle/american-insane',
     },
+    uncommon => {
+        name    => 'American English (Uncommon)',
+        prompt  => 'Guess the American English (Uncommon) word!',
+        list    => '/wordle/american-uncommon',
+        supp    => 'insane',
+    },
     british => {
         name    => 'British English',
         prompt  => 'Guess the British English word!',
@@ -443,7 +449,9 @@ sub guess_wordle($self, $channel, $guess) {
 
             if ($present) {
                 $result .= "$color{present} $guess[$i]$color{present_a}?";
-                $self->{$channel}->{letters}->{$guess[$i]} = LETTER_PRESENT;
+                if ($self->{$channel}->{letters}->{$guess[$i]} != LETTER_CORRECT) {
+                    $self->{$channel}->{letters}->{$guess[$i]} = LETTER_PRESENT;
+                }
             } else {
                 $result .= "$color{invalid} $guess[$i] ";
 
