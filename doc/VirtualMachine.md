@@ -335,7 +335,7 @@ Once the module is loaded, you should have the following character devices:
     host$ ls -l /dev/vsock
     crw-rw-rw- 1 root root 10, 54 May  4 11:55 /dev/vsock
 
-A VM sockets address is comprised of a context ID (CID) and a port; just like an IP address and TCP/UDP port.
+A VM socket address is comprised of a context ID (CID) and a port; just like an IP address and TCP/UDP port.
 The CID is represented using an unsigned 32-bit integer. It identifies a given machine as either a hypervisor
 or a virtual machine. Several addresses are reserved, including 0, 1, and the maximum value for a 32-bit
 integer: 0xffffffff. The hypervisor is always assigned a CID of 2, and VMs can be assigned any CID between 3
@@ -364,7 +364,11 @@ In the VM guest (once it reboots), there should be a `/dev/vsock` device:
 
 Add the following option to your `qemu` command-line arguments.
 
-    -device {"driver":"vhost-vsock-pci","id":"vsock0","guest-cid":7,"vhostfd":"28","bus":"pci.7","addr":"0x0"}
+    -device vhost-vsock-pci,guest-cid=$PBOTVM_CID
+
+or
+
+    -device {"driver":"vhost-vsock-pci","id":"vsock0","guest-cid":$PBOTVM_CID,"vhostfd":"28","bus":"pci.7","addr":"0x0"}
 
 See full QEMU command-line arguments [here.](#qemu-command-from-libvirt)
 
