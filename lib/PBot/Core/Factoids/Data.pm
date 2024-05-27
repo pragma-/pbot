@@ -28,6 +28,7 @@ our %factoid_metadata = (
     'help'                  => 'TEXT',
     'interpolate'           => 'INTEGER',
     'keep-quotes'           => 'INTEGER',
+    'keep-escapes'          => 'INTEGER',
     'keyword_override'      => 'TEXT',
     'last_referenced_in'    => 'TEXT',
     'last_referenced_on'    => 'NUMERIC',

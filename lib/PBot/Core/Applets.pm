@@ -74,11 +74,13 @@ sub launch_applet($self, $context) {
     my ($exitval, $stdout, $stderr) = eval {
         my $args = $context->{arguments};
 
-        my $strip_quotes = 1;
+        my $strip_quotes     = 1;
+        my $preserve_escapes = 0;
 
-        $strip_quotes = 0 if $self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $trigger, 'keep-quotes');
+        $strip_quotes     = 0 if $self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $trigger, 'keep-quotes');
+        $preserve_escapes = 1 if $self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $trigger, 'keep-escapes');
 
-        my @cmdline = ("./$applet", $self->{pbot}->{interpreter}->split_line($args, strip_quotes => $strip_quotes));
+        my @cmdline = ("./$applet", $self->{pbot}->{interpreter}->split_line($args, strip_quotes => $strip_quotes, preserve_escapes => $preserve_escapes));
 
         my $timeout = $self->{pbot}->{registry}->get_value('general', 'applet_timeout') // 30;
 

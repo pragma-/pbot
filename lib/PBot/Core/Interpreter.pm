@@ -292,7 +292,7 @@ sub interpret($self, $context) {
     }
 
     # convert command string to list of arguments
-    my $cmdlist = $self->make_args($context->{command});
+    my $cmdlist = $self->make_args($context->{command}, preserve_escapes => 1);
 
     $context->{cmdlist} = $cmdlist;
 
@@ -1176,7 +1176,7 @@ sub split_line($self, $line, %opts) {
     my %default_opts = (
         strip_quotes     => 0,
         keep_spaces      => 0,
-        preserve_escapes => 1,
+        preserve_escapes => 0,
         strip_commas     => 0,
     );
 
@@ -1224,8 +1224,11 @@ sub split_line($self, $line, %opts) {
         $spaces = 0 if $ch ne ' ';
 
         if ($escaped) {
-            if   ($opts{preserve_escapes}) { $token .= "\\$ch"; }
-            else                           { $token .= $ch; }
+            if ($opts{preserve_escapes}) {
+                $token .= "\\$ch";
+            } else {
+                $token .= $ch;
+            }
             $escaped = 0;
             next;
         }
@@ -1284,8 +1287,15 @@ sub split_line($self, $line, %opts) {
 }
 
 # creates an array of arguments from a string
-sub make_args($self, $string) {
-    my @args = $self->split_line($string, keep_spaces => 1);
+sub make_args($self, $string, %opts) {
+    my %default_opts = (
+        keep_spaces      => 1,
+        preserve_escapes => 0,
+    );
+
+    %opts = (%default_opts, %opts);
+
+    my @args = $self->split_line($string, keep_spaces => $opts{keep_spaces}, preserve_escapes => $opts{preserve_escapes});
 
     my @arglist;
     my @arglist_unstripped;
