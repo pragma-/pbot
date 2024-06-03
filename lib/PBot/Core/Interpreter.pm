@@ -1290,7 +1290,7 @@ sub split_line($self, $line, %opts) {
 sub make_args($self, $string, %opts) {
     my %default_opts = (
         keep_spaces      => 1,
-        preserve_escapes => 0,
+        preserve_escapes => 1,
     );
 
     %opts = (%default_opts, %opts);
