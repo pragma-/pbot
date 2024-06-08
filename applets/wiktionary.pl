@@ -105,6 +105,11 @@ if ($ENV{DEBUG}) {
     print Dumper($entries), "\n";
 }
 
+if (@$entries && ref $entries->[0] ne 'HASH') {
+    print "No entry for `$term` found in $lang; entries found in ", (join ', ', @$entries), "\n";
+    exit;
+}
+
 my @valid_sections = qw/definitions etymology pronunciations participle/;
 
 if (not grep { $_ eq $section } @valid_sections) {
