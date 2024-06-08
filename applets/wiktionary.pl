@@ -91,7 +91,12 @@ my $entries = $cache->get($cache_id);
 
 if (not defined $entries) {
     my $json = `python3 wiktionary.py \Q$term\E \Q$lang\E`;
-    $entries = decode_json $json;
+    $entries = eval { decode_json $json };
+    if ($@) {
+        print "$json\n";
+        print "$@\n";
+        die;
+    }
     $cache->set($cache_id, $entries);
 }
 
