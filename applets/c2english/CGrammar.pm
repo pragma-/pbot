@@ -1424,7 +1424,7 @@ array_declarator:
                 } else {
                   $return = "an array ";
                 }
-                $return .= "with optimization hint to provide access to the first element of $size of";
+                $return .= "with at least $size of";
               } else {
                 $return = "an $qualifiers array of $size of";
               }
