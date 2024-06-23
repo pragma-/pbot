@@ -109,7 +109,7 @@ Parameter | Description
 `hostmasks` | The hostmasks from which this user is recognized/allowed to login from (e.g., `somenick!*@*.somedomain.com` or `*!*@unaffiliated/someuser`). Can be a comma-separated list of values.
 `channels` | The channels this user belongs to; use `global` for all channels. Can be a comma-separated list of values.
 `capabilities` | A comma-separated list of [user-capabilities](#user-capabilities) for this user.
-`password` | The password the user will use to login (from `/msg`, obviously). Generates a random password if omitted. Users may view and set their password by using the [`my`](Commands.md#my) command.
+`password` | The password the user will use to login (from `/msg`, obviously). Users may update their password by using the [`my`](Commands.md#my) command once logged in.
 
 ### userdel
 Removes a user from PBot.

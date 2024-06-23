@@ -101,13 +101,19 @@ to set the `preserve_whitespace` [factoid metadata](Factoids.md#factoid-metadata
 
 ## How do I change my password?
 If you have a NickServ account or a unique hostmask, you don't need a PBot password.
-The `stayloggedin` metadata on your user account can be set instead.
+The `autologin` and `stayloggedin` metadata on your user account can be set instead.
 
 But if you prefer to be safe instead of sorry, use the [`my`](Commands.md#my) command
-to set the `password` user metadata for your user account. Your hostmask must match the
-user account.
+to set the `password` and unset the `autologin` and `stayloggedin` metadata for your
+user account. Your hostmask must match the user account and you must be logged in.
 
     my password <your password>
+    my autologin 0
+    my stayloggedin 0
+
+If you are unable to log in, ask an admin to set a temporary password for you
+with the [`userset`](Admin.md#userset) command. Log in with the temporary
+password and then use the above commands to update your password.
 
 ## How do I make PBot remember my `date` timezone?
 Use the [`my`](Commands.md#my) command to set the `timezone` user metadata for your

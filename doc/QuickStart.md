@@ -362,7 +362,7 @@ command in the PBot terminal console. Its usage is:
 
 Suppose your nick is `Bob` and your hostmask is `Bob!~user@some.domain.com`. Use the following command:
 
-    useradd Bob Bob!~user@*.domain.com global botowner
+    useradd Bob Bob!~user@*.domain.com global botowner <password>
 
 This will create a user account named `Bob` with the `botowner` [user-capability](Admin.md#user-capabilities) that can administrate
 all channels. Note the wildcard replacing `some` in `some.domain.com`. Now as long as
@@ -372,15 +372,13 @@ It is very important that user account hostmasks are defined as strictly or as n
 as possible to match only the person it is intended for. Ideally, the user would have a
 NickServ account, a user-cloak given by the staff of the IRC server or a unique DNS name.
 
-In your own IRC client, connected using the hostmask we just added, type the
-following command, in a private `/query` or `/msg`:
-
-    my password
-
-This will show you the randomly generated password that was assigned to your
-user account. You can change it -- if you want to -- with:
+You can change your password with:
 
     my password <new password>
+
+or
+
+    userset Bob password <new password>
 
 Then you can login with:
 
@@ -389,8 +387,30 @@ Then you can login with:
 Now you can use `/msg` in your own IRC client to administrate PBot, instead of
 the terminal console.
 
+If you want to autologin without typing a password, first ensure your hostmask is unique -- preferably
+by using a NickServ vhost/cloak or a reverse-DNS name. Then set the following metadata on your account:
+
+    userset Bob autologin 1
+
+If you want to remain permanently logged in, ensure your hostmask is unique and set the following metadata on your account:
+
+    userset Bob stayloggedin 1
+
 ### Adding other users and admins
-To add users to PBot, use the [`useradd`](Admin.md#useradd) command. Its usage is:
+Users may create their own unprivileged accounts by using the [`my`](Commands.md#my) command. It will automatically
+set their username, hostmask, channel and log them into it.
+
+Users added this way will have `autologin` and `stayloggedin` enabled. If they feel their hostmask is insecure, they
+can disable `autologin` and `stayloggedin` with:
+
+    my autologin 0
+    my stayloggedin 0
+
+And then update their login password with:
+
+    my password <new password>
+
+Alternatively, you can manually add users to PBot with the [`useradd`](Admin.md#useradd) command. Its usage is:
 
     useradd <username> <hostmasks> [channels [capabilities [password]]]
 
@@ -399,13 +419,24 @@ The `hostmasks` and `channels` arguments can be a comma-separated list of values
 If you omit the `capabilities` argument, the user will be a normal unprivileged user. See [user-capabilities](Admin.md#user-capabilities)
 for more information about user-capabilities.
 
-If you omit the `password` argument, a random password will be generated. The user
-can use the [`my`](Commands.md#my) command to view or change it.
-
 Users may view and change their own metadata by using the [`my`](Commands.md#my) command,
 provided their hostmask matches the user account.
 
     my [key [value]]
+
+Admins may change a user's password with:
+
+    userset <username> password <new password>
+
+If the user has a unique hostmask, preferable via a NickServ vhost/cloak or a reverse-DNS name, they
+may prefer to use passwordless autologin via:
+
+    userset <username> autologin 1
+
+If the user has a unique hostmask, preferable via a NickServ vhost/cloak or a reverse-DNS name, they
+may prefer to remain permanently logged in via:
+
+    userset <username> stayloggedin 1
 
 For more information, see the [Admin documentation](Admin.md).
 

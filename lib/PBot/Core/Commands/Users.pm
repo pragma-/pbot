@@ -237,6 +237,10 @@ sub cmd_userset($self, $context) {
         return "To set the $key capability your user account must also have it." unless $self->{pbot}->{capabilities}->userhas($u, 'botowner');
     }
 
+    if ($key eq 'password' and defined $value) {
+        $value = $self->{pbot}->{users}->digest_password($value);
+    }
+
     my $result = $self->{pbot}->{users}->{storage}->set($name, $key, $value);
     $result =~ s/^password: .*;?$/password: <private>;/m;
 
@@ -349,6 +353,10 @@ sub cmd_my($self, $context) {
         }
     } else {
         $result = "Usage: my <key> [value]; ";
+    }
+
+    if ($key eq 'password' and defined $value) {
+        $value = $self->{pbot}->{users}->digest_password($value);
     }
 
     $result .= $self->{pbot}->{users}->{storage}->set($name, $key, $value);

@@ -10,6 +10,8 @@ use parent 'PBot::Core::Class';
 
 use PBot::Imports;
 
+use Crypt::SaltedHash;
+
 sub initialize($self, %conf) {
     $self->{storage} = PBot::Core::Storage::HashObject->new(
         pbot     => $conf{pbot},
@@ -27,6 +29,7 @@ sub add_user($self, $name, $channels, $hostmasks, $capabilities = 'none', $passw
     $channels = 'global' if $channels !~ m/^#/;
 
     $password //= $self->{pbot}->random_nick(16);
+    $password   = $self->digest_password($password);
 
     my $data = {
         channels  => $channels,
@@ -177,7 +180,7 @@ sub login($self, $channel, $hostmask, $password = undef) {
         return "You do not have a user account$channel_text.";
     }
 
-    if (defined $password and $user->{password} ne $password) {
+    if (defined $password and !Crypt::SaltedHash->validate($user->{password}, $password)) {
         $self->{pbot}->{logger}->log("Bad login password for $channel $hostmask\n");
         return "I don't think so.";
     }
@@ -216,6 +219,12 @@ sub get_loggedin_user_metadata($self, $channel, $hostmask, $key) {
     my $user = $self->loggedin($channel, $hostmask);
     return $user->{lc $key} if $user;
     return undef;
+}
+
+sub digest_password($self, $password) {
+    my $csh = Crypt::SaltedHash->new(algorithm => 'SHA-512');
+    $csh->add($password);
+    return $csh->generate;
 }
 
 1;

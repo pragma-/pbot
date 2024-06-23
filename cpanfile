@@ -12,6 +12,7 @@ requires 'perl' => '5.020000';
 # PBot core
 requires 'Cache::FileCache';
 requires 'Carp';
+requires 'Crypt::SaltedHash';
 requires 'DateTime';
 requires 'DateTime::Format::Duration';
 requires 'DateTime::Format::Flexible';
