@@ -372,6 +372,14 @@ It is very important that user account hostmasks are defined as strictly or as n
 as possible to match only the person it is intended for. Ideally, the user would have a
 NickServ account, a user-cloak given by the staff of the IRC server or a unique DNS name.
 
+To login, in your own IRC client, connected using the hostmask we just added, type the
+following command, in a private `/query` or `/msg`:
+
+    login <password>
+
+Now you can use `/msg` in your own IRC client to administrate PBot, instead of
+the terminal console.
+
 You can change your password with:
 
     my password <new password>
@@ -379,13 +387,6 @@ You can change your password with:
 or
 
     userset Bob password <new password>
-
-Then you can login with:
-
-    login <password>
-
-Now you can use `/msg` in your own IRC client to administrate PBot, instead of
-the terminal console.
 
 If you want to autologin without typing a password, first ensure your hostmask is unique -- preferably
 by using a NickServ vhost/cloak or a reverse-DNS name. Then set the following metadata on your account:
@@ -398,7 +399,8 @@ If you want to remain permanently logged in, ensure your hostmask is unique and 
 
 ### Adding other users and admins
 Users may create their own unprivileged accounts by using the [`my`](Commands.md#my) command. It will automatically
-set their username, hostmask, channel and log them into it.
+set their username, hostmask, channel and log them into it. Unprivileged users may use the [`my`](Commands.md#my) command
+to edit their personal [user metadata](Admin.md#user-metadata-list), including password.
 
 Users added this way will have `autologin` and `stayloggedin` enabled. If they feel their hostmask is insecure, they
 can disable `autologin` and `stayloggedin` with:
