@@ -24,9 +24,9 @@ binmode(STDOUT, ":utf8");
 
 @ARGV = map { decode('UTF-8', $_, 1) } @ARGV;
 
-my $usage = "Usage: wiktionary <term> [-e] [-p] [-l <language>] [-n <entry number>]; -e for etymology; -p for pronunciation\n";
+my $usage = "Usage: wiktionary <term> [-pos <part of speech>] [-e] [-p] [-l <language>] [-n <entry number>]; -e for etymology; -p for pronunciation\n";
 
-my ($term, $lang, $section, $num, $all, $unique, $opt_e, $opt_p);
+my ($term, $lang, $section, $num, $all, $unique, $opt_e, $opt_p, $part_of_speech);
 
 {
     my $opt_error;
@@ -44,6 +44,7 @@ my ($term, $lang, $section, $num, $all, $unique, $opt_e, $opt_p);
         'num|n=i'     => \$num,
         'all|a'       => \$all,
         'unique|u'    => \$unique,
+        'pos=s'       => \$part_of_speech,
         'p'           => \$opt_p,
         'e'           => \$opt_e,
     );
@@ -161,6 +162,7 @@ if ($num <= 0 or $all or $unique) {
 }
 
 my @results;
+my %parts_of_speech;
 
 for (my $i = $start; $i < $num; $i++) {
     my $entry = $entries->[$i];
@@ -194,6 +196,10 @@ for (my $i = $start; $i < $num; $i++) {
         my $text;
 
         foreach my $definition (@{$entry->{definitions}}) {
+            $parts_of_speech{$definition->{partOfSpeech}} = 1;
+
+            next if defined $part_of_speech && $definition->{partOfSpeech} ne $part_of_speech;
+
             $text .= "$definition->{partOfSpeech}) ";
 
             my $entry = -1;
@@ -220,8 +226,21 @@ for (my $i = $start; $i < $num; $i++) {
 }
 
 if (not @results) {
+    if (defined $part_of_speech) {
+        $entries_text = $part_of_speech;
+        $entries_text =~ s/(?<![sy])$/s/;
+    }
+
     $entries_text =~ s/y$/ies/;
+
     print "There are no $entries_text for `$term`.\n";
+
+    my @pos = sort keys %parts_of_speech;
+
+    if (@pos) {
+        print 'Try ', join (', ', @pos), ".\n";
+    }
+
     exit 1;
 }
 
