@@ -16,7 +16,7 @@ use POSIX qw/strftime/;
 
 sub initialize($self, %conf) {
     $self->{pbot}->{registry}->add_default('text', 'antiflood', 'antirepeat',           $conf{antirepeat}           // 1);
-    $self->{pbot}->{registry}->add_default('text', 'antiflood', 'antirepeat_threshold', $conf{antirepeat_threshold} // 2.5);
+    $self->{pbot}->{registry}->add_default('text', 'antiflood', 'antirepeat_threshold', $conf{antirepeat_threshold} // 3);
     $self->{pbot}->{registry}->add_default('text', 'antiflood', 'antirepeat_match',     $conf{antirepeat_match}     // 0.5);
     $self->{pbot}->{registry}->add_default('text', 'antiflood', 'antirepeat_allow_bot', $conf{antirepeat_allow_bot} // 1);
 
@@ -83,7 +83,7 @@ sub on_public($self, $event_type, $event) {
         next if $now - $string1->{timestamp} > 60 * 60 * 2;
         next if $allow_bot and $string1->{msg} =~ m/^(?:$bot_trigger|$botnick.?)/;
         $string1->{msg} =~ s/^[^;,:]{1,20}[;,:]//;    # remove nick-like prefix if one exists
-        next if length $string1->{msg} <= 5;          # allow really short messages since "yep" "ok" etc are so common
+        next if length $string1->{msg} <= 10;          # allow really short messages since "yep" "ok" "thanks" etc are so common
 
         if (exists $self->{offenses}->{$account} and exists $self->{offenses}->{$account}->{$channel}) {
             next if $self->{offenses}->{$account}->{$channel}->{last_offense} >= $string1->{timestamp};
@@ -93,7 +93,7 @@ sub on_public($self, $event_type, $event) {
             next if $now - $string2->{timestamp} > 60 * 60 * 2;
             next if $allow_bot and $string2->{msg} =~ m/^(?:$bot_trigger|$botnick.?)/;
             $string2->{msg} =~ s/^[^;,:]{1,20}[;,:]//;    # remove nick-like prefix if one exists
-            next if length $string2->{msg} <= 5;          # allow really short messages since "yep" "ok" etc are so common
+            next if length $string2->{msg} <= 10;          # allow really short messages since "yep" "ok" "thanks" etc are so common
 
             if (exists $self->{offenses}->{$account} and exists $self->{offenses}->{$account}->{$channel}) {
                 next if $self->{offenses}->{$account}->{$channel}->{last_offense} >= $string2->{timestamp};
