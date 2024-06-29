@@ -228,12 +228,9 @@ for (my $i = $start; $i < $num; $i++) {
 if (not @results) {
     if (defined $part_of_speech) {
         $entries_text = $part_of_speech;
-        $entries_text =~ s/(?<![sy])$/s/;
     }
 
-    $entries_text =~ s/y$/ies/;
-
-    print "There are no $entries_text for `$term`.\n";
+    print "There is no $entries_text available for `$term`.\n";
 
     my @pos = sort keys %parts_of_speech;
 
