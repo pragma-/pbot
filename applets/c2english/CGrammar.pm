@@ -423,7 +423,7 @@ expression_statement:
 labeled_statement:
       identifier ':' statement[context => 'label'] (';')(?)
           { "Let there be a label $item{identifier}.\n$item{statement}" }
-    | ('case' constant_expression
+    | ('case' constant_expression[context => 'constant expression']
           { $return = $item{constant_expression} }
         ':')(s)
           {
@@ -450,7 +450,7 @@ labeled_statement:
           { "In the default case, ^L$item{statement}" }
 
 expression:
-      <leftop: assignment_expression ',' assignment_expression>
+      <leftop: assignment_expression[context => 'expression'] ',' assignment_expression[context => 'assignment expression']>
           {
             if ($arg{context} eq 'for increment statement'
                 or $arg{context} eq 'for init') {
@@ -465,7 +465,7 @@ expression:
 
 assignment_expression:
       unary_expression[context => 'assignment expression']
-        assignment_operator
+        assignment_operator[context => 'assignment expression']
         assignment_expression[context => 'assignment expression']
           {
             my $assignment_expression = $item{assignment_expression};
@@ -480,10 +480,10 @@ assignment_expression:
               $return = "$item{unary_expression} $assignment_operator $assignment_expression";
             }
           }
-    | conditional_expression
+    | conditional_expression[context => 'conditional expression']
 
 conditional_expression:
-      logical_OR_AND_expression conditional_ternary_expression
+      logical_OR_AND_expression[context => 'expression'] conditional_ternary_expression[context => 'expression']
           {
             if ($item{conditional_ternary_expression}) {
               my $op1 = $item{conditional_ternary_expression}->[0];
@@ -503,7 +503,7 @@ conditional_expression:
           }
 
 conditional_ternary_expression:
-      '?' expression ':' conditional_expression
+      '?' expression[context => 'expression'] ':' conditional_expression[context => 'expression']
           { [$item{expression}, $item{conditional_expression}] }
     | {""}
 
@@ -620,13 +620,13 @@ assignment_operator:
           }
 
 constant_expression:
-      conditional_expression
+      conditional_expression[context => 'expression']
 
 logical_OR_AND_expression:
       <leftop:
-        rel_add_mul_shift_expression
-        log_OR_AND_bit_or_and_eq
-        rel_add_mul_shift_expression[context => 'logical_OR_AND_expression']>
+        rel_add_mul_shift_expression[context => 'expression']
+        log_OR_AND_bit_or_and_eq[context => 'expression']
+        rel_add_mul_shift_expression[context => 'expression']>
           {
             my $expression = join('', @{$item[1]});
             if($arg{context} =~ /initializer expression$/
@@ -683,7 +683,7 @@ unary_operator:
 rel_add_mul_shift_expression:
       cast_expression ...';'
           { $item{cast_expression} }
-    | <leftop: cast_expression rel_mul_add_ex_op cast_expression>
+    | <leftop: cast_expression rel_mul_add_ex_op[context => 'expression'] cast_expression>
           { join('', @{$item[1]}) }
 
 closure:
