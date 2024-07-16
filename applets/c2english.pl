@@ -10,6 +10,7 @@ use Text::Balanced qw(extract_codeblock extract_delimited extract_bracketed);
 
 use feature 'switch';
 no if $] >= 5.018, warnings => 'experimental::smartmatch';
+no if $] >= 5.018, warnings => 'deprecated';
 
 my $debug = 0;
 
@@ -157,8 +158,13 @@ $white_code =~ s/(?:\"((?:\\\"|(?!\").)*)\")/'"' . ('-' x length $1) . '"'/ge;
 $white_code =~ s/(?:\'((?:\\\'|(?!\').)*)\')/"'" . ('-' x length $1) . "'"/ge;
 
 my $precode;
-if   ($white_code =~ m/#include/) { $precode = $code; }
-else                              { $precode = $prelude . $code; }
+
+if ($white_code =~ m/#include/) {
+    $precode = $code;
+} else {
+    $precode = $prelude . $code;
+}
+
 $code = '';
 my $warn_unterminated_define = 0;
 
@@ -168,7 +174,7 @@ my $lang = 'C89';
 
 if ($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
     my $prelude = '';
-    while ($precode =~ s/^\s*(#.*\n{1,2})//g) { $prelude .= $1; }
+    while ($precode =~ s/^\s*(#(?:define|include).*\n{1,2})//g) { $prelude .= $1; }
 
     if ($precode =~ m/^\s*(#.*)/ms) {
         my $line = $1;
@@ -265,8 +271,9 @@ if ($lang eq 'C89' or $lang eq 'C99' or $lang eq 'C11' or $lang eq 'C++') {
 
     $precode =~ s/^{(.*)}$/$1/s;
 
-    if (not $has_main and not $got_nomain) { $code = "$prelude\n$code" . "int main(void) {\n$precode\n;\n}\n"; }
-    else {
+    if (not $has_main and not $got_nomain) {
+        $code = "$prelude\n$code" . "int main(void) {\n$precode\n;\n}\n";
+    } else {
         print "code: [$code]; precode: [$precode]\n" if $debug;
         $code = "$prelude\n$precode\n\n$code\n";
     }
@@ -373,6 +380,11 @@ if (not $force and $ret != 0) {
     # don't error about undeclared objects
     $output =~ s/error: '[^']+' undeclared\s*//g;
 
+    # don't error about use of #error
+    $output =~ s/^error: #error.*$//gm;
+
+    $output =~ s/^\s+$//;
+
     if (length $output) {
         print "$output\n";
         exit 0;
@@ -390,7 +402,7 @@ close $fh;
 $output = `./c2eng.pl code2eng.c` if not defined $output;
 
 if (not $has_function and not $has_main) {
-    $output =~ s/Let .main. be a function taking no arguments and returning int.\s*When called, the function will.\s*(do nothing.)?//i;
+    $output =~ s/Let .main. be a function \(taking no arguments\) and returning int.\s*When called, the function will.\s*(do nothing.)?//i;
     $output =~ s/\s*Return 0.\s*End of function .main..\s*//;
     $output =~ s/\s*Finally, return 0.$//;
     $output =~ s/\s*and then return 0.$/./;
@@ -398,7 +410,7 @@ if (not $has_function and not $has_main) {
     $output =~ s/^\s*(.)/\U$1/;
     $output =~ s/\.\s+(\S)/. \U$1/g;
 } elsif ($has_function and not $has_main) {
-    $output =~ s/\s*Let `main` be a function taking no arguments and returning int.\s*When called, the function will do nothing.//;
+    $output =~ s/\s*Let `main` be a function \(taking no arguments\) and returning int.\s*When called, the function will do nothing.//;
     $output =~ s/\s*Finally, return 0.$//;
     $output =~ s/\s*and then return 0.$/./;
 }

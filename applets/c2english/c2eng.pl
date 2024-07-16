@@ -77,14 +77,14 @@ sub main {
     my $text;
 
     foreach my $arg (@ARGV) {
-        print STDERR "Opening file $arg\n";
+        # print STDERR "Opening file $arg\n";
 
         open(CFILE, "$arg") or die "Could not open $arg.\n";
         local $/;
         $text = <CFILE>;
         close(CFILE);
 
-        print STDERR "parsing...\n";
+        # print STDERR "parsing...\n";
 
         my $result = $parser->startrule(\$text) or die "Bad text!\n$text\n";
 

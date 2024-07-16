@@ -1072,7 +1072,7 @@ postfix_productions:
 
             my $arg_exp_list = join('',@{$item{'argument_expression_list(?)'}});
             if (length $arg_exp_list) {
-              $return .= " with argument$arg_exp_list";
+              $return .= " (with argument$arg_exp_list)";
             }
 
             if ($postfix) {
@@ -1375,7 +1375,7 @@ direct_declarator:
             $item{declarator}
           }
     | '(' parameter_type_list ')'
-          { "function taking $item{parameter_type_list} and returning" }
+          { "function (taking $item{parameter_type_list}) and returning" }
     | '(' declarator array_declarator(s) ')'
           { $item{'declarator'} . join(' ', @{$item{'array_declarator(s)'}}) }
     | '(' declarator ')'
@@ -1553,7 +1553,7 @@ direct_abstract_declarator:
     | '(' ')'
           { 'function taking unspecified arguments and returning' }
     | '(' parameter_type_list ')'
-          { "function taking $item{parameter_type_list} and returning" }
+          { "function (taking $item{parameter_type_list}) and returning" }
     | DAD '(' ')'
     | DAD '(' parameter_type_list ')'
 
