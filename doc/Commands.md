@@ -18,11 +18,12 @@
     * [Listing all built-in commands](#listing-all-built-in-commands)
     * [Creating new built-in commands](#creating-new-built-in-commands)
     * [Plugins](#plugins)
+      * [Listing loaded plugins](#listing-loaded-plugins)
     * [Functions](#functions)
   * [Factoids](#factoids)
     * [Code Factoids](#code-factoids)
     * [Applets](#applets)
-      * [Listing all loaded applets](#listing-all-loaded-applets)
+      * [Listing loaded applets](#listing-loaded-applets)
 * [Commands documented here](#commands-documented-here)
   * [version](#version)
   * [help](#help)
@@ -402,6 +403,12 @@ stand-alone self-contained units of code that can be loaded by the PBot owner.
 * only bot owner can install and load PBot Plugins
 * PBot Plugins have access to PBot internal API functions and data structures
 
+##### Listing loaded plugins
+To list the currently loaded plugins, use the `pluglist` command.
+
+     <pragma-> pluglist
+        <PBot> 25 plugins loaded: ActionTrigger, AntiAway, ..., GoogleSearch, RemindMe, Weather, Wolfram, Wordle
+
 #### Functions
 Functions are commands that accept input, manipulate it and then output the result. They are extremely
 useful with [piping](#piping) or [command substituting](#substitution).
@@ -448,11 +455,11 @@ a PBot applet.
 
 For more information, see the [Applets documentation.](Applets.md)
 
-##### Listing all loaded applets
-To list all of the currently loaded applets, use the `list applets` command.
+##### Listing loaded applets
+To list the currently loaded applets, use the `list applets` command.
 
     <pragma-> list applets
-       <PBot> Loaded applets: ago bashfaq bashpf c11std c2english c99std cdecl cfact cfaq ... etc.
+       <PBot> Loaded applets: ago bashfaq bashpf c2english cdecl cfact cfaq cstd ... etc.
 
 ## Commands documented here
 These are the commands documented in this file. For commands documented in
