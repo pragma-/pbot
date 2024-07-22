@@ -33,14 +33,16 @@ sub unload($self) {
 sub punish($self, $msg, $channel, $nick, $user, $host) {
     $self->{kick_counter}->{$channel}->{$nick}++;
 
-    if ($self->{kick_counter}->{$channel}->{$nick} >= 2) {
+    if ($self->{kick_counter}->{$channel}->{$nick} == 2) {
         $msg .= ' (WARNING: next offense will result in a temp ban)';
+    } elsif ($self->{kick_counter}->{$channel}->{$nick} > 2) {
+        $msg .= ' (temp ban for repeated offenses)';
     }
 
     $self->{pbot}->{chanops}->add_op_command($channel, "kick $channel $nick $msg");
     $self->{pbot}->{chanops}->gain_ops($channel);
 
-    if ($self->{kick_counter}->{$channel}->{$nick} >= 3) {
+    if ($self->{kick_counter}->{$channel}->{$nick} > 2) {
         my $botnick = $self->{pbot}->{conn}->nick;
         $self->{pbot}->{banlist}->ban_user_timed($channel, 'b', "*!*\@$host", 60 * 60 * 2, $botnick, 'anti-away');
     }
