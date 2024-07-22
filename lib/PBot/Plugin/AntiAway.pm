@@ -12,7 +12,7 @@ use PBot::Imports;
 
 sub initialize($self, %conf) {
     $self->{pbot}->{registry}->add_default('text', 'antiaway', 'bad_nicks',
-        $conf{bad_nicks} // '([[:punct:]](afk|brb|bbl|away|sleep|z+|work|gone|study|out|home|busy|off)[[:punct:]]*$|.+\[.*\]$)'
+        $conf{bad_nicks} // '(^zz+[[:punct:]]|[[:punct:]](afk|brb|bbl|away|a?sleep|nap|zz+|work|gone|study|out|home|busy|off)[[:punct:]]*$|afk$)'
     );
 
     $self->{pbot}->{registry}->add_default('text', 'antiaway', 'bad_actions', $conf{bad_actions} // '^/me (is (away|gone)|.*auto.?away)');
@@ -20,11 +20,48 @@ sub initialize($self, %conf) {
 
     $self->{pbot}->{event_dispatcher}->register_handler('irc.nick',    sub { $self->on_nickchange(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.caction', sub { $self->on_action(@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.public',  sub { $self->on_public(@_) });
+
+    $self->{kick_counter} = {};
 }
 
 sub unload($self) {
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.nick');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.caction');
+}
+
+sub punish($self, $msg, $channel, $nick, $user, $host) {
+    $self->{kick_counter}->{$channel}->{$nick}++;
+
+    if ($self->{kick_counter}->{$channel}->{$nick} >= 2) {
+        $msg .= ' (WARNING: next offense will result in a temp ban)';
+    }
+
+    $self->{pbot}->{chanops}->add_op_command($channel, "kick $channel $nick $msg");
+    $self->{pbot}->{chanops}->gain_ops($channel);
+
+    if ($self->{kick_counter}->{$channel}->{$nick} >= 3) {
+        my $botnick = $self->{pbot}->{conn}->nick;
+        $self->{pbot}->{banlist}->ban_user_timed($channel, 'b', "*!*\@$host", 60 * 60 * 2, $botnick, 'anti-away');
+    }
+}
+
+sub on_public($self, $event_type, $event) {
+    my ($nick, $user, $host, $msg) = ($event->nick, $event->user, $event->host, $event->args);
+    my $channel = $event->{to}[0];
+
+    return 0 if not $self->{pbot}->{chanops}->can_gain_ops($channel);
+
+    my $u = $self->{pbot}->{users}->loggedin($channel, "$nick!$user\@$host");
+    return 0 if $self->{pbot}->{capabilities}->userhas($u, 'is-whitelisted');
+
+    my $bad_nicks = $self->{pbot}->{registry}->get_value('antiaway', 'bad_nicks');
+
+    if ($nick =~ m/$bad_nicks/i) {
+        my $kick_msg = $self->{pbot}->{registry}->get_value('antiaway', 'kick_msg');
+        $self->punish($kick_msg, $channel, $nick, $user, $host);
+    }
+    return 0;
 }
 
 sub on_nickchange($self, $event_type, $event) {
@@ -47,9 +84,7 @@ sub on_nickchange($self, $event_type, $event) {
             my $u = $self->{pbot}->{users}->loggedin($chan, "$nick!$user\@$host");
             next if $self->{pbot}->{capabilities}->userhas($u, 'is-whitelisted');
 
-            $self->{pbot}->{logger}->log("$newnick matches bad away nick regex, kicking from $chan\n");
-            $self->{pbot}->{chanops}->add_op_command($chan, "kick $chan $newnick $kick_msg");
-            $self->{pbot}->{chanops}->gain_ops($chan);
+            $self->punish($kick_msg, $chan, $newnick, $user, $host);
         }
     }
     return 0;
@@ -75,8 +110,7 @@ sub on_action($self, $event_type, $event) {
     if ($msg =~ m/$bad_actions/i) {
         $self->{pbot}->{logger}->log("$nick $msg matches bad away actions regex, kicking...\n");
         my $kick_msg = $self->{pbot}->{registry}->get_value('antiaway', 'kick_msg');
-        $self->{pbot}->{chanops}->add_op_command($channel, "kick $channel $nick $kick_msg");
-        $self->{pbot}->{chanops}->gain_ops($channel);
+        $self->punish($kick_msg, $channel, $nick, $user, $host);
     }
     return 0;
 }
