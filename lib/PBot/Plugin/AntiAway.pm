@@ -28,6 +28,7 @@ sub initialize($self, %conf) {
 sub unload($self) {
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.nick');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.caction');
+    $self->{pbot}->{event_dispatcher}->remove_handler('irc.public');
 }
 
 sub punish($self, $msg, $channel, $nick, $user, $host) {
