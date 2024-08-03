@@ -154,7 +154,7 @@ sub wordmorph($self, $context) {
                 return NO_MORPH_AVAILABLE;
             }
 
-            return "Current word morph: " . $self->show_morph_with_blanks($channel) . " (Fill in the blanks)";
+            return "Current word morph: " . $self->show_morph_with_blanks($channel) . " (Change the word one letter at a time)";
         }
 
         when ('giveup') {
@@ -214,7 +214,7 @@ sub wordmorph($self, $context) {
             }
 
             $self->set_up_new_morph($morph, $channel);
-            return "New word morph: " . $self->show_morph_with_blanks($channel) . " (Fill in the blanks)";
+            return "New word morph: " . $self->show_morph_with_blanks($channel) . " (Change the word one letter at a time)";
         }
 
         when ('custom') {
@@ -267,7 +267,7 @@ sub wordmorph($self, $context) {
             }
 
             $self->set_up_new_morph($morph, $channel);
-            return "New word morph: " . $self->show_morph_with_blanks($channel) . " (Fill in the blanks)";
+            return "New word morph: " . $self->show_morph_with_blanks($channel) . " (Change the word one letter at a time)";
         }
 
         when ('search') {
