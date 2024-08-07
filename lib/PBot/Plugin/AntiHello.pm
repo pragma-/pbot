@@ -14,7 +14,7 @@ use PBot::Imports;
 
 sub initialize($self, %conf) {
     $self->{pbot}->{registry}->add_default('text', 'antihello', 'bad_greetings',
-        $conf{bad_greetings} // '^\s*(?:[[:punct:]]|\p{Emoticons})*\s*(?:h*e+l+l+o+|h*e+n+l+o+|l+o+|hi+|g+r+e+t+s*z*|g+r+e+t+i+n+g+s*|h*o+l+a+|o+i+|h*e+y+|h*a+y+)\s*(?:everyone|guys|peeps?z?|ppl|people|\s+.{1,20})*\s*(?:[[:punct:]]|\p{Emoticons})*\s*$'
+        $conf{bad_greetings} // '^\s*(?:[[:punct:]]|\p{Emoticons})*\s*(?:h*e+l+l+o+|h*e+n+l+o+|l+o+|hi+|g+r+e+t+s*z*|g+r+e+t+i+n+g+s*|h*o+l+a+|o+i+|h*e+y+|h+a+y+|o*h+a+i+)\s*(?:\s+.{1,10})?\s*(?:[[:punct:]]|\p{Emoticons})*\s*$'
     );
 
     $self->{pbot}->{registry}->add_default('text', 'antihello', 'kick_msg', 'https://nohello.net/');
