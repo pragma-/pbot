@@ -37,7 +37,7 @@ sub punish($self, $msg, $channel, $nick, $user, $host) {
     $self->{pbot}->{logger}->log("[anti-away] $nick!$user\@$host offense $self->{kick_counter}->{$channel}->{$nick}\n");
 
     if ($self->{kick_counter}->{$channel}->{$nick} == 2) {
-        $msg .= ' (WARNING: next offense will result in a temp-ban)';
+        $msg .= ' (2ND OFFENSE WARNING: next offense will result in a temp-ban)';
     } elsif ($self->{kick_counter}->{$channel}->{$nick} > 2) {
         $msg .= ' (temp ban for repeated offenses)';
     }
