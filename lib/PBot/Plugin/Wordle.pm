@@ -46,7 +46,7 @@ my %wordlists = (
         name    => 'American English',
         prompt  => 'Guess the American English word!',
         list    => '/wordle/american',
-        supp    => 'insane',
+        supp    => ['insane', 'british', 'urban'],
     },
     insane => {
         name    => 'American English (Insanely Huge List)',
@@ -57,19 +57,19 @@ my %wordlists = (
         name    => 'American English (Uncommon)',
         prompt  => 'Guess the American English (Uncommon) word!',
         list    => '/wordle/american-uncommon',
-        supp    => 'insane',
+        supp    => ['insane', 'british', 'urban'],
     },
     british => {
         name    => 'British English',
         prompt  => 'Guess the British English word!',
         list    => '/wordle/british',
-        supp    => 'insane',
+        supp    => ['insane', 'british', 'urban'],
     },
     canadian => {
         name    => 'Canadian English',
         prompt  => 'Guess the Canadian English word!',
         list    => '/wordle/canadian',
-        supp    => 'insane',
+        supp    => ['insane', 'british', 'urban'],
     },
     finnish => {
         name    => 'Finnish',
@@ -115,7 +115,7 @@ my %wordlists = (
         name    => 'Urban Dictionary',
         prompt  => 'Guess the Urban Dictionary word!',
         list    => '/wordle/urban',
-        supp    => 'insane',
+        supp    => ['insane', 'british'],
     },
 );
 
@@ -307,12 +307,14 @@ sub load_words($self, $length, $wordlist = DEFAULT_LIST, $words = undef) {
 }
 
 sub make_wordle($self, $channel, $length, $word = undef, $wordlist = DEFAULT_LIST) {
-    eval {
-        $self->{$channel}->{words} = $self->load_words($length, $wordlist);
-    };
+    unless ($self->{$channel}->{wordlist} eq $wordlist && exists $self->{$channel}->{words}) {
+        eval {
+            $self->{$channel}->{words} = $self->load_words($length, $wordlist);
+        };
 
-    if ($@) {
-        return "Failed to load words: $@";
+        if ($@) {
+            return "Failed to load words: $@";
+        }
     }
 
     my @wordle;
@@ -331,16 +333,21 @@ sub make_wordle($self, $channel, $length, $word = undef, $wordlist = DEFAULT_LIS
         return "Failed to find a suitable word.";
     }
 
-    if (exists $wordlists{$wordlist}->{supp}) {
-        eval {
-            $self->load_words($length, $wordlists{$wordlist}->{supp}, $self->{$channel}->{words});
-        };
+    unless ($self->{$channel}->{wordlist} eq $wordlist && exists $self->{$channel}->{words}) {
+        if (exists $wordlists{$wordlist}->{supp}) {
+            eval {
+                foreach my $list ($wordlists{$wordlist}->{supp}->@*) {
+                    $self->load_words($length, $list, $self->{$channel}->{words});
+                }
+            };
 
-        if ($@) {
-            return "Failed to load words: $@";
+            if ($@) {
+                return "Failed to load words: $@";
+            }
         }
     }
 
+    $self->{$channel}->{wordlist}    = $wordlist;
     $self->{$channel}->{wordle}      = \@wordle;
     $self->{$channel}->{guess}       = '';
     $self->{$channel}->{correct}     = 0;
