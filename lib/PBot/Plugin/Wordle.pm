@@ -11,6 +11,7 @@ use parent 'PBot::Plugin::Base';
 
 use PBot::Imports;
 
+use Storable qw(dclone);
 use utf8;
 
 sub initialize($self, %conf) {
@@ -45,36 +46,36 @@ my %wordlists = (
     american => {
         name    => 'American English',
         prompt  => 'Guess the American English word!',
-        list    => '/wordle/american',
-        supp    => ['insane', 'british', 'urban'],
+        wlist   => '/wordle/american',
+        glist   => ['insane', 'british', 'urban'],
     },
     insane => {
         name    => 'American English (Insanely Huge List)',
         prompt  => 'Guess the American English (Insanely Huge List) word!',
-        list    => '/wordle/american-insane',
+        wlist   => '/wordle/american-insane',
     },
     uncommon => {
         name    => 'American English (Uncommon)',
         prompt  => 'Guess the American English (Uncommon) word!',
-        list    => '/wordle/american-uncommon',
-        supp    => ['insane', 'british', 'urban'],
+        wlist   => '/wordle/american-uncommon',
+        glist   => ['insane', 'british', 'urban'],
     },
     british => {
         name    => 'British English',
         prompt  => 'Guess the British English word!',
-        list    => '/wordle/british',
-        supp    => ['insane', 'british', 'urban'],
+        wlist   => '/wordle/british',
+        glist   => ['insane', 'british', 'urban'],
     },
     canadian => {
         name    => 'Canadian English',
         prompt  => 'Guess the Canadian English word!',
-        list    => '/wordle/canadian',
-        supp    => ['insane', 'british', 'urban'],
+        wlist   => '/wordle/canadian',
+        glist   => ['insane', 'british', 'urban'],
     },
     finnish => {
         name    => 'Finnish',
         prompt  => 'Arvaa suomenkielinen sana!',
-        list    => '/wordle/finnish',
+        wlist   => '/wordle/finnish',
         accents => 'åäöšž',
         min_len => 5,
         max_len => 8,
@@ -82,25 +83,25 @@ my %wordlists = (
     french => {
         name    => 'French',
         prompt  => 'Devinez le mot Français !',
-        list    => '/wordle/french',
+        wlist   => '/wordle/french',
         accents => 'éàèùçâêîôûëïü',
     },
     german => {
         name    => 'German',
         prompt  => 'Erraten Sie das Deutsches Wort!',
-        list    => '/wordle/german',
+        wlist   => '/wordle/german',
         accents => 'äöüß',
     },
     italian   => {
         name    => 'Italian',
         prompt  => 'Indovina la parola italiana!',
-        list    => '/wordle/italian',
+        wlist   => '/wordle/italian',
         accents => 'èéìòù',
     },
     polish => {
         name    => 'Polish',
         prompt  => 'Odgadnij polskie słowo!',
-        list    => '/wordle/polish',
+        wlist   => '/wordle/polish',
         accents => 'ćńóśźżąęł',
         min_len => 5,
         max_len => 8,
@@ -108,14 +109,14 @@ my %wordlists = (
     spanish => {
         name    => 'Spanish',
         prompt  => '¡Adivina la palabra en español!',
-        list    => '/wordle/spanish',
+        wlist   => '/wordle/spanish',
         accents => 'áéíóúüñ',
     },
     urban => {
         name    => 'Urban Dictionary',
         prompt  => 'Guess the Urban Dictionary word!',
-        list    => '/wordle/urban',
-        supp    => ['insane', 'british'],
+        wlist   => '/wordle/urban',
+        glist   => ['insane', 'british'],
     },
 );
 
@@ -284,7 +285,7 @@ sub wordle($self, $context) {
 }
 
 sub load_words($self, $length, $wordlist = DEFAULT_LIST, $words = undef) {
-    $wordlist = $self->{datadir} . $wordlists{$wordlist}->{list};
+    $wordlist = $self->{datadir} . $wordlists{$wordlist}->{wlist};
 
     if (not -e $wordlist) {
         die "Wordle database `" . $wordlist . "` not available.\n";
@@ -307,9 +308,12 @@ sub load_words($self, $length, $wordlist = DEFAULT_LIST, $words = undef) {
 }
 
 sub make_wordle($self, $channel, $length, $word = undef, $wordlist = DEFAULT_LIST) {
-    unless ($self->{$channel}->{wordlist} eq $wordlist && exists $self->{$channel}->{words}) {
+    unless ($self->{$channel}->{wordlist} eq $wordlist
+            && $self->{$channel}->{length} == $length
+            && exists $self->{$channel}->{words}) {
         eval {
-            $self->{$channel}->{words} = $self->load_words($length, $wordlist);
+            $self->{$channel}->{words}     = $self->load_words($length, $wordlist);
+            $self->{$channel}->{guesslist} = dclone $self->{$channel}->{words};
         };
 
         if ($@) {
@@ -333,11 +337,13 @@ sub make_wordle($self, $channel, $length, $word = undef, $wordlist = DEFAULT_LIS
         return "Failed to find a suitable word.";
     }
 
-    unless ($self->{$channel}->{wordlist} eq $wordlist && exists $self->{$channel}->{words}) {
-        if (exists $wordlists{$wordlist}->{supp}) {
+    unless ($self->{$channel}->{wordlist} eq $wordlist
+            && $self->{$channel}->{length} == $length
+            && exists $self->{$channel}->{words}) {
+        if (exists $wordlists{$wordlist}->{glist}) {
             eval {
-                foreach my $list ($wordlists{$wordlist}->{supp}->@*) {
-                    $self->load_words($length, $list, $self->{$channel}->{words});
+                foreach my $list ($wordlists{$wordlist}->{glist}->@*) {
+                    $self->load_words($length, $list, $self->{$channel}->{guesslist});
                 }
             };
 
@@ -348,6 +354,7 @@ sub make_wordle($self, $channel, $length, $word = undef, $wordlist = DEFAULT_LIS
     }
 
     $self->{$channel}->{wordlist}    = $wordlist;
+    $self->{$channel}->{length}      = $length;
     $self->{$channel}->{wordle}      = \@wordle;
     $self->{$channel}->{guess}       = '';
     $self->{$channel}->{correct}     = 0;
@@ -409,7 +416,7 @@ sub guess_wordle($self, $channel, $guess) {
         return "Guess length ($guess_length) unequal to Wordle length ($wordle_length). Try again.";
     }
 
-    if (not exists $self->{$channel}->{words}->{$guess}) {
+    if (not exists $self->{$channel}->{guesslist}->{$guess}) {
         return "I don't know that word. Try again."
     }
 
