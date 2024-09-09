@@ -40,10 +40,15 @@ sub punish($self, $msg, $channel, $nick, $user, $host) {
         # just do a private warning message for the first offense
         my $now = time;
 
+        # send public message to channel with 5 minute cooldown
         if ($now - $self->{last_warning} >= 60 * 5) {
             $self->{last_warning} = $now;
             $self->{pbot}->{conn}->privmsg($channel, "Please do not send stand-alone channel greeting messages; include your question/statement along with the greeting. For more info, see https://nohello.net/ (repeated offenses will result in an automatic ban)");
         }
+
+        # always send private message to offender
+        $self->{pbot}->{conn}->privmsg($nick, "($channel) Please do not send stand-alone channel greeting messages; include your question/statement along with the greeting. For more info, see https://nohello.net/ (repeated offenses will result in an automatic ban)");
+
         return 0;
     } elsif ($self->{offense_counter}->{$channel}->{$nick} == 2) {
         $msg .= ' (2ND OFFENSE WARNING: next offense will result in a temp-ban)';
