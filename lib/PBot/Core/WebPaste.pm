@@ -21,7 +21,7 @@ sub initialize($self, %conf) {
 
     $self->{paste_sites} = [
         sub { $self->paste_0x0st(@_)   },
-        sub { $self->paste_sprunge(@_) },
+        # sub { $self->paste_sprunge(@_) }, # dead? RIP
         # sub { $self->paste_ixio(@_) }, # removed due to being too slow (temporarily hopefully)
     ];
 
