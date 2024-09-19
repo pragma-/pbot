@@ -15,7 +15,7 @@ sub initialize {
   $self->{name}            = 'c++';
   $self->{sourcefile}      = 'prog.cpp';
   $self->{execfile}        = 'prog';
-  $self->{default_options} = '-std=c++14 -Wextra -Wall -Wno-unused -pedantic -Wfloat-equal -Wshadow -lm -Wfatal-errors -fsanitize=alignment,undefined';
+  $self->{default_options} = '-std=c++14 -Wextra -Wall -Wno-unused-parameter -Wno-unused-variable -pedantic -Wfloat-equal -Wshadow -lm -Wfatal-errors -fsanitize=alignment,undefined';
   $self->{options_paste}   = '-fdiagnostics-show-caret';
   $self->{options_nopaste} = '-fno-diagnostics-show-caret';
   $self->{cmdline}         = 'g++ -ggdb -g3 $sourcefile $options -o $execfile';

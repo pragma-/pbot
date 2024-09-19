@@ -246,7 +246,7 @@ sub configure_context($context, $config) {
     # set any undefined values to default values
     $context->{nick}         //= 'vm';
     $context->{channel}      //= 'vm';
-    $context->{lang}         //= 'c2x';
+    $context->{lang}         //= 'clang2x';
     $context->{'vm-domain'}  //= DOMAIN;
     $context->{'vm-addr'}    //= ADDR;
     $context->{'vm-health'}  //= HEALTH;
