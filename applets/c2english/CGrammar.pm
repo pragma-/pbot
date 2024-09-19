@@ -1375,7 +1375,7 @@ direct_declarator:
             $item{declarator}
           }
     | '(' parameter_type_list ')'
-          { "function (taking $item{parameter_type_list}) and returning" }
+          { "function (taking $item{parameter_type_list}) returning" }
     | '(' declarator array_declarator(s) ')'
           { $item{'declarator'} . join(' ', @{$item{'array_declarator(s)'}}) }
     | '(' declarator ')'
@@ -1551,9 +1551,9 @@ direct_abstract_declarator:
     | DAD '[' ']'
     | DAD '[' array_qualifiers(?) assignment_expression(?) ']'
     | '(' ')'
-          { 'function taking unspecified arguments and returning' }
+          { 'function (taking unspecified arguments) returning' }
     | '(' parameter_type_list ')'
-          { "function (taking $item{parameter_type_list}) and returning" }
+          { "function (taking $item{parameter_type_list}) returning" }
     | DAD '(' ')'
     | DAD '(' parameter_type_list ')'
 

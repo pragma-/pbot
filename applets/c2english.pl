@@ -383,6 +383,8 @@ if (not $force and $ret != 0) {
     # don't error about use of #error
     $output =~ s/^error: #error.*$//gm;
 
+    $output =~ s/note: in definition of macro '[^']+'\s*//g;
+
     $output =~ s/^\s+$//;
 
     if (length $output) {
@@ -402,7 +404,7 @@ close $fh;
 $output = `./c2eng.pl code2eng.c` if not defined $output;
 
 if (not $has_function and not $has_main) {
-    $output =~ s/Let .main. be a function \(taking no arguments\) and returning int.\s*When called, the function will.\s*(do nothing.)?//i;
+    $output =~ s/Let .main. be a function \(taking no arguments\) returning int.\s*When called, the function will.\s*(do nothing.)?//i;
     $output =~ s/\s*Return 0.\s*End of function .main..\s*//;
     $output =~ s/\s*Finally, return 0.$//;
     $output =~ s/\s*and then return 0.$/./;
@@ -410,7 +412,7 @@ if (not $has_function and not $has_main) {
     $output =~ s/^\s*(.)/\U$1/;
     $output =~ s/\.\s+(\S)/. \U$1/g;
 } elsif ($has_function and not $has_main) {
-    $output =~ s/\s*Let `main` be a function \(taking no arguments\) and returning int.\s*When called, the function will do nothing.//;
+    $output =~ s/\s*Let `main` be a function \(taking no arguments\) returning int.\s*When called, the function will do nothing.//;
     $output =~ s/\s*Finally, return 0.$//;
     $output =~ s/\s*and then return 0.$/./;
 }
