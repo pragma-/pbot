@@ -45,9 +45,9 @@ sub initialize($self, %conf) {
     $self->{pbot}->{registry}->add_default('text',  'antiflood', 'chat_flood_time_threshold', $conf{chat_flood_time_threshold} // 10);
     $self->{pbot}->{registry}->add_default('array', 'antiflood', 'chat_flood_punishment',     $conf{chat_flood_punishment}     // '60,300,3600,86400,604800,2419200');
 
-    $self->{pbot}->{registry}->add_default('text',  'antiflood', 'nick_flood_threshold',      $conf{nick_flood_threshold}      // 3);
+    $self->{pbot}->{registry}->add_default('text',  'antiflood', 'nick_flood_threshold',      $conf{nick_flood_threshold}      // 4);
     $self->{pbot}->{registry}->add_default('text',  'antiflood', 'nick_flood_time_threshold', $conf{nick_flood_time_threshold} // 60 * 30);
-    $self->{pbot}->{registry}->add_default('array', 'antiflood', 'nick_flood_punishment',     $conf{nick_flood_punishment}     // '60,300,3600,86400,604800,2419200');
+    $self->{pbot}->{registry}->add_default('array', 'antiflood', 'nick_flood_punishment',     $conf{nick_flood_punishment}     // '900,3600,86400,604800,2419200');
 
     $self->{pbot}->{registry}->add_default('text',  'antiflood', 'enter_abuse_threshold',      $conf{enter_abuse_threshold}      // 4);
     $self->{pbot}->{registry}->add_default('text',  'antiflood', 'enter_abuse_time_threshold', $conf{enter_abuse_time_threshold} // 20);
