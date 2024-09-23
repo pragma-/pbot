@@ -88,7 +88,7 @@ my %wordlists = (
     },
     german => {
         name    => 'German',
-        prompt  => 'Erraten Sie das Deutsches Wort!',
+        prompt  => 'Errate das deutsche Wort!',
         wlist   => '/wordle/german',
         accents => 'äöüß',
     },
@@ -96,7 +96,7 @@ my %wordlists = (
         name    => 'Italian',
         prompt  => 'Indovina la parola italiana!',
         wlist   => '/wordle/italian',
-        accents => 'èéìòù',
+        accents => 'àèéìòù',
     },
     polish => {
         name    => 'Polish',
