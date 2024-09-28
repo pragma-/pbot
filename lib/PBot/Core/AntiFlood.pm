@@ -199,8 +199,8 @@ sub check_flood($self, $channel, $nick, $user, $host, $text, $max_messages, $max
         my $tags = $self->{pbot}->{irc}->get_tags($context->{tags});
 
         if (defined $tags->{account}) {
-            my $nickserv_account = $tags->{account};
-            my $current_nickserv_account = $self->{pbot}->{messagehistory}->{database}->get_current_nickserv_account($account);
+            my $nickserv_account = lc $tags->{account};
+            my $current_nickserv_account = lc $self->{pbot}->{messagehistory}->{database}->get_current_nickserv_account($account);
 
             if ($self->{pbot}->{registry}->get_value('irc', 'debug_tags')) {
                 $self->{pbot}->{logger}->log("($account) $mask got account-tag $nickserv_account\n");
@@ -621,7 +621,7 @@ sub check_bans($self, $message_account, $mask, $channel, $dry_run = 0) {
 
     my $debug_checkban = $self->{pbot}->{registry}->get_value('antiflood', 'debug_checkban');
 
-    my $current_nickserv_account = $self->{pbot}->{messagehistory}->{database}->get_current_nickserv_account($message_account);
+    my $current_nickserv_account = lc $self->{pbot}->{messagehistory}->{database}->get_current_nickserv_account($message_account);
 
     $self->{pbot}->{logger}->log("anti-flood: [check-bans] checking for bans on ($message_account) $mask "
           . (defined $current_nickserv_account and length $current_nickserv_account ? "[$current_nickserv_account] " : "")
@@ -892,7 +892,7 @@ sub on_whoisaccount($self, $event_type, $event) {
 sub on_accountnotify($self, $event_type, $event) {
     my $mask = $event->{from};
     my ($nick, $user, $host) = $mask =~ m/^([^!]+)!([^@]+)@(.*)/;
-    my $account = $event->{args}[0];
+    my $account = lc $event->{args}[0];
     my $id = $self->{pbot}->{messagehistory}->{database}->get_message_account($nick, $user, $host);
 
     $self->{pbot}->{messagehistory}->{database}->update_hostmask_data($mask, {last_seen => scalar gettimeofday});
