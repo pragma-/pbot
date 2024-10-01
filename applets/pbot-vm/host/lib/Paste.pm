@@ -41,7 +41,6 @@ sub paste_0x0 {
     $text =~ s/(.{120})\s/$1\n/g;
 
     my $ua = LWP::UserAgent->new();
-    $ua->agent("Mozilla/5.0");
     push @{ $ua->requests_redirectable }, 'POST';
     $ua->timeout(10);
 
