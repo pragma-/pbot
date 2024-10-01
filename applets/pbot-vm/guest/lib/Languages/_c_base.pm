@@ -85,7 +85,7 @@ sub postprocess {
 
     my $ulimits = "ulimit -f 2000; ulimit -t 8; ulimit -u 200";
 
-    my @args = $self->split_line($self->{arguments}, strip_quotes => 1, preserve_escapes => 0);
+    my @args = $self->split_line($self->{arguments}, strip_quotes => 1, preserve_escapes => 1);
 
     my $quoted_args = '';
 

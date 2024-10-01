@@ -217,7 +217,7 @@ sub split_line {
 sub quote_args {
     my ($self, $text) = @_;
 
-    my @args = $self->split_line($text, strip_quotes => 1, preserve_escapes => 0);
+    my @args = $self->split_line($text, strip_quotes => 1, preserve_escapes => 1);
 
     my $quoted = '';
 
