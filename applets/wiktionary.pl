@@ -24,9 +24,9 @@ binmode(STDOUT, ":utf8");
 
 @ARGV = map { decode('UTF-8', $_, 1) } @ARGV;
 
-my $usage = "Usage: wiktionary <term> [-pos <part of speech>] [-e] [-p] [-l <language>] [-n <entry number>]; -e for etymology; -p for pronunciation\n";
+my $usage = "Usage: wiktionary <term> [-pos <part of speech>] [-e] [-p] [-r [relation]] [-l <language>] [-n <entry number>]; -e for etymology; -p for pronunciation\n";
 
-my ($term, $lang, $section, $num, $all, $unique, $opt_e, $opt_p, $part_of_speech);
+my ($term, $lang, $section, $num, $all, $unique, $opt_e, $opt_p, $part_of_speech, $relation);
 
 {
     my $opt_error;
@@ -45,6 +45,7 @@ my ($term, $lang, $section, $num, $all, $unique, $opt_e, $opt_p, $part_of_speech
         'all|a'       => \$all,
         'unique|u'    => \$unique,
         'pos=s'       => \$part_of_speech,
+        'r:s'         => \$relation,
         'p'           => \$opt_p,
         'e'           => \$opt_e,
     );
@@ -163,6 +164,7 @@ if ($num <= 0 or $all or $unique) {
 
 my @results;
 my %parts_of_speech;
+my %relationships;
 
 for (my $i = $start; $i < $num; $i++) {
     my $entry = $entries->[$i];
@@ -194,30 +196,57 @@ for (my $i = $start; $i < $num; $i++) {
 
     elsif ($section eq 'definitions') {
         my $text;
+        my $dsep = '';
 
         foreach my $definition (@{$entry->{definitions}}) {
             $parts_of_speech{$definition->{partOfSpeech}} = 1;
 
             next if defined $part_of_speech && $definition->{partOfSpeech} ne $part_of_speech;
 
-            $text .= "$definition->{partOfSpeech}) ";
+            $text .= "$dsep$definition->{partOfSpeech}) ";
+            $dsep = ";\n\n";
 
             my $entry = -1;
+            my $rsep = '';
 
-            foreach my $def (flatten @{$definition->{text}}) {
-                $def =~ s/^#//;
-                $text .= "$def\n";
+            if (defined $relation) {
+                my $relations = $definition->{relatedWords};
 
-                if (@{$definition->{examples}}) {
-                    foreach my $example (@{$definition->{examples}}) {
-                        if ($example->{index} == $entry) {
-                            $text .= "  ($example->{text})\n";
-                        }
+                foreach my $rel (@$relations) {
+                    $relationships{$rel->{relationshipType}} = 1;
+                    if (!length $relation || $relation eq '*' || $rel->{relationshipType} eq $relation) {
+                        $text .= "$rsep$rel->{relationshipType}) ";
+                        $text .= join (",\n", $rel->{words}->@*);
+                        $rsep = ";\n\n";
+                        $entry++;
                     }
                 }
 
-                $entry++;
-                $text .= "\n";
+                if ($entry == -1) {
+                    $relation = 'relations' if not length $relation;
+                    print "There are no $relation available for `$term`.\n";
+                    my @rel = sort keys %relationships;
+                    if (@rel) {
+                        print 'Try ', join(', ', @rel), ".\n";
+                    }
+                    exit 1;
+                }
+            } else {
+                foreach my $def (flatten @{$definition->{text}}) {
+                    $def =~ s/^#//;
+                    $text .= "$def\n";
+
+                    if (@{$definition->{examples}}) {
+                        foreach my $example (@{$definition->{examples}}) {
+                            if ($example->{index} == $entry) {
+                                $text .= "  ($example->{text})\n";
+                            }
+                        }
+                    }
+
+                    $entry++;
+                    $text .= "\n";
+                }
             }
         }
 
