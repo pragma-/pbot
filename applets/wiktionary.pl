@@ -107,7 +107,7 @@ if ($ENV{DEBUG}) {
     print Dumper($entries), "\n";
 }
 
-my @valid_sections = qw/definitions etymology pronunciations participle/;
+my @valid_sections = qw/definitions etymology pronunciations/;
 
 if (not grep { $_ eq $section } @valid_sections) {
     print "Unknown section `$section`. Available sections are: " . join(', ', sort @valid_sections) . "\n";
@@ -196,58 +196,49 @@ for (my $i = $start; $i < $num; $i++) {
 
     elsif ($section eq 'definitions') {
         my $text;
-        my $dsep = '';
 
         foreach my $definition (@{$entry->{definitions}}) {
             $parts_of_speech{$definition->{partOfSpeech}} = 1;
 
             next if defined $part_of_speech && $definition->{partOfSpeech} ne $part_of_speech;
 
-            $text .= "$dsep$definition->{partOfSpeech}) ";
-            $dsep = ";\n\n";
-
-            my $entry = -1;
-            my $rsep = '';
+            my $relations = '';
 
             if (defined $relation) {
-                my $relations = $definition->{relatedWords};
-
-                foreach my $rel (@$relations) {
+                foreach my $rel ($definition->{relatedWords}->@*) {
                     $relationships{$rel->{relationshipType}} = 1;
                     if (!length $relation || $relation eq '*' || $rel->{relationshipType} eq $relation) {
-                        $text .= "$rsep$rel->{relationshipType}) ";
-                        $text .= join (",\n", $rel->{words}->@*);
-                        $rsep = ";\n\n";
-                        $entry++;
-                    }
-                }
-
-                if ($entry == -1) {
-                    $relation = 'relations' if not length $relation;
-                    print "There are no $relation available for `$term`.\n";
-                    my @rel = sort keys %relationships;
-                    if (@rel) {
-                        print 'Try ', join(', ', @rel), ".\n";
-                    }
-                    exit 1;
-                }
-            } else {
-                foreach my $def (flatten @{$definition->{text}}) {
-                    $def =~ s/^#//;
-                    $text .= "$def\n";
-
-                    if (@{$definition->{examples}}) {
-                        foreach my $example (@{$definition->{examples}}) {
-                            if ($example->{index} == $entry) {
-                                $text .= "  ($example->{text})\n";
-                            }
+                        if ($rel->{words}->@*) {
+                            $relations .= "$rel->{relationshipType}) ";
+                            $relations .= join (", ", $rel->{words}->@*);
+                            $relations .= "\n\n";
                         }
                     }
-
-                    $entry++;
-                    $text .= "\n";
                 }
+                next if not length $relations;
             }
+
+            my $entry = -1;
+
+            $text .= "$definition->{partOfSpeech}) ";
+
+            foreach my $def (flatten @{$definition->{text}}) {
+                $def =~ s/^#//;
+                $text .= "$def\n";
+
+                if (!defined $relation && @{$definition->{examples}}) {
+                    foreach my $example (@{$definition->{examples}}) {
+                        if ($example->{index} == $entry) {
+                            $text .= "  ($example->{text})\n";
+                        }
+                    }
+                }
+
+                $entry++;
+                $text .= "\n";
+            }
+
+            $text .= $relations;
         }
 
         push @results, $text if length $text;
@@ -256,17 +247,35 @@ for (my $i = $start; $i < $num; $i++) {
 
 if (not @results) {
     if (defined $part_of_speech) {
-        $entries_text = $part_of_speech;
+        if (not exists $parts_of_speech{$part_of_speech}) {
+            print "There is no $part_of_speech available for `$term`.\n";
+
+            my @pos = sort keys %parts_of_speech;
+
+            if (@pos) {
+                print 'Try ', join (', ', @pos), ".\n";
+            }
+
+            exit 1;
+        }
+    }
+
+    if (defined $relation) {
+        $relation = 'relations' if not length $relation;
+        if (not exists $relationships{$relation}) {
+            print "There are no $relation available for `$term`.\n";
+
+            my @relations = sort keys %relationships;
+
+            if (@relations) {
+                print 'Try ', join (', ', @relations), ".\n";
+            }
+
+            exit 1;
+        }
     }
 
     print "There is no $entries_text available for `$term`.\n";
-
-    my @pos = sort keys %parts_of_speech;
-
-    if (@pos) {
-        print 'Try ', join (', ', @pos), ".\n";
-    }
-
     exit 1;
 }
 
