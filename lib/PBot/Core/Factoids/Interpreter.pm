@@ -257,15 +257,6 @@ sub interpreter($self, $context) {
         $action = $self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'action');
     }
 
-    # action is a code factoid
-    if ($action =~ m{^/code\s+([^\s]+)\s+(.+)$}msi) {
-        my ($lang, $code) = ($1, $2);
-        $context->{lang} = $lang;
-        $context->{code} = $code;
-        $self->{pbot}->{factoids}->{code}->execute($context);
-        return '';
-    }
-
     # fork factoid if background-process is enabled
     if ($self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'background-process')) {
         my $timeout = $self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'process-timeout');
@@ -452,6 +443,16 @@ sub handle_action($self, $context, $action) {
     if (defined $preserve_whitespace) {
         $context->{preserve_whitespace} = $preserve_whitespace;
     }
+
+    # action is a code factoid
+    if ($action =~ m{^/code\s+([^\s]+)\s+(.+)$}msi) {
+        my ($lang, $code) = ($1, $2);
+        $context->{lang} = $lang;
+        $context->{code} = $code;
+        $self->{pbot}->{factoids}->{code}->execute($context);
+        return '';
+    }
+
 
     return $action if $context->{special} eq 'code-factoid';
 
