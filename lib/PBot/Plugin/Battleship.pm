@@ -30,6 +30,7 @@ use parent 'PBot::Plugin::Base';
 use PBot::Imports;
 
 use Time::Duration;
+use Time::HiRes qw/time/;
 use Data::Dumper;
 
 # some colors for IRC messages
@@ -422,6 +423,7 @@ sub cmd_battleship($self, $context) {
                 $msg = "/msg $channel $nick aims somewhere else.";
             }
             $player->{location} = $arguments;
+            $player->{time}     = time;
             return $msg;
         }
 
@@ -1448,7 +1450,7 @@ sub state_move($self, $state) {
 sub state_attack($self, $state) {
     my $trans = 'next';
 
-    foreach my $player (@{$state->{players}}) {
+    foreach my $player (sort { $a->{time} <=> $b->{time} } $state->{players}->@*) {
         # skip removed players
         next if $player->{removed};
 
