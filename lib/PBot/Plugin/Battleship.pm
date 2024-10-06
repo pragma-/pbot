@@ -586,25 +586,55 @@ sub init_game($self, $state) {
 }
 
 # ensures a ship can be placed at this location (all desired tiles are ocean)
-sub check_ship_placement($self, $x, $y, $o, $l) {
+sub check_ship_placement($self, $x, $y, $o, $l, $player_id) {
     my ($xd, $yd, $i);
 
     if ($o == $self->{ORIENT_VERT}) {
         if ($y + $l >= $self->{N_Y}) {
             return 0;
         }
+
+        if ($y >= 2) {
+            my $tile = $self->{board}->[$x][$y - 1];
+            if ($tile->{type} == $self->{TYPE_SHIP} && $tile->{player_id} == $player_id && $tile->{orientation} == $o) {
+                return 0;
+            }
+        }
+
+        if ($y + $l <= $self->{N_Y} - 3) {
+            my $tile = $self->{board}->[$x][$y + $l + 1];
+            if ($tile->{type} == $self->{TYPE_SHIP} && $tile->{player_id} == $player_id && $tile->{orientation} == $o) {
+                return 0;
+            }
+        }
+
         $xd = 0;
         $yd = 1;
     } else {
         if ($x + $l >= $self->{N_X}) {
             return 0;
         }
+
+        if ($x >= 2) {
+            my $tile = $self->{board}->[$x - 1][$y];
+            if ($tile->{type} == $self->{TYPE_SHIP} && $tile->{player_id} == $player_id && $tile->{orientation} == $o) {
+                return 0;
+            }
+        }
+
+        if ($x + $l <= $self->{N_X} - 3) {
+            my $tile = $self->{board}->[$x + $l + 1][$y];
+            if ($tile->{type} == $self->{TYPE_SHIP} && $tile->{player_id} == $player_id && $tile->{orientation} == $o) {
+                return 0;
+            }
+        }
+
         $xd = 1;
         $yd = 0;
     }
 
     for (my $i = 0; $i < $l; $i++) {
-        if ($self->{board}->[$x += $o == $self->{ORIENT_HORIZ} ? $xd : 0][$y += $o == $self->{ORIENT_HORIZ} ? 0 : $yd]->{type} != $self->{TYPE_OCEAN}) {
+        if ($self->{board}->[$x += $xd][$y += $yd]->{type} != $self->{TYPE_OCEAN}) {
             return 0;
         }
     }
@@ -639,27 +669,11 @@ sub place_ship($self, $player_id, $player_index, $ship) {
             $self->{pbot}->{logger}->log("attempt to place ship for player $player_index: ship $ship x,y: $x,$y o: $o length: $l\n");
         }
 
-        if ($self->check_ship_placement($x, $y, $o, $l)) {
+        if ($self->check_ship_placement($x, $y, $o, $l, $player_id)) {
             if (!$o) {
-                $self->{vert}++;
-
-                if ($self->{horiz} < $self->{SHIPS} / 2) {
-                    # generate a battlefield with half vertical and half horizontal ships
-                    # perfectly balanced as all things must be.
-                    next;
-                }
-
                 $yd = 1;
                 $xd = 0;
             } else {
-                $self->{horiz}++;
-
-                if ($self->{vert} < $self->{SHIPS} / 2) {
-                    # generate a battlefield with half vertical and half horizontal ships
-                    # perfectly balanced as all things must be.
-                    next;
-                }
-
                 $xd = 1;
                 $yd = 0;
             }
@@ -675,7 +689,7 @@ sub place_ship($self, $player_id, $player_index, $ship) {
                     hit_by       => 0,
                 };
 
-                $self->{board}->[$x += $o == $self->{ORIENT_HORIZ} ? $xd : 0][$y += $o == $self->{ORIENT_HORIZ} ? 0 : $yd] = $tile_data;
+                $self->{board}->[$x += $xd][$y += $yd] = $tile_data;
             }
 
             $self->{ship_length}->[$ship] = $l;
@@ -721,9 +735,6 @@ sub generate_battlefield($self) {
 
     # place ships
     for (my $player_index = 0; $player_index < @{$self->{state_data}->{players}}; $player_index++) {
-        # counts how many horizontal/vertical ships have been placed so far
-        $self->{horiz} = 0;
-        $self->{vert}  = 0;
         for (my $ship = 0; $ship < $self->{SHIPS}; $ship++) {
             if (!$self->place_ship($self->{state_data}->{players}->[$player_index]->{id}, $player_index, $ship)) {
                 return 0;
