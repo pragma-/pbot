@@ -29,7 +29,7 @@ sub unload($self) {
 }
 
 use constant {
-    USAGE     => 'Usage: wordle start [length [wordlist]] | custom <word> <channel> [wordlist] | guess <word> | letters | show | giveup',
+    USAGE     => 'Usage: wordle start [length [wordlist]] | custom <word> <channel> [wordlist] | guess <word> | letters | show | info | giveup',
     NO_WORDLE => 'There is no Wordle yet. Use `wordle start` to begin a game.',
 
     DEFAULT_LIST       => 'american',
@@ -152,6 +152,14 @@ sub wordle($self, $context) {
             return $self->show_wordle($channel, 1);
         }
 
+        when ('info') {
+            if (not defined $self->{$channel}->{wordle}) {
+                return NO_WORDLE;
+            }
+
+            return "Current wordlist: $self->{$channel}->{wordlist} ($self->{$channel}->{length}); guesses attempted: $self->{$channel}->{guess_count}\n";
+         }
+
         when ('giveup') {
             if (not defined $self->{$channel}->{wordle}) {
                 return NO_WORDLE;
@@ -166,10 +174,6 @@ sub wordle($self, $context) {
         when ('start') {
             if (@args > 2) {
                 return "Invalid arguments; Usage: wordle start [word length [wordlist]]";
-            }
-
-            if (defined $self->{$channel}->{wordle} && $self->{$channel}->{correct} == 0) {
-                return "There is already a Wordle underway! Use `wordle show` to see the current progress or `wordle giveup` to end it.";
             }
 
             my $length = DEFAULT_LENGTH;
@@ -189,6 +193,10 @@ sub wordle($self, $context) {
                 }
 
                 $length = $args[0];
+            }
+
+            if (defined $self->{$channel}->{wordle} && $self->{$channel}->{correct} == 0) {
+                return "There is already a Wordle underway! Use `wordle show` to see the current progress or `wordle giveup` to end it.";
             }
 
             return $self->make_wordle($channel, $length, undef, $wordlist);
