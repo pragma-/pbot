@@ -61,35 +61,37 @@ sub expand_factoid_vars($self, $context, $action, %opts) {
         while ($rest =~ s/(.*?)(?<!\\)\$([\w|{])/$2/ms) {
             $result .= $1;
 
-            my $var;
+            my ($var, $orig_var);
+            my $modifiers;
             my $extract_method;
 
             if ($rest =~ /^\{.*?\}/) {
                 ($var, $rest) = $self->{pbot}->{interpreter}->extract_bracketed($rest, '{', '}');
+                $orig_var = $var;
 
                 if ($var =~ /:/) {
                     my @stuff = split /:/, $var, 2;
                     $var = $stuff[0];
-                    $rest = ':' . $stuff[1] . $rest;
+                    $modifiers = ':' . $stuff[1];
                 }
 
                 $extract_method = 'bracket';
             } else {
                 $rest =~ s/^(\w+)//;
-                $var = $1;
+                $var = $orig_var = $1;
                 $extract_method = 'regex';
             }
 
             if ($var =~ /^(?:_.*|[[:punct:]0-9]+|a|b|nick|channel|randomnick|arglen|args|arg\[.+\])$/i) {
                 # skip identifiers with leading underscores, etc
-                $result .= $extract_method eq 'bracket' ? '${' . $var . '}' : '$' . $var;
+                $result .= $extract_method eq 'bracket' ? '${' . $orig_var . '}' : '$' . $orig_var;
                 next;
             }
 
             $matches++;
 
             # extract channel expansion modifier
-            if ($rest =~ s/^:(#[^:]+|global)//i) {
+            if ($var =~ s/:(#[^: ]+|global)//i || $rest =~ s/^:(#[^: ]+|global)//i) {
                 $from = $1;
                 $from = '.*' if lc $from eq 'global';
             }
@@ -101,7 +103,7 @@ sub expand_factoid_vars($self, $context, $action, %opts) {
             my @factoids = $self->{pbot}->{factoids}->{data}->find($from, $var, exact_channel => 2, exact_trigger => 2);
 
             if (not @factoids or not $factoids[0]) {
-                $result .= $extract_method eq 'bracket' ? '${' . $var . '}' : '$' . $var;
+                $result .= $extract_method eq 'bracket' ? '${' . $orig_var . '}' : '$' . $orig_var;
                 next;
             }
 
@@ -113,11 +115,15 @@ sub expand_factoid_vars($self, $context, $action, %opts) {
 
                 if (++$recurse > 100) {
                     $self->{pbot}->{logger}->log("Factoids: variable expansion recursion limit reached\n");
-                    $result .= $extract_method eq 'bracket' ? '${' . $var . '}' : '$' . $var;
+                    $result .= $extract_method eq 'bracket' ? '${' . $orig_var . '}' : '$' . $orig_var;
                     next;
                 }
 
                 goto ALIAS;
+            }
+
+            if ($modifiers) {
+                $rest = $modifiers . $rest;
             }
 
             my $copy = $rest;
@@ -182,7 +188,7 @@ sub expand_factoid_vars($self, $context, $action, %opts) {
 
                 $expansions++;
             } else {
-                $result .= $extract_method eq 'bracket' ? '${' . $var . '}' : '$' . $var;
+                $result .= $extract_method eq 'bracket' ? '${' . $orig_var . '}' : '$' . $orig_var;
             }
         }
 
