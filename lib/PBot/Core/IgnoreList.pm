@@ -51,7 +51,7 @@ sub add($self, $channel, $hostmask, $length, $owner) {
         $hostmask .= '@*';
     }
 
-    $channel = '.*' if $channel !~ /^#/;
+    $channel = '.*' if !defined $channel || $channel eq 'global';
 
     my $regex = quotemeta $hostmask;
     $regex =~ s/\\\*/.*?/g;
@@ -91,7 +91,7 @@ sub remove($self, $channel, $hostmask) {
         $hostmask .= '@*';
     }
 
-    $channel = '.*' if $channel !~ /^#/;
+    $channel = '.*' if !defined $channel || $channel eq 'global';
 
     $self->{pbot}->{event_queue}->dequeue_event("ignore_timeout $channel $hostmask");
     return $self->{storage}->remove($channel, $hostmask);
