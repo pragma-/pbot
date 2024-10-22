@@ -17,6 +17,8 @@ use PBot::Imports;
 use IPC::Run qw/run timeout/;
 use Encode;
 
+use Time::HiRes qw/gettimeofday/;
+
 sub initialize {
     # nothing to do here
 }
@@ -24,9 +26,11 @@ sub initialize {
 sub execute_applet($self, $context) {
     if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
         use Data::Dumper;
-        $Data::Dumper::Sortkeys = 1;
+        $Data::Dumper::Sortkeys = sub { [sort grep { not /(?:cmdlist|arglist)/ } keys %$context] };
+        $Data::Dumper::Indent = 2;
         $self->{pbot}->{logger}->log("execute_applet\n");
         $self->{pbot}->{logger}->log(Dumper $context);
+        $Data::Dumper::Sortkeys = 1;
     }
 
     $self->{pbot}->{process_manager}->execute_process($context, sub { $self->launch_applet(@_) });
@@ -91,7 +95,11 @@ sub launch_applet($self, $context) {
             @cmdline = map { encode('UTF-8', $_) } @cmdline;
         }
 
+        my $start = gettimeofday;
+        $self->{pbot}->{logger}->log("Starting applet run @cmdline\n");
         run \@cmdline, \$stdin, \$stdout, \$stderr, timeout($timeout);
+        my $duration = sprintf "%0.3f", gettimeofday - $start;
+        $self->{pbot}->{logger}->log("Finished applet run @cmdline; duration: $duration\n");
 
         my $exitval = $? >> 8;
 

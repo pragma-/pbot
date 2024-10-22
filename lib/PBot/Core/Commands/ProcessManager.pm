@@ -59,10 +59,10 @@ sub cmd_ps($self, $context) {
     my @entries;
 
     foreach my $process (@processes) {
-        my $entry = "$process->{pid}: $process->{commands}->[0]";
+        my $entry = "$process->{pid}: $process->{command}";
 
         if ($show_running_time or $show_all) {
-            my $duration = concise duration (gettimeofday - $process->{process_start});
+            my $duration = concise duration (gettimeofday - $process->{start});
             $entry .= " [$duration]";
         }
 
@@ -117,7 +117,7 @@ sub cmd_kill($self, $context) {
 
         foreach my $pid (sort keys %{$self->{pbot}->{process_manager}->{processes}}) {
             my $process = $self->{pbot}->{process_manager}->{processes}->{$pid};
-            next if defined $kill_time and $now - $process->{process_start} < $kill_time;
+            next if defined $kill_time and $now - $process->{start} < $kill_time;
             push @pids, $pid;
         }
     } else {

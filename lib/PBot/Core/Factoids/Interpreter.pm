@@ -20,9 +20,11 @@ sub interpreter($self, $context) {
     # trace context and context's contents
     if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
         use Data::Dumper;
-        $Data::Dumper::Sortkeys = 1;
+        $Data::Dumper::Sortkeys = sub { [sort grep { not /(?:cmdlist|arglist)/ } keys %$context] };
+        $Data::Dumper::Indent = 2;
         $self->{pbot}->{logger}->log("Factoids::interpreter\n");
         $self->{pbot}->{logger}->log(Dumper $context);
+        $Data::Dumper::Sortkeys = 1;
     }
 
     if (not length $context->{keyword}) {
@@ -279,9 +281,11 @@ sub handle_action($self, $context, $action) {
     # trace context and context's contents
     if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
         use Data::Dumper;
-        $Data::Dumper::Sortkeys = 1;
+        $Data::Dumper::Sortkeys = sub { [sort grep { not /(?:cmdlist|arglist)/ } keys %$context] };
+        $Data::Dumper::Indent = 2;
         $self->{pbot}->{logger}->log("Factoids::handle_action [$action]\n");
         $self->{pbot}->{logger}->log(Dumper $context);
+        $Data::Dumper::Sortkeys = 1;
     }
 
     if (not length $action) {
@@ -452,7 +456,6 @@ sub handle_action($self, $context, $action) {
         $self->{pbot}->{factoids}->{code}->execute($context);
         return '';
     }
-
 
     return $action if $context->{special} eq 'code-factoid';
 

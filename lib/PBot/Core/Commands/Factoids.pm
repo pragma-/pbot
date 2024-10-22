@@ -735,6 +735,10 @@ sub cmd_factadd($self, $context) {
             } else {
                 return "Failed to get URL: " . $response->status_line;
             }
+
+            if (length $text > 1024*250) {
+                return "Factoid content cannot be larger than 250Kb";
+            }
         } else {
             # check for optional "is" and discard
             if (lc $arglist[0] eq 'is') {

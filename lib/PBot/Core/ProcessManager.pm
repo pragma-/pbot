@@ -26,36 +26,34 @@ sub initialize($self, %conf) {
 }
 
 sub add_process($self, $pid, $context) {
-    $context->{process_start} = gettimeofday;
+    my $data = {
+        start => scalar gettimeofday,
+        command => $context->{command},
+    };
 
-    $self->{processes}->{$pid} = $context;
+    $self->{processes}->{$pid} = $data;
 
-    $self->{pbot}->{logger}->log("Starting process $pid: $context->{commands}->[0]\n");
+    $self->{pbot}->{logger}->log("Starting process $pid: $data->{command}\n");
 }
 
 sub remove_process($self, $pid) {
     if (exists $self->{processes}->{$pid}) {
-        my $command = $self->{processes}->{$pid}->{commands}->[0];
+        my $command = $self->{processes}->{$pid}->{command};
 
-        my $duration = gettimeofday - $self->{processes}->{$pid}->{process_start};
-        $duration = sprintf "%0.3f", $duration;
+        my $duration = sprintf "%0.3f", gettimeofday - $self->{processes}->{$pid}->{start};
 
         $self->{pbot}->{logger}->log("Finished process $pid ($command): duration $duration seconds\n");
 
         delete $self->{processes}->{$pid};
     } else {
-        $self->{pbot}->{logger}->log("Finished process $pid\n");
+        $self->{pbot}->{logger}->log("External process finished $pid\n");
     }
 }
 
 sub execute_process($self, $context, $subref, $timeout = undef, $reader_subref = undef) {
-    # ensure contextual command history list is available for add_process()
-    if (not exists $context->{commands}) {
-        $context->{commands} = [$context->{command}];
-    }
-
     # don't fork again if we're already a forked process
     if (defined $context->{pid} and $context->{pid} == 0) {
+        $self->{pbot}->{logger}->log("execute_process: Re-using PID $context->{pid} for new process\n");
         $subref->($context);
         return $context->{result};
     }
@@ -99,7 +97,7 @@ sub execute_process($self, $context, $subref, $timeout = undef, $reader_subref =
 
         # execute the provided subroutine, results are stored in $context
         eval {
-            local $SIG{ALRM} = sub { die "Process `$context->{commands}->[0]` timed-out\n" };
+            local $SIG{ALRM} = sub { die "Process `$context->{command}` timed-out\n" };
             alarm ($timeout // 30);
             $subref->($context);
             alarm 0;

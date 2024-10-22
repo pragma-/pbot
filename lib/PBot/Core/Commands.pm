@@ -132,10 +132,11 @@ sub interpreter($self, $context) {
     # debug flag to trace $context location and contents
     if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
         use Data::Dumper;
-        $Data::Dumper::Sortkeys = 1;
+        $Data::Dumper::Sortkeys = sub { [sort grep { not /(?:cmdlist|arglist)/ } keys %$context] };
         $Data::Dumper::Indent = 2;
         $self->{pbot}->{logger}->log("Commands::interpreter\n");
         $self->{pbot}->{logger}->log(Dumper $context);
+        $Data::Dumper::Sortkeys = 1;
     }
 
     # some convenient aliases

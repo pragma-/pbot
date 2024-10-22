@@ -269,9 +269,11 @@ sub interpret($self, $context) {
     # debug flag to trace $context location and contents
     if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
         use Data::Dumper;
-        $Data::Dumper::Sortkeys = 1;
+        $Data::Dumper::Sortkeys = sub { [sort grep { not /(?:cmdlist|arglist)/ } keys %$context] };
+        $Data::Dumper::Indent = 2;
         $self->{pbot}->{logger}->log("Interpreter::interpret\n");
         $self->{pbot}->{logger}->log(Dumper $context);
+        $Data::Dumper::Sortkeys = 1;
     }
 
     # enforce recursion limit
@@ -365,6 +367,62 @@ sub interpret($self, $context) {
         }
     }
 
+    # find factoid channel for dont-replace-pronouns metadata
+    my ($fact_channel, $fact_trigger);
+    my @factoids = $self->{pbot}->{factoids}->{data}->find($context->{from}, $keyword, exact_trigger => 1);
+
+    if (@factoids == 1) {
+        # found the factoid's channel
+        ($fact_channel, $fact_trigger) = @{$factoids[0]};
+    } else {
+        # match the factoid in the current channel if it exists
+        foreach my $f (@factoids) {
+            $self->{pbot}->{logger}->log("[$f->[0]][$f->[1]] [$context->{from}]\n");
+            if ($f->[0] eq $context->{from}) {
+                ($fact_channel, $fact_trigger) = ($f->[0], $f->[1]);
+                last;
+            }
+        }
+
+        # and otherwise assume global if it doesn't exist (FIXME: what to do if there isn't a global one?)
+        if (not defined $fact_channel) {
+            ($fact_channel, $fact_trigger) = ('.*', $keyword);
+        }
+    }
+
+    if ($self->{pbot}->{commands}->get_meta($keyword, 'dont-replace-pronouns')
+            or $self->{pbot}->{factoids}->{data}->get_meta($fact_channel, $fact_trigger, 'dont-replace-pronouns'))
+    {
+        $context->{'dont-replace-pronouns'} = 1;
+    }
+
+    # replace pronouns like "i", "my", etc, with "nick", "nick's", etc
+    if (not $context->{'dont-replace-pronouns'}) {
+        # if command recipient is "me" then replace it with invoker's nick
+        # e.g., "!tell me about date" or "!give me date", etc
+        if (defined $context->{nickprefix} and lc $context->{nickprefix} eq 'me') {
+            $context->{nickprefix} = $context->{nick};
+        }
+
+        # strip trailing sentence-ending punctuators from $keyword
+        # TODO: why are we doing this? why here? why at all?
+        $keyword =~ s/(\w+)[?!.]+$/$1/;
+
+        # replace pronouns in $arguments.
+        # but only on the top-level command (not on subsequent recursions).
+        # all pronouns can be escaped to prevent replacement, e.g. "!give \me date"
+        if (length $arguments and $context->{interpret_depth} <= 1) {
+            $arguments =~ s/(?<![\w\/\-\\])i am\b/$context->{nick} is/gi;
+            $arguments =~ s/(?<![\w\/\-\\])me\b/$context->{nick}/gi;
+            $arguments =~ s/(?<![\w\/\-\\])my\b/$context->{nick}'s/gi;
+
+            # unescape any escaped pronouns
+            $arguments =~ s/\\i am\b/i am/gi;
+            $arguments =~ s/\\my\b/my/gi;
+            $arguments =~ s/\\me\b/me/gi;
+        }
+    }
+
     # parse out a substituted command
     if ($arguments =~ m/(?<!\\)&\s*\{/) {
         my ($command) = $self->extract_bracketed($arguments, '{', '}', '&', 1);
@@ -389,12 +447,6 @@ sub interpret($self, $context) {
 
             # replace contextual command
             $context->{command} = $command;
-
-            # reset contextual command history
-            $context->{commands} = [];
-
-            # add command to contextual command history
-            push @{$context->{commands}}, $command;
 
             # interpret the substituted command
             $context->{result} = $self->interpret($context);
@@ -433,56 +485,10 @@ sub interpret($self, $context) {
     # unescape any escaped pipes
     $arguments =~ s/\\\|\s*\{/| {/g;
 
-    # find factoid channel for dont-replace-pronouns metadata
-    my ($fact_channel, $fact_trigger);
-    my @factoids = $self->{pbot}->{factoids}->{data}->find($context->{from}, $keyword, exact_trigger => 1);
-
-    if (@factoids == 1) {
-        # found the factoid's channel
-        ($fact_channel, $fact_trigger) = @{$factoids[0]};
-    } else {
-        # more than one factoid found, normally we would prompt to disambiguate
-        # but in this case we'll just go ahead and assume global
-        ($fact_channel, $fact_trigger) = ('.*', $keyword);
-    }
-
-    if ($self->{pbot}->{commands}->get_meta($keyword, 'dont-replace-pronouns')
-            or $self->{pbot}->{factoids}->{data}->get_meta($fact_channel, $fact_trigger, 'dont-replace-pronouns'))
-    {
-        $context->{'dont-replace-pronouns'} = 1;
-    }
-
-    # replace pronouns like "i", "my", etc, with "nick", "nick's", etc
-    if (not $context->{'dont-replace-pronouns'}) {
-        # if command recipient is "me" then replace it with invoker's nick
-        # e.g., "!tell me about date" or "!give me date", etc
-        if (defined $context->{nickprefix} and lc $context->{nickprefix} eq 'me') {
-            $context->{nickprefix} = $context->{nick};
-        }
-
-        # strip trailing sentence-ending punctuators from $keyword
-        # TODO: why are we doing this? why here? why at all?
-        $keyword =~ s/(\w+)[?!.]+$/$1/;
-
-        # replace pronouns in $arguments.
-        # but only on the top-level command (not on subsequent recursions).
-        # all pronouns can be escaped to prevent replacement, e.g. "!give \me date"
-        if (length $arguments and $context->{interpret_depth} <= 1) {
-            $arguments =~ s/(?<![\w\/\-\\])i am\b/$context->{nick} is/gi;
-            $arguments =~ s/(?<![\w\/\-\\])me\b/$context->{nick}/gi;
-            $arguments =~ s/(?<![\w\/\-\\])my\b/$context->{nick}'s/gi;
-
-            # unescape any escaped pronouns
-            $arguments =~ s/\\i am\b/i am/gi;
-            $arguments =~ s/\\my\b/my/gi;
-            $arguments =~ s/\\me\b/me/gi;
-        }
-    }
-
     # the bot doesn't like performing bot commands on itself
     # unless dont-protect-self is true
     if (not $self->{pbot}->{commands}->get_meta($keyword, 'dont-protect-self')
-            and not $self->{pbot}->{factoids}->{data}->get_meta($context->{from}, $keyword, 'dont-protect-self'))
+            and not $self->{pbot}->{factoids}->{data}->get_meta($fact_channel, $fact_trigger, 'dont-protect-self'))
     {
         my $botnick = $self->{pbot}->{conn}->nick;
 
@@ -507,6 +513,9 @@ sub interpret($self, $context) {
             # log upcoming message + delay
             $delay = duration($delay);
             $self->{pbot}->{logger}->log("($delay delay) $message->{message}\n");
+
+            # end pipe/substitution processing
+            $context->{alldone} = 1;
 
             # no output to return
             return undef;
@@ -575,9 +584,11 @@ sub handle_result($self, $context, $result = $context->{result}) {
     # debug flag to trace $context location and contents
     if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
         use Data::Dumper;
-        $Data::Dumper::Sortkeys = 1;
+        $Data::Dumper::Sortkeys = sub { [sort grep { not /(?:cmdlist|arglist)/ } keys %$context] };
+        $Data::Dumper::Indent = 2;
         $self->{pbot}->{logger}->log("Interpreter::handle_result [$result]\n");
         $self->{pbot}->{logger}->log(Dumper $context);
+        $Data::Dumper::Sortkeys = 1;
     }
 
     # strip and store /command prefixes
@@ -835,9 +846,11 @@ sub output_result($self, $context) {
     # debug flag to trace $context location and contents
     if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
         use Data::Dumper;
-        $Data::Dumper::Sortkeys = 1;
+        $Data::Dumper::Sortkeys = sub { [sort grep { not /(?:cmdlist|arglist)/ } keys %$context] };
+        $Data::Dumper::Indent = 2;
         $self->{pbot}->{logger}->log("Interpreter::output_result\n");
         $self->{pbot}->{logger}->log(Dumper $context);
+        $Data::Dumper::Sortkeys = 1;
     }
 
     my $output = $context->{output};
