@@ -12,6 +12,7 @@ use parent 'PBot::Plugin::Base';
 use PBot::Imports;
 
 use Storable qw(dclone);
+use Time::Duration;
 use utf8;
 
 sub initialize($self, %conf) {
@@ -157,7 +158,14 @@ sub wordle($self, $context) {
                 return NO_WORDLE;
             }
 
-            return "Current wordlist: $self->{$channel}->{wordlist} ($self->{$channel}->{length}); guesses attempted: $self->{$channel}->{guess_count}\n";
+            my $result = "Current wordlist: $self->{$channel}->{wordlist} ($self->{$channel}->{length}); guesses attempted: $self->{$channel}->{guess_count}";
+
+            if ($self->{$channel}->{correct}) {
+                my $solved_on = concise ago (time - $self->{$channel}->{solved_on});
+                $result .= "; solved by: $self->{$channel}->{solved_by} ($solved_on)";
+            }
+
+            return $result;
          }
 
         when ('giveup') {
@@ -268,10 +276,17 @@ sub wordle($self, $context) {
             }
 
             if ($self->{$channel}->{correct}) {
-                return "Wordle already solved. " . $self->show_wordle($channel);
+                return "Wordle already solved by $self->{$channel}->{solved_by}. " . $self->show_wordle($channel);
             }
 
-            return $self->guess_wordle($channel, $args[0]);
+            my $result = $self->guess_wordle($channel, $args[0]);
+
+            if ($self->{$channel}->{correct}) {
+                $self->{$channel}->{solved_by} = $context->{nick};
+                $self->{$channel}->{solved_on} = time;
+            }
+
+            return $result;
         }
 
         when ('letters') {
