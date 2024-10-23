@@ -1,7 +1,7 @@
 1) [INTRODUCTION. Introduction] This lists documents that were referred to during the preparation of the standard.|bibliography
 2) [3.4.1 Terms, definitions, and symbols] An example of this behavior is the propagation of the high-order bit when a signed integer is shifted right.|implementation-defined
 3) [3.4.2 Terms, definitions, and symbols] An example of this behavior is whether the islower function returns true for characters other than the 26 lowercase Latin letters.|locale-specific
-4) [3.4.3 Terms, definitions, and symbols] An example of this behavior is the behavior on integer overflow.|undefined
+4) [3.4.3 Terms, definitions, and symbols] An example of this behavior is the behavior on integer overflow.|undefined|undefined behavior
 5) [3.4.4 Terms, definitions, and symbols] This behavior is the behavior where the standard provides two or more possibilities and imposes no further requirements on which is chosen in any instance.|unspecified
 6) [3.4.4 Terms, definitions, and symbols] An example of this behavior is the order in which the arguments to a function are evaluated.|unspecified
 7) [3.6 Terms, definitions, and symbols] A byte is composed of a contiguous sequence of these.|bits{The number of bits is implementation-defined.}
@@ -16,7 +16,7 @@
 16) [4. Conformance] In the standard, ``shall not'' is to be interpreted as this on an implementation, or on a program.|prohibition{If violated, the behavior is undefined.}
 17) [4. Conformance] In the standard, this phrase is to be interpreted as a requirement on an implementation, or on a program.|shall{If violated, the behavior is undefined.}
 18) [4. Conformance] In the standard, this phrase is to be interpreted as a prohibition on an implementation, or on a program.|shall not{If violated, the behavior is undefined.}
-19) [4. Conformance] If a ``shall'' or ``shall not'' requirement that appears outside of a constraint or runtime-constraint is violated, the behavior is this.|undefined
+19) [4. Conformance] If a ``shall'' or ``shall not'' requirement that appears outside of a constraint or runtime-constraint is violated, the behavior is this.|undefined|undefined behavior
 20) [4. Conformance] A program that is correct, operates on correct data, and possibly containing unspecified behavior, shall be this kind of program.|correct|conforming|proper{I was really looking for "correct" or "conforming", to be honest.}|portable{I was really looking for "correct" or "conforming", to be honest.}
 21) [4. Conformance] The implementation shall not successfully translate a preprocessing translation unit containing this preprocessing directive unless it is part of a group skipped by conditional inclusion.|#error
 22) [4. Conformance] This kind of program shall use only those features of the language and library specified in this International Standard. It shall not produce output dependent on any unspecified, undefined, or implementation-defined behavior, and shall not exceed any minimum implementation limit.|strictly conforming
@@ -33,7 +33,7 @@
 33) [5.1.1.1 Program structure] After preprocessing, a preprocessing translation unit is called this.|translation unit
 34) [5.1.1.2 Translation phases] A source file that is not empty shall end with this character.|new-line|newline|\n
 35) [5.1.1.2 Translation phases] A source file shall not end in a partial this.|preprocessing token{Nor in a partial comment, either.}|comment{Nor in a partial preprocessing token, either.}
-36) [5.1.1.2 Translation phases] If a character sequence that matches the syntax of a universal character name is produced by token concatenation, the behavior is this.|undefined
+36) [5.1.1.2 Translation phases] If a character sequence that matches the syntax of a universal character name is produced by token concatenation, the behavior is this.|undefined|undefined behavior
 37) [5.1.1.2 Translation phases] Source files, translation units, and translated translation units need not necessarily be stored as this.|files|file
 38) [5.1.1.3 Diagnostics] A conforming implementation shall produce at least one of this (identified in an implementation-defined manner) if a preprocessing translation unit or translation unit contains a violation of any syntax rule or constraint, even if the behavior is also explicitly specified as undefined or implementation-defined.|diagnostic message|diagnostic
 39) [5.1.1.3 Diagnostics] An implementation shall issue this for the translation unit: char i; int i; because in those cases where wording in this International Standard describes the behavior for a construct as being both a constraint error and resulting in undefined behavior, the constraint error shall be diagnosed.|diagnostic|diagnostic message
@@ -228,7 +228,7 @@
 228) [6.2.2 Linkages of identifiers] If the declaration of an identifier for a function has no storage-class specifier, its linkage is determined exactly as if it were declared with this storage-class specifier.|extern
 229) [6.2.2 Linkages of identifiers] If the declaration of an identifier for an object has file scope and no storage-class specifier, it has this linkage.|external
 230) [6.2.2 Linkages of identifiers] If the declaration of an identifier for an object has this scope and no storage-class specifier, its linkage is external.|file
-231) [6.2.2 Linkages of identifiers] If, within a translation unit, the same identifier appears with both internal and external linkage, the behavior is this.|undefined
+231) [6.2.2 Linkages of identifiers] If, within a translation unit, the same identifier appears with both internal and external linkage, the behavior is this.|undefined|undefined behavior
 232) [6.2.3 Name spaces of identifiers] If more than one declaration of a particular identifier is visible at any point in a translation unit, this context disambiguates uses that refer to different entities.|syntactic context|syntactic|syntax
 233) [6.2.4 Storage durations of objects] This exists, has a constant address, and retains its last-stored value throughout its lifetime.|object
 234) [6.2.4 Storage durations of objects] An object whose identifier is declared without the storage-class specifier _Thread_local, and either with external or internal linkage or with the storage-class specifier static, has this storage duration.|static
@@ -322,7 +322,7 @@
 322) [6.3.2.3 Pointers] When a pointer to an object is converted to a pointer to a character type, the result points to this addressed byte of the object.|lowest|first
 323) [6.3.2.3 Pointers] If a pointer type to A is correctly aligned for a pointer to type B, which in turn is correctly aligned for a pointer to type C, then a pointer to type A is correctly aligned for a pointer to this type.|C
 324) [6.3.2.3 Pointers] A pointer to a function of one type may be converted to a pointer to a function of another type and back again; the result shall compare as this to the original pointer.|equal
-325) [6.3.2.3 Pointers] If a converted pointer is used to call a function whose type is not compatible with the referenced type, the behavior is this.|undefined
+325) [6.3.2.3 Pointers] If a converted pointer is used to call a function whose type is not compatible with the referenced type, the behavior is this.|undefined|undefined behavior
 326) [6.4 Lexical elements] This is the minimal lexical element of the language in translation phases 7 and 8.|token
 327) [6.4 Lexical elements] This is the minimal lexical element of the language in translation phases 3 through 6.|preprocessing token
 328) [6.4.2.1 General] This is a sequence of nondigit characters (including the underscore _, the lowercase and uppercase Latin letters, and other characters) and digits, which designates one or more entities.|identifier
@@ -358,7 +358,7 @@
 358) [6.4.7 Header names] If the characters ', \, ", //, or /* occur in the sequence between the < and > delimiters of this preprocessing directive, the behavior is undefined.|#include
 359) [6.5 Expressions] A sequence of operators and operands that specifies computation of a value, or that designates an object or a function, or that generates side effects, or that performs a combination thereof, is called this.|expression
 360) [6.5 Expressions] If a side effect on a scalar object is this relative to either a different side effect on the same scalar object or a value computation using the value of the same scalar object, the behavior is undefined.|unsequenced
-361) [6.5 Expressions] If a side effect on a scalar object is unsequenced relative to either a different side effect on the same scalar object or a value computation using the value of the same scalar object, the behavior is this.|undefined
+361) [6.5 Expressions] If a side effect on a scalar object is unsequenced relative to either a different side effect on the same scalar object or a value computation using the value of the same scalar object, the behavior is this.|undefined|undefined behavior
 362) [6.5 Expressions] If there are multiple allowable orderings of the subexpressions of an expression, the behavior is undefined if this occurs in any of the orderings.|unsequenced side effect
 363) [6.5 Expressions] This is specified by the syntax of the grouping of operators and operands in the evaluation of an expression.|precedence|precedence of operators
 364) [6.5 Expressions] The unary operator ~, and the binary operators <<, >>, &, ^, and \| are collectively described as this.|bitwise operators
@@ -370,7 +370,7 @@
 370) [6.5 Expressions] The result of this operator is the bitwise-OR of its operands.|binary \||\|
 371) [6.5 Expressions] The bitwise operators are required to have operands that have this kind of type.|integer
 372) [6.5 Expressions] If the result of the evaluation of an expression is not mathematically defined or not in the range of representable values for its type, this kind of condition occurs.|exceptional|exceptional condition
-373) [6.5 Expressions] If an exceptional condition occurs during the evaluation of an expression (that is, if the result is not mathematically defined or not in the range of representable values for its type), the behavior is this.|undefined
+373) [6.5 Expressions] If an exceptional condition occurs during the evaluation of an expression (that is, if the result is not mathematically defined or not in the range of representable values for its type), the behavior is this.|undefined|undefined behavior
 374) [6.5 Expressions] If a value is stored into an object having no declared type through an lvalue having a type that is not a character type, then the type of the lvalue becomes this type of the object for that access and for subsequent accesses that do not modify the stored value.|effective|effective type
 375) [6.5 Expressions] When a floating expression is evaluated as though it were a single operation, thereby omitting rounding errors implied by the source code and the expression evaluation method, it is called this.|contracted expression|contracted
 376) [6.5 Expressions] This pragma in <math.h> provides a way to disallow contracted expressions.|FP_CONTRACT
@@ -509,14 +509,14 @@
 509) [6.7.3 Type qualifiers] The type modified by this type qualifier shall not be an array type or a function type.|_Atomic
 510) [6.7.3 Type qualifiers] If the same qualifier appears more than once in the same specifier-qualifier-list, either directly or via one or more typedefs, the behavior is the same as if it appeared this many times.|1|one|once
 511) [6.7.3 Type qualifiers] If other qualifiers appear along with this qualifier in a specifier-qualifier-list, the resulting type is the so-qualified atomic type.|_Atomic
-512) [6.7.3 Type qualifiers] If an attempt is made to modify an object defined with a const-qualified type through use of an lvalue with non-const-qualified type, the behavior is this.|undefined
-513) [6.7.3 Type qualifiers] If an attempt is made to refer to an object defined with a volatile-qualified type through use of an lvalue with non-volatile-qualified type, the behavior is this.|undefined
+512) [6.7.3 Type qualifiers] If an attempt is made to modify an object defined with a const-qualified type through use of an lvalue with non-const-qualified type, the behavior is this.|undefined|undefined behavior
+513) [6.7.3 Type qualifiers] If an attempt is made to refer to an object defined with a volatile-qualified type through use of an lvalue with non-volatile-qualified type, the behavior is this.|undefined|undefined behavior
 514) [6.7.3 Type qualifiers] What constitutes an access to an object that has volatile-qualified type is this.|implementation-defined
 515) [6.7.3 Type qualifiers] What constitutes an access to an object that has this qualified type is implementation-defined.|volatile
 516) [6.7.3 Type qualifiers] Actions on objects declared with this type qualifier shall not be ``optimized out'' by an implementation or reordered except as permitted by the rules for evaluating expressions.|volatile
 517) [6.7.3 Type qualifiers] An object that is accessed through a pointer qualified with this type qualifier has a special association with that pointer. This association requires that all accesses to that object use, directly or indirectly, the value of that particular pointer.|restrict{The intended use of the restrict qualifier is to promote optimization.}
 518) [6.7.3 Type qualifiers] If the specification of an array type includes any type qualifiers, this type is so-qualified, not the array type.|element type|element
-519) [6.7.3 Type qualifiers] If the specification of a function type includes any type qualifiers, the behavior is this.|undefined
+519) [6.7.3 Type qualifiers] If the specification of a function type includes any type qualifiers, the behavior is this.|undefined|undefined behavior
 520) [6.7.3.1 Formal definition of restrict] A translator is free to ignore any or all aliasing implications of uses of this type qualifier.|restrict
 521) [6.7.4 Function specifiers] Function specifiers shall be used only in the declaration of an identifier for this.|function{That was kind of obvious, wasn't it?}
 522) [6.7.4 Function specifiers] In a hosted environment, no function specifier(s) shall appear in a declaration of this function.|main
@@ -529,7 +529,7 @@
 529) [6.7.5 Alignment specifier] The expression to the _Alignas specifier shall evaluate to a valid fundamental alignment, or to a valid extended alignment supported by the implementation in the context in which it appears, or to this.|0|zero
 530) [6.7.5 Alignment specifier] When multiple alignment specifiers occur in a declaration, the effective alignment requirement is this specified alignment.|strictest
 531) [6.7.5 Alignment specifier] If the definition of an object has an alignment specifier, any other declaration of that object shall either specify this kind of alignment or have no alignment specifier.|equivalent
-532) [6.7.5 Alignment specifier] If declarations of an object in different translation units have different alignment specifiers, the behavior is this.|undefined
+532) [6.7.5 Alignment specifier] If declarations of an object in different translation units have different alignment specifiers, the behavior is this.|undefined|undefined behavior
 533) [6.7.6 Declarators] This is a declarator that is not part of another declarator.|full declarator|full
 534) [6.7.6 Declarators] If, in the nested sequence of declarators in a full declarator, there is a declarator specifying a variable length array type, the type specified by the full declarator is said to be this.|variably modified
 535) [6.7.6.1 Pointer declarators] For two pointer types to be this, both shall be identically qualified and both shall be pointers to compatible types.|compatible
@@ -614,7 +614,7 @@
 614) [6.9.1 Function definitions] If the declarator of a function includes a parameter type list, the list also specifies the types of all the parameters; such a declarator also serves as this for later calls to the same function in the same translation unit.|function prototype|prototype
 615) [6.9.1 Function definitions] If a function declarator includes this, the types of the parameters shall be declared in a following declaration list.|identifier list{Such a function declaration is also known as K&R style or old style.}
 616) [6.9.1 Function definitions] If a function that accepts a variable number of arguments is defined without a parameter type list that ends with this, the behavior is undefined.|ellipsis|...
-617) [6.9.1 Function definitions] If the } that terminates a function is reached, and the value of the function call is used by the caller, the behavior is this.|undefined
+617) [6.9.1 Function definitions] If the } that terminates a function is reached, and the value of the function call is used by the caller, the behavior is this.|undefined|undefined behavior
 618) [6.9.2 External object definitions] If the declaration of an identifier for an object has this scope and an initializer, the declaration is an external definition for the identifier.|file
 619) [6.9.2 External object definitions] If at the end of the translation unit containing int i[]; at file scope, the array i still has incomplete type, the implicit initializer causes it to have one element, which is set to this on program startup.|zero|0
 620) [6.10 Preprocessing directives] A sequence of preprocessing tokens whose first token in the sequence is a # preprocessing token that is either the first character in the source file (optionally after white space containing no new-line characters) or that follows white space containing at least one new-line character is called this.|preprocessing directive
@@ -677,7 +677,7 @@
 677) [7.1.1 Definitions of terms] A wide character with code value zero is called this.|null wide character
 678) [7.1.1 Definitions of terms] A contiguous sequence of wide characters terminated by and including the first null wide character is called this.|wide string
 679) [7.1.1 Definitions of terms] A contiguous sequence of bytes within a multibyte string that (potentially) causes a change in shift state is called this.|shift sequence
-680) [7.1.2 Standard headers] If a file with the same name as one of the above < and > delimited sequences, not provided as part of the implementation, is placed in any of the standard places that are searched for included source files, the behavior is this.|undefined
+680) [7.1.2 Standard headers] If a file with the same name as one of the above < and > delimited sequences, not provided as part of the implementation, is placed in any of the standard places that are searched for included source files, the behavior is this.|undefined|undefined behavior
 681) [7.1.2 Standard headers] The program shall not have any macros with names lexically identical to these currently defined prior to the inclusion of the header or when any macro defined in the header is expanded.|keywords
 682) [7.1.2 Standard headers] Any definition of an object-like macro in a standard header shall expand to code that is fully protected by these where necessary, so that it groups in an arbitrary expression as if it were a single identifier.|parentheses
 683) [7.1.2 Standard headers] Any declaration of a library function shall have this linkage.|external
@@ -842,7 +842,7 @@
 842) [7.16 Variable arguments <stdarg.h>] This type is a complete object type suitable for holding information needed by the macros va_start, va_arg, va_end, and va_copy.|va_list
 843) [7.16 Variable arguments <stdarg.h>] If access to the varying arguments is desired, the called function shall declare an object having this type.|va_list
 844) [7.16.1 Variable argument list access macros] Each invocation of the va_start and va_copy macros shall be matched by a corresponding invocation of this macro in the same function.|va_end
-845) [7.16.1.3 The va_end macro] If there is no corresponding invocation of the va_start or va_copy macro, or if the va_end macro is not invoked before the return, the behavior is this.|undefined
+845) [7.16.1.3 The va_end macro] If there is no corresponding invocation of the va_start or va_copy macro, or if the va_end macro is not invoked before the return, the behavior is this.|undefined|undefined behavior
 846) [7.16.1.4 The va_start macro] This  macro initializes a unique va_list for subsequent use by the va_arg and va_end macros.|va_start
 847) [7.16.1.4 The va_start macro] Neither the va_start nor va_copy macro shall be invoked to reinitialize a va_list without an intervening invocation of this macro for the same va_list.|va_end
 848) [7.17.1 Introduction] This header defines several macros and declares several types and functions for performing atomic operations on data shared between threads.|stdatomic.h
@@ -1036,7 +1036,7 @@
 1036) [7.22.4.5 The _Exit function] This function causes normal program termination to occur and control to be returned to the host environment. No functions registered by the atexit function, the at_quick_exit function, or signal handlers registered by the signal function are called.|_Exit
 1037) [7.22.4.6 The getenv function] This function searches an environment list, provided by the host environment, for a string that matches the string pointed to by name.|getenv
 1038) [7.22.4.7 The quick_exit function] This function causes normal program termination to occur. No functions registered by the atexit function or signal handlers registered by the signal function are called.|quick_exit
-1039) [7.22.4.7 The quick_exit function] If a signal is raised while the quick_exit function is executing, the behavior is this.|undefined
+1039) [7.22.4.7 The quick_exit function] If a signal is raised while the quick_exit function is executing, the behavior is this.|undefined|undefined behavior
 1040) [7.22.4.8 The system function] If the argument of the system function is this, the system function determines whether the host environment has a command processor and returns nonzero if so.|null pointer|NULL|0
 1041) [7.22.4.8 The system function] If the argument of the system function is a null pointer, the system function determines whether the host environment has this and returns nonzero if so.|command processor
 1042) [7.22.4.8 The system function] If the argument is not a null pointer, this function passes the string pointed to by its argument to the host environment's command processor to be executed in a manner which the implementation shall document.|system
@@ -1287,22 +1287,22 @@
 1287) [J.1 Unspecified behavior] An example of this behavior is which of two elements that compare as equal is matched by the bsearch function.|unspecified behavior|unspecified
 1288) [J.1 Unspecified behavior] An example of this behavior is the order of two elements that compare as equal in an array sorted by the qsort function.|unspecified behavior|unspecified
 1289) [J.1 Unspecified behavior] An example of this behavior is the encoding of the calendar time returned by the time function.|unspecified behavior|unspecified
-1290) [J.2 Undefined behavior] An example of this is when a nonempty source file does not end in a new-line character which is not immediately preceded by a backslash character or ends in a partial preprocessing token or comment.|undefined behavior
-1291) [J.2 Undefined behavior] An example of this is when an object is referred to outside of its lifetime.|undefined behavior
-1292) [J.2 Undefined behavior] An example of this is when a pointer is converted to other than an integer or pointer type.|undefined behavior
-1293) [J.2 Undefined behavior] An example of this is when an expression is shifted by a negative number or by an amount greater than or equal to the width of the promoted expression.|undefined behavior
-1294) [J.2 Undefined behavior] An example of this is when a file with the same name as one of the standard headers, not provided as part of the implementation, is placed in any of the standard places that are searched for included source files.|undefined behavior
-1295) [J.2 Undefined behavior] An example of this is when a macro definition of errno is suppressed in order to access an actual object, or the program defines an identifier with the name errno.|undefined behavior
-1296) [J.2 Undefined behavior] An example of this is when a signal occurs as the result of calling the abort or raise function, and the signal handler calls the raise function.|undefined behavior
-1297) [J.2 Undefined behavior] An example of this is when the signal function is used in a multi-threaded program.|undefined behavior
-1298) [J.2 Undefined behavior] An example of this is when an output operation on an update stream is followed by an input operation without an intervening call to the fflush function or a file positioning function, or an input operation on an update stream is followed by an output operation with an intervening call to a file positioning function.|undefined behavior
-1299) [J.2 Undefined behavior] An example of this is when a partial element read by a call to the fread function is used.|undefined behavior
-1300) [J.2 Undefined behavior] An example of this is when the fseek function is called for a text stream with a nonzero offset and either the offset was not returned by a previous successful call to the ftell function on a stream associated with the same file or whence is not SEEK_SET.|undefined behavior
-1301) [J.2 Undefined behavior] An example of this is when the fsetpos function is called to set a position that was not returned by a previous successful call to the fgetpos function on a stream associated with the same file.|undefined behavior
-1302) [J.2 Undefined behavior] An example of this is when a signal is raised while the quick_exit function is executing.|undefined behavior
-1303) [J.2 Undefined behavior] An example of this is when a complex argument is supplied for a generic parameter of a type-generic macro that has no corresponding complex function.|undefined behavior
+1290) [J.2 Undefined behavior] An example of this is when a nonempty source file does not end in a new-line character which is not immediately preceded by a backslash character or ends in a partial preprocessing token or comment.|undefined behavior|undefined
+1291) [J.2 Undefined behavior] An example of this is when an object is referred to outside of its lifetime.|undefined behavior|undefined
+1292) [J.2 Undefined behavior] An example of this is when a pointer is converted to other than an integer or pointer type.|undefined behavior|undefined
+1293) [J.2 Undefined behavior] An example of this is when an expression is shifted by a negative number or by an amount greater than or equal to the width of the promoted expression.|undefined behavior|undefined
+1294) [J.2 Undefined behavior] An example of this is when a file with the same name as one of the standard headers, not provided as part of the implementation, is placed in any of the standard places that are searched for included source files.|undefined behavior|undefined
+1295) [J.2 Undefined behavior] An example of this is when a macro definition of errno is suppressed in order to access an actual object, or the program defines an identifier with the name errno.|undefined behavior|undefined
+1296) [J.2 Undefined behavior] An example of this is when a signal occurs as the result of calling the abort or raise function, and the signal handler calls the raise function.|undefined behavior|undefined
+1297) [J.2 Undefined behavior] An example of this is when the signal function is used in a multi-threaded program.|undefined behavior|undefined
+1298) [J.2 Undefined behavior] An example of this is when an output operation on an update stream is followed by an input operation without an intervening call to the fflush function or a file positioning function, or an input operation on an update stream is followed by an output operation with an intervening call to a file positioning function.|undefined behavior|undefined
+1299) [J.2 Undefined behavior] An example of this is when a partial element read by a call to the fread function is used.|undefined behavior|undefined
+1300) [J.2 Undefined behavior] An example of this is when the fseek function is called for a text stream with a nonzero offset and either the offset was not returned by a previous successful call to the ftell function on a stream associated with the same file or whence is not SEEK_SET.|undefined behavior|undefined
+1301) [J.2 Undefined behavior] An example of this is when the fsetpos function is called to set a position that was not returned by a previous successful call to the fgetpos function on a stream associated with the same file.|undefined behavior|undefined
+1302) [J.2 Undefined behavior] An example of this is when a signal is raised while the quick_exit function is executing.|undefined behavior|undefined
+1303) [J.2 Undefined behavior] An example of this is when a complex argument is supplied for a generic parameter of a type-generic macro that has no corresponding complex function.|undefined behavior|undefined
 1304) [J.3 Implementation-defined behavior] A conforming implementation is required to do this for its choice of behavior for implementation-defined behavior.|document
-1305) [J.3 Implementation-defined behavior] A conforming implementation is required to document its choice of behavior for this kind of behavior.|implementation-defined
+1305) [J.3 Implementation-defined behavior] A conforming implementation is required to document its choice of behavior for this kind of behavior.|implementation-defined|implementation-defined behavior
 1306) [J.3 Implementation-defined behavior] An example of this behavior is the result of converting a pointer to an integer or vice versa.|implementation-defined behavior|implementation-defined
 1307) [J.3 Implementation-defined behavior] An example of this behavior is the size of the result of subtracting two pointers to elements of the same array.|implementation-defined behavior|implementation-defined
 1308) [J.3 Implementation-defined behavior] An example of this behavior is the extent to which suggestions made by using the register storage-class specifier are effective.|implementation-defined behavior|implementation-defined
