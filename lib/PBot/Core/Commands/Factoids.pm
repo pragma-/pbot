@@ -797,11 +797,19 @@ sub cmd_factadd($self, $context) {
 
     if ($self->{pbot}->{commands}->exists($keyword)) { return "/say $keyword_text already exists as a built-in command."; }
 
+    my $exists = $self->{pbot}->{factoids}->{data}->{storage}->exists($from_chan, $keyword);
+
     $self->{pbot}->{factoids}->{data}->add('text', $from_chan, $context->{hostmask}, $keyword, $text);
 
-    $self->{pbot}->{logger}->log("$context->{hostmask} added [$from_chan] $keyword_text => $text\n");
+    if ($force && $exists) {
+        $self->{pbot}->{factoids}->{data}->{storage}->set($from_chan, $keyword, 'edited_by', $context->{hostmask});
+        $self->{pbot}->{factoids}->{data}->{storage}->set($from_chan, $keyword, 'edited_on', scalar gettimeofday);
+        $self->log_factoid($from_chan, $keyword, $context->{hostmask}, "force created: $text");
+    } else {
+        $self->log_factoid($from_chan, $keyword, $context->{hostmask}, "created: $text");
+    }
 
-    $self->log_factoid($from_chan, $keyword, $context->{hostmask}, "created: $text");
+    $self->{pbot}->{logger}->log("$context->{hostmask} added [$from_chan] $keyword_text => $text\n");
 
     return "/say $keyword_text added to " . ($from_chan eq '.*' ? 'global channel' : $from_chan) . ".";
 }
@@ -1385,7 +1393,7 @@ sub cmd_top20($self, $context) {
 
     my ($channel, $args) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
-    if (not defined $channel) { return "Usage: top20 <channel> [nick or 'recent']"; }
+    if (not defined $channel) { return "Usage: top20 <channel> [nick or 'added' or 'edited']"; }
 
     if (not defined $args) {
         my $iter = $factoids->get_each('type = text', "index1 = $channel", 'index2', 'ref_count > 0', '_sort = -ref_count');
@@ -1404,7 +1412,7 @@ sub cmd_top20($self, $context) {
         }
     }
 
-    if (lc $args eq "recent") {
+    if (lc $args eq 'recent' || lc $args eq 'added') {
         my $iter = $factoids->get_each('type = text', "index1 = $channel", 'index2', 'created_on', 'owner', '_sort = -created_on');
         while (defined (my $factoid = $factoids->get_next($iter))) {
             my $ago   = concise ago gettimeofday - $factoid->{'created_on'};
@@ -1414,8 +1422,23 @@ sub cmd_top20($self, $context) {
             last if $i >= 50;
         }
 
-        $channel = "global channel"                                if $channel eq '.*';
+        $channel = 'global channel' if $channel eq '.*';
         $text    = "$i most recent $channel submissions:\n\n$text" if $i > 0;
+        return $text;
+    }
+
+    if (lc $args eq 'edited') {
+        my $iter = $factoids->get_each('type = text', "index1 = $channel", 'index2', 'edited_on', 'edited_by', '_sort = -edited_on');
+        while (defined (my $factoid = $factoids->get_next($iter))) {
+            my $ago   = concise ago gettimeofday - $factoid->{'edited_on'};
+            my ($editor) = $factoid->{'edited_by'} =~ /^([^!]+)/;
+            $text .= '   ' . $factoids->get_data($factoid->{index1}, $factoid->{index2}, '_name') . " [$ago by $editor]\n";
+            $i++;
+            last if $i >= 50;
+        }
+
+        $channel = 'global channel' if $channel eq '.*';
+        $text    = "$i most recent $channel edits:\n\n$text" if $i > 0;
         return $text;
     }
 
