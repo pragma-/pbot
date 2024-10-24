@@ -1430,6 +1430,7 @@ sub cmd_top20($self, $context) {
     if (lc $args eq 'edited') {
         my $iter = $factoids->get_each('type = text', "index1 = $channel", 'index2', 'edited_on', 'edited_by', '_sort = -edited_on');
         while (defined (my $factoid = $factoids->get_next($iter))) {
+            last if not defined $factoid->{'edited_on'};
             my $ago   = concise ago gettimeofday - $factoid->{'edited_on'};
             my ($editor) = $factoid->{'edited_by'} =~ /^([^!]+)/;
             $text .= '   ' . $factoids->get_data($factoid->{index1}, $factoid->{index2}, '_name') . " [$ago by $editor]\n";
