@@ -14,7 +14,7 @@ use PBot::Imports;
 
 sub initialize($self, %conf) {
     $self->{pbot}->{registry}->add_default('text', 'antihello', 'bad_greetings',
-        $conf{bad_greetings} // '^\s*(?:[[:punct:]]|\p{Emoticons})*\s*(?:h*e+l+l+o+|h+e+y+a+|y+o+|h*e+n+l+o+|l+o+|h+i+|g+o*d*\s*[[:punct:]]*\s*(d+a+y+|m+o+r+n+i*n*g*|e+v+e+n+i+n+g*|a+f+t+e+r+n+o+n+|n+o+n+)|w*a*s+u+p+|g+[[:punct:]]*d+a+y+|g+r+e+t+s*z*|g+r+e+t+i+n+g+s*|h*o+l+a+|o+i+|h*e+y+|h+a+y+|o*h+a+i+)\s*[[:punct:]]*\s*(?:\s+.{1,15})?\s*(?:[[:punct:]]|\p{Emoticons})*\s*$'
+        $conf{bad_greetings} // '^\s*(?:[[:punct:]]|\p{Emoticons})*\s*(?:h*e+l+l+o+|h+e+y+a+|y+o+|h*e+n+l+o+|l+o+|h+i+|(?:g+o*d*\s*[[:punct:]]*\s*)*(d+a+y+|m+o+r+n+i*n*g*|e+v+e+n+i+n+g*|a+f+t+e+r+n+o+n+|n+o+n+)|w*a*s+u+p+|b+r+o+s*|g+[[:punct:]]*d+a+y+|g+r+e+t+s*z*|g+r+e+t+i+n+g+s*|h*o+l+a+|o+i+|h*e+y+|h+a+y+|o*h+a+i+)\s*[[:punct:]]*\s*(?:\s+.{1,15})?\s*(?:[[:punct:]]|\p{Emoticons})*\s*$'
     );
 
     $self->{pbot}->{registry}->add_default('text', 'antihello', 'kick_msg', 'https://nohello.net/');
@@ -22,7 +22,17 @@ sub initialize($self, %conf) {
     $self->{pbot}->{event_dispatcher}->register_handler('irc.caction', sub { $self->on_action(@_) });
     $self->{pbot}->{event_dispatcher}->register_handler('irc.public',  sub { $self->on_public(@_) });
 
-    $self->{offense_counter} = {};
+    my $filename = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/antihello';
+
+    $self->{storage} = PBot::Core::Storage::DualIndexHashObject->new(
+        pbot     => $self->{pbot},
+        name     => 'AntiHello',
+        filename => $filename,
+        save_queue_timeout => 15,
+    );
+
+    $self->{storage}->load;
+
     $self->{last_warning} = 0;
 }
 
@@ -32,34 +42,45 @@ sub unload($self) {
 }
 
 sub punish($self, $msg, $channel, $nick, $user, $host) {
-    $self->{offense_counter}->{$channel}->{$nick}++;
+    my $data = $self->{storage}->get_data($channel, $nick);
 
-    $self->{pbot}->{logger}->log("[anti-hello] $nick!$user\@$host offense $self->{offense_counter}->{$channel}->{$nick}\n");
+    if (not defined $data) {
+        $data = {
+            offenses     => 0,
+            last_offense => 0,
+        };
+    }
 
-    if ($self->{offense_counter}->{$channel}->{$nick} == 1) {
-        # just do a private warning message for the first offense
+    $data->{offenses}++;
+    $data->{last_offense} = time;
+
+    $self->{storage}->add($channel, $nick, $data);
+
+    $self->{pbot}->{logger}->log("[anti-hello] $nick!$user\@$host offense $data->{offenses}\n");
+
+    if ($data->{offenses} == 1) {
         my $now = time;
 
         # send public message to channel with 5 minute cooldown
-        if ($now - $self->{last_warning} >= 60 * 5) {
+        if ($now - $self->{last_warning} >= 60 * 60) {
             $self->{last_warning} = $now;
             $self->{pbot}->{conn}->privmsg($channel, "Please do not send stand-alone channel greeting messages; include your question/statement along with the greeting. For more info, see https://nohello.net/ (repeated offenses will result in an automatic ban)");
         }
 
         # always send private message to offender
-        $self->{pbot}->{conn}->privmsg($nick, "($channel) Please do not send stand-alone channel greeting messages; include your question/statement along with the greeting. For more info, see https://nohello.net/ (repeated offenses will result in an automatic ban)");
+        $self->{pbot}->{conn}->privmsg($nick, "$nick: ($channel) Please do not send stand-alone channel greeting messages; include your question/statement along with the greeting. For more info, see https://nohello.net/ (repeated offenses will result in an automatic ban)");
 
         return 0;
-    } elsif ($self->{offense_counter}->{$channel}->{$nick} == 2) {
+    } elsif ($data->{offenses} == 2) {
         $msg .= ' (2ND OFFENSE WARNING: next offense will result in a temp-ban)';
-    } elsif ($self->{offense_counter}->{$channel}->{$nick} > 2) {
+    } elsif ($data->{offenses} > 2) {
         $msg .= ' (temp ban for repeated offenses)';
     }
 
     $self->{pbot}->{chanops}->add_op_command($channel, "kick $channel $nick $msg");
     $self->{pbot}->{chanops}->gain_ops($channel);
 
-    if ($self->{offense_counter}->{$channel}->{$nick} > 2) {
+    if ($data->{offenses} > 2) {
         my $botnick = $self->{pbot}->{conn}->nick;
         $self->{pbot}->{banlist}->ban_user_timed($channel, 'b', "*!*\@$host", 60 * 60 * 2, $botnick, 'anti-hello');
     }
