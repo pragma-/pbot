@@ -14,7 +14,7 @@ use PBot::Imports;
 
 sub initialize($self, %conf) {
     $self->{pbot}->{registry}->add_default('text', 'antihello', 'bad_greetings',
-        $conf{bad_greetings} // '^\s*(?:[[:punct:]]|\p{Emoticons})*\s*(?:h*e+l+l+o+|h+e+y+a+|y+o+|h*e+n+l+o+|l+o+|h+i+|(?:g+o*d*\s*[[:punct:]]*\s*)*(d+a+y+|m+o+r+n+i*n*g*|e+v+e+n+i+n+g*|a+f+t+e+r+n+o+n+|n+o+n+)|w*a*s+u+p+|b+r+o+s*|g+[[:punct:]]*d+a+y+|g+r+e+t+s*z*|g+r+e+t+i+n+g+s*|h*o+l+a+|o+i+|h*e+y+|h+a+y+|o*h+a+i+)\s*[[:punct:]]*\s*(?:\s+.{1,15})?\s*(?:[[:punct:]]|\p{Emoticons})*\s*$'
+        $conf{bad_greetings} // '^\s*(?:[[:punct:]]|\p{Emoticons})*\s*(?:h*e+l+l+o+|h+e+y+a+|y+o+|h*e+n+l+o+|l+o+|h+i+|(?:g+o*d*\s*[[:punct:]]*\s*)*(d+a+y+|m+o+r+n+i*n*g*|e+v+e+n+i+n+g*|a+f+t+e+r+n+o+n+|n+o+n+)|w*a*s+u+p+|l+a+d+s*|b+r+o+s*|g+[[:punct:]]*d+a+y+|g+r+e+t+s*z*|g+r+e+t+i+n+g+s*|h*o+l+a+|o+i+|h*e+y+|h+a+y+|o*h+a+i+)\s*[[:punct:]]*\s*(?:\s+.{1,15})?\s*(?:[[:punct:]]|\p{Emoticons})*\s*$'
     );
 
     $self->{pbot}->{registry}->add_default('text', 'antihello', 'kick_msg', 'https://nohello.net/');
@@ -61,7 +61,7 @@ sub punish($self, $msg, $channel, $nick, $user, $host) {
     if ($data->{offenses} == 1) {
         my $now = time;
 
-        # send public message to channel with 5 minute cooldown
+        # send public message to channel with cooldown
         if ($now - $self->{last_warning} >= 60 * 60) {
             $self->{last_warning} = $now;
             $self->{pbot}->{conn}->privmsg($channel, "Please do not send stand-alone channel greeting messages; include your question/statement along with the greeting. For more info, see https://nohello.net/ (repeated offenses will result in an automatic ban)");
