@@ -373,12 +373,22 @@ sub postprocess_output($self) {
         # "\n" => '<nl>',
 
         # \t is left alone
+
     );
 
     $self->{output} =~ s/([\e\f])/$escapes{$1}/gs;
 
     # other unprintables
-    my %disregard = ( "\n" => 1, "\r" => 1, "\t" => 1, "\x03" => 1 );
+    my %disregard = (
+        "\n" => 1, "\r" => 1, "\t" => 1,
+        "\x11" => 1, # monospace
+        "\x1D" => 1, # italic
+        "\x1E" => 1, # strikethrough
+        "\x1F" => 1, # underline
+        "\x02" => 1, # bold
+        "\x03" => 1, # colors
+        "\x0F" => 1, # reset
+    );
     $self->{output} =~ s/([\x00-\x1f])/$disregard{$1} ? $1 : sprintf('\x%02X', ord $1)/gse;
 }
 
