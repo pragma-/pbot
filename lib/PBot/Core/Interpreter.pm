@@ -1180,11 +1180,9 @@ sub extract_bracketed($self, $string, $open_bracket = '{', $close_bracket = '}',
     return ($result, $rest);
 }
 
-# splits line into quoted arguments while preserving quotes.
-# a string is considered quoted only if they are surrounded by
-# whitespace or json separators.
-# handles unbalanced quotes gracefully by treating them as
-# part of the argument they were found within.
+# splits line into arguments separated by unquoted whitespace.
+# handles unbalanced quotes by treating them as part of the
+# argument they were found within.
 sub split_line($self, $line, %opts) {
     my %default_opts = (
         strip_quotes     => 0,
@@ -1252,12 +1250,10 @@ sub split_line($self, $line, %opts) {
         }
 
         if (defined $quote) {
-            if ($ch eq $quote and (not defined $next_ch or $next_ch =~ /[\s,:;})\].+=]/)) {
+            if ($ch eq $quote) {
                 # closing quote
                 $token .= $ch unless $opts{strip_quotes};
-                push @args, $token;
                 $quote = undef;
-                $token = '';
             } else {
                 # still within quoted argument
                 $token .= $ch;
@@ -1265,7 +1261,7 @@ sub split_line($self, $line, %opts) {
             next;
         }
 
-        if (($last_ch =~ /[\s:{(\[.+=,]/) and not defined $quote and ($ch eq "'" or $ch eq '"')) {
+        if (not defined $quote and ($ch eq "'" or $ch eq '"')) {
             if ($ignore_quote) {
                 # treat unbalanced quote as part of this argument
                 $token .= $ch;
