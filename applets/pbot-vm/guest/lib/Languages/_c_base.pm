@@ -9,6 +9,8 @@ use strict;
 package _c_base;
 use parent '_default';
 
+use SplitLine;
+
 sub preprocess {
     my $self = shift;
 
@@ -18,7 +20,7 @@ sub preprocess {
     print $fh "$input\n";
     close $fh;
 
-    my @cmd = $self->split_line($self->{cmdline}, strip_quotes => 1, preserve_escapes => 0);
+    my @cmd = split_line($self->{cmdline}, strip_quotes => 1, preserve_escapes => 0);
 
     if ($self->{code} =~ m/print_last_statement\(.*\);$/m) {
         # remove print_last_statement wrapper in order to get warnings/errors from last statement line
@@ -85,7 +87,7 @@ sub postprocess {
 
     my $ulimits = "ulimit -f 2000; ulimit -t 8; ulimit -u 200";
 
-    my @args = $self->split_line($self->{arguments}, strip_quotes => 1, preserve_escapes => 1);
+    my @args = split_line($self->{arguments}, strip_quotes => 1, preserve_escapes => 1);
 
     my $quoted_args = '';
 

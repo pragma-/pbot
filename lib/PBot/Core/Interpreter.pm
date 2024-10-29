@@ -1203,15 +1203,12 @@ sub split_line($self, $line, %opts) {
     my $token      = '';
     my $last_token = '';
     my $ch         = ' ';
-    my $last_ch;
-    my $next_ch;
     my $i = 0;
     my $pos;
     my $ignore_quote = 0;
     my $spaces       = 0;
 
     while (1) {
-        $last_ch = $ch;
 
         if ($i >= @chars) {
             if (defined $quote) {
@@ -1219,7 +1216,6 @@ sub split_line($self, $line, %opts) {
                 $i            = $pos;
                 $ignore_quote = 1;
                 $quote        = undef;
-                $last_ch      = ' ';
                 $token        = $last_token;
             } else {
                 # add final token and exit
@@ -1230,7 +1226,6 @@ sub split_line($self, $line, %opts) {
         }
 
         $ch      = $chars[$i++];
-        $next_ch = $chars[$i];
 
         $spaces = 0 if $ch ne ' ';
 
