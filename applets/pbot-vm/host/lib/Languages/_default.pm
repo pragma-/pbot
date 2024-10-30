@@ -53,7 +53,7 @@ sub process_interactive_edit($self) {
 }
 
 sub process_standard_options($self) {
-    my @opt_args = split_line($self->{code}, preserve_escapes => 1, keep_spaces => 0);
+    my @opt_args = split_line($self->{code}, preserve_escapes => 1, keep_spaces => 1);
 
     my $getopt_error;
     local $SIG{__WARN__} = sub {
