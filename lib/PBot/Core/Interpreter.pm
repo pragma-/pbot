@@ -343,6 +343,9 @@ sub interpret($self, $context) {
         }
     }
 
+    # strip any trailing newlines from keyword
+    $keyword =~ s/\n+$//;
+
     # ensure we have a $keyword
     if (not defined $keyword or not length $keyword) {
         $self->{pbot}->{logger}->log("Error: Missing keyword; disregarding command\n");
@@ -709,7 +712,7 @@ sub handle_result($self, $context, $result = $context->{result}) {
 
             my $link = $self->{pbot}->{webpaste}->paste("$context->{from} <$context->{nick}> $context->{text}\n\n$original_result");
 
-            my $message = "And that's all I have to say about that. See $link for full text.";
+            my $message = "<truncated; $link>";
 
             if ($context->{use_output_queue}) {
                 my $message = {
@@ -1276,9 +1279,14 @@ sub split_line($self, $line, %opts) {
                 $token .= $ch;
                 next;
             } else {
+                if ($opts{keep_spaces} && $ch eq "\n") {
+                    $token .= $ch;
+                }
+
                 unless ($opts{strip_commas} and $token eq ',') {
                     push @args, $token if length $token;
                 }
+
                 $token = '';
                 next;
             }
