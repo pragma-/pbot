@@ -30,7 +30,7 @@ sub unload($self) {
 }
 
 use constant {
-    USAGE     => 'Usage: wordle start [length [wordlist]] | custom <word> <channel> [wordlist] | guess <word> | letters | show | info | giveup',
+    USAGE     => 'Usage: wordle start [length [wordlist]] | custom <word> <channel> [wordlist] | guess <word> | guesses | letters | show | info | giveup',
     NO_WORDLE => 'There is no Wordle yet. Use `wordle start` to begin a game.',
 
     DEFAULT_LIST       => 'american',
@@ -289,6 +289,18 @@ sub wordle($self, $context) {
             return $result;
         }
 
+        when ('guesses') {
+            if (not defined $self->{$channel}->{wordle}) {
+                return NO_WORDLE;
+            }
+
+            if (not $self->{$channel}->{guesses}->@*) {
+                return 'No guesses yet.';
+            }
+
+            return join("$color{reset} ", $self->{$channel}->{guesses}->@*) . "$color{reset}";
+        }
+
         when ('letters') {
             if (@args > 1) {
                 return "Usage: wordle letters";
@@ -380,6 +392,7 @@ sub make_wordle($self, $channel, $length, $word = undef, $wordlist = DEFAULT_LIS
     $self->{$channel}->{length}      = $length;
     $self->{$channel}->{wordle}      = \@wordle;
     $self->{$channel}->{guess}       = '';
+    $self->{$channel}->{guesses}     = [];
     $self->{$channel}->{correct}     = 0;
     $self->{$channel}->{guess_count} = 0;
     $self->{$channel}->{letters}     = {};
@@ -500,6 +513,8 @@ sub guess_wordle($self, $channel, $guess) {
     }
 
     $self->{$channel}->{guess} = $result;
+
+    push $self->{$channel}->{guesses}->@*, $result;
 
     if ($correct == length $guess) {
         $self->{$channel}->{correct} = 1;
