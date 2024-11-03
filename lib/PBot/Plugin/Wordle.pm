@@ -158,7 +158,7 @@ sub wordle($self, $context) {
                 return NO_WORDLE;
             }
 
-            my $result = "Current wordlist: $self->{$channel}->{wordlist} ($self->{$channel}->{length}); guesses attempted: $self->{$channel}->{guess_count}";
+            my $result = "Current wordlist: $self->{$channel}->{wordlist} ($self->{$channel}->{length}); guesses: $self->{$channel}->{guess_count}";
 
             if ($self->{$channel}->{correct}) {
                 my $solved_on = concise ago (time - $self->{$channel}->{solved_on});
