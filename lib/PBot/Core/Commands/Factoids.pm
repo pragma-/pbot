@@ -58,6 +58,7 @@ sub initialize($self, %conf) {
     $self->{pbot}->{commands}->register(sub { $self->cmd_factchange(@_) },   "factchange", 0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_factalias(@_) },    "factalias",  0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_factmove(@_) },     "factmove",   0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_factcopy(@_) },     "factcopy",   0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_call_factoid(@_) }, "fact",       0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_as_factoid(@_) },   "factoid",    0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_factfind(@_) },     "factfind",   0);
@@ -512,11 +513,12 @@ sub cmd_factmove($self, $context) {
 
     return $usage if not defined $target_channel;
 
-    if ($target_channel !~ /^#/ and $target_channel ne '.*') {
+    if ($target_channel !~ /^#/ && ($target_channel ne '.*' && $target_channel ne 'global')) {
         if (defined $target) {
             return "Unexpected argument '$target' when renaming to '$target_channel'. Perhaps '$target_channel' is missing #s? $usage";
         }
 
+        $target_channel = '.*' if $target_channel eq 'global';
         $target         = $target_channel;
         $target_channel = $src_channel;
     } else {
@@ -541,6 +543,7 @@ sub cmd_factmove($self, $context) {
 
     my $source_channel_name = $self->{pbot}->{factoids}->{data}->{storage}->get_data($found_src_channel, '_name');
     my $source_trigger_name = $self->{pbot}->{factoids}->{data}->{storage}->get_data($found_src_channel, $found_source, '_name');
+
     $source_channel_name = 'global'                   if $source_channel_name eq '.*';
     $source_trigger_name = "\"$source_trigger_name\"" if $source_trigger_name =~ / /;
 
@@ -562,8 +565,10 @@ sub cmd_factmove($self, $context) {
     if (defined $found_target_channel) {
         my $target_channel_name = $factoids->get_data($found_target_channel, '_name');
         my $target_trigger_name = $factoids->get_data($found_target_channel, $found_target, '_name');
+
         $target_channel_name = 'global'                   if $target_channel_name eq '.*';
         $target_trigger_name = "\"$target_trigger_name\"" if $target_trigger_name =~ / /;
+
         return "Target factoid $target_trigger_name already exists in channel $target_channel_name.";
     }
 
@@ -571,9 +576,12 @@ sub cmd_factmove($self, $context) {
     if (defined $overtrigger and $factoids->get_data('.*', $overtrigger, 'nooverride')) {
         my $override_channel_name = $factoids->get_data($overchannel, '_name');
         my $override_trigger_name = $factoids->get_data($overchannel, $overtrigger, '_name');
+
         $override_channel_name = 'global'                     if $override_channel_name eq '.*';
         $override_trigger_name = "\"$override_trigger_name\"" if $override_trigger_name =~ / /;
+
         $self->{pbot}->{logger}->log("$context->{hostmask} attempt to override $target\n");
+
         return
           "/say $override_trigger_name already exists for the global channel and cannot be overridden for "
           . ($target_channel eq '.*' ? 'the global channel' : $target_channel) . ".";
@@ -599,6 +607,107 @@ sub cmd_factmove($self, $context) {
         $self->log_factoid($target_channel,    $target,       $context->{hostmask}, "moved from $source_channel_name/$source_trigger_name to $target_channel/$target");
         return "[$source_channel_name] $source_trigger_name moved to [$target_channel] $target";
     }
+}
+
+sub cmd_factcopy($self, $context) {
+    my ($src_channel, $source, $target_channel, $target) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 5);
+
+    my $usage = "Usage: factcopy <source channel> <source factoid> <target channel/factoid> [target factoid]";
+
+    return $usage if not defined $target_channel;
+
+    if ($target_channel !~ /^#/ && ($target_channel ne '.*' && $target_channel ne 'global')) {
+        if (defined $target) {
+            return "Unexpected argument '$target' when renaming to '$target_channel'. Perhaps '$target_channel' is missing #s? $usage";
+        }
+
+        $target_channel = '.*' if $target_channel eq 'global';
+        $target         = $target_channel;
+        $target_channel = $src_channel;
+    } else {
+        if (not defined $target) {
+            $target = $source;
+        }
+    }
+
+    if (length $target > $self->{pbot}->{registry}->get_value('factoids', 'max_name_length')) {
+        return "/say $context->{nick}: I don't think the factoid name needs to be that long.";
+    }
+
+    if (length $target_channel > $self->{pbot}->{registry}->get_value('factoids', 'max_channel_length')) {
+        return "/say $context->{nick}: I don't think the channel name needs to be that long.";
+    }
+
+    my ($found_src_channel, $found_source) = $self->{pbot}->{factoids}->{data}->find($src_channel, $source, exact_channel => 1, exact_trigger => 1);
+
+    if (not defined $found_src_channel) {
+        return "Source factoid $source not found in channel $src_channel";
+    }
+
+    my $source_channel_name = $self->{pbot}->{factoids}->{data}->{storage}->get_data($found_src_channel, '_name');
+    my $source_trigger_name = $self->{pbot}->{factoids}->{data}->{storage}->get_data($found_src_channel, $found_source, '_name');
+
+    $source_channel_name = 'global'                   if $source_channel_name eq '.*';
+    $source_trigger_name = "\"$source_trigger_name\"" if $source_trigger_name =~ / /;
+
+    my $factoids = $self->{pbot}->{factoids}->{data}->{storage};
+    my ($owner) = $factoids->get_data($found_src_channel, $found_source, 'owner') =~ m/([^!]+)/;
+
+    if ($factoids->get_data($found_src_channel, $found_source, 'locked')) {
+        return "/say $source_trigger_name is locked; unlock before copying.";
+    }
+
+    my ($found_target_channel, $found_target) = $self->{pbot}->{factoids}->{data}->find($target_channel, $target, exact_channel => 1, exact_trigger => 1);
+
+    if (defined $found_target_channel) {
+        my $target_channel_name = $factoids->get_data($found_target_channel, '_name');
+        my $target_trigger_name = $factoids->get_data($found_target_channel, $found_target, '_name');
+
+        $target_channel_name = 'global'                   if $target_channel_name eq '.*';
+        $target_trigger_name = "\"$target_trigger_name\"" if $target_trigger_name =~ / /;
+
+        return "Target factoid $target_trigger_name already exists in channel $target_channel_name.";
+    }
+
+    my ($overchannel, $overtrigger) = $self->{pbot}->{factoids}->{data}->find('.*', $target, exact_channel => 1, exact_trigger => 1);
+    if (defined $overtrigger and $factoids->get_data('.*', $overtrigger, 'nooverride')) {
+        my $override_channel_name = $factoids->get_data($overchannel, '_name');
+        my $override_trigger_name = $factoids->get_data($overchannel, $overtrigger, '_name');
+
+        $override_channel_name = 'global'                     if $override_channel_name eq '.*';
+        $override_trigger_name = "\"$override_trigger_name\"" if $override_trigger_name =~ / /;
+
+        $self->{pbot}->{logger}->log("$context->{hostmask} attempt to override $target\n");
+
+        return
+          "/say $override_trigger_name already exists for the global channel and cannot be overridden for "
+          . ($target_channel eq '.*' ? 'the global channel' : $target_channel) . ".";
+    }
+
+    if ($self->{pbot}->{commands}->exists($target)) { return "/say $target already exists as a built-in command."; }
+
+    $target_channel = '.*' if $target_channel !~ /^#/;
+
+    my $data = $factoids->get_data($found_src_channel, $found_source);
+
+    $data->{owner}              = $context->{hostmask};
+    $data->{created_on}         = scalar gettimeofday;
+    $data->{ref_count}          = 0;
+    $data->{ref_user}           = "nobody";
+    $data->{rate_limit}         = $self->{pbot}->{registry}->get_value('factoids', 'default_rate_limit');
+    $data->{last_referenced_in} = '';
+    delete $data->{last_referenced_on};
+    delete $data->{edited_on};
+    delete $data->{edited_by};
+
+    $factoids->add($target_channel, $target, $data);
+
+    $found_src_channel = 'global' if $found_src_channel eq '.*';
+    $target_channel    = 'global' if $target_channel eq '.*';
+
+    $self->log_factoid($found_src_channel, $found_source, $context->{hostmask}, "copied from $source_channel_name/$source_trigger_name to $target_channel/$target");
+    $self->log_factoid($target_channel,    $target,       $context->{hostmask}, "copied from $source_channel_name/$source_trigger_name to $target_channel/$target");
+    return "[$source_channel_name] $source_trigger_name copied to [$target_channel] $target";
 }
 
 sub cmd_factalias($self, $context) {
