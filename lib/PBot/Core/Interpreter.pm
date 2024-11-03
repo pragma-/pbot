@@ -699,7 +699,7 @@ sub handle_result($self, $context, $result = $context->{result}) {
     $context->{original_result} = $result;
 
     $result =~ s/[\n\r]/ /g unless $preserve_newlines;
-    $result =~ s/[ \t]+/ /g unless $context->{preserve_whitespace};
+    #$result =~ s/[ \t]+/ /g unless $context->{preserve_whitespace};
 
     my $max_lines = $self->{pbot}->{registry}->get_value($context->{from}, 'max_newlines') // 4;
     my $lines = 0;
@@ -1320,6 +1320,9 @@ sub make_args($self, $string, %opts) {
         # add argument with quotes and spaces preserved
         push @arglist_unstripped, $arg;
 
+        # strip leading spaces from argument
+        $arg =~ s/^\s+//;
+
         # strip quotes from argument
         if ($arg =~ m/^'.*'$/) {
             $arg =~ s/^'//;
@@ -1328,9 +1331,6 @@ sub make_args($self, $string, %opts) {
             $arg =~ s/^"//;
             $arg =~ s/"$//;
         }
-
-        # strip leading spaces from argument
-        $arg =~ s/^\s+//;
 
         # add stripped argument
         push @arglist, $arg;
