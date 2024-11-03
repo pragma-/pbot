@@ -55,7 +55,6 @@ sub split_line ($line, %opts) {
 
         $ch = $chars[$i++];
 
-        my $dquote = $quote // 'undef';
         $spaces = 0 if $ch ne ' ';
 
         if ($escaped) {
@@ -101,7 +100,7 @@ sub split_line ($line, %opts) {
         }
 
         if ($ch eq ' ') {
-            if (++$spaces > 1 and $opts{keep_spaces}) {
+            if ($opts{keep_spaces} && (++$spaces > 1 || $ch eq "\n")) {
                 $token .= $ch;
                 next;
             } else {
