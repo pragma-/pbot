@@ -217,6 +217,7 @@ sub expand_action_arguments($self, $action, $input, $nick) {
     my %h;
 
     if (not defined $input or $input eq '') {
+        $input = '';
         %h = (args => $nick);
     } else {
         %h = (args => $input);
@@ -226,18 +227,16 @@ sub expand_action_arguments($self, $action, $input, $nick) {
     $jsonargs =~ s/^{".*":"//;
     $jsonargs =~ s/"}$//;
 
-    if (not defined $input or $input eq '') {
-        $input = "";
-        $action =~ s/\$args:json|\$\{args:json\}/$jsonargs/ge;
-        $action =~ s/\$args(?![[\w])|\$\{args(?![[\w])\}/$nick/g;
-    } else {
-        $action =~ s/\$args:json|\$\{args:json\}/$jsonargs/g;
-        $action =~ s/\$args(?![[\w])|\$\{args(?![[\w])\}/$input/g;
-    }
-
     my @args = $self->{pbot}->{interpreter}->split_line($input);
 
     $action =~ s/\$arglen\b|\$\{arglen\}/scalar @args/eg;
+    $action =~ s/\$args:json|\$\{args:json\}/$jsonargs/g;
+
+    if ($input eq '') {
+        $action =~ s/\$p?args(?![[\w])|\$\{p?args(?![[\w])\}/$nick/g;
+    } else {
+        $action =~ s/\$args(?![[\w])|\$\{args(?![[\w])\}/$input/g;
+    }
 
     my $depth        = 0;
     my $const_action = $action;
@@ -248,7 +247,7 @@ sub expand_action_arguments($self, $action, $input, $nick) {
         last if ++$depth >= 100;
 
         if ($arg eq '*') {
-            if (not defined $input or $input eq '') {
+            if ($input eq '') {
                 $action =~ s/\$arg\[\*\]|\$\{arg\[\*\]\}/$nick/;
             } else {
                 $action =~ s/\$arg\[\*\]|\$\{arg\[\*\]\}/$input/;
