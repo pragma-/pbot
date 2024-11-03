@@ -26,14 +26,17 @@ sub initialize {
 sub execute_applet($self, $context) {
     if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
         use Data::Dumper;
-        $Data::Dumper::Sortkeys = sub { [sort grep { not /(?:cmdlist|arglist)/ } keys %$context] };
+        $Data::Dumper::Sortkeys = 1;
         $Data::Dumper::Indent = 2;
         $self->{pbot}->{logger}->log("execute_applet\n");
         $self->{pbot}->{logger}->log(Dumper $context);
-        $Data::Dumper::Sortkeys = 1;
     }
 
     $self->{pbot}->{process_manager}->execute_process($context, sub { $self->launch_applet(@_) });
+
+    # return defined empty string to tell Interpreter::interpret() that we've
+    # handled this command so it stops looping through registered interpreters
+    return '';
 }
 
 sub launch_applet($self, $context) {
