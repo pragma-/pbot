@@ -79,9 +79,9 @@ sub execute($self, $context) {
     # launch the `vm-client` applet
     $self->{pbot}->{applets}->execute_applet($context);
 
-    # return empty string since the applet process reader will
+    # return undef since the applet process reader will
     # pass the output along to the result handler
-    return '';
+    return undef;
 }
 
 1;

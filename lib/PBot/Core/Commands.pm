@@ -224,6 +224,7 @@ sub interpreter($self, $context) {
         );
 
         # return no output since it will be handled by process manager
+        $context->{'skip-handle-result'} = 1;
         return '';
     } else {
         # execute this command normally

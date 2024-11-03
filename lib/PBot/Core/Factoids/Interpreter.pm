@@ -453,8 +453,7 @@ sub handle_action($self, $context, $action) {
         my ($lang, $code) = ($1, $2);
         $context->{lang} = $lang;
         $context->{code} = $code;
-        $self->{pbot}->{factoids}->{code}->execute($context);
-        return '';
+        return $self->{pbot}->{factoids}->{code}->execute($context);
     }
 
     return $action if $context->{special} eq 'code-factoid';

@@ -230,7 +230,6 @@ sub process_line($self, $from, $nick, $user, $host, $text, $tags = '', $is_comma
 
     # interpret all parsed commands
     foreach $command (@commands) {
-
         # check if user is ignored
         # the `login` command gets a pass on the ignore filter
         if ($command !~ /^login / and $self->{pbot}->{ignorelist}->is_ignored($from, "$nick!$user\@$host")) {
@@ -578,9 +577,6 @@ sub interpret($self, $context) {
 # sends final command output to appropriate queues.
 # use context result if no result argument given.
 sub handle_result($self, $context, $result = $context->{result}) {
-    # ensure we have a command result to work with
-    return if not defined $result or not length $result;
-
     # preservation of consecutive whitespace is disabled by default
     $context->{preserve_whitespace} //= 0;
 
@@ -591,7 +587,13 @@ sub handle_result($self, $context, $result = $context->{result}) {
         $Data::Dumper::Indent = 2;
         $self->{pbot}->{logger}->log("Interpreter::handle_result [$result]\n");
         $self->{pbot}->{logger}->log(Dumper $context);
-        $Data::Dumper::Sortkeys = 1;
+    }
+
+    # ensure we have a command result to work with
+    if (!defined $result || $context->{'skip-handle-result'}) {
+        $self->{pbot}->{logger}->log("Skipping handle_result\n");
+        delete $context->{'skip-handle-result'};
+        return;
     }
 
     # strip and store /command prefixes
@@ -1228,7 +1230,7 @@ sub split_line($self, $line, %opts) {
             }
         }
 
-        $ch      = $chars[$i++];
+        $ch = $chars[$i++];
 
         $spaces = 0 if $ch ne ' ';
 
