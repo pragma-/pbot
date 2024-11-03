@@ -57,6 +57,22 @@ sub initialize($self, %conf) {
         }
     );
     $self->{pbot}->{functions}->register(
+        'shquote',
+        {
+            desc   => 'quotes text for sh invocation',
+            usage  => 'shquote <text>',
+            subref => sub { $self->func_shquote(@_) }
+        }
+    );
+    $self->{pbot}->{functions}->register(
+        'quotemeta',
+        {
+            desc   => 'escapes/quotes metacharacters',
+            usage  => 'quotemeta <text>',
+            subref => sub { $self->func_quotemeta(@_) }
+        }
+    );
+    $self->{pbot}->{functions}->register(
         'uri_escape',
         {
             desc   => 'percent-encode unsafe URI characters',
@@ -90,6 +106,8 @@ sub unload($self) {
     $self->{pbot}->{functions}->unregister('uc');
     $self->{pbot}->{functions}->unregister('lc');
     $self->{pbot}->{functions}->unregister('unquote');
+    $self->{pbot}->{functions}->unregister('shquote');
+    $self->{pbot}->{functions}->unregister('quotemeta');
     $self->{pbot}->{functions}->unregister('uri_escape');
     $self->{pbot}->{functions}->unregister('ana');
     $self->{pbot}->{functions}->unregister('maybe-the');
@@ -131,6 +149,17 @@ sub func_uc($self, @rest) {
 sub func_lc($self, @rest) {
     my $text = "@rest";
     return lc $text;
+}
+
+sub func_shquote($self, @rest) {
+    my $text = "@rest";
+    $text =~ s/'/'"'"'/g;
+    return "'$text'";
+}
+
+sub func_quotemeta($self, @rest) {
+    my $text = "@rest";
+    return quotemeta $text;
 }
 
 sub func_uri_escape($self, @rest) {
