@@ -96,6 +96,14 @@ sub initialize($self, %conf) {
             subref => sub { $self->func_maybe_the(@_) }
         }
     );
+    $self->{pbot}->{functions}->register(
+        'maybe-to',
+        {
+            desc   => 'prepend "to" in front of text depending on the part-of-speech of the first word in text',
+            usage  => 'maybe-to <text>',
+            subref => sub { $self->func_maybe_to(@_) }
+        }
+    );
 
     $self->{tagger} = Lingua::EN::Tagger->new;
 }
@@ -111,6 +119,7 @@ sub unload($self) {
     $self->{pbot}->{functions}->unregister('uri_escape');
     $self->{pbot}->{functions}->unregister('ana');
     $self->{pbot}->{functions}->unregister('maybe-the');
+    $self->{pbot}->{functions}->unregister('maybe-to');
 }
 
 sub func_unquote($self, @rest) {
@@ -191,7 +200,7 @@ sub func_maybe_the($self, @rest) {
 
     my ($word) = $text =~ m/^\s*([^',.;: ]+)/;
 
-    # don't prepend "the" if a proper-noun nick follows
+    # don't prepend if a proper-noun nick follows
     if ($self->{pbot}->{nicklist}->is_present_any_channel($word)) {
         return $text;
     }
@@ -205,6 +214,33 @@ sub func_maybe_the($self, @rest) {
 
     if ($tagged !~ m/^\s*<(?:det|prps?|cd|in|nnp|to|rb|wdt|rbr|jjr)>/) {
         $text = "the $text";
+    }
+
+    return $text;
+}
+
+sub func_maybe_to($self, @rest) {
+    my $text = "@rest";
+    $text =~ s/^to (?:the )?//;
+
+    my ($word) = $text =~ m/^\s*([^',.;: ]+)/;
+
+    # don't prepend if a proper-noun nick follows
+    if ($self->{pbot}->{nicklist}->is_present_any_channel($word)) {
+        return "to $text";
+    }
+
+    # special-case some indefinite nouns that Lingua::EN::Tagger treats as plain nouns
+    if ($word =~ m/(some|any|every|no)(thing|one|body|how|way|where|when|time|place)/i) {
+        return "to $text";
+    }
+
+    my $tagged = $self->{tagger}->add_tags($word);
+
+    if ($tagged !~ m/^\s*<(?:det|prps?|cd|in|nnp|to|rb|wdt|rbr|jjr)>/) {
+        $text = "to the $text";
+    } else {
+        $text = "to $text";
     }
 
     return $text;
