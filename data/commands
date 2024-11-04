@@ -191,7 +191,7 @@
    },
    "factlog" : {
       "help" : "Displays a factoid's changelog history. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factlog",
-      "requires_cap" : 0
+      "requires_cap" : "0"
    },
    "factmove" : {
       "help" : "Renames a factoid or moves a factoid to a different channel. See https://github.com/pragma-/pbot/blob/master/doc/Factoids.md#factmove",
@@ -247,6 +247,7 @@
       "requires_cap" : "0"
    },
    "grab" : {
+      "dont-replace-pronouns" : "1",
       "help" : "Grabs a message someone says, and adds it to the quotegrabs database. https://github.com/pragma-/pbot/blob/master/doc/Plugins/Quotegrabs.md#grab",
       "requires_cap" : "0"
    },
@@ -353,13 +354,11 @@
    "plang" : {
       "dont-replace-pronouns" : "1",
       "help" : "",
-      "preserve_whitespace" : "1",
       "requires_cap" : "0"
    },
    "plangrepl" : {
       "dont-replace-pronouns" : "1",
       "help" : "",
-      "preserve_whitespace" : "1",
       "requires_cap" : 0
    },
    "plug" : {
@@ -381,6 +380,7 @@
    "recall" : {
       "dont-replace-pronouns" : "0",
       "help" : "Recalls previous chat history for a channel. See https://github.com/pragma-/pbot/blob/master/doc/Admin.md#recall",
+      "keep-escapes" : "1",
       "requires_cap" : "0"
    },
    "refresh" : {
@@ -397,7 +397,7 @@
    },
    "regfind" : {
       "help" : "Searches the registry for keywords or values. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regfind",
-      "requires_cap" : 0
+      "requires_cap" : "0"
    },
    "regset" : {
       "help" : "Creates a new registry item or updates an existing item. See https://github.com/pragma-/pbot/blob/master/doc/Registry.md#regset",
@@ -531,7 +531,6 @@
    },
    "wordle" : {
       "help" : "Wordle game! Guess target word by submitting words for clues about which letters belong to the word!",
-      "preserve_whitespace" : "1",
       "requires_cap" : null
    },
    "wordmorph" : {

@@ -982,8 +982,6 @@ sub cmd_factshow($self, $context) {
 
     my $factoids = $self->{pbot}->{factoids}->{data}->{storage};
 
-    $context->{preserve_whitespace} = 1;
-
     my ($chan, $trig) = @$opt_args;
     $chan = $context->{from} if not defined $trig;
     my $args = join(' ', map { $_ = "'$_'" if $_ =~ m/ /; $_ } @$opt_args);
@@ -1310,8 +1308,6 @@ sub cmd_factfind($self, $context) {
 sub cmd_factchange($self, $context) {
     my $factoids_data = $self->{pbot}->{factoids}->{data}->{storage};
     my ($channel, $trigger, $keyword, $delim, $tochange, $changeto, $modifier, $url);
-
-    $context->{preserve_whitespace} = 1;
 
     my $needs_disambig;
 

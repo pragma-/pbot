@@ -634,7 +634,7 @@ Name | Capability | Description
 `locked_to_channel` | none | This factoid can only be invoked in the channel in which it was created.
 `allow_empty_args` | none | Do not replace empty arguments with `$nick`.
 `require_explicit_args` | none | Aliases must have explicit `$args`.
-`preserve_whitespace` | none | Do not collapse ajdacent whitespace characters.
+`condense-whitespace` | none | Collapse ajdacent whitespace characters.
 
 ## Information about factoids
 ### factfind

@@ -194,8 +194,8 @@ sub interpreter($self, $context) {
         }
     }
 
-    if ($self->get_meta($keyword, 'preserve_whitespace')) {
-        $context->{preserve_whitespace} = 1;
+    if ($self->get_meta($keyword, 'condense-whitespace')) {
+        $context->{'condense-whitespace'} = 1;
     }
 
     # tell PBot::Core::Interpreter to prepend caller's nick to output

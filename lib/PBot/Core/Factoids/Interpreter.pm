@@ -239,9 +239,9 @@ sub interpreter($self, $context) {
         $context->{use_output_queue} = 1;
     }
 
-    # turn on context->{preserve_whitespace}?
-    if ($self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'preserve_whitespace')) {
-        $context->{preserve_whitespace} = 1;
+    # turn on context->{condense-whitespace}?
+    if ($self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'condense-whitespace')) {
+        $context->{'condense-whitespace'} = 1;
     }
 
     # tell PBot::Core::Interpreter to prepend caller's nick to output
@@ -442,10 +442,10 @@ sub handle_action($self, $context, $action) {
         }
     }
 
-    my $preserve_whitespace = $self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'preserve_whitespace');
+    my $condense_whitespace = $self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'condense-whitespace');
 
-    if (defined $preserve_whitespace) {
-        $context->{preserve_whitespace} = $preserve_whitespace;
+    if (defined $condense_whitespace) {
+        $context->{'condense-whitespace'} = $condense_whitespace;
     }
 
     # action is a code factoid

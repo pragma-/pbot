@@ -86,18 +86,18 @@ For example:
        <PBot> a
        <PBot> b
        <PBot> c
-       <PBot> And that's all I have to say about that. See https://0x0.st/-Okb.txt for full text.
+       <PBot> <truncated; https://0x0.st/Okb.txt>
 
-## I made a command. It's supposed to output formatting with spaces and tabs?
-By default, PBot collapses adjacent whitespace in command output. This is intended to
-reduce visual noise in IRC channels.
+## How can I remove excessive spaces and tabs from command output?
+If a command or factoid is producing too much whitespace and making it
+difficult to read, you enable a metadata option to collapse adjacent
+whitespace to a single space.
 
 If your command is registered by a plugin, use the [`cmdset`](Admin.md#cmdset) command
-to set the `preserve_whitespace` [command metadata](Admin.md#command-metadata-list) to
-control this behavior.
+to set the `condense-whitespace` [command metadata](Admin.md#command-metadata-list).
 
 If your command is a command-line applet, use the [`factset`](Factoids.md#factset) command
-to set the `preserve_whitespace` [factoid metadata](Factoids.md#factoid-metadata-list) instead.
+to set the `condense-whitespace` [factoid metadata](Factoids.md#factoid-metadata-list) instead.
 
 ## How do I change my password?
 If you have a NickServ account or a unique hostmask, you don't need a PBot password.

@@ -585,8 +585,8 @@ sub interpret($self, $context) {
 # sends final command output to appropriate queues.
 # use context result if no result argument given.
 sub handle_result($self, $context, $result = $context->{result}) {
-    # preservation of consecutive whitespace is disabled by default
-    $context->{preserve_whitespace} //= 0;
+    # condensation of consecutive whitespace is disable by default
+    $context->{'condense-whitespace'} //= 0;
 
     # debug flag to trace $context location and contents
     if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
@@ -707,7 +707,7 @@ sub handle_result($self, $context, $result = $context->{result}) {
     $context->{original_result} = $result;
 
     $result =~ s/[\n\r]/ /g unless $preserve_newlines;
-    #$result =~ s/[ \t]+/ /g unless $context->{preserve_whitespace};
+    $result =~ s/[ \t]+/ /g if     $context->{'condense-whitespace'};
 
     my $max_lines = $self->{pbot}->{registry}->get_value($context->{from}, 'max_newlines') // 4;
     my $lines = 0;
@@ -999,7 +999,6 @@ sub add_to_command_queue($self, $channel, $command, $delay = 0, $repeating = 0) 
                 command             => $command->{command},
                 interpret_depth     => 0,
                 checkflood          => 0,
-                preserve_whitespace => 0
             };
 
             if (exists $command->{'cap-override'}) {
@@ -1311,7 +1310,7 @@ sub split_line($self, $line, %opts) {
                 }
 
                 unless ($opts{strip_commas} and $token eq ',') {
-                    $add_token = 1 if $got_ch;;
+                    $add_token = 1 if $got_ch;
                 }
                 next;
             }
