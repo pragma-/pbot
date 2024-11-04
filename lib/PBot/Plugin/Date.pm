@@ -89,8 +89,10 @@ sub cmd_date($self, $context) {
         root_channel => $context->{from},
         root_keyword => "date_applet",
         keyword      => "date_applet",
-        arguments    => "$timezone"
+        arguments    => "$timezone",
     };
+
+    $context->{interpreted} = 1;
 
     $self->{pbot}->{applets}->execute_applet($newcontext);
 }

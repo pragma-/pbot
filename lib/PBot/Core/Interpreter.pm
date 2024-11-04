@@ -561,7 +561,7 @@ sub interpret($self, $context) {
         $result = $func->{subref}->($context);
 
         # exit loop if interpreter returned output
-        last if defined $result;
+        last if $context->{interpreted} || defined $result;
 
         # reset any manipulated/overridden arguments
         $context->{arguments} = $context->{original_arguments};

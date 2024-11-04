@@ -33,10 +33,6 @@ sub execute_applet($self, $context) {
     }
 
     $self->{pbot}->{process_manager}->execute_process($context, sub { $self->launch_applet(@_) });
-
-    # return defined empty string to tell Interpreter::interpret() that we've
-    # handled this command so it stops looping through registered interpreters
-    return '';
 }
 
 sub launch_applet($self, $context) {
