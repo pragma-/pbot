@@ -392,6 +392,14 @@ sub interpret($self, $context) {
         }
     }
 
+    if ($self->{pbot}->{commands}->get_meta($keyword, 'suppress-no-output')
+            or $self->{pbot}->{factoids}->{data}->get_meta($fact_channel, $fact_trigger, 'suppress-no-output'))
+    {
+        $context->{'suppress_no_output'} = 1;
+    } else {
+        delete $context->{'suppress_no_output'};
+    }
+
     if ($self->{pbot}->{commands}->get_meta($keyword, 'dont-replace-pronouns')
             or $self->{pbot}->{factoids}->{data}->get_meta($fact_channel, $fact_trigger, 'dont-replace-pronouns'))
     {
@@ -1203,18 +1211,19 @@ sub split_line($self, $line, %opts) {
     my @chars = split //, $line;
 
     my @args;
-    my $escaped = 0;
-    my $quote;
-    my $token      = '';
-    my $last_token = '';
-    my $ch         = ' ';
-    my $i = 0;
+    my $ch;
     my $pos;
+    my $quote;
+    my $escaped      = 0;
+    my $token        = '';
+    my $last_token   = '';
+    my $i            = 0;
     my $ignore_quote = 0;
     my $spaces       = 0;
+    my $add_token    = 0;
+    my $got_ch       = 0;
 
     while (1) {
-
         if ($i >= @chars) {
             if (defined $quote) {
                 # reached end, but unbalanced quote... reset to beginning of quote and ignore it
@@ -1225,7 +1234,7 @@ sub split_line($self, $line, %opts) {
             } else {
                 # add final token and exit
                 $token .= '\\' if $escaped;
-                push @args, $token if length $token;
+                push @args, $token;
                 last;
             }
         }
@@ -1235,17 +1244,25 @@ sub split_line($self, $line, %opts) {
         $spaces = 0 if $ch ne ' ';
 
         if ($escaped) {
+            if ($add_token) {
+                push @args, $token;
+                $token = '';
+                $add_token = 0;
+            }
+
             if ($opts{preserve_escapes}) {
                 $token .= "\\$ch";
             } else {
                 $token .= $ch;
             }
+
             $escaped = 0;
             next;
         }
 
         if ($ch eq '\\') {
             $escaped = 1;
+            $got_ch  = 1;
             next;
         }
 
@@ -1262,6 +1279,14 @@ sub split_line($self, $line, %opts) {
         }
 
         if (not defined $quote and ($ch eq "'" or $ch eq '"')) {
+            $got_ch = 1;
+
+            if ($add_token) {
+                push @args, $token;
+                $token = '';
+                $add_token = 0;
+            }
+
             if ($ignore_quote) {
                 # treat unbalanced quote as part of this argument
                 $token .= $ch;
@@ -1286,14 +1311,19 @@ sub split_line($self, $line, %opts) {
                 }
 
                 unless ($opts{strip_commas} and $token eq ',') {
-                    push @args, $token if length $token;
+                    $add_token = 1 if $got_ch;;
                 }
-
-                $token = '';
                 next;
             }
         }
 
+        if ($add_token) {
+            push @args, $token;
+            $token = '';
+            $add_token = 0;
+        }
+
+        $got_ch = 1;
         $token .= $ch;
     }
 
@@ -1303,7 +1333,7 @@ sub split_line($self, $line, %opts) {
 # creates an array of arguments from a string
 sub make_args($self, $string, %opts) {
     my %default_opts = (
-        keep_spaces      => 1,
+        keep_spaces      => 0,
         preserve_escapes => 1,
     );
 

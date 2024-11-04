@@ -46,6 +46,7 @@ our %factoid_metadata = (
     'ref_user'              => 'TEXT',
     'require_explicit_args' => 'INTEGER',
     'requires_arguments'    => 'INTEGER',
+    'suppress-no-output'    => 'INTEGER',
     'type'                  => 'TEXT',
     'unquote_spaces'        => 'INTEGER',
     'usage'                 => 'TEXT',

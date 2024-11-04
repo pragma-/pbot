@@ -153,8 +153,11 @@ sub process_pipe_reader($self, $pid, $buf) {
     # check for output
     if (not defined $context->{result} or not length $context->{result}) {
         $self->{pbot}->{logger}->log("No result from process.\n");
-        return if $context->{suppress_no_output};
-        $context->{result} = "No output.";
+        if ($context->{suppress_no_output}) {
+            $context->{result} = '';
+        } else {
+            $context->{result} = "No output.";
+        }
     }
 
     # don't output unnecessary result if command was embedded within a message
@@ -165,12 +168,6 @@ sub process_pipe_reader($self, $pid, $buf) {
     # handle code factoid result
     if (exists $context->{special} and $context->{special} eq 'code-factoid') {
         $context->{result} =~ s/\s+$//g;
-
-        if (not length $context->{result}) {
-            $self->{pbot}->{logger}->log("No text result from code-factoid.\n");
-            return;
-        }
-
         $context->{original_keyword} = $context->{root_keyword};
         $context->{result} = $self->{pbot}->{factoids}->{interpreter}->handle_action($context, $context->{result});
     }
