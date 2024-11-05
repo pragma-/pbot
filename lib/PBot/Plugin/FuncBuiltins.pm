@@ -105,6 +105,15 @@ sub initialize($self, %conf) {
         }
     );
 
+    $self->{pbot}->{functions}->register(
+        'maybe-on',
+        {
+            desc   => 'prepend "on" in front of text depending on the part-of-speech of the first word in text',
+            usage  => 'maybe-to <text>',
+            subref => sub { $self->func_maybe_on(@_) }
+        }
+    );
+
     $self->{tagger} = Lingua::EN::Tagger->new;
 }
 
@@ -120,6 +129,7 @@ sub unload($self) {
     $self->{pbot}->{functions}->unregister('ana');
     $self->{pbot}->{functions}->unregister('maybe-the');
     $self->{pbot}->{functions}->unregister('maybe-to');
+    $self->{pbot}->{functions}->unregister('maybe-on');
 }
 
 sub func_unquote($self, @rest) {
@@ -225,7 +235,6 @@ sub func_maybe_to($self, @rest) {
 
     my ($word) = $text =~ m/^\s*([^',.;: ]+)/;
 
-    # don't prepend if a proper-noun nick follows
     if ($self->{pbot}->{nicklist}->is_present_any_channel($word)) {
         return "to $text";
     }
@@ -240,7 +249,37 @@ sub func_maybe_to($self, @rest) {
     if ($tagged !~ m/^\s*<(?:det|prps?|cd|in|nnp|to|rb|wdt|rbr|jjr)>/) {
         $text = "to the $text";
     } else {
-        $text = "to $text";
+        unless ($tagged =~ m/^\s*<(?:in)>/) {
+            $text = "to $text";
+        }
+    }
+
+    return $text;
+}
+
+sub func_maybe_on($self, @rest) {
+    my $text = "@rest";
+    $text =~ s/^on (?:the )?//;
+
+    my ($word) = $text =~ m/^\s*([^',.;: ]+)/;
+
+    if ($self->{pbot}->{nicklist}->is_present_any_channel($word)) {
+        return "on $text";
+    }
+
+    # special-case some indefinite nouns that Lingua::EN::Tagger treats as plain nouns
+    if ($word =~ m/(?:some|any|every|no)(?:thing|one|body|how|way|where|when|time|place)/i) {
+        return "on $text";
+    }
+
+    my $tagged = $self->{tagger}->add_tags($word);
+
+    if ($tagged !~ m/^\s*<(?:det|prps?|cd|in|nnp|to|rb|wdt|rbr|jjr)>/) {
+        $text = "on the $text";
+    } else {
+        unless ($tagged =~ m/^\s*<(?:in)>/) {
+            $text = "on $text";
+        }
     }
 
     return $text;
