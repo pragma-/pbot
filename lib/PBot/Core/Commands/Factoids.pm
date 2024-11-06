@@ -459,7 +459,7 @@ sub cmd_factunset($self, $context) {
     if ($self->{pbot}->{factoids}->{data}->{storage}->exists($channel, $trigger, 'cap-override')) {
         if (lc $key eq 'locked') {
             if ($self->{pbot}->{capabilities}->userhas($userinfo, 'botowner')) {
-                $self->{pbot}->{factoids}->{data}->{storage}->unset($channel, $trigger, 'cap-override', 1);
+                $self->{pbot}->{factoids}->{data}->{storage}->unset($channel, $trigger, 'cap-override');
             } else {
                 return "You cannot unlock this factoid because it has a cap-override. Remove the override first.";
             }
