@@ -182,6 +182,7 @@ sub interpreter($self, $context) {
     $context->{original_keyword} = $original_keyword;
     $context->{channel_name}     = $channel_name;
     $context->{trigger_name}     = $trigger_name;
+    $context->{factoid}          = 1;
 
     if ($context->{embedded} and $self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'noembed')) {
         $self->{pbot}->{logger}->log("Factoids: interpreter: ignoring $channel.$keyword due to noembed.\n");
@@ -192,6 +193,12 @@ sub interpreter($self, $context) {
         if ($context->{ref_from} ne '') { # called from another channel
             return "$trigger_name may be invoked only in $context->{ref_from}.";
         }
+    }
+
+    if ($self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'locked')) {
+        $context->{locked} = 1;
+    } else {
+        $context->{locked} = 0;
     }
 
     # rate-limiting

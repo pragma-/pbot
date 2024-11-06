@@ -192,6 +192,10 @@ sub interpreter($self, $context) {
                 return "/msg $context->{nick} The $keyword command requires the can-$keyword capability, which your user account does not have.";
             }
         }
+
+        if ($context->{factoid} && !$context->{locked}) {
+            return "/msg $context->{nick} The $keyword command requires the can-$keyword capability and cannot be invoked from an unlocked factoid.";
+        }
     }
 
     if ($self->get_meta($keyword, 'condense-whitespace')) {
