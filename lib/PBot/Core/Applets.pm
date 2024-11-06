@@ -96,7 +96,9 @@ sub launch_applet($self, $context) {
 
         my $start = gettimeofday;
         $self->{pbot}->{logger}->log("Starting applet run @cmdline\n");
+
         run \@cmdline, \$stdin, \$stdout, \$stderr, timeout($timeout);
+
         my $duration = sprintf "%0.3f", gettimeofday - $start;
         $self->{pbot}->{logger}->log("Finished applet run @cmdline; duration: $duration\n");
 

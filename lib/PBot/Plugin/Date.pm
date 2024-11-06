@@ -78,23 +78,16 @@ sub cmd_date($self, $context) {
         return "No timezone set or user account does not exist.";
     }
 
-    # execute `date_applet`
-    my $newcontext = {
-        from         => $context->{from},
-        nick         => $context->{nick},
-        user         => $context->{user},
-        host         => $context->{host},
-        hostmask     => $context->{hostmask},
-        command      => "date_applet $timezone",
-        root_channel => $context->{from},
-        root_keyword => "date_applet",
-        keyword      => "date_applet",
-        arguments    => "$timezone",
-    };
+    # override command fields to execute date_applet
+    $context->{keyword}   = "date_applet";
+    $context->{command}   = "date_applet $timezone";
+    $context->{arguments} = $timezone;
 
+    # tell Interpreter::interpret() that this command has been interpreted
     $context->{interpreted} = 1;
 
-    $self->{pbot}->{applets}->execute_applet($newcontext);
+    # fork to execute applet
+    $self->{pbot}->{applets}->execute_applet($context);
 }
 
 1;

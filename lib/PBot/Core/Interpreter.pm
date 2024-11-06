@@ -585,8 +585,11 @@ sub interpret($self, $context) {
 # sends final command output to appropriate queues.
 # use context result if no result argument given.
 sub handle_result($self, $context, $result = $context->{result}) {
-    # condensation of consecutive whitespace is disable by default
+    # condensation of consecutive whitespace is disabled by default
     $context->{'condense-whitespace'} //= 0;
+
+    # reset interpreted to allow pipes/command-substitutions to finish
+    delete $context->{'interpreted'};
 
     # debug flag to trace $context location and contents
     if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
