@@ -193,8 +193,8 @@ sub interpreter($self, $context) {
             }
         }
 
-        if ($context->{factoid} && !$context->{locked}) {
-            return "/msg $context->{nick} The $keyword command requires the can-$keyword capability and cannot be invoked from an unlocked factoid.";
+        if ($context->{factoid} && $context->{locked} != 1) {
+            return "/msg $context->{nick} The $keyword command requires the can-$keyword capability and cannot be invoked from a factoid that does not have `locked` set to 1.";
         }
     }
 

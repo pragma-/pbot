@@ -59,7 +59,7 @@
 <!-- md-toc-end -->
 
 ## About
-Factoids are a very special type of command. Anybody interacting with PBot can create, edit, delete and invoke factoids. Factoids can be locked by the creator of the factoid to prevent them from being edited by others.
+Factoids are a very special type of command. Anybody interacting with PBot can create, edit, delete and invoke factoids.
 
 At its most simple, a factoid merely displays the text the creator sets.
 
@@ -622,7 +622,7 @@ Name | Capability | Description
 `type` | botowner | The type of the factoid. "text" for regular factoid; "module" for module.
 `edited_by` | botowner | The hostmask of the person to last edit the factoid.
 `edited_on` | botowner | The timestamp of when the factoid was last edited.
-`locked` | chanop | If enabled, prevents the factoid from being changed or removed.
+`locked` | chanop | If enabled, prevents the factoid from being changed or removed. Must be set to `1` to allow factoid to invoke a command that has `required_caps` enabled. Can be set to a value greater than `1` to lock the factoid without allowing `required_caps` commands to be invoked.
 `add_nick` | chanop | Prepends the nick of the person invoking the factoid to the output of the factoid.
 `nooverride` | chanop | Prevents the creation of a factoid with an identical name in a different channel.
 `cap-override` | botowner | Provides a user with the capability specified, just for this factoid invocation.

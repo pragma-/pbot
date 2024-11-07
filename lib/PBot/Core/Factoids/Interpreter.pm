@@ -195,11 +195,7 @@ sub interpreter($self, $context) {
         }
     }
 
-    if ($self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'locked')) {
-        $context->{locked} = 1;
-    } else {
-        $context->{locked} = 0;
-    }
+    $context->{locked} = $self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'locked') // 0;
 
     # rate-limiting
     if ($context->{interpret_depth} <= 1
