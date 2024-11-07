@@ -358,7 +358,10 @@ sub handle_action($self, $context, $action) {
                 my $target = $self->{pbot}->{nicklist}->is_present_similar($context->{from}, $context->{arguments});
 
                 if ($target and $action !~ /\$\{?(?:nick|args)\b/) {
-                    $context->{nickprefix} = $target unless $context->{nickprefix_forced};
+                    my $add_nick = $self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'add_nick');
+                    unless (defined $add_nick && $add_nick == 0) {
+                        $context->{nickprefix} = $target unless $context->{nickprefix_forced};
+                    }
                 }
             }
         }
