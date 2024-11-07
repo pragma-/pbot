@@ -622,7 +622,7 @@ Name | Capability | Description
 `type` | botowner | The type of the factoid. "text" for regular factoid; "module" for module.
 `edited_by` | botowner | The hostmask of the person to last edit the factoid.
 `edited_on` | botowner | The timestamp of when the factoid was last edited.
-`locked` | chanop | If enabled, prevents the factoid from being changed or removed. Must be set to `1` to allow factoid to invoke a command that has `required_caps` enabled. Can be set to a value greater than `1` to lock the factoid without allowing `required_caps` commands to be invoked.
+`locked` | chanop | If enabled, prevents the factoid from being changed or removed. Must be set to `1` to allow factoid to invoke a command that has `requires_cap` enabled. Can be set to a value greater than `1` to lock the factoid without allowing `requires_cap` commands to be invoked.
 `add_nick` | chanop | Prepends the nick of the person invoking the factoid to the output of the factoid.
 `nooverride` | chanop | Prevents the creation of a factoid with an identical name in a different channel.
 `cap-override` | botowner | Provides a user with the capability specified, just for this factoid invocation.
