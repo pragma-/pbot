@@ -379,7 +379,6 @@ sub interpret($self, $context) {
     } else {
         # match the factoid in the current channel if it exists
         foreach my $f (@factoids) {
-            $self->{pbot}->{logger}->log("[$f->[0]][$f->[1]] [$context->{from}]\n");
             if ($f->[0] eq $context->{from}) {
                 ($fact_channel, $fact_trigger) = ($f->[0], $f->[1]);
                 last;
