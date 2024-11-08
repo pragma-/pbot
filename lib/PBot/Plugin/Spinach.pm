@@ -724,7 +724,7 @@ sub cmd_spinach($self, $context) {
         when ('show') {
             if ($self->{current_state} =~ /(?:getlies|findtruth|showlies)$/) {
                 $self->showquestion($self->{state_data}, 1);
-                return;
+                return '';
             }
 
             return "$context->{nick}: There is nothing to show right now.";
@@ -961,6 +961,7 @@ sub run_one_state($self) {
     # this shouldn't happen
     if (not defined $self->{current_state}) {
         $self->{pbot}->{logger}->log("Spinach state broke.\n");
+        $self->send_message($self->{channel}, "Spinach state broke.");
         $self->{current_state} = 'nogame';
         $self->{pbot}->{event_queue}->update_repeating('spinach loop', 0);
         return;
@@ -983,7 +984,7 @@ sub run_one_state($self) {
 
     # dump new state data for logging/debugging
     if ($state_data->{newstate} and $self->{metadata}->get_data('settings', 'debug_state')) {
-        $self->{pbot}->{logger}->log("Spinach: New state: $self->{previous_state} ($state_data->{previous_result}) --> $self->{current_state}\n" . Dumper $state_data);
+        $self->{pbot}->{logger}->log("Spinach: New state: $self->{previous_state} ($state_data->{previous_result}) --> $self->{current_state}\n" . Dumper($state_data) . "\n");
     }
 
     # run one state/tick
@@ -1001,7 +1002,10 @@ sub run_one_state($self) {
 
     if (not exists $self->{states}{$self->{current_state}}{trans}{$state_data->{result}}) {
         $self->{pbot}->{logger}->log("Spinach: State broke: no such transistion to $state_data->{result} for state $self->{current_state}\n");
-        # XXX: do something here
+        $self->send_message($self->{channel}, "Spinach state broke: no such transistion to $state_data->{result} for state $self->{current_state}");
+        $self->{current_state} = 'nogame';
+        $self->{pbot}->{event_queue}->update_repeating('spinach loop', 0);
+        return;
     }
 
     $self->{current_state} = $self->{states}{$self->{current_state}}{trans}{$state_data->{result}};
@@ -1521,6 +1525,7 @@ sub choosecategory($self, $state) {
 
         if (not @choices) {
             $self->{pbot}->{logger}->log("Out of questions with current settings!\n");
+            $self->send_message($self->{channel}, "Out of questions with current settings! This will probably break something.");
             # XXX: do something useful here
         }
 
@@ -2359,15 +2364,15 @@ sub r1q2showscore($self, $state) {
 }
 
 sub round1q3($self, $state) {
-    if ($state->{ticks} % 2 || $state->{reroll_category}) {
+    if ($state->{ticks} % 2 == 0 || $state->{reroll_category}) {
         $state->{init}      = 1;
         $state->{max_count} = $self->{choosecategory_max_count};
         $state->{counter}   = 0;
-        $state->{result}    = 'wait';
         $self->send_message($self->{channel}, "Round 1/3, question 3/3! $state->{lie_points} for each lie. $state->{truth_points} for the truth.")
           unless $state->{reroll_category};
-    } else {
         $state->{result} = 'next';
+    } else {
+        $state->{result} = 'wait';
     }
     return $state;
 }
