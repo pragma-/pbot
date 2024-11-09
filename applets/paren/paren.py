@@ -47,7 +47,7 @@ class CGenerator(c_generator.CGenerator):
                 return 'sizeof %s' % self._parenthesize_unless_simple(n.expr)
         else:
             operand = self.visit(n.expr)
-            if isinstance(n.expr, c_ast.ArrayRef) or not self._is_simple_node(n.expr):
+            if not self._is_simple_node(n.expr) or (n.op == '*' and isinstance(n.expr, c_ast.FuncCall)):
                 operand = '(%s)' % operand
             if n.op in ('p++', 'p--'):
                 return operand + n.op[1:]
