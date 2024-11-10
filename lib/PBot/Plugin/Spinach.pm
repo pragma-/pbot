@@ -6,7 +6,7 @@
 # bot. Then all "lies" are revealed along with the true answer. Players
 # gain points every time another player picks their lie. Very fun!
 
-# SPDX-FileCopyrightText: 2018-2023 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2018-2024 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 package PBot::Plugin::Spinach;
@@ -202,15 +202,14 @@ sub set_metadata_defaults($self) {
         max_difficulty    => 25000,
         max_missed_inputs => 3,
         debug_state       => 0,
+        rounds            => 3,
+        questions         => 3,
+        bonus_rounds      => 1,
     };
 
-    if ($self->{metadata}->exists('settings')) {
-        $self->{metadata}->add('settings', $defaults, 1);
-    } else {
-        foreach my $key (keys %$defaults) {
-            if (not $self->{metadata}->exists('settings', $key)) {
-                $self->{metadata}->set('settings', $key, $defaults->{$key}, 1);
-            }
+    foreach my $key (keys %$defaults) {
+        if (not $self->{metadata}->exists('settings', $key)) {
+            $self->{metadata}->set('settings', $key, $defaults->{$key}, 1);
         }
     }
 }
@@ -255,7 +254,7 @@ sub cmd_spinach($self, $context) {
 
     given ($command) {
         when ('help') {
-         given ($arguments) {
+            given ($arguments) {
                 when ('help') { return "Seriously?"; }
 
                 when ('join') { return "Help is coming soon."; }
@@ -899,8 +898,8 @@ sub cmd_spinach($self, $context) {
 
 sub start_game($self) {
     $self->{state_data} = {
-        players => [],
-        counter => 0
+        players     => [],
+        bonus_round => 0,
     };
 
     $self->{current_state} = 'getplayers';
@@ -961,6 +960,7 @@ sub send_message($self, $to, $text, $delay = 0) {
         user       => 'spinach',
         host       => 'localhost',
         hostmask   => "$botnick!spinach\@localhost",
+        keyword    => 'spinach',
         command    => 'spinach',
         checkflood => 1,
         message    => $text
@@ -1147,40 +1147,29 @@ sub showquestion_helper($self, $state, $show_category = undef) {
 
 sub run_one_state($self) {
     # check for naughty or missing players
-    if ($self->{current_state} =~ /r\dq\d/) {
-        my $removed = 0;
-        for (my $i = 0; $i < @{$self->{state_data}->{players}}; $i++) {
-            if ($self->{state_data}->{players}->[$i]->{missedinputs} >= $self->{metadata}->get_data('settings', 'max_missed_inputs')) {
-                $self->send_message(
-                    $self->{channel},
-                    "$color{red}$self->{state_data}->{players}->[$i]->{name} has missed too many prompts and has been ejected from the game!$color{reset}"
-                );
-                splice @{$self->{state_data}->{players}}, $i--, 1;
-                $removed = 1;
+    for (my $i = 0; $i < @{$self->{state_data}->{players}}; $i++) {
+        if ($self->{state_data}->{players}->[$i]->{missedinputs} >= $self->{metadata}->get_data('settings', 'max_missed_inputs')) {
+            $self->send_message(
+                $self->{channel},
+                "$color{red}$self->{state_data}->{players}->[$i]->{name} has missed too many prompts and has been ejected from the game!$color{reset}"
+            );
+
+            splice @{$self->{state_data}->{players}}, $i--, 1;
+
+            if ($self->{state_data}->{current_player} >= @{$self->{state_data}->{players}}) {
+                $self->{state_data}->{current_player} = @{$self->{state_data}->{players}} - 1;
             }
-        }
-
-        if ($removed) {
-            if ($self->{state_data}->{current_player} >= @{$self->{state_data}->{players}}) { $self->{state_data}->{current_player} = @{$self->{state_data}->{players}} - 1 }
-        }
-
-        if (not @{$self->{state_data}->{players}}) {
-            $self->send_message($self->{channel}, "All players have left the game!");
-            $self->{current_state} = 'nogame';
-            $self->{pbot}->{event_queue}->update_repeating('spinach loop', 0);
         }
     }
 
-    my $state_data = $self->{state_data};
-
-    # this shouldn't happen
-    if (not defined $self->{current_state}) {
-        $self->{pbot}->{logger}->log("Spinach state broke.\n");
-        $self->send_message($self->{channel}, "Spinach state broke.");
+    if (not @{$self->{state_data}->{players}}) {
+        $self->send_message($self->{channel}, "All players have left the game!");
         $self->{current_state} = 'nogame';
         $self->{pbot}->{event_queue}->update_repeating('spinach loop', 0);
         return;
     }
+
+    my $state_data = $self->{state_data};
 
     # transitioned to a brand new state; prepare first tock
     if ($self->{previous_state} ne $self->{current_state}) {
@@ -1203,7 +1192,7 @@ sub run_one_state($self) {
     }
 
     # run one state/tick
-    $self->{states}{$self->{current_state}}{sub}($state_data);
+    my $should_trans = $self->{states}{$self->{current_state}}{sub}($state_data);
 
     if ($state_data->{tocked}) {
         delete $state_data->{tocked};
@@ -1211,20 +1200,32 @@ sub run_one_state($self) {
         $state_data->{ticks} = 0;
     }
 
-    # transition to next state
+    # prepare to transition to next state
     $state_data->{previous_result} = $state_data->{result};
     $self->{previous_state}        = $self->{current_state};
 
-    if (not exists $self->{states}{$self->{current_state}}{trans}{$state_data->{result}}) {
-        $self->{pbot}->{logger}->log("Spinach: State broke: no such transition to $state_data->{result} for state $self->{current_state}\n");
-        $self->send_message($self->{channel}, "Spinach state broke: no such transition to $state_data->{result} for state $self->{current_state}");
-        $self->{current_state} = 'nogame';
-        $self->{pbot}->{event_queue}->update_repeating('spinach loop', 0);
-        return;
-    }
+    if ($should_trans) {
+        # sanity check to ensure edits to state machine didn't break anything
+        if (not exists $self->{states}{$self->{current_state}}{trans}{$state_data->{result}}) {
+            $self->{pbot}->{logger}->log("Spinach: State broke: no such transition to $state_data->{result} for state $self->{current_state}\n");
+            $self->send_message($self->{channel}, "Spinach state broke: no such transition to $state_data->{result} for state $self->{current_state}");
+            $self->{current_state} = 'nogame';
+            $self->{pbot}->{event_queue}->update_repeating('spinach loop', 0);
+            return;
+        }
 
-    $self->{current_state} = $self->{states}{$self->{current_state}}{trans}{$state_data->{result}};
-    $self->{state_data}    = $state_data;
+        # transition to next state
+        $self->{current_state} = $self->{states}{$self->{current_state}}{trans}{$state_data->{result}};
+
+        # this shouldn't happen
+        if (not defined $self->{current_state}) {
+            $self->{pbot}->{logger}->log("Spinach state broke.\n");
+            $self->send_message($self->{channel}, "Spinach state broke.");
+            $self->{current_state} = 'nogame';
+            $self->{pbot}->{event_queue}->update_repeating('spinach loop', 0);
+            return;
+        }
+    }
 
     # next tick
     $self->{state_data}->{ticks}++;
@@ -1239,20 +1240,12 @@ sub create_states($self) {
     $self->{previous_result} = '';
     $self->{current_state}   = 'nogame';
 
-    $self->{state_data} = {
-        players  => [],
-        ticks    => 0,
-        newstate => 1
-    };
-
     # no game running || game ended
     $self->{states}{'nogame'}{sub}                  = sub { $self->nogame(@_) };
     $self->{states}{'nogame'}{trans}{start}         = 'getplayers';
-    $self->{states}{'nogame'}{trans}{nogame}        = 'nogame';
 
     # waiting for players to join/ready
     $self->{states}{'getplayers'}{sub}              = sub { $self->getplayers(@_) };
-    $self->{states}{'getplayers'}{trans}{wait}      = 'getplayers';
     $self->{states}{'getplayers'}{trans}{stop}      = 'nogame';
     $self->{states}{'getplayers'}{trans}{allready}  = 'roundinit';
 
@@ -1263,49 +1256,38 @@ sub create_states($self) {
 
     # start round (announce current round info)
     $self->{states}{'roundstart'}{sub}              = sub { $self->roundstart(@_) };
-    $self->{states}{'roundstart'}{trans}{wait}      = 'roundstart';
     $self->{states}{'roundstart'}{trans}{next}      = 'choosecategory';
 
     $self->{states}{'choosecategory'}{sub}          = sub { $self->choosecategory(@_) };
-    $self->{states}{'choosecategory'}{trans}{wait}  = 'choosecategory';
     $self->{states}{'choosecategory'}{trans}{next}  = 'showquestion';
 
     $self->{states}{'showquestion'}{sub}            = sub { $self->showquestion(@_) };
-    $self->{states}{'showquestion'}{trans}{wait}    = 'showquestion';
     $self->{states}{'showquestion'}{trans}{next}    = 'getlies';
 
     $self->{states}{'getlies'}{sub}                 = sub { $self->getlies(@_) };
-    $self->{states}{'getlies'}{trans}{wait}         = 'getlies';
     $self->{states}{'getlies'}{trans}{reroll}       = 'showquestion';
     $self->{states}{'getlies'}{trans}{skip}         = 'roundstart';
     $self->{states}{'getlies'}{trans}{next}         = 'findtruth';
 
     $self->{states}{'findtruth'}{sub}               = sub { $self->findtruth(@_) };
-    $self->{states}{'findtruth'}{trans}{wait}       = 'findtruth';
     $self->{states}{'findtruth'}{trans}{next}       = 'showlies';
 
     $self->{states}{'showlies'}{sub}                = sub { $self->showlies(@_) };
-    $self->{states}{'showlies'}{trans}{wait}        = 'showlies';
     $self->{states}{'showlies'}{trans}{next}        = 'showtruth';
 
     $self->{states}{'showtruth'}{sub}               = sub { $self->showtruth(@_) };
-    $self->{states}{'showtruth'}{trans}{wait}       = 'showtruth';
     $self->{states}{'showtruth'}{trans}{next}       = 'reveallies';
 
     $self->{states}{'reveallies'}{sub}              = sub { $self->reveallies(@_) };
-    $self->{states}{'reveallies'}{trans}{wait}      = 'reveallies';
     $self->{states}{'reveallies'}{trans}{next}      = 'showscore';
 
     $self->{states}{'showscore'}{sub}               = sub { $self->showscore(@_) };
-    $self->{states}{'showscore'}{trans}{wait}       = 'showscore';
     $self->{states}{'showscore'}{trans}{next}       = 'roundinit';
 
     $self->{states}{'finalscore'}{sub}              = sub { $self->finalscore(@_) };
-    $self->{states}{'finalscore'}{trans}{wait}      = 'finalscore';
     $self->{states}{'finalscore'}{trans}{next}      = 'gameover';
 
     $self->{states}{'gameover'}{sub}                = sub { $self->gameover(@_) };
-    $self->{states}{'gameover'}{trans}{wait}        = 'gameover';
     $self->{states}{'gameover'}{trans}{next}        = 'getplayers';
 }
 
@@ -1319,6 +1301,7 @@ sub nogame($self, $state) {
 
     $self->{pbot}->{event_queue}->update_repeating('spinach loop', 0);
     $state->{result} = 'nogame';
+    return 0;
 }
 
 sub getplayers($self, $state) {
@@ -1347,8 +1330,8 @@ sub getplayers($self, $state) {
         }
 
         $self->{game} = {
-            rounds    => 3, # max rounds (TODO: make this customizable via `set`)
-            questions => 3, # max questions per round (TODO: customizable via `set`)
+            rounds    => $self->{metadata}->get_data('settings', 'rounds'),
+            questions => $self->{metadata}->get_data('settings', 'questions'),
             round     => 1, # current round
             question  => 0, # current question
         };
@@ -1366,14 +1349,14 @@ sub getplayers($self, $state) {
                 truth => 1000,
                 lie   => 2000,
             },
-            final => { # final round is rounds + 1
+            bonus => { # bonus rounds are when round >= rounds + 1
                 truth => 2000,
                 lie   => 3000,
             }
         };
 
         $state->{result} = 'allready';
-        return;
+        return 1;
     }
 
     my $tock;
@@ -1397,7 +1380,7 @@ sub getplayers($self, $state) {
             $self->send_message($self->{channel}, "Not all players were ready in time. The game has been stopped.");
             $state->{players} = [];
             $state->{result}  = 'stop';
-            return;
+            return 1;
         }
 
         $players = join ', ', @names;
@@ -1419,6 +1402,7 @@ sub getplayers($self, $state) {
     }
 
     $state->{result} = 'wait';
+    return 0;
 }
 
 sub roundinit($self, $state) {
@@ -1431,22 +1415,23 @@ sub roundinit($self, $state) {
 
     my $round_scoring = $self->{game}->{round};
 
-    if ($round_scoring == $self->{game}->{rounds} + 1) {
+    if ($round_scoring >= $self->{game}->{rounds} + 1) {
         $state->{random_category} = 1;
-        $round_scoring = 'final';
+        $state->{bonus_round}++;
+        $round_scoring = 'bonus';
     } elsif ($round_scoring > 3) {
         $round_scoring = 3;
     }
 
     $state->{truth_points}  = $self->{scoring}->{$round_scoring}->{truth};
     $state->{lie_points}    = $self->{scoring}->{$round_scoring}->{lie};
-    $state->{my_lie_points} = $state->{lie_points} * 0.25;
 
-    if ($round_scoring eq 'final' && $self->{game}->{question} == 2) {
+    if ($state->{bonus_round} > $self->{metadata}->get_data('settings', 'bonus_rounds')) {
         $state->{result} = 'finalscore';
     } else {
         $state->{result} = 'next';
     }
+    return 1;
 }
 
 sub roundstart($self, $state) {
@@ -1462,7 +1447,7 @@ sub roundstart($self, $state) {
             my $questions = $self->{game}->{questions};
             my $announce;
 
-            if ($round == $self->{game}->{rounds} + 1) {
+            if ($round >= $self->{game}->{rounds} + 1) {
                 $announce = 'BONUS ROUND! BONUS QUESTION!';
             } else {
                 $announce = "Round $round/$rounds, question $question/$questions!";
@@ -1472,8 +1457,10 @@ sub roundstart($self, $state) {
         }
 
         $state->{result} = 'next';
+        return 1;
     } else {
         $state->{result} = 'wait';
+        return 0;
     }
 }
 
@@ -1566,7 +1553,7 @@ sub choosecategory($self, $state) {
 
     if (exists $state->{current_category} or not @{$state->{players}}) {
         $state->{result} = 'next';
-        return;
+        return 1;
     }
 
     my $tock;
@@ -1584,7 +1571,7 @@ sub choosecategory($self, $state) {
             $self->send_message($self->{channel}, "$color{green}Category:$color{reset} $category! ($questions questions)");
             $state->{current_category} = $category;
             $state->{result} = 'next';
-            return;
+            return 1;
         }
 
         if (++$state->{tocks} > $state->{max_tocks}) {
@@ -1594,7 +1581,7 @@ sub choosecategory($self, $state) {
             $self->send_message($self->{channel}, "$name took too long to choose. Randomly choosing: $category!");
             $state->{current_category} = $category;
             $state->{result} = 'next';
-            return;
+            return 1;
         }
 
         my $name = $state->{players}->[$state->{current_player}]->{name};
@@ -1611,11 +1598,16 @@ sub choosecategory($self, $state) {
         $self->send_message($self->{channel}, "$name: $warning$remaining Choose a category via `/msg $botnick c <number>`:$color{reset}");
         $self->send_message($self->{channel}, "$state->{categories_text}");
         $state->{result} = 'wait';
-        return;
+        return 0;
     }
 
-    if   (exists $state->{current_category}) { $state->{result} = 'next'; }
-    else                                     { $state->{result} = 'wait'; }
+    if (exists $state->{current_category}) {
+        $state->{result} = 'next';
+        return 1;
+    } else {
+        $state->{result} = 'wait';
+        return 0;
+    }
 }
 
 sub showquestion($self, $state) {
@@ -1691,15 +1683,17 @@ sub showquestion($self, $state) {
         $state->{current_lie_player} = 0;
 
         $state->{result} = 'next';
+        return 1;
     } else {
         $state->{result} = 'wait';
+        return 0;
     }
 }
 
 sub getlies($self, $state) {
     if ($state->{reroll_category}) {
         $state->{result} = 'skip';
-        return;
+        return 1;
     }
 
     my $tock;
@@ -1734,7 +1728,7 @@ sub getlies($self, $state) {
     # advance to next state if everyone has submitted a lie
     if (not @nolies) {
         $state->{result} = 'next';
-        return;
+        return 1;
     }
 
     $reveallies = '' if not $lies;
@@ -1747,7 +1741,7 @@ sub getlies($self, $state) {
             $state->{reroll_question} = 1;
             $self->send_message($self->{channel}, "The answer was: " . uc($state->{current_question}->{answer}) . $reveallies);
             $state->{result} = 'reroll';
-            return;
+            return 1;
         }
     }
 
@@ -1758,7 +1752,7 @@ sub getlies($self, $state) {
         if ($needed <= 0) {
             $self->send_message($self->{channel}, "The answer was: " . uc($state->{current_question}->{answer}) . $reveallies);
             $state->{result} = 'skip';
-            return;
+            return 1;
         }
     }
 
@@ -1782,7 +1776,7 @@ sub getlies($self, $state) {
             $state->{tocks}  = 0;
             $state->{init}   = 1;
             $state->{result} = 'next';
-            return;
+            return 1;
         }
 
         my $players = join ', ', @nolies;
@@ -1801,6 +1795,7 @@ sub getlies($self, $state) {
     }
 
     $state->{result} = 'wait';
+    return 0;
 }
 
 sub findtruth($self, $state) {
@@ -1818,7 +1813,7 @@ sub findtruth($self, $state) {
     if (not @notruth) {
         # all players have selected a truth
         $state->{result} = 'next';
-        return;
+        return 1;
     }
 
     if ($state->{init}) {
@@ -1893,7 +1888,7 @@ sub findtruth($self, $state) {
             }
 
             $state->{result} = 'next';
-            return;
+            return 1;
         }
 
         my $players = join ', ', @notruth;
@@ -1913,6 +1908,7 @@ sub findtruth($self, $state) {
     }
 
     $state->{result} = 'wait';
+    return 0;
 }
 
 sub showlies($self, $state) {
@@ -1950,17 +1946,17 @@ sub showlies($self, $state) {
                     $self->{stats}->update_player_data($player_id, $player_data);
                 }
 
-                my $points = $state->{lie_points} * 0.25;
-                $player->{score} -= $points;
+                $player->{score} -= $state->{lie_points};
                 $player->{deceived} = $player->{truth};
-                $self->send_message($self->{channel}, "$player->{name} fell for my lie: \"$player->{truth}\". -$points points!");
+                $self->send_message($self->{channel}, "$player->{name} fell for my lie: \"$player->{truth}\". -$state->{lie_points} points!");
 
                 if ($state->{current_lie_player} < @{$state->{players}}) {
                     $state->{result} = 'wait';
+                    return 0;
                 } else {
                     $state->{result} = 'next';
+                    return 1;
                 }
-                return;
             }
         }
 
@@ -2001,13 +1997,15 @@ sub showlies($self, $state) {
             if   (@liars) { delete $state->{tick_drift}; }
             else          { $state->{tick_drift} = $tock - 1; }
             $state->{result} = 'next';
+            return 1;
         } else {
             $state->{result} = 'wait';
+            return 0;
         }
-        return;
     }
 
     $state->{result} = 'wait';
+    return 0;
 }
 
 sub showtruth($self, $state) {
@@ -2055,8 +2053,10 @@ sub showtruth($self, $state) {
 
         $self->add_new_suggestions($state);
         $state->{result} = 'next';
+        return 1;
     } else {
         $state->{result} = 'wait';
+        return 0;
     }
 }
 
@@ -2081,16 +2081,27 @@ sub reveallies($self, $state) {
 
         $self->send_message($self->{channel}, "$text");
         $state->{result} = 'next';
+        return 1;
     } else {
         $state->{result} = 'wait';
+        return 0;
     }
 }
 
 sub showscore($self, $state) {
     # skip showing scores if bonus round so finalscore state does it
-    if ($self->{game}->{round} == $self->{game}->{rounds} + 1) {
+    if ($self->{game}->{round} >= $self->{game}->{rounds} + 1) {
         $state->{result} = 'next';
-        return;
+        return 1;
+    }
+
+    # skip showing scores if no bonus round and final round/question
+    if ($self->{metadata}->get_data('settings', 'bonus_rounds') == 0
+        && $self->{game}->{round} >= $self->{game}->{rounds}
+        && $self->{game}->{question} >= $self->{game}->{questions})
+    {
+        $state->{result} = 'next';
+        return 1;
     }
 
     if ($state->{ticks} % 3 == 0) {
@@ -2105,8 +2116,10 @@ sub showscore($self, $state) {
 
         $self->send_message($self->{channel}, "$color{green}Scores:$color{reset} $text");
         $state->{result} = 'next';
+        return 1;
     } else {
         $state->{result} = 'wait';
+        return 0;
     }
 }
 
@@ -2188,12 +2201,14 @@ sub finalscore($self, $state) {
 
         if (not @{$state->{finalscores}}) {
             $self->send_message($self->{channel}, "$color{green}Final scores: $color{reset}none");
-            return 'next';
+            $state->{result} = 'next';
+            return 1;
         }
 
         if ($state->{first_tock}) {
             $self->send_message($self->{channel}, "$color{green}Final scores:$color{reset}");
-            return 'wait';
+            $state->{result} = 'wait';
+            return 0;
         }
 
         my $text = shift @{$state->{finalscores}};
@@ -2201,12 +2216,11 @@ sub finalscore($self, $state) {
 
         if (not @{$state->{finalscores}}) {
             $state->{result} = 'next';
-        } else {
-            $state->{result} = 'wait';
+            return 1;
         }
-    } else {
-        $state->{result} = 'wait';
     }
+    $state->{result} = 'wait';
+    return 0;
 }
 
 sub gameover($self, $state) {
@@ -2222,10 +2236,15 @@ sub gameover($self, $state) {
         # save updated seen_timestamps
         $self->save_questions;
 
-        $state->{tocks} = 0;
+        # reset some state data
+        delete $state->{random_category};
+        $state->{tocks}       = 0;
+        $state->{bonus_round} = 0;
         $state->{result}  = 'next';
+        return 1;
     } else {
         $state->{result} = 'wait';
+        return 0;
     }
 }
 
