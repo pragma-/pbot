@@ -102,8 +102,7 @@ sub unload($self) {
 }
 
 sub on_kick($self, $event_type, $event) {
-    my ($nick, $user, $host)  = ($event->nick, $event->user, $event->host);
-    my ($victim, $reason) = ($event->to, $event->{args}[1]);
+    my ($nick, $user, $host) = ($event->nick, $event->user, $event->host);
     my $channel = $event->{args}[0];
     return 0 if lc $channel ne $self->{channel};
     $self->player_left($nick, $user, $host);
@@ -111,9 +110,9 @@ sub on_kick($self, $event_type, $event) {
 }
 
 sub on_departure($self, $event_type, $event) {
-    my ($nick, $user, $host, $channel) = ($event->nick, $event->user, $event->host, $event->to);
-    my $type = uc $event->type;
-    return 0 if $type ne 'QUIT' and lc $channel ne $self->{channel};
+    my ($nick, $user, $host) = ($event->nick, $event->user, $event->host);
+    my ($channel, $type)     = (lc $event->to, uc $event->type);
+    return 0 if $type ne 'QUIT' and $channel ne $self->{channel};
     $self->player_left($nick, $user, $host);
     return 0;
 }
@@ -257,53 +256,55 @@ sub cmd_spinach($self, $context) {
             given ($arguments) {
                 when ('help') { return "Seriously?"; }
 
-                when ('join') { return "Help is coming soon."; }
+                when ('join') { return "Use `join` to start/join a game. A on-going game can be joined at any time."; }
 
-                when ('ready') { return "Help is coming soon."; }
+                when ('ready') { return "Use `ready` to ready-up for a game."; }
 
-                when ('exit') { return "Help is coming soon."; }
+                when ('unready') { return "Use `unready` to no longer be ready for a game."; }
+
+                when ('exit') { return "Use `exit` to leave a game."; }
 
                 when ('skip') { return "Use `skip` to skip a question and return to the \"choose category\" stage. A majority of the players must agree to skip."; }
 
                 when ('keep') { return "Use `keep` to vote to prevent the current question from being rerolled or skipped."; }
 
-                when ('abort') { return "Help is coming soon."; }
+                when ('abort') { return "Use `abort` to immediately end a game."; }
 
-                when ('load') { return "Help is coming soon."; }
+                when ('load') { return "Use `load` to load a trivia database."; }
 
-                when ('edit') { return "Help is coming soon."; }
+                when ('edit') { return "Use `edit` to view and edit question metadata."; }
 
-                when ('state') { return "Help is coming soon."; }
+                when ('state') { return "Use `state` to view and manipulate the game state machine."; }
 
                 when ('reroll') { return "Use `reroll` to get a different question from the same category."; }
 
-                when ('kick') { return "Help is coming soon."; }
+                when ('kick') { return "Use `kick` to forcefully remove a player."; }
 
-                when ('players') { return "Help is coming soon."; }
+                when ('players') { return "Use `players` to list players and their ready-state or scores."; }
 
-                when ('score') { return "Help is coming soon."; }
+                when ('score') { return "Use `score` to display player scores."; }
 
-                when ('choose') { return "Help is coming soon."; }
+                when ('choose') { return "Use `choose` to choose category, submit lie, or select truth."; }
 
-                when ('lie') { return "Help is coming soon."; }
+                when ('lie') { return "Use `lie` (or `choose`) to submit a lie."; }
 
-                when ('truth') { return "Help is coming soon."; }
+                when ('truth') { return "Use `truth` (or `choose`) to select a truth."; }
 
                 when ('show') { return "Show the current question again."; }
 
-                when ('categories') { return "Help is coming soon."; }
+                when ('categories') { return "Use `categories` to list available categories."; }
 
-                when ('filter') { return "Help is coming soon."; }
+                when ('filter') { return "Use `filter` to set category include/exclude filters."; }
 
-                when ('set') { return "Help is coming soon."; }
+                when ('set') { return "Use `set` to set game metadata values (e.g. rounds, questions per rounds, minimum players, etc; see `spinach set settings` for a list of values)."; }
 
-                when ('unset') { return "Help is coming soon."; }
+                when ('unset') { return "Use `unset` to delete game metadata values."; }
 
-                when ('rank') { return "Help is coming soon."; }
+                when ('rank') { return "Use `rank` to show ranking of player stats."; }
 
                 default {
                     if (length $arguments) {
-                        return "Spinach has no such command '$arguments'. I can't help you with that.";
+                        return "Spinach has no such command '$arguments'.";
                     } else {
                         return "Usage: spinach help <command>";
                     }
@@ -314,11 +315,15 @@ sub cmd_spinach($self, $context) {
         when ('edit') {
             my $admin = $self->{pbot}->{users}->loggedin_admin($self->{channel}, $context->{hostmask});
 
-            if (not $admin) { return "$context->{nick}: Only admins may edit questions."; }
+            if (not $admin) {
+                return "$context->{nick}: Only admins may edit questions.";
+            }
 
             my ($id, $key, $value) = split /\s+/, $arguments, 3;
 
-            if (not defined $id) { return "Usage: spinach edit <question id> [key [value]]"; }
+            if (not defined $id) {
+                return "Usage: spinach edit <question id> [key [value]]";
+            }
 
             $id =~ s/,//g;
 
@@ -330,7 +335,9 @@ sub cmd_spinach($self, $context) {
                 }
             }
 
-            if (not defined $question) { return "$context->{nick}: No such question."; }
+            if (not defined $question) {
+                return "$context->{nick}: No such question.";
+            }
 
             if (not defined $key) {
                 my $dump = Dumper $question;
@@ -344,7 +351,9 @@ sub cmd_spinach($self, $context) {
                 return "$context->{nick}: Question $id: $key => $v";
             }
 
-            if ($key !~ m/^(?:question|answer|category)$/i) { return "$context->{nick}: You may not edit that key."; }
+            if ($key !~ m/^(?:question|answer|category)$/i) {
+                return "$context->{nick}: You may not edit that key.";
+            }
 
             $question->{$key} = $value;
             $self->save_questions;
@@ -506,7 +515,9 @@ sub cmd_spinach($self, $context) {
             }
         }
 
-        when ('n') { return $self->normalize_text($arguments); }
+        when ('n') {
+            return $self->normalize_text($arguments);
+        }
 
         when ('v') {
             my ($truth, $lie) = split /;/, $arguments;
@@ -533,7 +544,9 @@ sub cmd_spinach($self, $context) {
                     }
                 }
 
-                if (not $player) { return "$context->{nick}: You are not playing in this game. Use `j` to start playing now!"; }
+                if (not $player) {
+                    return "$context->{nick}: You are not playing in this game. Use `j` to start playing now!";
+                }
 
                 my $needed = int(@{$self->{state_data}->{players}} / 2) + 1;
                 $needed -= $rerolled;
@@ -768,7 +781,7 @@ sub cmd_spinach($self, $context) {
                 my $comma = "";
                 foreach my $cat (sort @categories) {
                     $text .= "$comma$cat: " . keys %{$self->{categories}{$cat}};
-                    $comma = ", ";
+                    $comma = ",\n";
                 }
                 return $text;
             };
@@ -1447,7 +1460,7 @@ sub roundstart($self, $state) {
             my $questions = $self->{game}->{questions};
             my $announce;
 
-            if ($round >= $self->{game}->{rounds} + 1) {
+            if ($round >= $rounds + 1) {
                 $announce = 'BONUS ROUND! BONUS QUESTION!';
             } else {
                 $announce = "Round $round/$rounds, question $question/$questions!";
