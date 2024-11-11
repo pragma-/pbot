@@ -697,6 +697,7 @@ sub handle_result($self, $context, $result = $context->{result}) {
         $result =~ s!^/me !\n* $botnick !i;
 
         $result = $context->{split_result} . $result;
+        delete $context->{split_result};
     }
 
     # nothing more to do here if we have no result or keyword
