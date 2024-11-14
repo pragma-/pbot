@@ -390,33 +390,11 @@ sub cmd_factset($self, $context) {
         }
     }
 
-    if (defined $owner_channel) {
-        my $factoid = $self->{pbot}->{factoids}->{data}->{storage}->get_data($owner_channel, $owner_trigger);
-
-        my $owner;
-        my $mask;
-
-        if ($factoid->{'locked'}) {
-            # check owner against full hostmask for locked factoids
-            $owner = $factoid->{'owner'};
-            $mask  = $context->{hostmask};
-        } else {
-            # otherwise just the nick
-            ($owner) = $factoid->{'owner'} =~ m/([^!]+)/;
-            $mask = $context->{nick};
-        }
-
-        if ((defined $value and $key ne 'action' and $key ne 'action_with_args')
-                and lc $mask ne lc $owner
-                and not $self->{pbot}->{capabilities}->userhas($userinfo, 'admin'))
-        {
-            return "You are not the owner of $trigger_name.";
-        }
-    }
-
     my $result = $self->{pbot}->{factoids}->{data}->{storage}->set($channel, $trigger, $key, $value);
 
-    if (defined $value and $result =~ m/set to/) { $self->log_factoid($channel, $trigger, $context->{hostmask}, "set $key to $value"); }
+    if (defined $value and $result =~ m/set to/) {
+        $self->log_factoid($channel, $trigger, $context->{hostmask}, "set $key to $value");
+    }
 
     return $result;
 }
@@ -472,20 +450,7 @@ sub cmd_factunset($self, $context) {
     $channel_name = 'global'            if $channel_name eq '.*';
     $trigger_name = "\"$trigger_name\"" if $trigger_name =~ / /;
 
-    my $oldvalue;
-
-    if (defined $owner_channel) {
-        my $factoid = $self->{pbot}->{factoids}->{data}->{storage}->get_data($owner_channel, $owner_trigger);
-        my ($owner) = $factoid->{'owner'} =~ m/([^!]+)/;
-
-        if ($key ne 'action_with_args' and lc $context->{nick} ne lc $owner
-                and not $self->{pbot}->{capabilities}->userhas($userinfo, 'admin'))
-        {
-            return "You are not the owner of $trigger_name.";
-        }
-
-        $oldvalue = $self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $trigger, $key);
-    }
+    my $oldvalue = $self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $trigger, $key);
 
     if (not defined $oldvalue) {
         return "[$channel_name] $trigger_name: key '$key' does not exist.";
