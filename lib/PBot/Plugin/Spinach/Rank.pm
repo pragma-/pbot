@@ -314,12 +314,19 @@ sub rank($self, $arguments, @rest) {
 
     if ($arguments eq 'expr') {
         $self->{expr} = eval { Math::Expression::Evaluator->new($opt_arg) };
-        if ($@) {
-            my $error = $@;
-            $error =~ s/ at .*//ms;
-            return "Bad expression: $error";
+        if (my $except = $@) {
+            $except =~ s/ at .*//ms;
+            return "Bad expression: $except";
         }
-        $self->{expr}->optimize;
+
+        eval {
+            $self->{expr}->optimize;
+        };
+
+        if (my $except = $@) {
+           $except =~ s/ at .*//ms;
+           return $except;
+        }
     }
 
     my $sort_method = $ranks{$arguments}->{sort};

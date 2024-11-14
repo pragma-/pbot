@@ -521,6 +521,9 @@ sub cmd_spinach($self, $context) {
 
         when ('v') {
             my ($truth, $lie) = split /;/, $arguments;
+            if (!defined $truth || !defined $lie) {
+                return "Usage: spinach v <truth>;<lie>";
+            }
             return $self->validate_lie($self->normalize_text($truth), $self->normalize_text($lie));
         }
 
@@ -685,30 +688,31 @@ sub cmd_spinach($self, $context) {
 
                 my $validate = $self->validate_lie($self->{state_data}->{current_question}->{answer}, $arguments);
 
-                # don't check alternate answers if exact match to first answer is found
-                unless ($validate == 0) {
+                # check alternate answers if lie is not already too similar to default answer
+                if ($validate == 1) {
                     # check alternative answers
                     foreach my $alt (@{$self->{state_data}->{current_question}->{alternativeSpellings}}) {
                         $validate = self->validate_lie($alt, $arguments);
 
-                        # end loop if exact match to truth
-                        last if $validate == 0;
+                        # end loop if too similar to an alternative
+                        last if $validate != 1;
                     }
                 }
 
                 if ($validate != 1) {
-                    if (++$player->{lie_count} > 2) {
-                        return "/msg $context->{nick} You cannot change your lie again this round.";
-                    }
-
                     if ($validate == 0) {
                         $self->send_message($self->{channel}, "$color{yellow}$context->{nick} has found the truth!$color{reset}");
+                        return "$context->{nick}: You have found the truth! Submit a different lie.";
                     } elsif ($validate == -1) {
-                        $self->send_message($self->{channel}, "$color{yellow}$context->{nick} has found part of the truth!$color{reset}");
+                        $self->send_message($self->{channel}, "$color{cyan}$context->{nick} has found part of the truth!$color{reset}");
                     } else {
-                        $self->send_message($self->{channel}, "$color{yellow}$context->{nick} has misspelled the truth!$color{reset}");
+                        $self->send_message($self->{channel}, "$color{cyan}$context->{nick} has misspelled the truth!$color{reset}");
                     }
-                    return "$context->{nick}: Your lie is too similar to the truth! Please submit a different lie.";
+                    return "$context->{nick}: Your lie is too similar to the truth! Submit a different lie.";
+                }
+
+                if (++$player->{lie_count} > 2) {
+                    return "/msg $context->{nick} You cannot change your lie again this round.";
                 }
 
                 my $changed = exists $player->{lie};
@@ -901,7 +905,9 @@ sub cmd_spinach($self, $context) {
             return $self->{metadata}->unset($index, $key);
         }
 
-        when ('rank') { return $self->{rankcmd}->rank($arguments); }
+        when ('rank') {
+            return $self->{rankcmd}->rank($arguments);
+        }
 
         default { return $usage; }
     }
@@ -942,9 +948,6 @@ sub player_join($self, $nick, $user, $host) {
     };
 
     push @{$self->{state_data}->{players}}, $player;
-
-    # reset tocks to give player time to choose/lie
-    $self->{state_data}->{tocks} = 0;
 
     return "/msg $self->{channel} $nick has joined the game!";
 }
@@ -1109,29 +1112,56 @@ sub validate_lie($self, $truth, $lie) {
     my $count = 0;
 
     foreach my $word (keys %lie_words) {
-        if (exists $truth_words{$word}) { $count++; }
+        if (exists $truth_words{$word}) {
+            $count++;
+        }
     }
 
     if ($count >= $lie_word_count) {
         if ($count == $truth_word_count) {
+            # lie matches truth exactly
             return 0;
         } else {
+            # lie is a proper subset of truth
+            return -1;
+        }
+    }
+
+    $count = 0;
+
+    foreach my $word (keys %truth_words) {
+        if (exists $lie_words{$word}) {
+            $count++;
+        }
+    }
+
+    if ($count >= $truth_word_count) {
+        if ($count == $lie_word_count) {
+            # truth matches lie exactly
+            return 0;
+        } else {
+            # truth is a proper subset of lie
             return -1;
         }
     }
 
     my $stripped_truth = $truth;
     $stripped_truth =~ s/(?:\s|\p{PosixPunct})+//g;
+
     my $stripped_lie = $lie;
     $stripped_lie =~ s/(?:\s|\p{PosixPunct})+//g;
 
-    if ($stripped_truth eq $stripped_lie) { return 0; }
+    if ($stripped_truth eq $stripped_lie) {
+        return 0;
+    }
 
     my $distance = distance($stripped_truth, $stripped_lie);
     my $length   = (length $stripped_truth > length $stripped_lie) ? length $stripped_truth : length $stripped_lie;
 
     # if difference is 20% or less then they're too similar
-    if ($distance / $length <= 0.20) { return -2; }
+    if ($distance / $length <= 0.20) {
+        return -2;
+    }
 
     return 1;
 }
@@ -1175,7 +1205,7 @@ sub run_one_state($self) {
         }
     }
 
-    if (not @{$self->{state_data}->{players}}) {
+    if ($self->{current_state} ne 'nogame' && not @{$self->{state_data}->{players}}) {
         $self->send_message($self->{channel}, "All players have left the game!");
         $self->{current_state} = 'nogame';
         $self->{pbot}->{event_queue}->update_repeating('spinach loop', 0);
@@ -1188,6 +1218,7 @@ sub run_one_state($self) {
     if ($self->{previous_state} ne $self->{current_state}) {
         $state_data->{newstate} = 1;
         $state_data->{ticks}    = 1;
+        $state_data->{tocks}    = 0;
 
         if (exists $state_data->{tick_drift}) {
             $state_data->{ticks} += $state_data->{tick_drift};
@@ -1429,7 +1460,6 @@ sub roundinit($self, $state) {
     my $round_scoring = $self->{game}->{round};
 
     if ($round_scoring >= $self->{game}->{rounds} + 1) {
-        $state->{random_category} = 1;
         $state->{bonus_round}++;
         $round_scoring = 'bonus';
     } elsif ($round_scoring > 3) {
@@ -1450,7 +1480,6 @@ sub roundinit($self, $state) {
 sub roundstart($self, $state) {
     if ($state->{ticks} % 2 == 0 || $state->{reroll_category}) {
         $state->{init}  = 1;
-        $state->{tocks} = 0;
         $state->{max_tocks} = $self->{choosecategory_max_tocks};
 
         unless ($state->{reroll_category}) {
@@ -1484,6 +1513,10 @@ sub choosecategory($self, $state) {
 
         if ($state->{current_player} >= @{$state->{players}}) {
             $state->{current_player} = 0;
+        }
+
+        if ($self->{game}->{round} >= $self->{game}->{rounds} + 1) {
+            $state->{random_category} = 1;
         }
 
         my @choices;
@@ -1691,7 +1724,6 @@ sub showquestion($self, $state) {
         $self->showquestion_helper($state);
 
         $state->{max_tocks}          = $self->{picktruth_max_tocks};
-        $state->{tocks}              = 0;
         $state->{init}               = 1;
         $state->{current_lie_player} = 0;
 
@@ -1786,7 +1818,6 @@ sub getlies($self, $state) {
                 $self->send_message($self->{channel}, "$missed failed to submit a lie in time!");
             }
 
-            $state->{tocks}  = 0;
             $state->{init}   = 1;
             $state->{result} = 'next';
             return 1;
@@ -2251,7 +2282,6 @@ sub gameover($self, $state) {
 
         # reset some state data
         delete $state->{random_category};
-        $state->{tocks}       = 0;
         $state->{bonus_round} = 0;
         $state->{result}  = 'next';
         return 1;
