@@ -379,6 +379,15 @@ sub handle_action($self, $context, $action) {
         $context->{nickprefix_disabled} = 0;
     }
 
+    $self->{pbot}->{logger}->log("$context->{from}: $context->{nick}!$context->{user}\@$context->{host}: $trigger_name: action: \"$action\"\n");
+
+    my $enabled = $self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'enabled');
+
+    if (defined $enabled and $enabled == 0) {
+        $self->{pbot}->{logger}->log("$trigger_name disabled.\n");
+        return "${ref_from}$trigger_name is disabled.";
+    }
+
     # Check if it's an alias
     if ($action =~ /^\/call\s+(.*)$/msi) {
         my $command = $1;
@@ -409,15 +418,6 @@ sub handle_action($self, $context, $action) {
         }
 
         return $self->{pbot}->{interpreter}->interpret($context);
-    }
-
-    $self->{pbot}->{logger}->log("$context->{from}: $context->{nick}!$context->{user}\@$context->{host}: $trigger_name: action: \"$action\"\n");
-
-    my $enabled = $self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'enabled');
-
-    if (defined $enabled and $enabled == 0) {
-        $self->{pbot}->{logger}->log("$trigger_name disabled.\n");
-        return "/msg $context->{nick} ${ref_from}$trigger_name is disabled.";
     }
 
     if ($context->{interpolate}) {
