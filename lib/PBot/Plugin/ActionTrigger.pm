@@ -366,7 +366,7 @@ sub get_trigger($self, $channel, $trigger) {
 }
 
 sub on_kick($self, $event_type, $event) {
-    # don't handle this event if it was caused by a bot command
+    # don't handle this event if it was processed by a bot command
     return 0 if $event->{interpreted};
 
     my ($nick, $user, $host) = (
@@ -387,6 +387,9 @@ sub on_kick($self, $event_type, $event) {
 }
 
 sub on_action($self, $event_type, $event) {
+    # don't handle this event if it was processed by a bot command
+    return 0 if $event->{interpreted};
+
     my ($nick, $user, $host, $msg) = (
         $event->nick,
         $event->user,
@@ -403,6 +406,9 @@ sub on_action($self, $event_type, $event) {
 }
 
 sub on_public($self, $event_type, $event) {
+    # don't handle this event if it was processed by a bot command
+    return 0 if $event->{interpreted};
+
     my ($nick, $user, $host, $msg) = (
         $event->nick,
         $event->user,
