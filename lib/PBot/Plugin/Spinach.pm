@@ -112,7 +112,7 @@ sub on_kick($self, $event_type, $event) {
 sub on_departure($self, $event_type, $event) {
     my ($nick, $user, $host) = ($event->nick, $event->user, $event->host);
     my ($channel, $type)     = (lc $event->to, uc $event->type);
-    return 0 if $type ne 'QUIT' and $channel ne $self->{channel};
+    return 0 if $type eq 'QUIT' and $channel ne $self->{channel};
     $self->player_left($nick, $user, $host);
     return 0;
 }
@@ -1208,7 +1208,7 @@ sub run_one_state($self) {
     }
 
     if ($self->{current_state} ne 'nogame' && not @{$self->{state_data}->{players}}) {
-        $self->send_message($self->{channel}, "All players have left the game!");
+        $self->send_message($self->{channel}, "All players have left. The game has been stopped.");
         $self->{current_state} = 'nogame';
         $self->{pbot}->{event_queue}->update_repeating('spinach loop', 0);
         return;
