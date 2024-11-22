@@ -128,7 +128,7 @@ sub process_line($self, $from, $nick, $user, $host, $text, $tags = '', $is_comma
     # otherwise try to parse any potential commands
     if ($cmd_text =~ m/^\s*($nick_regex)[,:]?\s+$bot_trigger\{\s*(.+?)\s*\}\s*$/) {
         # "somenick: !{command}"
-        $context->{addressed} = 1;
+        $context->{addressed} = 1; # command explicitly invoked (output disambig/errors)
         goto CHECK_EMBEDDED_CMD;
     } elsif ($cmd_text =~ m/^\s*$bot_trigger\{\s*(.+?)\s*\}\s*$/) {
         # "!{command}"
@@ -149,27 +149,27 @@ sub process_line($self, $from, $nick, $user, $host, $text, $tags = '', $is_comma
             $self->{pbot}->{logger}->log("No similar nick for $possible_nick_prefix; disregarding command.\n");
             return 0;
         }
-        $context->{addressed} = 1;
+        $context->{addressed} = 1; # command explicitly invoked
     } elsif ($cmd_text =~ m/^$bot_trigger\s*(.+)$/) {
         # "!command"
         $command = $1;
-        $context->{addressed} = 1;
+        $context->{addressed} = 1; # command explicitly invoked
     } elsif ($cmd_text =~ m/^.?\s*$botnick\s*[,:]\s+(.+)$/i) {
         # "botnick: command"
         $command = $1;
-        $context->{addressed} = 1;
+        $context->{addressed} = 1; # command explicitly invoked
     } elsif ($cmd_text =~ m/^.?\s*$botnick\s+(.+)$/i) {
         # "botnick command"
         $command = $1;
-        $context->{addressed} = 0;
+        $context->{addressed} = 0; # command NOT explicitly invoked (silence disambig/errors)
     } elsif ($cmd_text =~ m/^(.+?),\s+$botnick[?!.]*$/i) {
         # "command, botnick?"
         $command = $1;
-        $context->{addressed} = 1;
+        $context->{addressed} = 1; # command explicitly invoked
     } elsif ($cmd_text =~ m/^(.+?)\s+$botnick[?!.]*$/i) {
         # "command botnick?"
         $command = $1;
-        $context->{addressed} = 0;
+        $context->{addressed} = 0; # command NOT explicitly invoked
     }
 
     # check for embedded commands
@@ -251,6 +251,14 @@ sub process_line($self, $from, $nick, $user, $host, $text, $tags = '', $is_comma
 
         # increment processed counter
         $processed++;
+
+        # reset context
+        delete $context->{subcmd};
+        delete $context->{pipe};
+        delete $context->{pipe_next};
+        delete $context->{command_split};
+        delete $context->{split_result};
+        delete $context->{add_nick};
     }
 
     # return number of commands processed
@@ -616,7 +624,10 @@ sub handle_result($self, $context, $result = $context->{result}) {
 
     # finish piping
     if (exists $context->{pipe}) {
-        my ($pipe, $pipe_rest) = (delete $context->{pipe}, delete $context->{pipe_rest});
+        my ($pipe, $pipe_rest) = (
+            delete $context->{pipe},
+            delete $context->{pipe_rest}
+        );
 
         if (not $context->{alldone}) {
             $context->{command} = "$pipe $result $pipe_rest";
@@ -683,6 +694,9 @@ sub handle_result($self, $context, $result = $context->{result}) {
             $context->{split_result} .= $result;
         }
 
+        delete $context->{ref_from};
+        delete $context->{add_nick};
+
         $context->{result} = $self->interpret($context);
         $self->handle_result($context);
         return 0;
@@ -693,8 +707,9 @@ sub handle_result($self, $context, $result = $context->{result}) {
         my $botnick = $self->{pbot}->{conn}->nick;
 
         # reformat result to be more suitable for joining together
-        $result =~ s!^/say !\n!i;
-        $result =~ s!^/me !\n* $botnick !i;
+        $result =~ s!^/say !\n!i
+        || $result =~ s!^/me !\n* $botnick !i
+        || $result =~ s!^!\n!;
 
         $result = $context->{split_result} . $result;
         delete $context->{split_result};
