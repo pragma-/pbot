@@ -681,6 +681,10 @@ sub cmd_spinach($self, $context) {
                     return "$context->{nick}: You are not playing in this game. Use `j` to start playing now!";
                 }
 
+                if ($player->{lie_count} >= 2) {
+                    return "/msg $context->{nick} You cannot change your lie again this round.";
+                }
+
                 $arguments = $self->normalize_text($arguments);
 
                 my @truth_count = split /\s/, $self->{state_data}->{current_question}->{answer};
@@ -711,9 +715,7 @@ sub cmd_spinach($self, $context) {
                     return "$context->{nick}: Your lie is too similar to the truth! Submit a different lie.";
                 }
 
-                if (++$player->{lie_count} > 2) {
-                    return "/msg $context->{nick} You cannot change your lie again this round.";
-                }
+                $player->{lie_count}++;
 
                 my $changed = exists $player->{lie};
                 $player->{lie} = $arguments;
@@ -1280,6 +1282,10 @@ sub run_one_state($self) {
 sub create_states($self) {
     $self->{pbot}->{logger}->log("Spinach: Creating game state machine\n");
 
+    $self->{state_data} = {
+        players => []
+    };
+
     $self->{previous_state}  = '';
     $self->{previous_result} = '';
     $self->{current_state}   = 'nogame';
@@ -1709,8 +1715,8 @@ sub showquestion($self, $state) {
         $state->{seen_questions}->{$state->{current_category}}->{$state->{current_question}->{id}} = 1;
 
         foreach my $player (@{$state->{players}}) {
+            $player->{lie_count} = 0;
             delete $player->{lie};
-            delete $player->{lie_count};
             delete $player->{truth};
             delete $player->{good_lie};
             delete $player->{deceived};
