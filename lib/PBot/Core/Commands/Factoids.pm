@@ -84,6 +84,7 @@ sub cmd_call_factoid($self, $context) {
     $context->{keyword}      = $trigger;
     $context->{trigger}      = $trigger;
     $context->{ref_from}     = $channel;
+    $context->{no_ref_from}  = 1;
     $context->{arguments}    = $args // '';
     $context->{root_keyword} = $trigger;
 

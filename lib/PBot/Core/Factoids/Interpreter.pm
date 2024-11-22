@@ -20,11 +20,10 @@ sub interpreter($self, $context) {
     # trace context and context's contents
     if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
         use Data::Dumper;
-        $Data::Dumper::Sortkeys = sub { [sort grep { not /(?:cmdlist|arglist)/ } keys %$context] };
+        $Data::Dumper::Sortkeys = 1;
         $Data::Dumper::Indent = 2;
         $self->{pbot}->{logger}->log("Factoids::interpreter\n");
         $self->{pbot}->{logger}->log(Dumper $context);
-        $Data::Dumper::Sortkeys = 1;
     }
 
     if (not length $context->{keyword}) {
@@ -302,7 +301,7 @@ sub handle_action($self, $context, $action) {
 
     my $ref_from = '';
 
-    unless ($context->{pipe} or $context->{subcmd}) {
+    unless ($context->{no_ref_from} or $context->{pipe} or $context->{subcmd}) {
         $ref_from = $context->{ref_from} ? "[$context->{ref_from}] " : '';
     }
 
