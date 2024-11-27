@@ -39,9 +39,9 @@ sub execute($self, $context) {
 
         # expand factoid action $args
         if ($factoids->get_data($context->{channel}, $context->{keyword}, 'allow_empty_args')) {
-            $context->{code} = $variables->expand_action_arguments($context->{code}, $context->{arguments}, '');
+            $context->{code} = $variables->expand_action_arguments($context, $context->{code}, $context->{arguments}, '');
         } else {
-            $context->{code} = $variables->expand_action_arguments($context->{code}, $context->{arguments}, $context->{nick});
+            $context->{code} = $variables->expand_action_arguments($context, $context->{code}, $context->{arguments}, $context->{nick});
         }
     } else {
         # otherwise allow nick overriding

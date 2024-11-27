@@ -6,7 +6,7 @@ This is a work in progress. More questions coming soon!
 * [How do I change the bot trigger?](#how-do-i-change-the-bot-trigger)
 * [How do I whitelist a user?](#how-do-i-whitelist-a-user)
 * [How do I change how the bot outputs multi-line messages?](#how-do-i-change-how-the-bot-outputs-multi-line-messages)
-* [I made a command. It's supposed to output formatting with spaces and tabs?](#i-made-a-command-its-supposed-to-output-formatting-with-spaces-and-tabs)
+* [How can I remove excessive spaces and tabs from command output?](#how-can-i-remove-excessive-spaces-and-tabs-from-command-output)
 * [How do I change my password?](#how-do-i-change-my-password)
 * [How do I make PBot remember my `date` timezone?](#how-do-i-make-pbot-remember-my-date-timezone)
 * [How do I make PBot remember my `weather` location?](#how-do-i-make-pbot-remember-my-weather-location)

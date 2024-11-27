@@ -62,7 +62,7 @@ sub expand_factoid_vars($self, $context, $action, %opts) {
             $result .= $1;
 
             my ($var, $orig_var);
-            my $modifiers;
+            my $modifiers = '';
             my $extract_method;
 
             if ($rest =~ /^\{.*?\}/) {
@@ -102,44 +102,66 @@ sub expand_factoid_vars($self, $context, $action, %opts) {
 
             my @factoids = $self->{pbot}->{factoids}->{data}->find($from, $var, exact_channel => 2, exact_trigger => 2);
 
-            if (not @factoids or not $factoids[0]) {
-                $result .= $extract_method eq 'bracket' ? '${' . $orig_var . '}' : '$' . $orig_var;
-                next;
+            my $var_chan;
+            if (@factoids && $factoids[0]) {
+                ($var_chan, $var) = ($factoids[0]->[0], $factoids[0]->[1]);
+
+                if ($self->{pbot}->{factoids}->{data}->{storage}->get_data($var_chan, $var, 'action') =~ m{^/call (.*)}ms) {
+                    $var = $1;
+
+                    if (++$recurse > 100) {
+                        $self->{pbot}->{logger}->log("Factoids: variable expansion recursion limit reached\n");
+                        $result .= $extract_method eq 'bracket' ? '${' . $orig_var . '}' : '$' . $orig_var;
+                        next;
+                    }
+
+                    goto ALIAS;
+                }
             }
 
-            my $var_chan;
-            ($var_chan, $var) = ($factoids[0]->[0], $factoids[0]->[1]);
+            my $copy;
+            my $bracketed = 0;
 
-            if ($self->{pbot}->{factoids}->{data}->{storage}->get_data($var_chan, $var, 'action') =~ m{^/call (.*)}ms) {
-                $var = $1;
+            if ($extract_method eq 'bracket') {
+                $copy = $modifiers;
+                $bracketed = 1;
+            } else {
+                $copy = $rest;
+            }
 
-                if (++$recurse > 100) {
-                    $self->{pbot}->{logger}->log("Factoids: variable expansion recursion limit reached\n");
+            my %settings = $self->{pbot}->{factoids}->{modifiers}->parse(\$copy, $bracketed);
+
+            my $change;
+
+            if (not @factoids or not $factoids[0]) {
+                if (exists $settings{default} && length $settings{default}) {
+                    $change = $settings{default};
+                } else {
                     $result .= $extract_method eq 'bracket' ? '${' . $orig_var . '}' : '$' . $orig_var;
                     next;
                 }
-
-                goto ALIAS;
+            } else {
+                if ($self->{pbot}->{factoids}->{data}->{storage}->get_data($var_chan, $var, 'type') eq 'text') {
+                    $change = $self->{pbot}->{factoids}->{data}->{storage}->get_data($var_chan, $var, 'action');
+                }
             }
 
-            if ($modifiers) {
-                $rest = $modifiers . $rest;
-            }
-
-            my $copy = $rest;
-            my %settings = $self->{pbot}->{factoids}->{modifiers}->parse(\$copy);
-
-            if ($self->{pbot}->{factoids}->{data}->{storage}->get_data($var_chan, $var, 'type') eq 'text') {
-                my $change = $self->{pbot}->{factoids}->{data}->{storage}->get_data($var_chan, $var, 'action');
-                my @list   = $self->{pbot}->{interpreter}->split_line($change);
-
+            if (defined $change) {
+                my @list = $self->{pbot}->{interpreter}->split_line($change);
                 my @replacements;
+                my $ref;
+
+                if ($extract_method eq 'bracket') {
+                    $ref = \$modifiers;
+                } else {
+                    $ref = \$rest;
+                }
 
                 if (wantarray) {
-                    @replacements = $self->{pbot}->{factoids}->{selectors}->select_item($context, join ('|', @list),  \$rest, %opts);
+                    @replacements = $self->{pbot}->{factoids}->{selectors}->select_item($context, join ('|', @list), $ref, %opts);
                     return @replacements;
                 } else {
-                    push @replacements, scalar $self->{pbot}->{factoids}->{selectors}->select_item($context, join ('|', @list), \$rest, %opts);
+                    push @replacements, scalar $self->{pbot}->{factoids}->{selectors}->select_item($context, join ('|', @list), $ref, %opts);
                 }
 
                 my $replacement = $opts{nested} ? join('|', @replacements) : "@replacements";
@@ -210,104 +232,218 @@ sub expand_factoid_vars($self, $context, $action, %opts) {
     return validate_string($result, $self->{pbot}->{registry}->get_value('factoids', 'max_content_length'));
 }
 
-sub expand_action_arguments($self, $action, $input, $nick) {
+sub expand_action_arguments($self, $context, $action, $input = '', $nick = '') {
     $action = validate_string($action, $self->{pbot}->{registry}->get_value('factoids', 'max_content_length'));
     $input  = validate_string($input,  $self->{pbot}->{registry}->get_value('factoids', 'max_content_length'));
 
-    my %h;
-
-    if (not defined $input or $input eq '') {
-        $input = '';
-        %h = (args => $nick);
-    } else {
-        %h = (args => $input);
-    }
-
-    my $jsonargs = to_json \%h;
-    $jsonargs =~ s/^{".*":"//;
-    $jsonargs =~ s/"}$//;
+    my %opts = (
+        nested => 0,
+    );
 
     my @args = $self->{pbot}->{interpreter}->split_line($input);
 
     $action =~ s/\$arglen\b|\$\{arglen\}/scalar @args/eg;
-    $action =~ s/\$args:json|\$\{args:json\}/$jsonargs/g;
 
-    if ($input eq '') {
-        $action =~ s/\$p?args(?![[\w])|\$\{p?args(?![[\w])\}/$nick/g;
-    } else {
-        $action =~ s/\$args(?![[\w])|\$\{args(?![[\w])\}/$input/g;
+    my $root_keyword = $context->{keyword_override} ? $context->{keyword_override} : $context->{root_keyword};
+
+    if ($action =~ m/^\/call --keyword-override=([^ ]+)/i) {
+        $root_keyword = $1;
     }
 
     my $depth        = 0;
     my $const_action = $action;
 
-    while ($const_action =~ m/\$arg\[([^]]+)]|\$\{arg\[([^]]+)]\}/g) {
-        my $arg = defined $2 ? $2 : $1;
+    my $result = '';
+    my $rest   = $action;
 
-        last if ++$depth >= 100;
+    while (++$depth < 100) {
+        $rest =~ s/(?<!\\)\$0/$root_keyword/g;
 
-        if ($arg eq '*') {
-            if ($input eq '') {
-                $action =~ s/\$arg\[\*\]|\$\{arg\[\*\]\}/$nick/;
+        my $matches = 0;
+        my $expansions = 0;
+
+        while ($rest =~ s/(.*?)(?<!\\)\$([\w|{])/$2/ms) {
+            $result .= $1;
+
+            my ($var, $orig_var);
+            my $modifiers = '';
+            my $extract_method;
+
+            if ($rest =~ /^\{.*?\}/) {
+                ($var, $rest) = $self->{pbot}->{interpreter}->extract_bracketed($rest, '{', '}');
+                $orig_var = $var;
+
+                if ($var =~ /:/) {
+                    my @stuff = split /:/, $var, 2;
+                    $var = $stuff[0];
+                    $modifiers = ':' . $stuff[1];
+                }
+
+                $extract_method = 'bracket';
             } else {
-                $action =~ s/\$arg\[\*\]|\$\{arg\[\*\]\}/$input/;
+                $rest =~ s/^(\w+)//;
+                $var = $orig_var = $1;
+                $extract_method = 'regex';
             }
 
-            next;
-        }
-
-        if ($arg =~ m/([^:]*):(.*)/) {
-            my $arg1 = $1;
-            my $arg2 = $2;
-
-            my $arg1i = $arg1;
-            my $arg2i = $arg2;
-
-            $arg1i = 0      if $arg1i eq '';
-            $arg2i = $#args if $arg2i eq '';
-            $arg2i = $#args if $arg2i > $#args;
-
-            my @values = eval {
-                local $SIG{__WARN__} = sub { };
-                return @args[$arg1i .. $arg2i];
-            };
-
-            if ($@) {
+            if ($var ne 'args' && $var ne 'arg') {
+                $result .= $extract_method eq 'bracket' ? '${' . $orig_var . '}' : '$' . $orig_var;
                 next;
-            } else {
-                my $string = join(' ', @values);
+            }
 
-                if ($string eq '') {
-                    $action =~ s/\s*\$\{arg\[$arg1:$arg2\]\}//     || $action =~ s/\s*\$arg\[$arg1:$arg2\]//;
+            $matches++;
+
+            my $value;
+            my $use_nick = 0;
+
+            if ($var eq 'args') {
+                if (!defined $input || !length $input) {
+                    $value = undef;
+                    $use_nick = 1;
                 } else {
-                    $action =~ s/\$\{arg\[$arg1:$arg2\]\}/$string/ || $action =~ s/\$arg\[$arg1:$arg2\]/$string/;
+                    $value = $input;
+                }
+            } else {
+                my $index;
+                if ($rest =~ s/\[(.*?)\]//) {
+                    $index = $1;
+                } else {
+                    $result .= $extract_method eq 'bracket' ? '${' . $orig_var . '}' : '$' . $orig_var;
+                    next;
+                }
+
+                if ($index eq '*') {
+                    if (!defined $input || !length $input) {
+                        $value = undef;
+                        $use_nick = 1;
+                    } else {
+                        $value = $input;
+                    }
+                } elsif ($index =~ m/([^:]*):(.*)/) {
+                    my $arg1 = $1;
+                    my $arg2 = $2;
+
+                    my $arg1i = $arg1;
+                    my $arg2i = $arg2;
+
+                    $arg1i = 0      if $arg1i eq '';
+                    $arg2i = $#args if $arg2i eq '';
+                    $arg2i = $#args if $arg2i > $#args;
+
+                    my @values = eval {
+                        local $SIG{__WARN__} = sub { };
+                        return @args[$arg1i .. $arg2i];
+                    };
+
+                    if ($@) {
+                        $value = undef;
+                    } else {
+                        $value = join(' ', @values);
+                    }
+                } else {
+                    $value = eval {
+                        local $SIG{__WARN__} = sub { };
+                        return $args[$index];
+                    };
+
+                    if ($@) {
+                        if ($index == 0) {
+                            $value = $nick;
+                        } else {
+                            $value = undef;
+                        }
+                    }
+
+                    if (!defined $value) {
+                        if ($index == 0) {
+                            $use_nick = 1;
+                        }
+                    }
                 }
             }
 
-            next;
+            my %settings;
+            if ($extract_method eq 'bracket') {
+                %settings = $self->{pbot}->{factoids}->{modifiers}->parse(\$modifiers, 1);
+            } else {
+                %settings = $self->{pbot}->{factoids}->{modifiers}->parse(\$rest);
+            }
+
+            my $change;
+
+            if (!defined $value || !length $value) {
+                if (exists $settings{default} && length $settings{default}) {
+                    $change = $settings{default};
+                } else {
+                    if ($use_nick) {
+                        $change = $nick;
+                    } else {
+                        $change = '';
+                    }
+                }
+            } else {
+                $change = $value;
+            }
+
+            if (defined $change) {
+                if (not length $change) {
+                    $result =~ s/\s+$//;
+                }
+
+                if ($settings{'uc'}) {
+                    $change = uc $change;
+                }
+
+                if ($settings{'lc'}) {
+                    $change = lc $change;
+                }
+
+                if ($settings{'ucfirst'}) {
+                    $change = ucfirst $change;
+                }
+
+                if ($settings{'title'}) {
+                    $change = ucfirst lc $change;
+                    $change =~ s/ (\w)/' ' . uc $1/ge;
+                }
+
+                if ($settings{'json'}) {
+                    $change = $self->escape_json($change);
+                }
+
+                if ($result =~ s/\b(a|an)(\s+)$//i) {
+                    my ($article, $trailing) = ($1, $2);
+                    my $fixed_article = select_indefinite_article $change;
+
+                    if ($article eq 'AN') {
+                        $fixed_article = uc $fixed_article;
+                    } elsif ($article eq 'An' or $article eq 'A') {
+                        $fixed_article = ucfirst $fixed_article;
+                    }
+
+                    $change = $fixed_article . $trailing . $change;
+                }
+
+                $result .= $change;
+
+                $expansions++;
+            }
         }
 
-        my $value = eval {
-            local $SIG{__WARN__} = sub { };
-            return $args[$arg];
-        };
+        last if $matches == 0 or $expansions == 0;
 
-        if ($@) {
-            next;
-        } else {
-            if (not defined $value) {
-                if ($arg == 0) {
-                    $action =~ s/\$\{arg\[$arg\]\}/$nick/ || $action =~ s/\$arg\[$arg\]/$nick/;
-                } else {
-                    $action =~ s/\s*\$\{arg\[$arg\]\}//   || $action =~ s/\s*\$arg\[$arg\]//;
-                }
-            } else {
-                $action =~ s/\$arg\{\[$arg\]\}/$value/    || $action =~ s/\$arg\[$arg\]/$value/;
-            }
+        if (not length $rest) {
+            $rest = $result;
+            $result = '';
         }
     }
 
-    return $action;
+    $result .= $rest;
+
+    # unescape certain symbols
+    $result =~ s/(?<!\\)\\([\$\:\|])/$1/g;
+
+    return validate_string($result, $self->{pbot}->{registry}->get_value('factoids', 'max_content_length'));
 }
 
 sub escape_json($self, $text) {

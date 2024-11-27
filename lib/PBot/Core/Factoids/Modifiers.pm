@@ -13,12 +13,23 @@ use PBot::Imports;
 sub initialize {
 }
 
-sub parse($self, $modifier) {
+sub parse($self, $modifier, $bracketed = 0) {
     my %modifiers;
 
     my $interp = $self->{pbot}->{interpreter};
 
-    while ($$modifier =~ s/^:(?=\w)//) {
+    my $modregex;
+    my $defregex;
+
+    if ($bracketed) {
+        $modregex = qr/^:(?=.+?:?)/;
+        $defregex = qr/^-([^:]+)/;
+    } else {
+        $modregex = qr/^:(?=[\w+-]+)/;
+        $defregex = qr/^-([\w]+)/;
+    }
+
+    while ($$modifier =~ s/$modregex//) {
         if ($$modifier =~ s/^join\s*(?=\(.*?(?=\)))//) {
             my ($params, $rest) = $interp->extract_bracketed($$modifier, '(', ')', '', 1);
             $$modifier = $rest;
@@ -34,6 +45,11 @@ sub parse($self, $modifier) {
 
         if ($$modifier=~ s/^\-sort//) {
             $modifiers{'sort-'} = 1;
+            next;
+        }
+
+        if ($$modifier =~ s/$defregex//) {
+            $modifiers{'default'} = $1;
             next;
         }
 
@@ -92,7 +108,7 @@ sub parse($self, $modifier) {
             next;
         }
 
-        if ($$modifier =~ s/^(enumerate|comma|ucfirst|lcfirst|title|uc|lc)//) {
+        if ($$modifier =~ s/^(enumerate|comma|ucfirst|lcfirst|title|uc|lc|json)//) {
             $modifiers{$1} = 1;
             next;
         }

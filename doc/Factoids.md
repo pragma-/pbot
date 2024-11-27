@@ -28,6 +28,7 @@
   * [$0](#0)
 * [List variables](#list-variables)
   * [Expansion modifiers](#expansion-modifiers)
+* [Default values for variables and arguments](#default-values-for-variables-and-arguments)
 * [action_with_args](#action_with_args)
 * [add_nick](#add_nick)
 * [Channel namespaces](#channel-namespaces)
@@ -436,6 +437,30 @@ Text Modifier | Description
 `:lc` | Lowercases the expansion.
 `:ucfirst` | Uppercases the first letter in the expansion.
 `:title` | Lowercases the expansion and then uppercases the initial letter of each word.
+
+## Default values for variables and arguments
+Factoid variables and argument variables may be provided with a default value to be used when the variable is undefined.
+
+    <pragma-> !factadd cookie /me gives a cookie to ${args:-nobody. What a shame}!
+       <PBot> cookie added to the global channel.
+
+    <pragma-> !cookie Bob
+            * PBot gives a cookie to Bob!
+
+    <pragma-> !cookie
+            * PBot gives a cookie to nobody. What a shame!
+
+    <pragma-> !factadd sum /call calc $arg[0]:-1 + $arg[1]:-2
+       <PBot> sum added to the global channel.
+
+    <pragma-> !sum
+       <PBot> 1 + 2 = 3
+
+    <pragma-> !sum 3
+       <PBot> 3 + 2 = 5
+
+    <pragma-> !sum 4 6
+       <PBot> 4 + 6 = 10
 
 ## action_with_args
 You can use the [`factset`](#factset) command to set a special [factoid metadata](#factoid-metadata) key named `action_with_args` to trigger an alternate message if an argument has been supplied.

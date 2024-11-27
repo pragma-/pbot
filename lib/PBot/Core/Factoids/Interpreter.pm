@@ -283,11 +283,10 @@ sub handle_action($self, $context, $action) {
     # trace context and context's contents
     if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
         use Data::Dumper;
-        $Data::Dumper::Sortkeys = sub { [sort grep { not /(?:cmdlist|arglist)/ } keys %$context] };
+        $Data::Dumper::Sortkeys = 1;
         $Data::Dumper::Indent = 2;
         $self->{pbot}->{logger}->log("Factoids::handle_action [$action]\n");
         $self->{pbot}->{logger}->log(Dumper $context);
-        $Data::Dumper::Sortkeys = 1;
     }
 
     if (not length $action) {
@@ -341,7 +340,7 @@ sub handle_action($self, $context, $action) {
         if ($action =~ m/\$\{?args/ or $action =~ m/\$\{?arg\[/) {
             # factoid has $args, replace them
             if ($context->{interpolate}) {
-                $action = $self->{pbot}->{factoids}->{variables}->expand_action_arguments($action, $context->{arguments}, $context->{nick});
+                $action = $self->{pbot}->{factoids}->{variables}->expand_action_arguments($context, $action, $context->{arguments}, $context->{nick});
             }
 
             $context->{arguments}          = '';
@@ -369,9 +368,9 @@ sub handle_action($self, $context, $action) {
             $context->{alldone} = 1;
         } else {
             if ($self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'allow_empty_args')) {
-                $action = $self->{pbot}->{factoids}->{variables}->expand_action_arguments($action, undef, '');
+                $action = $self->{pbot}->{factoids}->{variables}->expand_action_arguments($context, $action, undef, '');
             } else {
-                $action = $self->{pbot}->{factoids}->{variables}->expand_action_arguments($action, undef, $context->{nick});
+                $action = $self->{pbot}->{factoids}->{variables}->expand_action_arguments($context, $action, undef, $context->{nick});
             }
         }
 
@@ -441,9 +440,9 @@ sub handle_action($self, $context, $action) {
         $action = $self->{pbot}->{factoids}->{variables}->expand_factoid_vars($context, $action);
 
         if ($self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'allow_empty_args')) {
-            $action = $self->{pbot}->{factoids}->{variables}->expand_action_arguments($action, $context->{arguments}, '');
+            $action = $self->{pbot}->{factoids}->{variables}->expand_action_arguments($context, $action, $context->{arguments}, '');
         } else {
-            $action = $self->{pbot}->{factoids}->{variables}->expand_action_arguments($action, $context->{arguments}, $context->{nick});
+            $action = $self->{pbot}->{factoids}->{variables}->expand_action_arguments($context, $action, $context->{arguments}, $context->{nick});
         }
     }
 
