@@ -162,13 +162,16 @@ sub wordle($self, $context) {
 
             if ($self->{$channel}->{correct}) {
                 my $solved_on = concise ago (time - $self->{$channel}->{solved_on});
-                $result .= "; solved by: $self->{$channel}->{solved_by} ($solved_on)";
-            }
-
-            if ($self->{$channel}->{givenup}) {
+                my $wordle = join '', $self->{$channel}->{wordle}->@*;
+                $result .= "; solved by: $self->{$channel}->{solved_by} ($solved_on); word was: $wordle";
+            } elsif ($self->{$channel}->{givenup}) {
                 my $givenup_on = concise ago (time - $self->{$channel}->{givenup_on});
                 my $wordle = join '', $self->{$channel}->{wordle}->@*;
                 $result .= "; given up by: $self->{$channel}->{givenup_by} ($givenup_on); word was: $wordle";
+            } else {
+                my $guess = $self->{$channel}->{guesses}->[-1];
+                $guess =~ s/[^\pL]//g;
+                $result .= "; last guess: $guess";
             }
 
             return $result;
