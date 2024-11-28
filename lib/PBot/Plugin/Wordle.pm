@@ -165,6 +165,12 @@ sub wordle($self, $context) {
                 $result .= "; solved by: $self->{$channel}->{solved_by} ($solved_on)";
             }
 
+            if ($self->{$channel}->{givenup}) {
+                my $givenup_on = concise ago (time - $self->{$channel}->{givenup_on});
+                my $wordle = join '', $self->{$channel}->{wordle}->@*;
+                $result .= "; given up by: $self->{$channel}->{givenup_by} ($givenup_on); word was: $wordle";
+            }
+
             return $result;
          }
 
@@ -173,9 +179,21 @@ sub wordle($self, $context) {
                 return NO_WORDLE;
             }
 
-            my $wordle = join '', $self->{$channel}->{wordle}->@*;
-            $self->{$channel}->{wordle} = undef;
+            if ($self->{$channel}->{correct}) {
+                my $solved_on = concise ago (time - $self->{$channel}->{solved_on});
+                return "Wordle already solved by $self->{$channel}->{solved_by} ($solved_on)";
+            }
 
+            if ($self->{$channel}->{givenup}) {
+                my $givenup_on = concise ago (time - $self->{$channel}->{givenup_on});
+                my $wordle = join '', $self->{$channel}->{wordle}->@*;
+                return "The word was $wordle. It was already given up by $self->{$channel}->{givenup_by} ($givenup_on).";
+            }
+
+            $self->{$channel}->{givenup} = 1;
+            $self->{$channel}->{givenup_by} = $context->{nick};
+            $self->{$channel}->{givenup_on} = time;
+            my $wordle = join '', $self->{$channel}->{wordle}->@*;
             return "The word was $wordle. Better luck next time.";
         }
 
@@ -203,7 +221,7 @@ sub wordle($self, $context) {
                 $length = $args[0];
             }
 
-            if (defined $self->{$channel}->{wordle} && $self->{$channel}->{correct} == 0) {
+            if (defined $self->{$channel}->{wordle} && $self->{$channel}->{correct} == 0 && $self->{$channel}->{givenup} == 0) {
                 return "There is already a Wordle underway! Use `wordle show` to see the current progress or `wordle giveup` to end it.";
             }
 
@@ -237,7 +255,7 @@ sub wordle($self, $context) {
                 return "I'm not on that channel!";
             }
 
-            if (defined $self->{$custom_channel}->{wordle} && $self->{$custom_channel}->{correct} == 0) {
+            if (defined $self->{$custom_channel}->{wordle} && $self->{$custom_channel}->{correct} == 0 && $self->{$custom_channel}->{givenup} == 0) {
                 return "There is already a Wordle underway! Use `wordle show` to see the current progress or `wordle giveup` to end it.";
             }
 
@@ -277,6 +295,10 @@ sub wordle($self, $context) {
 
             if ($self->{$channel}->{correct}) {
                 return "Wordle already solved by $self->{$channel}->{solved_by}. " . $self->show_wordle($channel);
+            }
+
+            if ($self->{$channel}->{givenup}) {
+                return "Wordle given up by $self->{$channel}->{givenup_by}.";
             }
 
             my $result = $self->guess_wordle($channel, $args[0]);
@@ -394,6 +416,7 @@ sub make_wordle($self, $channel, $length, $word = undef, $wordlist = DEFAULT_LIS
     $self->{$channel}->{guess}       = '';
     $self->{$channel}->{guesses}     = [];
     $self->{$channel}->{correct}     = 0;
+    $self->{$channel}->{givenup}     = 0;
     $self->{$channel}->{guess_count} = 0;
     $self->{$channel}->{letters}     = {};
 
