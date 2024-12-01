@@ -126,7 +126,7 @@
       * [factlog](Factoids.md#factlog)
       * [count](Factoids.md#count)
       * [histogram](Factoids.md#histogram)
-      * [top20](Factoids.md#top20)
+      * [top50](Factoids.md#top50)
 <!-- md-toc-end -->
 
 ## Command interpreter
@@ -656,4 +656,4 @@ to have the command remember your location.
 ##### [factlog](Factoids.md#factlog)
 ##### [count](Factoids.md#count)
 ##### [histogram](Factoids.md#histogram)
-##### [top20](Factoids.md#top20)
+##### [top50](Factoids.md#top50)

@@ -228,7 +228,7 @@
     * [factset](Factoids.md#factset-1)
     * [count](Factoids.md#count)
     * [histogram](Factoids.md#histogram)
-    * [top20](Factoids.md#top20)
+    * [top50](Factoids.md#top50)
 <!-- md-toc-end -->
 <!-- md-toc-begin -->
 * [Registry](Registry.md#registry)

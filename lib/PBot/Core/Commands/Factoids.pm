@@ -62,7 +62,7 @@ sub initialize($self, %conf) {
     $self->{pbot}->{commands}->register(sub { $self->cmd_call_factoid(@_) }, "fact",       0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_as_factoid(@_) },   "factoid",    0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_factfind(@_) },     "factfind",   0);
-    $self->{pbot}->{commands}->register(sub { $self->cmd_top20(@_) },        "top20",      0);
+    $self->{pbot}->{commands}->register(sub { $self->cmd_top50(@_) },        "top50",      0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_histogram(@_) },    "histogram",  0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_count(@_) },        "count",      0);
     $self->{pbot}->{commands}->register(sub { $self->cmd_add_regex(@_) },    "regex",      1);
@@ -1456,7 +1456,7 @@ sub cmd_factchange($self, $context) {
     return "Changed: $trigger_name is $action";
 }
 
-sub cmd_top20($self, $context) {
+sub cmd_top50($self, $context) {
     my $factoids = $self->{pbot}->{factoids}->{data}->{storage};
     my %hash     = ();
     my $text     = "";
@@ -1464,14 +1464,16 @@ sub cmd_top20($self, $context) {
 
     my ($channel, $args) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
-    if (not defined $channel) { return "Usage: top20 <channel> [nick or 'added' or 'edited']"; }
+    if (!defined $channel || $channel ne '.*' && $channel !~ m/^#/) {
+        return "Usage: top50 <channel> [<nick> | 'added' | 'edited' | 'referenced']";
+    }
 
     if (not defined $args) {
         my $iter = $factoids->get_each('type = text', "index1 = $channel", 'index2', 'ref_count > 0', '_sort = -ref_count');
         while (defined (my $factoid = $factoids->get_next($iter))) {
             $text .= $factoids->get_data($factoid->{index1}, $factoid->{index2}, '_name') . " ($factoid->{ref_count}) ";
             $i++;
-            last if $i >= 20;
+            last if $i >= 50;
         }
 
         $channel = "the global channel" if $channel eq '.*';
@@ -1514,6 +1516,22 @@ sub cmd_top20($self, $context) {
         return $text;
     }
 
+    if (lc $args eq 'referenced') {
+        my $iter = $factoids->get_each('type = text', "index1 = $channel", 'index2', 'last_referenced_on', 'ref_user', '_sort = -last_referenced_on');
+        while (defined (my $factoid = $factoids->get_next($iter))) {
+            last if not defined $factoid->{'last_referenced_on'};
+            my $ago   = concise ago gettimeofday - $factoid->{'last_referenced_on'};
+            my ($ref_by) = $factoid->{'ref_user'} =~ /^([^!]+)/;
+            $text .= '   ' . $factoids->get_data($factoid->{index1}, $factoid->{index2}, '_name') . " [$ago by $ref_by]\n";
+            $i++;
+            last if $i >= 50;
+        }
+
+        $channel = 'the global channel' if $channel eq '.*';
+        $text    = "$i most recent references for $channel:\n\n$text" if $i > 0;
+        return $text;
+    }
+
     my $iter = $factoids->get_each('type = text', "index1 = $channel", 'index2', 'ref_user', 'last_referenced_on', '_sort = -last_referenced_on');
     while (defined (my $factoid = $factoids->get_next($iter))) {
         my ($ref_user) = $factoid->{ref_user} =~ /^([^!]+)/;
@@ -1521,13 +1539,15 @@ sub cmd_top20($self, $context) {
             my $ago = $factoid->{'last_referenced_on'} ? concise ago(gettimeofday - $factoid->{'last_referenced_on'}) : "unknown";
             $text .= '   ' . $factoids->get_data($factoid->{index1}, $factoid->{index2}, '_name') . " [$ago]\n";
             $i++;
-            last if $i >= 20;
+            last if $i >= 50;
         }
     }
 
     if ($i > 0) {
+        $channel = 'global channel' if $channel eq '.*';
         return "$i $channel factoids last referenced by $args:\n\n$text";
     } else {
+        $channel = 'the global channel' if $channel eq '.*';
         return "No factoids last referenced by $args in $channel.";
     }
 }

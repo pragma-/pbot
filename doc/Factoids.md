@@ -56,7 +56,7 @@
   * [factset](#factset-1)
   * [count](#count)
   * [histogram](#histogram)
-  * [top20](#top20)
+  * [top50](#top50)
 <!-- md-toc-end -->
 
 ## About
@@ -739,19 +739,19 @@ To see a histogram of the top factoid submitters, use the `histogram` command.
     <pragma-> !histogram
        <PBot> 268 factoids, top 10 submitters: twkm: 74 (27%) Major-Willard: 64 (23%) pragma-: 40 (14%) prec: 39 (14%) defrost: 14 (5%) PoppaVic: 10 (3%) infobahn: 7 (2%) orbitz: 3 (1%) mauke: 3 (1%) Tom^: 2 (1%)
 
-### top20
-To see the top 20 most popular factoids, use the `top20` command. It can also show you the 50 most recent factoids that were added or edited in a channel.
+### top50
+To see the top 50 most popular factoids, use the `top50` command. It can also show you the 50 most recent factoids that were added or edited in a channel.
 
-Usage: `top20 <channel> [<nick> or 'added' or 'edited']`
+Usage: `top50 <channel> [<nick> | 'added' | 'edited' | 'referenced']`
 
-    <pragma-> !top20 ##c
-       <PBot> Top 20 referenced factoids for ##c: explain (3459) c11 (2148) book (1070) books (1049) K&R (1000) dontcastmalloc (991) notC (696) standard (655) c99 (506) scanf (501) declare (453) std (434) cstd (344) tias (305) parens (291) int (287) c1x (272) UB (263) H&S (257) binky (236)
+    <pragma-> !top50 #c
+       <PBot> Top 50 referenced factoids for ##c: explain (3459) c11 (2148) book (1070) books (1049) K&R (1000) dontcastmalloc (991) notC (696) standard (655) c99 (506) scanf (501) declare (453) std (434) cstd (344) tias (305) parens (291) int (287) c1x (272) UB (263) H&S (257) binky (236)
 
-    <pragma-> !top20 ##c pragma-
-       <PBot> 20 factoids last referenced by pragma- (pragma-!~chaos@unaffiliated/pragmatic-chaos): to [1d20h ago] realloc [3d15h ago] deport [4d16h ago] long [4d16h ago] decay [6d17h ago] x [6d16h ago] sizeof [13d18h ago] ENOQUESTION [13d19h ago] main [13d10h ago] cfaq [14d22h ago] heap [14d23h ago] malloc [15d15h ago] _ [16d20h ago] declareuse [17d15h ago] rot13 [17...
+    <pragma-> !top50 #c pragma-
+       <PBot> 50 factoids last referenced by pragma- (pragma-!~chaos@unaffiliated/pragmatic-chaos): to [1d20h ago] realloc [3d15h ago] deport [4d16h ago] long [4d16h ago] decay [6d17h ago] x [6d16h ago] sizeof [13d18h ago] ENOQUESTION [13d19h ago] main [13d10h ago] cfaq [14d22h ago] heap [14d23h ago] malloc [15d15h ago] _ [16d20h ago] declareuse [17d15h ago] rot13 [17...
 
-    <pragma-> !top20 ##c added
-       <PBot> 50 most recent ##c submissions: barometer [9h ago by kurahaupo] glib-pcre [21h ago by aozt] unspecified [1d13h ago by pragma-] rules [1d17h ago by oldlaptop] pjp [2d3h ago by d3738] gnu-errno-name-num [2d21h ago by aozt] cbreak [5d8h ago by jp] test case [5d9h ago by pragma-] googlearn [6d2h ago by glacial] threads [8d10h ago by glacial] cjeopard...
+    <pragma-> !top50 #c added
+       <PBot> 50 most recent #c submissions: barometer [9h ago by kurahaupo] glib-pcre [21h ago by aozt] unspecified [1d13h ago by pragma-] rules [1d17h ago by oldlaptop] pjp [2d3h ago by d3738] gnu-errno-name-num [2d21h ago by aozt] cbreak [5d8h ago by jp] test case [5d9h ago by pragma-] googlearn [6d2h ago by glacial] threads [8d10h ago by glacial] cjeopard...
 
-    <pragma-> !top20 ##c edited
-       <PBot> 50 most recent ##c edits: sanitizers [14h ago by nitrix] testing [1d6h ago by pragma-] typedef [1d8h ago by pragma-] license [2d4h ago by nitrix] diagnostics [2d19h ago by nitrix] tias [3d5h ago by pragma-] kr_lovecraft [4d1h ago by pragma-] cjeopardy [5d3h ago by pragma-] ...
+    <pragma-> !top50 #c edited
+       <PBot> 50 most recent #c edits: sanitizers [14h ago by nitrix] testing [1d6h ago by pragma-] typedef [1d8h ago by pragma-] license [2d4h ago by nitrix] diagnostics [2d19h ago by nitrix] tias [3d5h ago by pragma-] kr_lovecraft [4d1h ago by pragma-] cjeopardy [5d3h ago by pragma-] ...
