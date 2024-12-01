@@ -475,8 +475,12 @@ sub cmd_kick($self, $context) {
 
     if ($context->{keyword} =~ /^[A-Z]+$/) {
         $reason = uc $reason;
-    } elsif ($context->{keyword} eq 'KiCk' or $context->{keyword} eq 'kIcK') {
+    } elsif ($context->{keyword} eq 'KiCk') {
+        $reason =~ s/(.)(.)/uc($1) . lc($2)/ge;
+    } elsif ($context->{keyword} eq 'kIcK') {
         $reason =~ s/(.)(.)/lc($1) . uc($2)/ge;
+    } elsif ($context->{keyword} eq 'KicK') {
+        $reason =~ s/(\w)(?:(\S*)(\w))?/uc($1) . lc($2) . uc($3)/ge;
     }
 
     my @nicks = split /,/, $victim;
