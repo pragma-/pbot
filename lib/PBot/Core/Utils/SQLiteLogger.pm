@@ -22,8 +22,8 @@ sub new($class, %args) {
     return bless $self, $class;
 }
 
-sub log($self) {
-    $self->{buf} .= shift;
+sub log($self, $chunk) {
+    $self->{buf} .= $chunk;
 
     # DBI feeds us pieces at a time, so accumulate a complete line
     # before outputing
