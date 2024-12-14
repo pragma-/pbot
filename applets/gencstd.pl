@@ -14,7 +14,7 @@
 #     n3220: pdftotext -layout -y 80 -H 700 -W 1000 n3220.pdf n3220.in
 #     n3301: pdftotext -layout -y 80 -H 700 -W 1000 n3301.pdf n3301.in
 #
-# Step 2: manually edit file.in as follows. Compare with existing n3047.in
+# Step 2: manually edit file.in as follows. Compare with existing n3220.in
 #     for guidance.
 #
 #     a) Add ABSTRACT., CONTENTS., INTRO., FOREWORD. BIBLIO. section headers
@@ -67,10 +67,10 @@
 #     successfully added. Look in the contents to see which section/paragraph
 #     was slurped up. Fix that section/paragraph.
 #
-#     99% of the time the fix is to simply adjust indentation to exactly 4
+#     Most of the time the fix is to simply adjust indentation to exactly 4
 #     spaces for the section/footnote identifier.
 #
-#     Rarely there will be a numerical literal or a section reference at the
+#     Sometimes there will be a numerical literal or a section reference at the
 #     beginning of the line that belongs to the paragraph's contents but it's
 #     being parsed as a section/paragraph identifier. In this case, put a ~~
 #     at the beginning of the line to mask the literal/reference.
