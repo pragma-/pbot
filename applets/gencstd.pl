@@ -5,9 +5,94 @@
 
 # ugly and hacked together
 
-# n1256: pdftotext -layout -y 75 -H 650 -W 1000 n1256.pdf n1256.in
-# n1570: pdftotext -layout -y 80 -H 650 -W 1000 n1570.pdf n1570.in
-# n3047: pdftotext -layout -y 75 -H 700 -W 1000 n3047.pdf n3047.in
+# Instructions:
+#
+# Step 1: convert file.pdf to file.in:
+#     n1256: pdftotext -layout -y 75 -H 650 -W 1000 n1256.pdf n1256.in
+#     n1570: pdftotext -layout -y 80 -H 650 -W 1000 n1570.pdf n1570.in
+#     n3047: pdftotext -layout -y 75 -H 700 -W 1000 n3047.pdf n3047.in
+#     n3220: pdftotext -layout -y 80 -H 700 -W 1000 n3220.pdf n3220.in
+#     n3301: pdftotext -layout -y 80 -H 700 -W 1000 n3301.pdf n3301.in
+#
+# Step 2: manually edit file.in as follows. Compare with existing n3047.in
+#     for guidance.
+#
+#     a) Add ABSTRACT., CONTENTS., INTRO., FOREWORD. BIBLIO. section headers
+#     indented to column 5 (4 spaces indentation).
+#
+#     b) Delete any leftover INTERNATIONAL STANDARD headers/footers.
+#
+#     c) Edit CONTENTS. section to add ~~ in front of every line so they
+#     are not parsed as sections. I use the following vim macro:
+#
+#       qq
+#       i
+#       ~~
+#       <ESC>
+#       j
+#       0
+#       q
+#       300@q (subtract first ToC line number from last line number to
+#              determine how many lines to mask . Or just add a few
+#              more 10@q until all table of contents lines are masked)
+#
+#     d) Strip page numbers from CONTENTS. I use the following vim macro:
+#
+#     qq
+#     / \. \.
+#     D
+#     q
+#     50@q (repeat until done)
+#
+#     Then go back to top of ToC and:
+#
+#     qq
+#     /\s\+\d\+$
+#     D
+#     q
+#     10@q (repeat until done)
+#
+#     e) Delete M section identifiers from Bibliography.
+#
+#     f) Delete Index section at bottom after Bibliography.
+#
+#     h) Add Z. indented to 4 spaces as last line to mark final section.
+#
+# Step 3: run ./gencstd.pl -d file.in (this validates the data of file.in)
+#
+# Step 4: when an error about mismatched sections/footnotes occurs,
+#     manually edit the file.in to fix the error.
+#
+#     The debug output will show you the last section/paragrah that was
+#     successfully added. Look in the contents to see which section/paragraph
+#     was slurped up. Fix that section/paragraph.
+#
+#     99% of the time the fix is to simply adjust indentation to exactly 4
+#     spaces for the section/footnote identifier.
+#
+#     Rarely there will be a numerical literal or a section reference at the
+#     beginning of the line that belongs to the paragraph's contents but it's
+#     being parsed as a section/paragraph identifier. In this case, put a ~~
+#     at the beginning of the line to mask the literal/reference.
+#
+#     If there's an invalid footnote difference, ensure the footnote is attached
+#     to a word and not at the beginning of a line.
+#
+#     Return to step 3.
+#
+# Step 5: run ./gencstd.pl -t file.in > file.out
+#     (this is for the `cstd` bot cmd)
+#
+# Step 6: run ./gencstd.pl -h file.in > file.html
+#     (this is the HTML for the website)
+#
+# Step 7: Update docs, website, commands, etc.
+#     * doc/Applets.md (###c99, ###c11, ###c23, etc)
+#     * upload file.html to website
+#     * update applets/cstd.pl
+#     * add new bot command if necessary:
+#         factadd #c c2y <info about c2y>
+#         factset #c c2y action_with_args /call cstd -std=C2Y
 
 use warnings;
 use strict;
@@ -20,10 +105,21 @@ my $debug = 100;
 binmode(STDOUT, ":utf8");
 binmode(STDERR, ":utf8");
 
+my $USAGE = "Usage: $0 <-d|-t|-h> <input file>";
+
 my $input = "@ARGV";
 
 if (not length $input) {
-    print STDERR "Usage: $0 <input file>\n";
+    print STDERR "$USAGE\n";
+    exit 1;
+}
+
+# too lazy to use getopt at the moment
+$input =~ s/^(-[^ ]+)\s+//;
+my $mode = $1;
+
+if ($mode ne '-t' && $mode ne '-h' && $mode ne '-d') {
+    print STDERR "Missing -d, -t or -h. $USAGE\n";
     exit 1;
 }
 
@@ -45,8 +141,17 @@ my $footnote      = 0;
 my $last_footnote = 0;
 
 gen_data();
-gen_txt();
-#gen_html();
+
+if ($mode eq '-d') {
+    exit 0;
+} elsif ($mode eq '-t') {
+    gen_txt();
+} elsif ($mode eq '-h') {
+    gen_html();
+} else {
+    print STDERR "Invalid mode `$mode`.\n";
+    exit 1;
+}
 
 sub gen_data {
     while ($text =~ m/^\f?\s{0,5}([0-9A-Z]+\.[0-9\.]*)/msg) {
@@ -346,7 +451,16 @@ sub gen_html {
     }
 
     foreach my $section (sort bysection keys %sections) {
+        next if $section eq 'BIBLIO.';
         write_html_section($section);
+    }
+
+    foreach my $section (qw/BIBLIO./) {
+        foreach my $paragraph (sort bysection keys %sections) {
+            if ($paragraph =~ m/^$section/) {
+                write_html_section($paragraph);
+            }
+        }
     }
 
     print "\n</body>\n</html>\n";
@@ -425,11 +539,13 @@ sub write_html_section {
 # this mess of code verifies that two given section numbers are within 1 unit of distance of each other
 # this ensures that no sections were skipped due to misparses
 sub validate_section_difference {
-    if (@last_section_number && $last_section_number[0] !~ /(?:ABSTRACT|CONTENTS|FOREWORD|INTRO)/) {
+    if (@last_section_number && $last_section_number[0] !~ /(?:ABSTRACT|CONTENTS|FOREWORD|INTRO|BIBLIO)/) {
         my $fail = 0;
         my $skip = 0;
 
         print STDERR "comparing last section ", join('.', @last_section_number), " vs ", join('.', @section_number), "\n";
+
+        return if "@section_number" eq 'BIBLIO';
 
         if (@section_number > @last_section_number) {
             if (@section_number - @last_section_number != 1) {

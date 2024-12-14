@@ -12,7 +12,7 @@ use Encode;
 my %standards = (
     C99 => 'n1256.out',
     C11 => 'n1570.out',
-    C23 => 'n3047.out',
+    C23 => 'n3220.out',
 );
 
 binmode(STDOUT, ":utf8");

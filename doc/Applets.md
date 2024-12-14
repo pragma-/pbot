@@ -670,7 +670,7 @@ Searches ISO/IEC 9811:201X (WG14/N1570), also known as the C11 draft standard.  
 Usage is identical to [`c99`](#c99).
 
 ### c23
-Searches ISO/IEC 9899:2023 (WG14/N3047), also known as the C23 draft standard.  http://www.open-std.org/jtc1/sc22/wg14/www/docs/n3047.pdf
+Searches ISO/IEC 9899:2023 (WG14/N3220), also known as the C23 draft standard.  http://www.open-std.org/jtc1/sc22/wg14/www/docs/n3220.pdf
 
 Usage is identical to [`c99`](#c99).
 
