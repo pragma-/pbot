@@ -109,7 +109,7 @@ sub initialize($self, %conf) {
         'maybe-on',
         {
             desc   => 'prepend "on" in front of text depending on the part-of-speech of the first word in text',
-            usage  => 'maybe-to <text>',
+            usage  => 'maybe-on <text>',
             subref => sub { $self->func_maybe_on(@_) }
         }
     );
