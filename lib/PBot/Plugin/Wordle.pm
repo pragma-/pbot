@@ -30,7 +30,7 @@ sub unload($self) {
 }
 
 use constant {
-    USAGE     => 'Usage: wordle start [length [wordlist]] | custom <word> <channel> [wordlist] | guess <word> | guesses | letters | show | info | giveup',
+    USAGE     => 'Usage: wordle start [length [wordlist]] | custom <word> <channel> [wordlist] | guess <word> | guesses | letters | show | info | hard [on|off] | giveup',
     NO_WORDLE => 'There is no Wordle yet. Use `wordle start` to begin a game.',
 
     DEFAULT_LIST       => 'american',
@@ -314,6 +314,20 @@ sub wordle($self, $context) {
             return $result;
         }
 
+        when ('hard') {
+            if (!@args || @args > 1) {
+                return "Hard mode is " . ($self->{$channel}->{hard_mode} ? "enabled." : "disabled.");
+            }
+
+            if (lc $args[0] eq 'on') {
+                $self->{$channel}->{hard_mode} = 1;
+                return "Hard mode is now enabled.";
+            } else {
+                $self->{$channel}->{hard_mode} = 0;
+                return "Hard mode is now disabled.";
+            }
+        }
+
         when ('guesses') {
             if (not defined $self->{$channel}->{wordle}) {
                 return NO_WORDLE;
@@ -327,7 +341,7 @@ sub wordle($self, $context) {
         }
 
         when ('letters') {
-            if (@args > 1) {
+            if (@args > 0) {
                 return "Usage: wordle letters";
             }
 
@@ -416,6 +430,10 @@ sub make_wordle($self, $channel, $length, $word = undef, $wordlist = DEFAULT_LIS
     $self->{$channel}->{wordlist}    = $wordlist;
     $self->{$channel}->{length}      = $length;
     $self->{$channel}->{wordle}      = \@wordle;
+    $self->{$channel}->{greens}      = [];
+    $self->{$channel}->{oranges}     = [];
+    $self->{$channel}->{whites}      = [];
+    $self->{$channel}->{letter_max}  = {};
     $self->{$channel}->{guess}       = '';
     $self->{$channel}->{guesses}     = [];
     $self->{$channel}->{correct}     = 0;
@@ -479,13 +497,77 @@ sub guess_wordle($self, $channel, $guess) {
     }
 
     if (not exists $self->{$channel}->{guesslist}->{$guess}) {
-        return "I don't know that word. Try again."
+        return "I don't know that word. Try again.";
     }
-
-    $self->{$channel}->{guess_count}++;
 
     my @guess  = split //, $guess;
     my @wordle = $self->{$channel}->{wordle}->@*;
+
+    if ($self->{$channel}->{hard_mode}) {
+        my %greens;
+        my @greens = $self->{$channel}->{greens}->@*;
+
+        for (my $i = 0; $i < @guess; $i++) {
+            if ($self->{$channel}->{letters}->{$guess[$i]} == LETTER_INVALID) {
+                return "Hard mode is enabled. $guess[$i] is not in the Wordle. Try again.";
+            }
+
+            if ($greens[$i]) {
+                if ($guess[$i] ne $greens[$i]) {
+                    return "Hard mode is enabled. Position " . ($i + 1) . " must be $greens[$i]. Try again.";
+                }
+                $greens{$greens[$i]}++;
+            }
+
+            foreach my $orange ($self->{$channel}->{oranges}->@*) {
+                if ($guess[$i] eq $orange->[$i]) {
+                    return "Hard mode is enabled. Position " . ($i + 1) . " is not $guess[$i]. Try again.";
+                }
+            }
+        }
+
+        my %oranges;
+        my $last_orange = $self->{$channel}->{oranges}->[$self->{$channel}->{oranges}->@* - 1];
+
+        if ($last_orange) {
+            $_ && $oranges{$_}++ foreach @$last_orange;
+
+            foreach my $o (keys %oranges) {
+                my $count = 0;
+                $_ eq $o && $count++ foreach @guess;
+                if ($count < $oranges{$o}) {
+                    return "Hard mode is enabled. There must be $oranges{$o} $o. Try again.";
+                }
+            }
+        }
+
+        foreach my $white ($self->{$channel}->{whites}->@*) {
+            for (my $i = 0; $i < @guess; $i++) {
+                if ($guess[$i] eq $white->[$i]) {
+                    return "Hard mode is enabled. Position " . ($i + 1) . " is not $guess[$i]. Try again.";
+                }
+
+                if (not $self->{$channel}->{letter_max}->{$white->[$i]}) {
+                    my $count = $greens{$white->[$i]} + $oranges{$white->[$i]};
+
+                    if ($count) {
+                        $self->{$channel}->{letter_max}->{$white->[$i]} = $count;
+                    }
+                }
+            }
+        }
+
+        my %count;
+        $count{$_}++ foreach @guess;
+
+        foreach my $c (keys %count) {
+            if ($self->{$channel}->{letter_max}->{$c} && $count{$c} > $self->{$channel}->{letter_max}->{$c}) {
+                return "Hard mode is enabled. There can't be more than $self->{$channel}->{letter_max}->{$c} $c. Try again.";
+            }
+        }
+    }
+
+    $self->{$channel}->{guess_count}++;
 
     my %count;
     my %seen;
@@ -503,12 +585,15 @@ sub guess_wordle($self, $channel, $guess) {
 
     my $result = '';
     my $correct = 0;
+    my @oranges;
+    my @whites;
 
     for (my $i = 0; $i < @wordle; $i++) {
         if ($guess[$i] eq $wordle[$i]) {
             $correct++;
             $result .= "$color{correct} $guess[$i]$color{correct_a}*";
             $self->{$channel}->{letters}->{$guess[$i]} = LETTER_CORRECT;
+            $self->{$channel}->{greens}->[$i] = $guess[$i];
         } else {
             my $present = 0;
 
@@ -528,12 +613,14 @@ sub guess_wordle($self, $channel, $guess) {
                 if ($self->{$channel}->{letters}->{$guess[$i]} != LETTER_CORRECT) {
                     $self->{$channel}->{letters}->{$guess[$i]} = LETTER_PRESENT;
                 }
+                $oranges[$i] = $guess[$i];
             } else {
                 $result .= "$color{invalid} $guess[$i] ";
 
                 if ($self->{$channel}->{letters}->{$guess[$i]} == 0) {
                     $self->{$channel}->{letters}->{$guess[$i]} = LETTER_INVALID;
                 }
+                $whites[$i] = $guess[$i];
             }
         }
     }
@@ -541,6 +628,8 @@ sub guess_wordle($self, $channel, $guess) {
     $self->{$channel}->{guess} = $result;
 
     push $self->{$channel}->{guesses}->@*, $result;
+    push $self->{$channel}->{oranges}->@*, \@oranges;
+    push $self->{$channel}->{whites}->@*, \@whites;
 
     if ($correct == length $guess) {
         $self->{$channel}->{correct} = 1;
