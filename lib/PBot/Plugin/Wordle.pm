@@ -496,10 +496,6 @@ sub guess_wordle($self, $channel, $guess) {
         return "Guess length ($guess_length) unequal to Wordle length ($wordle_length). Try again.";
     }
 
-    if (not exists $self->{$channel}->{guesslist}->{$guess}) {
-        return "I don't know that word. Try again.";
-    }
-
     my @guess  = split //, $guess;
     my @wordle = $self->{$channel}->{wordle}->@*;
 
@@ -521,7 +517,7 @@ sub guess_wordle($self, $channel, $guess) {
 
             foreach my $orange ($self->{$channel}->{oranges}->@*) {
                 if ($guess[$i] eq $orange->[$i]) {
-                    return "Hard mode is enabled. Position " . ($i + 1) . " is not $guess[$i]. Try again.";
+                    return "Hard mode is enabled. Position " . ($i + 1) . " can't be $guess[$i]. Try again.";
                 }
             }
         }
@@ -535,8 +531,8 @@ sub guess_wordle($self, $channel, $guess) {
             foreach my $o (keys %oranges) {
                 my $count = 0;
                 $_ eq $o && $count++ foreach @guess;
-                if ($count < $oranges{$o}) {
-                    return "Hard mode is enabled. There must be $oranges{$o} $o. Try again.";
+                if ($count < $oranges{$o} + $greens{$o}) {
+                    return "Hard mode is enabled. There must be " . ($oranges{$o} + $greens{$o}) . " $o. Try again.";
                 }
             }
         }
@@ -544,7 +540,7 @@ sub guess_wordle($self, $channel, $guess) {
         foreach my $white ($self->{$channel}->{whites}->@*) {
             for (my $i = 0; $i < @guess; $i++) {
                 if ($guess[$i] eq $white->[$i]) {
-                    return "Hard mode is enabled. Position " . ($i + 1) . " is not $guess[$i]. Try again.";
+                    return "Hard mode is enabled. Position " . ($i + 1) . " can't be $guess[$i]. Try again.";
                 }
 
                 if (not $self->{$channel}->{letter_max}->{$white->[$i]}) {
@@ -565,6 +561,10 @@ sub guess_wordle($self, $channel, $guess) {
                 return "Hard mode is enabled. There can't be more than $self->{$channel}->{letter_max}->{$c} $c. Try again.";
             }
         }
+    }
+
+    if (not exists $self->{$channel}->{guesslist}->{$guess}) {
+        return "I don't know that word. Try again.";
     }
 
     $self->{$channel}->{guess_count}++;
