@@ -17,5 +17,10 @@ $args =~ s/^\s+|\s+$//g;
 my $opts = '-j -no-ansi -no-autocorrect';
 $opts .= ' -b' unless $args =~ /^-/;
 
+if ($args =~ m/-pager/) {
+    print "I don't think so.\n";
+    exit;
+}
+
 my $result = `trans $opts $args`;
 print "$result\n";
