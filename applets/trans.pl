@@ -14,10 +14,10 @@ my $args = quotemeta "@ARGV";
 $args =~ s/\\([ :-])/$1/g;
 $args =~ s/^\s+|\s+$//g;
 
-my $opts = '-j -no-ansi -no-autocorrect';
+my $opts = '-j -no-ansi -no-autocorrect -no-browser -no-pager -no-play';
 $opts .= ' -b' unless $args =~ /^-/;
 
-if ($args =~ m/-pager/) {
+if ($args =~ m/-(pager|browser|player|download|p|I|interactive|shell|emacs|E|x|4|6|ipv|inet|u|U|upgrade|user)/) {
     print "I don't think so.\n";
     exit;
 }
