@@ -158,7 +158,8 @@ sub wordle($self, $context) {
                 return NO_WORDLE;
             }
 
-            my $result = "Current wordlist: $self->{$channel}->{wordlist} ($self->{$channel}->{length}); guesses: $self->{$channel}->{guess_count}; nonwords: $self->{$channel}->{nonword_count}; invalids: $self->{$channel}->{invalid_count}";
+            my $hard = $self->{$channel}->{hard_mode} ? 'on' : 'off';
+            my $result = "Current wordlist: $self->{$channel}->{wordlist} ($self->{$channel}->{length}); hard mode: $hard; guesses: $self->{$channel}->{guess_count}; nonwords: $self->{$channel}->{nonword_count}; invalids: $self->{$channel}->{invalid_count}";
 
             if ($self->{$channel}->{correct}) {
                 my $solved_on = concise ago (time - $self->{$channel}->{solved_on});
@@ -651,7 +652,7 @@ sub guess_wordle($self, $channel, $guess) {
         my $invalids = $self->{$channel}->{invalid_count};
 
         if ($nonwords || $invalids) {
-            $guesses .= '(';
+            $guesses .= '(plus ';
 
             if ($nonwords) {
                 $guesses .= "$nonwords nonword";
