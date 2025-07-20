@@ -15,6 +15,7 @@ if (not @ARGV) {
 my $args = quotemeta "@ARGV";
 $args =~ s/\\([ :-])/$1/g;
 $args =~ s/^\s+|\s+$//g;
+$args =~ s/\s+--\s+/ /g;
 
 my $opts = '-j -no-ansi -no-autocorrect -no-browser -no-pager -no-play';
 $opts .= ' -b' unless $args =~ /^-/;
@@ -29,7 +30,7 @@ $opts .= ' -b' unless $args =~ /^-/;
     Getopt::Long::Configure('no_auto_abbrev', 'no_ignore_case');
 
     my %h;
-    my @allowed = qw/V version H help M man T reference R reference-english S list-engines list-languages list-languages-english list-codes list-all L linguist e engine b brief d dictionary identify show-original show-original-phonetics show-translation show-translation-phonetics show-prompt-message show-languages show-original-dictionary show-dictionary show-alternatives hl host s sl source from t tl target to/;
+    my @allowed = qw/V version H help M man T reference R reference-english S list-engines list-languages list-languages-english list-codes list-all L=s linguist=s e=s engine=s b brief d dictionary identify show-original=s show-original-phonetics=s show-translation=s show-translation-phonetics=s show-prompt-message=s show-languages=s show-original-dictionary=s show-dictionary=s show-alternatives=s hl=s host=s s=s sl=s source=s from=s t=s tl=s target=s to=s/;
     my ($ret, $rest) = GetOptionsFromString($args, \%h, @allowed);
 
     if ($opt_err) {
@@ -39,6 +40,11 @@ $opts .= ' -b' unless $args =~ /^-/;
 
     if ($ret != 1) {
         print "Error parsing options.\n";
+        exit;
+    }
+
+    if (not @$rest) {
+        print "Missing phrase to translate.\n";
         exit;
     }
 }
