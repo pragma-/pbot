@@ -1,0 +1,6 @@
+set save definitions 1
+function export 0
+function load 0
+function command 0
+function save 0
+exit

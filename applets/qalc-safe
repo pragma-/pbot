@@ -1,0 +1,3 @@
+#/usr/bin/sh
+yes | qalc -f .qalc-safe-1
+qalc -f .qalc-safe-2
