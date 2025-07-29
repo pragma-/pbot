@@ -253,11 +253,10 @@ sub process_line($self, $from, $nick, $user, $host, $text, $tags = '', $is_comma
         $processed++;
 
         # reset context
-        delete $context->{subcmd};
+        delete $context->{cmdstack};
+        delete $context->{outq};
         delete $context->{pipe};
         delete $context->{pipe_next};
-        delete $context->{command_split};
-        delete $context->{split_result};
         delete $context->{add_nick};
     }
 
@@ -296,8 +295,9 @@ sub interpret($self, $context) {
 
     # check for a split command, e.g. "echo Hello ;;; echo world."
     if ($context->{command} =~ m/^(.*?)\s*(?<!\\);;;\s*(.*)/ms) {
-        $context->{command}       = $1; # command is the first half of the split
-        $context->{command_split} = $2; # store the rest of the split, potentially containing more splits
+        $context->{command} = $1;         # command is the first half of the split
+        push @{$context->{cmdstack}}, $2; # store the rest of the split, potentially containing more splits
+        push @{$context->{outq}}, [];     # add output queue to stack
     }
 
     # convert command string to list of arguments
@@ -450,7 +450,10 @@ sub interpret($self, $context) {
             $arguments =~ s/&\s*\{\Q$command\E\}/&{subcmd}/;
 
             # add it to the list of substituted commands
-            push @{$context->{subcmd}}, "$keyword $arguments";
+            push @{$context->{cmdstack}}, "$keyword $arguments";
+
+            # add output queue to stack
+            push @{$context->{outq}}, [];
 
             # FIXME: quick-and-dirty hack to fix $0.
             # Without this hack `pet &{echo dog}` will output `You echo
@@ -638,28 +641,40 @@ sub handle_result($self, $context, $result = $context->{result}) {
         return 0;
     }
 
-    # finish command substitution
-    if (exists $context->{subcmd}) {
-        my $command = pop @{$context->{subcmd}};
+    # process next command in stack
+    if (exists $context->{cmdstack}) {
+        my $command = pop @{$context->{cmdstack}};
 
-        if (@{$context->{subcmd}} == 0 or $context->{alldone}) {
-            delete $context->{subcmd};
+        if (@{$context->{cmdstack}} == 0 or $context->{alldone}) {
+            delete $context->{cmdstack};
         }
 
-        if ($command =~ s/\b(an?)(\s+)&\{subcmd\}/&{subcmd}/i) {
-            # fix-up a/an article
-            my ($article, $spaces) = ($1, $2);
-            my $fixed_article = select_indefinite_article $result;
+        if ($command =~ m/&\{subcmd\}/) {
+            # finish command substitution
+            my $output = pop @{$context->{outq}};
+            $output = join " ", @$output;
 
-            if ($article eq 'AN') {
-                $fixed_article = uc $fixed_article;
-            } elsif ($article eq 'An' or $article eq 'A') {
-                $fixed_article = ucfirst $fixed_article;
+            if (length $output) {
+                $result = "$output $result";
             }
 
-            $command =~ s/&\{subcmd\}/$fixed_article$spaces$result/;
+            if ($command =~ s/\b(an?)(\s+)&\{subcmd\}/&{subcmd}/i) {
+                # fix-up a/an article
+                my ($article, $spaces) = ($1, $2);
+                my $fixed_article = select_indefinite_article $result;
+
+                if ($article eq 'AN') {
+                    $fixed_article = uc $fixed_article;
+                } elsif ($article eq 'An' or $article eq 'A') {
+                    $fixed_article = ucfirst $fixed_article;
+                }
+
+                $command =~ s/&\{subcmd\}/$fixed_article$spaces$result/;
+            } else {
+                $command =~ s/&\{subcmd\}/$result/;
+            }
         } else {
-            $command =~ s/&\{subcmd\}/$result/;
+            push @{$context->{outq}->[$#{$context->{outq}}]}, $result;
         }
 
         if (not $context->{alldone}) {
@@ -676,43 +691,22 @@ sub handle_result($self, $context, $result = $context->{result}) {
         $result = "$context->{result_prefix} $result";
     }
 
-    # finish command split
-    if ($context->{command_split}) {
-        my $botnick = $self->{pbot}->{conn}->nick;
+    # join output queue
+    if (exists $context->{outq}) {
 
-        # update contextual command with next command in split
-        $context->{command} = delete $context->{command_split};
+        while (my $outq = pop @{$context->{outq}}) {
+            $outq = join " ", @$outq;
 
-        # reformat result to be more suitable for joining together
-        $result =~ s!^/say !\n!i;
-        $result =~ s!^/me !\n* $botnick !i;
+            # reformat result to be more suitable for joining together
+            my $botnick = $self->{pbot}->{conn}->nick;
+            $result =~ s!^/say !\n!i
+            || $result =~ s!^/me !\n * $botnick !i
+            || $result =~ s!^!\n!;
 
-        if (not length $context->{split_result}) {
-            $result =~ s/^\n//;
-            $context->{split_result} = $result;
-        } else {
-            $context->{split_result} .= $result;
+            $result = "$outq$result";
+            $result =~ s/^\n+//;
         }
-
-        delete $context->{ref_from};
-        delete $context->{add_nick};
-
-        $context->{result} = $self->interpret($context);
-        $self->handle_result($context);
-        return 0;
-    }
-
-    # join command split
-    if ($context->{split_result}) {
-        my $botnick = $self->{pbot}->{conn}->nick;
-
-        # reformat result to be more suitable for joining together
-        $result =~ s!^/say !\n!i
-        || $result =~ s!^/me !\n* $botnick !i
-        || $result =~ s!^!\n!;
-
-        $result = $context->{split_result} . $result;
-        delete $context->{split_result};
+        delete $context->{outq};
     }
 
     # nothing more to do here if we have no result or keyword
