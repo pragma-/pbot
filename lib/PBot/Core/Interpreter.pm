@@ -449,7 +449,7 @@ sub interpret($self, $context) {
             # replace it with a placeholder
             $arguments =~ s/&\s*\{\Q$command\E\}/&{subcmd}/;
 
-            # add it to the list of substituted commands
+            # add it to the command stack
             push @{$context->{cmdstack}}, "$keyword $arguments";
 
             # add output queue to stack
@@ -674,6 +674,11 @@ sub handle_result($self, $context, $result = $context->{result}) {
                 $command =~ s/&\{subcmd\}/$result/;
             }
         } else {
+            if ($context->{result_prefix}) {
+                $result = "$context->{result_prefix} $result";
+            }
+
+            # append output to queue
             push @{$context->{outq}->[$#{$context->{outq}}]}, $result;
         }
 
@@ -693,18 +698,18 @@ sub handle_result($self, $context, $result = $context->{result}) {
 
     # join output queue
     if (exists $context->{outq}) {
+        my $botnick = $self->{pbot}->{conn}->nick;
 
         while (my $outq = pop @{$context->{outq}}) {
-            $outq = join " ", @$outq;
+            $outq = join ' ', @$outq;
 
             # reformat result to be more suitable for joining together
-            my $botnick = $self->{pbot}->{conn}->nick;
-            $result =~ s!^/say !\n!i
-            || $result =~ s!^/me !\n * $botnick !i
-            || $result =~ s!^!\n!;
+            $result =~ s!^/say ! !i
+            || $result =~ s!^/me ! * $botnick !i
+            || $result =~ s!^! !;
 
             $result = "$outq$result";
-            $result =~ s/^\n+//;
+            $result =~ s/^ +//;
         }
         delete $context->{outq};
     }
@@ -945,6 +950,11 @@ sub output_result($self, $context) {
     my $bot_account  = $self->{pbot}->{messagehistory}->get_message_account($bot_nick, 'pbot3', 'pbot');
 
     if ($type eq 'echo') {
+        # prepend ref_from to output
+        if ($context->{ref_from}) {
+            $output = "[$context->{ref_from}] $output";
+        }
+
         # prepend nickprefix to output
         if ($context->{nickprefix} && (! $context->{nickprefix_disabled} || $context->{nickprefix_forced})) {
             $output = "$context->{nickprefix}: $output";
@@ -965,6 +975,11 @@ sub output_result($self, $context) {
         $self->{pbot}->{conn}->privmsg($to, $output);
     }
     elsif ($type eq 'action') {
+        # append ref_from to output
+        if ($context->{ref_from}) {
+            $output = "$output [$context->{ref_from}]";
+        }
+
         # truncate if necessary, pasting original result to a web paste site
         $output = $self->truncate_result($context, $output, $context->{original_result});
 

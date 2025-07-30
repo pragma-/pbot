@@ -207,7 +207,8 @@ sub interpreter($self, $context) {
         if (gettimeofday - $self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'last_referenced_on') < $ratelimit) {
             my $ref_from = $context->{ref_from} ? "[$context->{ref_from}] " : '';
 
-            unless ($self->{pbot}->{users}->loggedin_admin($channel, "$context->{nick}!$context->{user}\@$context->{host}")) {
+            unless ($self->{pbot}->{users}->loggedin_admin($channel, "$context->{nick}!$context->{user}\@$context->{host}")
+                || $self->{pbot}->{users}->get_user_metadata($channel, "$context->{nick}!$context->{user}\@$context->{host}", 'is-whitelisted')) {
                 return "/msg $context->{nick} $ref_from'$trigger_name' is rate-limited; try again in "
                   . duration($ratelimit - int(gettimeofday - $self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'last_referenced_on'))) . "."
             }
@@ -298,12 +299,6 @@ sub handle_action($self, $context, $action) {
 
     my ($channel_name, $trigger_name) = ($context->{channel_name}, $context->{trigger_name});
 
-    my $ref_from = '';
-
-    unless ($context->{no_ref_from} or $context->{pipe} or $context->{subcmd}) {
-        $ref_from = $context->{ref_from} ? "[$context->{ref_from}] " : '';
-    }
-
     my $interpolate = $self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'interpolate');
 
     if (defined $interpolate and not $interpolate) {
@@ -383,7 +378,7 @@ sub handle_action($self, $context, $action) {
 
     if (defined $enabled and $enabled == 0) {
         $self->{pbot}->{logger}->log("$trigger_name disabled.\n");
-        return "${ref_from}$trigger_name is disabled.";
+        return "$trigger_name is disabled.";
     }
 
     # Check if it's an alias
@@ -466,13 +461,7 @@ sub handle_action($self, $context, $action) {
         $context->{root_keyword} = $keyword unless defined $context->{root_keyword};
         $context->{root_channel} = $channel;
 
-        my $result = $self->{pbot}->{applets}->execute_applet($context);
-
-        if (defined $result && length $result) {
-            return $ref_from . $result;
-        } else {
-            return $result;
-        }
+        return $self->{pbot}->{applets}->execute_applet($context);
     }
     elsif ($self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'type') eq 'text') {
         # Don't allow user-custom /msg factoids, unless invoked by admin
@@ -483,21 +472,10 @@ sub handle_action($self, $context, $action) {
             }
         }
 
-        if ($ref_from) {
-            if (   $action =~ s/^\/say\s+/$ref_from/i
-                || $action =~ s/^\/me\s+(.*)/\/me $1 $ref_from/i
-                || $action =~ s/^\/msg\s+([^ ]+)/\/msg $1 $ref_from/i
-            ) {
-                return $action;
-            } else {
-                return $ref_from . "$trigger_name is $action";
-            }
+        if ($action =~ m/^\/(?:say|me|msg)/i) {
+            return $action;
         } else {
-            if ($action =~ m/^\/(?:say|me|msg)/i) {
-                return $action;
-            } else {
-                return "/say $trigger_name is $action";
-            }
+            return "/say $trigger_name is $action";
         }
     }
     elsif ($self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'type') eq 'regex') {
@@ -536,13 +514,13 @@ sub handle_action($self, $context, $action) {
         }
 
         if (length $result) {
-            return $ref_from . $result;
+            return $result;
         } else {
             return '';
         }
     } else {
         $self->{pbot}->{logger}->log("$context->{from}: $context->{nick}!$context->{user}\@$context->{host}): bad type for $channel.$keyword\n");
-        return "/me blinks. $ref_from";
+        return '/me blinks.';
     }
 }
 
