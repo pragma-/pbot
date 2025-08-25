@@ -243,6 +243,9 @@ sub process_line($self, $from, $nick, $user, $host, $text, $tags = '', $is_comma
         # reset $context's interpreter recursion depth counter
         $context->{interpret_depth} = 0;
 
+        # reset $context's interpreter stack depth counter
+        $context->{stack_depth} = 0;
+
         # interpet this command
         $context->{result} = $self->interpret($context);
 
@@ -269,7 +272,7 @@ sub process_line($self, $from, $nick, $user, $host, $text, $tags = '', $is_comma
 # command such as the channel, nick, user, host, command, etc.
 sub interpret($self, $context) {
     # log command invocation
-    $self->{pbot}->{logger}->log("=== [$context->{interpret_depth}] Got command: "
+    $self->{pbot}->{logger}->log("=== [$context->{interpret_depth} ($context->{stack_depth})] Got command: "
         . "($context->{from}) $context->{hostmask}: $context->{command}\n");
 
     # debug flag to trace $context location and contents
@@ -297,6 +300,7 @@ sub interpret($self, $context) {
     if ($context->{command} =~ m/^(.*?)\s*(?<!\\);;;\s*(.*)/ms) {
         $context->{command} = $1;         # command is the first half of the split
         push @{$context->{cmdstack}}, $2; # store the rest of the split, potentially containing more splits
+        $context->{stack_depth}++;
         push @{$context->{outq}}, [];     # add output queue to stack
     }
 
@@ -451,6 +455,7 @@ sub interpret($self, $context) {
 
             # add it to the command stack
             push @{$context->{cmdstack}}, "$keyword $arguments";
+            $context->{stack_depth}++;
 
             # add output queue to stack
             push @{$context->{outq}}, [];
@@ -486,14 +491,16 @@ sub interpret($self, $context) {
         # trim surrounding whitespace
         $pipe =~ s/^\s+|\s+$//g;
 
+        my $depth = $context->{stack_depth};
+
         # update contextual pipe data
-        if (exists $context->{pipe}) {
-            $context->{pipe_rest} = "$rest | { $context->{pipe} }$context->{pipe_rest}";
+        if (exists $context->{pipe}->{$depth}) {
+            $context->{pipe_rest}->{$depth} = "$rest | { $context->{pipe}->{$depth} }$context->{pipe_rest}->{$depth}";
         } else {
-            $context->{pipe_rest} = $rest;
+            $context->{pipe_rest}->{$depth} = $rest;
         }
 
-        $context->{pipe} = $pipe;
+        $context->{pipe}->{$depth} = $pipe;
     }
 
     # unescape any escaped command splits
@@ -626,10 +633,10 @@ sub handle_result($self, $context, $result = $context->{result}) {
     }
 
     # finish piping
-    if (exists $context->{pipe}) {
+    if (exists $context->{pipe}->{$context->{stack_depth}}) {
         my ($pipe, $pipe_rest) = (
-            delete $context->{pipe},
-            delete $context->{pipe_rest}
+            delete $context->{pipe}->{$context->{stack_depth}},
+            delete $context->{pipe_rest}->{$context->{stack_depth}}
         );
 
         if (not $context->{alldone}) {
@@ -644,6 +651,7 @@ sub handle_result($self, $context, $result = $context->{result}) {
     # process next command in stack
     if (exists $context->{cmdstack}) {
         my $command = pop @{$context->{cmdstack}};
+        $context->{stack_depth}--;
 
         if (@{$context->{cmdstack}} == 0 or $context->{alldone}) {
             delete $context->{cmdstack};
