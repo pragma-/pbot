@@ -18,7 +18,7 @@ $args =~ s/^\s+|\s+$//g;
 $args =~ s/\s+--\s+/ /g;
 
 my $opts = '-j -no-ansi -no-autocorrect -no-browser -no-pager -no-play';
-$opts .= ' -b' unless $args =~ /^-/;
+$opts .= ' -e bing -b' unless $args =~ /^-/;
 
 {
     my $opt_err;
@@ -30,7 +30,7 @@ $opts .= ' -b' unless $args =~ /^-/;
     Getopt::Long::Configure('no_auto_abbrev', 'no_ignore_case');
 
     my %h;
-    my @allowed = qw/V version H help M man T reference R reference-english S list-engines list-languages list-languages-english list-codes list-all L=s linguist=s e=s engine=s b brief d dictionary identify show-original=s show-original-phonetics=s show-translation=s show-translation-phonetics=s show-prompt-message=s show-languages=s show-original-dictionary=s show-dictionary=s show-alternatives=s hl=s host=s s=s sl=s source=s from=s t=s tl=s target=s to=s/;
+    my @allowed = qw/V version H h help M man T reference R reference-english S list-engines list-languages list-languages-english list-codes list-all L=s linguist=s e=s engine=s b brief d dictionary identify show-original=s show-original-phonetics=s show-translation=s show-translation-phonetics=s show-prompt-message=s show-languages=s show-original-dictionary=s show-dictionary=s show-alternatives=s hl=s host=s s=s sl=s source=s from=s t=s tl=s target=s to=s verbose/;
     my ($ret, $rest) = GetOptionsFromString($args, \%h, @allowed);
 
     if ($opt_err) {
@@ -42,12 +42,8 @@ $opts .= ' -b' unless $args =~ /^-/;
         print "Error parsing options.\n";
         exit;
     }
-
-    if (not @$rest) {
-        print "Missing phrase to translate.\n";
-        exit;
-    }
 }
 
-my $result = `trans $opts $args`;
+my $result = `trans $opts $args 2>&1`;
+$result =~ s/\033.*?m//g;
 print "$result\n";
