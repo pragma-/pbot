@@ -17,7 +17,6 @@ use PBot::Imports;
 use HTML::Entities;
 use Time::Duration;
 use Time::HiRes qw(gettimeofday);
-use Getopt::Long qw(GetOptionsFromString);
 
 use POSIX qw(strftime);
 
