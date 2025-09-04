@@ -1436,6 +1436,18 @@ sub sl_real {
 
     return unless defined $self->socket;
 
+    # dispatch pbot.public or pbot.action event
+    if ($line =~ m/^PRIVMSG (.*?) :(.*)$/) {
+        my $to = $1;
+        my $msg = $2;
+
+        if ($msg =~ m/^\x01ACTION (.*)\x01$/) {
+            $self->{_pbot}->{event_dispatcher}->dispatch_event('pbot.caction', { to => $to, msg => $1 });
+        } else {
+            $self->{_pbot}->{event_dispatcher}->dispatch_event('pbot.public', { to => $to, msg => $msg });
+        }
+    }
+
     if ($self->{_utf8}) { $line = encode('UTF-8', $line); }
 
     my $rv = eval {
