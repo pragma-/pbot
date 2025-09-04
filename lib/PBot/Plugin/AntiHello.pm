@@ -64,11 +64,11 @@ sub punish($self, $msg, $channel, $nick, $user, $host) {
         # send public message to channel with cooldown
         if ($now - $self->{last_warning} >= 60 * 60) {
             $self->{last_warning} = $now;
-            $self->{pbot}->{conn}->privmsg($channel, "Please do not send stand-alone channel greeting messages; include your question/statement along with the greeting. For more info, see https://nohello.net/ (repeated offenses will result in an automatic ban)");
+            $self->{pbot}->{conn}->privmsg($channel, "Please do not send stand-alone channel greeting messages; include your question/statement along with the greeting. For more info, see https://nohello.net/");
         }
 
         # always send private message to offender
-        $self->{pbot}->{conn}->privmsg($nick, "$nick: ($channel) Please do not send stand-alone channel greeting messages; include your question/statement along with the greeting. For more info, see https://nohello.net/ (repeated offenses will result in an automatic ban)");
+        $self->{pbot}->{conn}->privmsg($nick, "$nick: ($channel) Please do not send stand-alone channel greeting messages; include your question/statement along with the greeting. For more info, see https://nohello.net/");
 
         return 0;
     } elsif ($data->{offenses} == 2) {
