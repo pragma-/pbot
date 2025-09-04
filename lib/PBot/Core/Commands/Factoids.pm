@@ -133,6 +133,10 @@ sub cmd_as_factoid($self, $context) {
 sub cmd_factundo($self, $context) {
     my $usage = "Usage: factundo [-l [N]] [-r N] [channel] <keyword> (-l list undo history, optionally starting from N; -r jump to revision N)";
 
+    if ($context->{interpret_depth} > 2) {
+        return "factundo: recursion depth exceeded.\n";
+    }
+
     my $arguments = $context->{arguments};
 
     my ($list_undos, $goto_revision);
@@ -196,8 +200,13 @@ sub cmd_factundo($self, $context) {
         return $self->list_undo_history($undos, $list_undos);
     }
 
-    my $factoids = $self->{pbot}->{factoids}->{data}->{storage};
     my $userinfo = $self->{pbot}->{users}->loggedin($channel, $context->{hostmask});
+
+    if (!$self->{pbot}->{capabilities}->userhas($userinfo, 'admin') && $channel =~ /^#/ && $channel ne $context->{from}) {
+        return "/say Switch to $channel to revert this factoid.";
+    }
+
+    my $factoids = $self->{pbot}->{factoids}->{data}->{storage};
     if ($factoids->get_data($channel, $trigger, 'locked')) {
         return "/say $trigger_name is locked and cannot be reverted." if not $self->{pbot}->{capabilities}->userhas($userinfo, 'admin');
 
@@ -236,6 +245,10 @@ sub cmd_factundo($self, $context) {
 
 sub cmd_factredo($self, $context) {
     my $usage = "Usage: factredo [-l [N]] [-r N] [channel] <keyword> (-l list undo history, optionally starting from N; -r jump to revision N)";
+    if ($context->{interpret_depth} >2) {
+        return "factredo: recursion depth exceeded.\n";
+    }
+
 
     my $arguments = $context->{arguments};
 
@@ -287,6 +300,10 @@ sub cmd_factredo($self, $context) {
         return $self->list_undo_history($undos, $list_undos);
     }
 
+    if ($channel =~ /^#/ && $channel ne $context->{from}) {
+        return "/say Switch to $channel to revert this factoid.";
+    }
+
     my $factoids = $self->{pbot}->{factoids}->{data}->{storage};
     my $userinfo = $self->{pbot}->{users}->loggedin($channel, $context->{hostmask});
     if ($factoids->get_data($channel, $trigger, 'locked')) {
@@ -331,6 +348,10 @@ sub cmd_factset($self, $context) {
         $context->{from}, $context->{arguments}, 'factset', usage => 'Usage: factset [channel] <factoid> [key [value]]', explicit => 1
     );
 
+    if ($context->{interpret_depth} > 2) {
+        return "factset: recursion depth exceeded.\n";
+    }
+
     return $channel if not defined $trigger;    # if $trigger is not defined, $channel is an error message
 
     my $trigger_name = $self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $trigger, '_name');
@@ -372,6 +393,10 @@ sub cmd_factset($self, $context) {
             return "/say $trigger_name is locked; unlock before setting.";
         }
 
+        if ($channel =~ /^#/ && $channel ne $context->{from} && !$self->{pbot}->{capabilities}->userhas($userinfo, 'admin')) {
+            return "/say Switch to $channel to factset this factoid.";
+        }
+
         if (lc $key eq 'cap-override' and defined $value) {
             if (not $self->{pbot}->{capabilities}->exists($value)) {
                 return "No such capability $value.";
@@ -402,6 +427,10 @@ sub cmd_factset($self, $context) {
 
 sub cmd_factunset($self, $context) {
     my $usage = 'Usage: factunset [channel] <factoid> <key>';
+
+    if ($context->{interpret_depth} > 2) {
+        return "factunset: recursion depth exceeded.\n";
+    }
 
     my ($channel, $trigger, $arguments) = $self->find_factoid_with_optional_channel(
         $context->{from}, $context->{arguments}, 'factunset', usage => $usage, explicit => 1
@@ -457,6 +486,10 @@ sub cmd_factunset($self, $context) {
         return "[$channel_name] $trigger_name: key '$key' does not exist.";
     }
 
+    if ($channel =~ /^#/ && $channel ne $context->{from}) {
+        return "/say Switch to $channel to factunset this factoid.";
+    }
+
     if ($key eq 'cap-override') {
         if (not $self->{pbot}->{capabilities}->userhas($userinfo, $oldvalue)) {
             return "Your user account must have the $oldvalue capability to unset this cap-override.";
@@ -474,6 +507,10 @@ sub cmd_factunset($self, $context) {
 
 sub cmd_factmove($self, $context) {
     my ($src_channel, $source, $target_channel, $target) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 5);
+
+    if ($context->{interpret_depth} > 2) {
+        return "factmove: recursion depth exceeded.\n";
+    }
 
     my $usage = "Usage: factmove <source channel> <source factoid> <target channel/factoid> [target factoid]";
 
@@ -557,6 +594,10 @@ sub cmd_factmove($self, $context) {
 
     $target_channel = '.*' if $target_channel !~ /^#/;
 
+    if ($target_channel =~ /^#/ && $target_channel ne $context->{from}) {
+        return "/say Switch to $target_channel to move this factoid.";
+    }
+
     my $data = $factoids->get_data($found_src_channel, $found_source);
     $factoids->remove($found_src_channel, $found_source, undef, 1);
     $factoids->add($target_channel, $target, $data);
@@ -577,6 +618,10 @@ sub cmd_factmove($self, $context) {
 
 sub cmd_factcopy($self, $context) {
     my ($src_channel, $source, $target_channel, $target) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 5);
+
+    if ($context->{interpret_depth} > 2) {
+        return "factcopy: recursion depth exceeded.\n";
+    }
 
     my $usage = "Usage: factcopy <source channel> <source factoid> <target channel/factoid> [target factoid]";
 
@@ -654,6 +699,10 @@ sub cmd_factcopy($self, $context) {
 
     $target_channel = '.*' if $target_channel !~ /^#/;
 
+    if ($target_channel =~ /^#/ && $target_channel ne $context->{from}) {
+        return "/say Switch to $target_channel to move this factoid.";
+    }
+
     my $data = $factoids->get_data($found_src_channel, $found_source);
 
     $data->{owner}              = $context->{hostmask};
@@ -678,6 +727,11 @@ sub cmd_factcopy($self, $context) {
 
 sub cmd_factalias($self, $context) {
     my ($chan, $alias, $command) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 3, 0, 1);
+
+    if ($context->{interpret_depth} > 2) {
+        return "factalias: recursion depth exceeded.\n";
+    }
+
 
     if (defined $chan and not($chan eq '.*' or $chan =~ m/^#/)) {
         # $chan doesn't look like a channel, so shift everything to the right
@@ -712,6 +766,12 @@ sub cmd_factalias($self, $context) {
     }
 
     if ($self->{pbot}->{commands}->exists($alias)) { return "/say $alias already exists as a built-in command."; }
+
+    my $userinfo = $self->{pbot}->{users}->loggedin($chan, $context->{hostmask});
+
+    if (!$self->{pbot}->{capabilities}->userhas($userinfo, 'admin') && $chan =~ /^#/ && $chan ne $context->{from}) {
+        return "/say Switch to $chan to add this factoid.";
+    }
 
     $self->{pbot}->{factoids}->{data}->add('text', $chan, $context->{hostmask}, $alias, "/call $command");
     $self->{pbot}->{logger}->log("$context->{hostmask} [$chan] aliased $alias => $command\n");
@@ -755,10 +815,15 @@ my @valid_pastesites = (
     'https?://ix.io',
     'https?://dpaste.com',
     'https?://0x0.st',
+    'https?://x0.at',
 );
 
 sub cmd_factadd($self, $context) {
     my ($from_chan, $keyword, $text, $force);
+
+    if ($context->{interpret_depth} > 2) {
+        return "factadd: recursion depth exceeded.\n";
+    }
 
     my @arglist = @{$context->{arglist}};
 
@@ -872,6 +937,12 @@ sub cmd_factadd($self, $context) {
 
     if ($self->{pbot}->{commands}->exists($keyword)) { return "/say $keyword_text already exists as a built-in command."; }
 
+    my $userinfo = $self->{pbot}->{users}->loggedin($from_chan, $context->{hostmask});
+
+    if (!$self->{pbot}->{capabilities}->userhas($userinfo, 'admin') && $from_chan =~ /^#/ && $from_chan ne $context->{from}) {
+        return "/say Switch to $from_chan to add this factoid.";
+    }
+
     my $exists = $self->{pbot}->{factoids}->{data}->{storage}->exists($from_chan, $keyword);
 
     $self->{pbot}->{factoids}->{data}->add('text', $from_chan, $context->{hostmask}, $keyword, $text);
@@ -892,6 +963,10 @@ sub cmd_factadd($self, $context) {
 sub cmd_factrem($self, $context) {
     my $factoids = $self->{pbot}->{factoids}->{data}->{storage};
 
+    if ($context->{interpret_depth} > 2) {
+        return "factrem: recursion depth exceeded.\n";
+    }
+
     my ($from_chan, $from_trig) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
     if (not defined $from_trig) {
@@ -910,7 +985,15 @@ sub cmd_factrem($self, $context) {
     $channel_name = 'global'            if $channel_name eq '.*';
     $trigger_name = "\"$trigger_name\"" if $trigger_name =~ / /;
 
-    if ($factoids->get_data($channel, $trigger, 'type') eq 'applet') { return "/say $trigger_name is not a factoid."; }
+    if ($factoids->get_data($channel, $trigger, 'type') eq 'applet') {
+        return "/say $trigger_name is not a factoid.";
+    }
+
+    my $is_admin = $self->{pbot}->{users}->loggedin_admin($channel, $context->{hostmask});
+
+    if (!$is_admin && $channel =~ /^#/ && $channel ne $context->{from}) {
+        return "/say Switch to $channel_name to remove this factoid.";
+    }
 
     if ($channel =~ /^#/ and $from_chan =~ /^#/ and lc $channel ne lc $from_chan) {
         return "/say $trigger_name belongs to $channel_name, but this is $from_chan. Please switch to $channel_name or use /msg to remove this factoid.";
@@ -1275,6 +1358,10 @@ sub cmd_factchange($self, $context) {
     my $factoids_data = $self->{pbot}->{factoids}->{data}->{storage};
     my ($channel, $trigger, $keyword, $delim, $tochange, $changeto, $modifier, $url);
 
+    if ($context->{interpret_depth} > 2) {
+        return "factchange: recursion depth exceeded.\n";
+    }
+
     my $needs_disambig;
 
     if (length $context->{arguments}) {
@@ -1361,11 +1448,16 @@ sub cmd_factchange($self, $context) {
 
     $from_chan = '.*' if $from_chan eq 'global';
 
+    my $userinfo = $self->{pbot}->{users}->loggedin($channel, $context->{hostmask});
+
+    if ($channel =~ /^#/ && $channel ne $context->{from} && !$self->{pbot}->{capabilities}->userhas($userinfo, 'admin')) {
+        return "/say Switch to $channel_name to change this factoid.";
+    }
+
     if ($channel =~ /^#/ and $from_chan =~ /^#/ and lc $channel ne lc $from_chan) {
         return "/say $trigger_name belongs to $channel_name, but this is $from_chan. Please switch to $channel_name or use /msg to change this factoid.";
     }
 
-    my $userinfo = $self->{pbot}->{users}->loggedin($channel, $context->{hostmask});
     if ($factoids_data->get_data($channel, $trigger, 'locked')) {
         return "/say $trigger_name is locked and cannot be changed." if not $self->{pbot}->{capabilities}->userhas($userinfo, 'admin');
 

@@ -236,10 +236,6 @@ sub expand_action_arguments($self, $context, $action, $input = '', $nick = '') {
     $action = validate_string($action, $self->{pbot}->{registry}->get_value('factoids', 'max_content_length'));
     $input  = validate_string($input,  $self->{pbot}->{registry}->get_value('factoids', 'max_content_length'));
 
-    my %opts = (
-        nested => 0,
-    );
-
     my @args = $self->{pbot}->{interpreter}->split_line($input);
 
     $action =~ s/\$arglen\b|\$\{arglen\}/scalar @args/eg;

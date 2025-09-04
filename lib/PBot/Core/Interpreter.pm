@@ -271,6 +271,7 @@ sub process_line($self, $from, $nick, $user, $host, $text, $tags = '', $is_comma
 # takes a $context object containing contextual information about the
 # command such as the channel, nick, user, host, command, etc.
 sub interpret($self, $context) {
+    $context->{stack_depth} //= 0;
     # log command invocation
     $self->{pbot}->{logger}->log("=== [$context->{interpret_depth} ($context->{stack_depth})] Got command: "
         . "($context->{from}) $context->{hostmask}: $context->{command}\n");
@@ -633,7 +634,7 @@ sub handle_result($self, $context, $result = $context->{result}) {
     }
 
     # finish piping
-    if (exists $context->{pipe}->{$context->{stack_depth}}) {
+    if (exists $context->{pipe} && exists $context->{pipe}->{$context->{stack_depth}}) {
         my ($pipe, $pipe_rest) = (
             delete $context->{pipe}->{$context->{stack_depth}},
             delete $context->{pipe_rest}->{$context->{stack_depth}}
