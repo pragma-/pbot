@@ -158,13 +158,15 @@ sub wordle($self, $context) {
                 return NO_WORDLE;
             }
 
+            my $started = concise ago time - $self->{$channel}->{start_time};
             my $hard = $self->{$channel}->{hard_mode} ? 'on' : 'off';
-            my $result = "Current wordlist: $self->{$channel}->{wordlist} ($self->{$channel}->{length}); hard mode: $hard; guesses: $self->{$channel}->{guess_count}; nonwords: $self->{$channel}->{nonword_count}; invalids: $self->{$channel}->{invalid_count}";
+            my $result = "Current wordlist: $self->{$channel}->{wordlist} ($self->{$channel}->{length}); started $started; hard mode: $hard; guesses: $self->{$channel}->{guess_count}; nonwords: $self->{$channel}->{nonword_count}; invalids: $self->{$channel}->{invalid_count}";
 
             if ($self->{$channel}->{correct}) {
                 my $solved_on = concise ago (time - $self->{$channel}->{solved_on});
                 my $wordle = join '', $self->{$channel}->{wordle}->@*;
-                $result .= "; solved by: $self->{$channel}->{solved_by} ($solved_on); word was: $wordle";
+                my $duration = concise duration $self->{$channel}->{start_time} - $self->{$channel}->{solved_on};
+                $result .= "; solved by: $self->{$channel}->{solved_by} in $duration ($solved_on); word was: $wordle";
             } elsif ($self->{$channel}->{givenup}) {
                 my $givenup_on = concise ago (time - $self->{$channel}->{givenup_on});
                 my $wordle = join '', $self->{$channel}->{wordle}->@*;
@@ -443,6 +445,7 @@ sub make_wordle($self, $channel, $length, $word = undef, $wordlist = DEFAULT_LIS
     $self->{$channel}->{nonword_count} = 0;
     $self->{$channel}->{invalid_count} = 0;
     $self->{$channel}->{letters}       = {};
+    $self->{$channel}->{start_time}    = time;
 
     foreach my $letter ('A'..'Z') {
         $self->{$channel}->{letters}->{$letter} = 0;
@@ -647,6 +650,10 @@ sub guess_wordle($self, $channel, $guess) {
 
         my $guesses = $self->{$channel}->{guess_count};
         $guesses = " Correct in $guesses guess" . ($guesses != 1 ? 'es! ' : '! ');
+
+        my $duration = concise duration $self->{$channel}->{start_time} - time;
+
+        $guesses .= "($duration) ";
 
         my $nonwords = $self->{$channel}->{nonword_count};
         my $invalids = $self->{$channel}->{invalid_count};
