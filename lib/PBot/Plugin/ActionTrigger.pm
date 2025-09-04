@@ -56,12 +56,14 @@ sub initialize($self, %conf) {
     $self->{pbot}->{capabilities}->add('admin', 'can-actiontrigger', 1);
 
     # register IRC handlers
-    $self->{pbot}->{event_dispatcher}->register_handler('irc.public',  sub { $self->on_public(@_) });
-    $self->{pbot}->{event_dispatcher}->register_handler('irc.caction', sub { $self->on_action(@_) });
-    $self->{pbot}->{event_dispatcher}->register_handler('irc.join',    sub { $self->on_join(@_) });
-    $self->{pbot}->{event_dispatcher}->register_handler('irc.part',    sub { $self->on_departure(@_) });
-    $self->{pbot}->{event_dispatcher}->register_handler('irc.quit',    sub { $self->on_departure(@_) });
-    $self->{pbot}->{event_dispatcher}->register_handler('irc.kick',    sub { $self->on_kick(@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.public',   sub { $self->on_public(@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.caction',  sub { $self->on_action(@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.join',     sub { $self->on_join(@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.part',     sub { $self->on_departure(@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.quit',     sub { $self->on_departure(@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.kick',     sub { $self->on_kick(@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('pbot.public',  sub { $self->on_pbotpublic(@_) });
+    $self->{pbot}->{event_dispatcher}->register_handler('pbot.caction', sub { $self->on_pbotaction(@_) });
 
     # database file
     $self->{filename} = $self->{pbot}->{registry}->get_value('general', 'data_dir') . '/triggers.sqlite3';
@@ -88,6 +90,8 @@ sub unload($self) {
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.part');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.quit');
     $self->{pbot}->{event_dispatcher}->remove_handler('irc.kick');
+    $self->{pbot}->{event_dispatcher}->remove_handler('pbot.public');
+    $self->{pbot}->{event_dispatcher}->remove_handler('pbot.caction');
 }
 
 sub cmd_actiontrigger($self, $context) {
@@ -386,6 +390,32 @@ sub on_kick($self, $event_type, $event) {
     return 0;
 }
 
+sub on_pbotaction($self, $event_type, $event) {
+    my ($nick, $user, $host, $channel, $msg) = (
+        $self->{pbot}->{conn}->nick,
+        'pbot3',
+        'pbot',
+        $event->{to},
+        $event->{msg}
+    );
+
+    $self->check_trigger($nick, $user, $host, $channel, "ACTION $msg");
+    return 0;
+}
+
+sub on_pbotpublic($self, $event_type, $event) {
+    my ($nick, $user, $host, $channel, $msg) = (
+        $self->{pbot}->{conn}->nick,
+        'pbot3',
+        'pbot',
+        $event->{to},
+        $event->{msg}
+    );
+
+    $self->check_trigger($nick, $user, $host, $channel, "PRIVMSG $msg");
+    return 0;
+}
+
 sub on_action($self, $event_type, $event) {
     # don't handle this event if it was processed by a bot command
     return 0 if $event->{interpreted};
@@ -459,13 +489,6 @@ sub check_trigger($self, $nick, $user, $host, $channel, $text) {
 
     if ($channel =~ /^#/) {
         @triggers = $self->list_triggers($channel);
-    } else {
-        my $channels = $self->{pbot}->{nicklist}->get_channels($nick);
-
-        foreach my $c (@$channels) {
-            next if not $self->{pbot}->{channels}->is_active($c);
-            push @triggers, $self->list_triggers($c);
-        }
     }
 
     my @globals = $self->list_triggers('global');
