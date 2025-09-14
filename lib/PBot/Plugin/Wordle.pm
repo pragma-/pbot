@@ -323,11 +323,13 @@ sub wordle($self, $context) {
             }
 
             if (lc $args[0] eq 'on') {
+                my $mode = $self->{$channel}->{hard_mode} ? 'already' : 'now';
                 $self->{$channel}->{hard_mode} = 1;
-                return "Hard mode is now enabled.";
+                return "Hard mode is $mode enabled.";
             } else {
+                my $mode = $self->{$channel}->{hard_mode} ? 'now' : 'already';
                 $self->{$channel}->{hard_mode} = 0;
-                return "Hard mode is now disabled.";
+                return "Hard mode is $mode disabled.";
             }
         }
 
