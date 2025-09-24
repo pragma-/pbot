@@ -94,6 +94,7 @@ sub process_standard_options($self) {
     }
 
     $self->{code} = join ' ', @opt_args;
+    $self->{code} =~ s/\n /\n/msg;
 
     if ($self->{code} =~ s/-stdin[ =]?(.*)$//) {
         $self->add_option("-stdin", $1);
@@ -136,7 +137,7 @@ sub preprocess_code($self, %opts) {
 
     unless($self->{got_run} and $self->{copy_code}) {
         $self->debug("---- preprocess\n");
-        $self->debug("$self->{nick} $self->{channel}: [$self->{arguments}] $self->{cmdline_options} $self->{code}\n", 0);
+        $self->debug("$self->{nick} $self->{channel}: [$self->{arguments}] $self->{cmdline_options}\n$self->{code}\n", 0);
     }
 
     # replace \n outside of quotes with literal newline

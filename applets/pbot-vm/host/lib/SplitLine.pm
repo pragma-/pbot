@@ -128,7 +128,7 @@ sub split_line($line, %opts) {
                 $token .= $ch;
                 next;
             } else {
-                if ($opts{keep_spaces} && $ch eq "\n") {
+                if ($opts{keep_spaces} && ($ch eq "\n" || $ch eq "\t")) {
                     $token .= $ch;
                 }
 

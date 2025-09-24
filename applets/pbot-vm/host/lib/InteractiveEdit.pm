@@ -13,6 +13,7 @@ no warnings qw(experimental::smartmatch experimental::signatures deprecated);
 use LWP::UserAgent;
 use FindBin qw($RealBin);
 use Text::Balanced qw(extract_delimited);
+use JSON::XS;
 
 use parent qw(Exporter);
 our @EXPORT = qw(interactive_edit);
@@ -31,7 +32,7 @@ sub interactive_edit($self) {
 
         my @code = load_history("$RealBin/../history/$copy-$self->{lang}.hist");
 
-        $copy_code = $code[0];
+        $copy_code = decode_entry($code[0]);
 
         if (not defined $copy_code) {
             print "No history for $copy.\n";
@@ -49,18 +50,18 @@ sub interactive_edit($self) {
 
     my @last_code = load_history("$RealBin/../history/$self->{channel}-$self->{lang}.hist");
 
-    unshift @last_code, $copy_code if defined $copy_code;
+    unshift @last_code, encode_entry($copy_code) if defined $copy_code;
 
     if ($subcode =~ m/^\s*(?:and\s+)?show(?:\s+\S+)?\s*$/i) {
         if (defined $last_code[0]) {
-            print "$last_code[0]\n";
+            print decode_entry($last_code[0]) . "\n";
         } else {
             print "No recent code to show.\n"
         }
         exit 0;
     }
 
-    my $prevchange = $last_code[0];
+    my $prevchange = decode_entry($last_code[0]);
     my @replacements;
     my $got_changes = 0;
     my $got_sub = 0;
@@ -74,8 +75,9 @@ sub interactive_edit($self) {
             print "No more undos remaining.\n";
             exit 0;
         } else {
-            $code = $last_code[0];
-            $prevchange = $last_code[0];
+            my $last = decode_entry($last_code[0]);
+            $code = $last;
+            $prevchange = $last;
             $got_undo = 1;
         }
     }
@@ -464,7 +466,7 @@ sub interactive_edit($self) {
 
     unless (($self->{got_run} or $got_diff) and not $got_changes) {
         if ($unshift_last_code) {
-            unshift @last_code, $code;
+            unshift @last_code, encode_entry($code);
         }
 
         save_history("$RealBin/../history/$self->{channel}-$self->{lang}.hist", \@last_code, $self->{max_history});
@@ -475,7 +477,9 @@ sub interactive_edit($self) {
             print "Not enough recent code to diff.\n"
         } else {
             use Text::WordDiff;
-            my $diff = word_diff(\$last_code[1], \$last_code[0], { STYLE => 'Diff' });
+            my $last1 = decode_entry($last_code[1]);
+            my $last0 = decode_entry($last_code[0]);
+            my $diff = word_diff(\$last1, \$last0, { STYLE => 'Diff' });
 
             if ($diff !~ /(?:<del>|<ins>)/) {
                 $diff = "No difference.";
@@ -523,6 +527,25 @@ sub load_history($path) {
 
     close $fh;
     return @lines;
+}
+
+sub decode_entry($entry) {
+    return undef if not defined $entry;
+    my $result = eval {
+        my $data = decode_json($entry);
+        return $data->{code};
+    };
+
+    if ($@) {
+        return $entry;
+    } else {
+        return $result;
+    }
+}
+
+sub encode_entry($entry) {
+    my $data = { code => $entry };
+    return encode_json($data);
 }
 
 1;
