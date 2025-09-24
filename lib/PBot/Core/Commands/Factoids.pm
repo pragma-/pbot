@@ -821,10 +821,6 @@ my @valid_pastesites = (
 sub cmd_factadd($self, $context) {
     my ($from_chan, $keyword, $text, $force);
 
-    if ($context->{interpret_depth} > 2) {
-        return "factadd: recursion depth exceeded.\n";
-    }
-
     my @arglist = @{$context->{arglist}};
 
     if (@arglist) {
@@ -938,6 +934,12 @@ sub cmd_factadd($self, $context) {
     if ($self->{pbot}->{commands}->exists($keyword)) { return "/say $keyword_text already exists as a built-in command."; }
 
     my $userinfo = $self->{pbot}->{users}->loggedin($from_chan, $context->{hostmask});
+
+    if ($context->{interpret_depth} > 2) {
+        if (($from_chan ne '.*' && $from_chan ne $context->{from}) || ($keyword ne "$context->{trigger}-data" && $keyword ne "$context->{root_keyword}-data")) {
+            return "factadd: recursion depth exceeded.\n";
+        }
+    }
 
     if (!$self->{pbot}->{capabilities}->userhas($userinfo, 'admin') && $from_chan =~ /^#/ && $from_chan ne $context->{from}) {
         return "/say Switch to $from_chan to add this factoid.";
@@ -1494,11 +1496,11 @@ sub cmd_factchange($self, $context) {
 
                 while (1) {
                     if ($count == 0) {
-                        if   ($insensitive) { $changed = $action =~ s|$tochange|$changeto$magic|i; }
-                        else                { $changed = $action =~ s|$tochange|$changeto$magic|; }
+                        if   ($insensitive) { $changed = $action =~ s|$tochange|$changeto$magic|ims; }
+                        else                { $changed = $action =~ s|$tochange|$changeto$magic|ms; }
                     } else {
-                        if   ($insensitive) { $changed = $action =~ s|$tochange|$1$changeto$magic|i; }
-                        else                { $changed = $action =~ s|$tochange|$1$changeto$magic|; }
+                        if   ($insensitive) { $changed = $action =~ s|$tochange|$1$changeto$magic|ims; }
+                        else                { $changed = $action =~ s|$tochange|$1$changeto$magic|ms; }
                     }
 
                     if ($changed) {
@@ -1515,9 +1517,9 @@ sub cmd_factchange($self, $context) {
                     }
                 }
             } elsif ($modifier eq 'i') {
-                $changed = $action =~ s|$tochange|$changeto|i;
+                $changed = $action =~ s|$tochange|$changeto|ims;
             } else {
-                $changed = $action =~ s|$tochange|$changeto|;
+                $changed = $action =~ s|$tochange|$changeto|ms;
             }
 
             if (not $changed) {
