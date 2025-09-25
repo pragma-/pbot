@@ -52,6 +52,8 @@ sub expand_factoid_vars($self, $context, $action, %opts) {
     my $result = '';
     my $rest   = $action;
 
+    my $needs_save = 0;
+
     while (++$depth < 100) {
         $rest =~ s/(?<!\\)\$0/$root_keyword/g;
 
@@ -105,6 +107,18 @@ sub expand_factoid_vars($self, $context, $action, %opts) {
             my $var_chan;
             if (@factoids && $factoids[0]) {
                 ($var_chan, $var) = ($factoids[0]->[0], $factoids[0]->[1]);
+
+                my $ref_count = $self->{pbot}->{factoids}->{data}->{storage}->get_data($var_chan, $var, 'ref_count');
+
+                my $data = {
+                    ref_count => $ref_count + 1,
+                    ref_user => $context->{hostmask},
+                    last_referenced_in => $context->{from},
+                    last_referenced_on => time
+                };
+
+                $self->{pbot}->{factoids}->{data}->{storage}->add($var_chan, $var, $data, 1);
+                $needs_save = 1;
 
                 if ($self->{pbot}->{factoids}->{data}->{storage}->get_data($var_chan, $var, 'action') =~ m{^/call (.*)}ms) {
                     $var = $1;
@@ -206,6 +220,11 @@ sub expand_factoid_vars($self, $context, $action, %opts) {
                     $replacement = $fixed_article . $trailing . $replacement;
                 }
 
+                # prevent double-spaces when joining replacement to result
+                if ($result =~ m/ $/ && (!length($replacement) || $replacement =~ m/^ /)) {
+                    $result =~ s/ $//;
+                }
+
                 $result .= $replacement;
 
                 $expansions++;
@@ -228,6 +247,10 @@ sub expand_factoid_vars($self, $context, $action, %opts) {
 
     # unescape certain symbols
     $result =~ s/(?<!\\)\\([\$\:\|])/$1/g;
+
+    if ($needs_save) {
+        $self->{pbot}->{factoids}->{data}->{storage}->save;
+    }
 
     return validate_string($result, $self->{pbot}->{registry}->get_value('factoids', 'max_content_length'));
 }

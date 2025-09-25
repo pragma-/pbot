@@ -803,7 +803,7 @@ sub remove($self, $index1, $index2 = undef, $data_index = undef, $dont_save = 0)
     return "$name2.$data_index is not set.";
 }
 
-sub set($self, $index1, $index2, $key = undef, $value = undef) {
+sub set($self, $index1, $index2, $key = undef, $value = undef, $dont_save = 0) {
     if (not $self->exists($index1)) {
         my $result = "$self->{name}: $index1 not found; similiar matches: ";
         $result .= $self->levenshtein_matches($index1);
@@ -862,7 +862,7 @@ sub set($self, $index1, $index2, $key = undef, $value = undef) {
                 $self->{cache}->{$lc_index1}->{$lc_index2}->{$key} = $value;
             }
 
-            $self->save;
+            $self->save unless $dont_save;
         };
 
         if ($@) {
