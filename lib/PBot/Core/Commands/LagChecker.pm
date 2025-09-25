@@ -11,7 +11,7 @@ use parent 'PBot::Core::Class';
 use PBot::Imports;
 
 use Time::Duration qw/concise ago/;
-use Time::HiRes qw/gettimeofday/;
+use Time::HiRes qw/gettimeofday tv_interval/;
 
 sub initialize($self, %conf) {
     $self->{pbot}->{commands}->register(sub { $self->cmd_lagcheck(@_) }, "lagcheck", 0);
@@ -20,7 +20,7 @@ sub initialize($self, %conf) {
 sub cmd_lagcheck($self, $context) {
     if (defined $self->{pbot}->{lagchecker}->{pong_received} and $self->{pbot}->{lagchecker}->{pong_received} == 0) {
         # a ping has been sent (pong_received is not undef) and no pong has been received yet
-        my $elapsed   = tv_interval($self->{pbot}->{lagchecker}->{ping_send_time});
+        my $elapsed   = tv_interval($self->{pbot}->{lagchecker}->{ping_send_time}) * 1000;
         my $lag_total = $elapsed;
         my $len       = @{$self->{pbot}->{lagchecker}->{lag_history}};
 

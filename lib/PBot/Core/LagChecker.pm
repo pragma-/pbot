@@ -15,6 +15,9 @@ use Time::HiRes qw(gettimeofday tv_interval);
 use Time::Duration;
 
 sub initialize($self, %conf) {
+    # are we fully connected yet?
+    $self->{welcomed} = 0;
+
     # average of entries in lag history, in seconds
     $self->{lag_average} = undef;
 
@@ -51,6 +54,9 @@ sub initialize($self, %conf) {
 
     # PONG IRC handler
     $self->{pbot}->{event_dispatcher}->register_handler('irc.pong', sub { $self->on_pong(@_) });
+
+    # Don't send PING until fully connected
+    $self->{pbot}->{event_dispatcher}->register_handler('irc.welcome', sub { $self->on_welcome(@_) });
 }
 
 # registry trigger fires when value changes
@@ -59,12 +65,18 @@ sub trigger_lag_history_interval($self, $section, $item, $newvalue) {
 }
 
 sub send_ping($self) {
-    return unless defined $self->{pbot}->{conn};
+    return unless defined $self->{pbot}->{conn} && $self->{pbot}->{conn}->connected && $self->{welcomed};
+
+    return if defined $self->{pong_received} && $self->{pong_received} == 0;
 
     $self->{ping_send_time} = [gettimeofday];
     $self->{pong_received}  = 0;
 
     $self->{pbot}->{conn}->sl("PING :lagcheck");
+}
+
+sub on_welcome($self, $event_type, $event) {
+    $self->{welcomed} = 1;
 }
 
 sub on_pong($self, $event_type, $event) {
