@@ -70,7 +70,7 @@ sub execute($self, $context) {
     my $json = encode_json \%args;
 
     # update context details
-    $context->{special}      = 'code-factoid';      # ensure handle_result(), etc, process this as a code-factoid
+    $context->{special}->{$context->{stack_depth}} = 'code-factoid'; # ensure handle_result(), etc, process this as a code-factoid
     $context->{root_channel} = $context->{channel}; # override root channel to current channel
     $context->{keyword}      = 'vm-client';         # code-factoid uses `vm-client` command to invoke vm
     $context->{arguments}    = $json;               # set arguments to json string as `vm-client` expects

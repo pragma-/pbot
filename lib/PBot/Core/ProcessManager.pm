@@ -51,7 +51,16 @@ sub remove_process($self, $pid) {
 }
 
 sub execute_process($self, $context, $subref, $timeout = undef, $reader_subref = undef) {
-    # don't fork again if we're already a forked process
+    # debug flag to trace $context location and contents
+    if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
+        use Data::Dumper;
+        $Data::Dumper::Indent = 2;
+        $Data::Dumper::Sortkeys = 1;
+        $self->{pbot}->{logger}->log("ProcessManager::execute_process\n");
+        $self->{pbot}->{logger}->log(Dumper $context);
+    }
+
+    # don't fork again if we're already child
     if (defined $context->{pid} and $context->{pid} == 0) {
         $self->{pbot}->{logger}->log("execute_process: Re-using PID $context->{pid} for new process\n");
         $subref->($context);
@@ -62,6 +71,8 @@ sub execute_process($self, $context, $subref, $timeout = undef, $reader_subref =
 
     # fork new process
     $context->{pid} = fork;
+
+    $self->{pbot}->{logger}->log("=-=-=-=-=-=-= FORK PID $context->{pid} =-=-=-=-=-=-=-=\n");
 
     if (not defined $context->{pid}) {
         # fork failed
@@ -143,9 +154,18 @@ sub execute_process($self, $context, $subref, $timeout = undef, $reader_subref =
 sub process_pipe_reader($self, $pid, $buf) {
     # retrieve context object from child
     my $context = decode_json $buf or do {
-        $self->{pbot}->{logger}->log("Failed to decode bad json: [$buf]\n");
+        $self->{pbot}->{logger}->log("ProcessManager::process_pipe_reader: Failed to decode bad json: [$buf]\n");
         return;
     };
+
+    # debug flag to trace $context location and contents
+    if ($self->{pbot}->{registry}->get_value('general', 'debugcontext')) {
+        use Data::Dumper;
+        $Data::Dumper::Indent = 2;
+        $Data::Dumper::Sortkeys = 1;
+        $self->{pbot}->{logger}->log("ProcessManager::process_pipe_reader ($pid)\n");
+        $self->{pbot}->{logger}->log(Dumper $context);
+    }
 
     # context is no longer forked
     delete $context->{pid};
@@ -165,8 +185,10 @@ sub process_pipe_reader($self, $pid, $buf) {
         return if $context->{result} =~ m/(?:no results)/i;
     }
 
+    $self->{pbot}->{logger}->log("process pipe handling result [$context->{result}]\n");
+
     # handle code factoid result
-    if (exists $context->{special} and $context->{special} eq 'code-factoid') {
+    if (exists $context->{special} and $context->{special}->{$context->{stack_depth}} eq 'code-factoid') {
         $context->{result} =~ s/\s+$//g;
         $context->{original_keyword} = $context->{root_keyword};
         $context->{result} = $self->{pbot}->{factoids}->{interpreter}->handle_action($context, $context->{result});

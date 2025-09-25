@@ -388,7 +388,7 @@ sub handle_action($self, $context, $action) {
 
         unless ($self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'require_explicit_args')) {
             my $args = $context->{arguments};
-            $command .= " $args" if length $args and not $context->{special} eq 'code-factoid';
+            $command .= " $args" if length $args and not $context->{special}->{$context->{stack_depth}} eq 'code-factoid';
             $context->{arguments} = '';
         }
 
@@ -448,14 +448,20 @@ sub handle_action($self, $context, $action) {
     }
 
     # action is a code factoid
-    if ($action =~ m{^/code\s+([^\s]+)\s+(.+)$}msi) {
+    if ($action =~ m{^/code\s+(\S+)\s+(.+)$}msi) {
         my ($lang, $code) = ($1, $2);
-        $context->{lang} = $lang;
-        $context->{code} = $code;
-        return $self->{pbot}->{factoids}->{code}->execute($context);
+        my $depth = $context->{stack_depth};
+        $context->{code_args}->{$depth} = $context->{arguments};
+        $context->{special}->{$depth} = 'code-factoid';
+        $context->{command} = "/code $lang $code";
+        return $self->{pbot}->{interpreter}->interpret($context);
     }
 
-    return $action if $context->{special} eq 'code-factoid';
+    if ($context->{special}->{$context->{stack_depth}} eq 'code-factoid') {
+        # code-factoid completed
+        delete $context->{special}->{$context->{stack_depth}};
+        return $action;
+    }
 
     if ($self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'type') eq 'applet') {
         $context->{root_keyword} = $keyword unless defined $context->{root_keyword};
