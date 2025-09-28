@@ -26,10 +26,9 @@ use Data::Dumper;
 
 sub read_input($input, $buffer, $tag) {
     my $line;
-    my $total_read = 0;
 
     print STDERR "$tag waiting for input...\n";
-    my $ret = sysread($input, my $buf, 16384);
+    my $ret = sysread($input, my $buf, 4096);
 
     if (not defined $ret) {
         print STDERR "Error reading $tag: $!\n";
@@ -41,19 +40,16 @@ sub read_input($input, $buffer, $tag) {
         return 0;
     }
 
-    $total_read += $ret;
+    print STDERR "$tag read $ret bytes [$buf]\n";
 
-    print STDERR "$tag read $ret bytes [$total_read total] [$buf]\n";
-
-    $$buffer .= $buf;
-
-    return undef if $$buffer !~ s/\s*:end:\s*$//m;
+    if ($buf ne "\n") {
+        chomp $buf;
+        $$buffer .= $buf;
+        return undef;
+    }
 
     $line = $$buffer;
-    chomp $line;
-
     $$buffer = '';
-    $total_read = 0;
 
     print STDERR "-" x 40, "\n";
     print STDERR "$tag got [$line]\n";
@@ -62,7 +58,16 @@ sub read_input($input, $buffer, $tag) {
 
     if ($@) {
         print STDERR "Failed to decode JSON: $@\n";
-        return undef;
+        return {
+            arguments  => '',
+            cmdline    => 'sh prog.sh',
+            code       => "echo 'Failed to decode JSON: $@'",
+            date       => 0,
+            execfile   => 'prog.sh',
+            input      => '',
+            lang       => 'sh',
+            sourcefile => 'prog.sh'
+        };
     }
 
     $command->{arguments} //= '';

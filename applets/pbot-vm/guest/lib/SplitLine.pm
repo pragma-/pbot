@@ -24,8 +24,6 @@ sub split_line($line, %opts) {
         strip_commas     => 0,
     );
 
-    print STDERR "split: [$line]\n";
-
     %opts = (%default_opts, %opts);
 
     return () if not length $line;
@@ -149,8 +147,6 @@ sub split_line($line, %opts) {
         $token .= $ch;
     }
 
-    use Data::Dumper;
-    print STDERR "split: ", Dumper(\@args), "\n";
     return @args;
 }
 

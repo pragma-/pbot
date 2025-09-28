@@ -19,6 +19,9 @@ use Getopt::Long qw(GetOptionsFromArray :config pass_through no_ignore_case no_a
 use Time::HiRes qw(gettimeofday);
 use POSIX;
 
+use Data::Dumper;
+$Data::Dumper::Useqq = 1;
+
 use FindBin qw($RealBin);
 
 use InteractiveEdit;
@@ -136,8 +139,8 @@ sub preprocess_code($self, %opts) {
     }
 
     unless($self->{got_run} and $self->{copy_code}) {
-        $self->debug("---- preprocess\n");
-        $self->debug("$self->{nick} $self->{channel}: [$self->{arguments}] $self->{cmdline_options}\n$self->{code}\n", 0);
+        $self->info("---- preprocess\n");
+        $self->info("$self->{nick} $self->{channel}: [$self->{arguments}] $self->{cmdline_options}\n$self->{code}\n",0);
     }
 
     # replace \n outside of quotes with literal newline
@@ -253,8 +256,8 @@ sub execute {
         $cmdline =~ s/\$options\s+//;
     }
 
-    $self->debug("---- executing\n");
-    $self->debug("$cmdline\n$stdin\n$pretty_code\n", 0);
+    $self->info("---- executing\n");
+    $self->info("$cmdline\n$stdin\n$pretty_code\n", 0);
 
     my $compile_in = {
         lang       => $self->{lang},
@@ -270,44 +273,45 @@ sub execute {
     $compile_in->{'factoid'} = $self->{'factoid'} if length $self->{'factoid'};
     $compile_in->{'persist-key'} = $self->{'persist-key'} if length $self->{'persist-key'};
 
+    $self->debug("compile_in: ", Dumper($compile_in), "\n") if $self->{debug} > 5;
+
     my $compile_json = encode_json($compile_in);
-    $compile_json .= "\n:end:\n";
+    my $chunk_size = 4000;
 
-    my $length = length $compile_json;
-    my $sent = 0;
-    my $chunk_max = 16384;
-    my $chunk_size = $length < $chunk_max ? $length : $chunk_max;
-    my $chunks_sent = 0;
+    $self->debug("compile_json: ", Dumper($compile_json), "\n") if $self->{debug} > 5;
 
-    # $self->debug("Sending $length bytes [$compile_json] to vm_server\n");
+    my @lines = unpack("(A$chunk_size)*", $compile_json);
+    push @lines, '';
 
-    $chunk_size -= 1; # account for newline in syswrite
+    $self->debug("Lines:\n" . (Dumper(\@lines))) if $self->{debug} > 1;
 
-    while ($chunks_sent < $length) {
-        my $chunk = substr $compile_json, $chunks_sent, $chunk_size;
+    foreach my $line (@lines) {
+        $line .= "\n";
+        my $length = length $line;
+        my $sent = 0;
 
-        $chunks_sent += length $chunk;
+        $self->debug("writing [$line]\n") if $self->{debug} > 1;
 
-        my $ret = syswrite($input, $chunk);
+        while ($sent < $length) {
+            my $ret = syswrite($input, $line, $chunk_size + 1, $sent);
+            $self->debug("sent: $sent, length: $length, ret: $ret\n");
 
-        if (not defined $ret) {
-            my $error = $!;
-            print STDERR "Error sending: $error\n";
-            $self->debug("Error sending: $error\n");
-            last;
+            if (not defined $ret) {
+                $self->info("Error sending: $!\n");
+                last;
+            }
+
+            if ($ret == 0) {
+                $self->info("Sent 0 bytes. Sleep 1 sec and try again\n");
+                sleep 1;
+                next;
+            }
+
+            $sent += $ret;
         }
-
-        if ($ret == 0) {
-            print STDERR "Sent 0 bytes. Sleep 1 sec and try again\n";
-            $self->debug("Sent 0 bytes. Sleep 1 sec and try again\n");
-            sleep 1;
-            next;
-        }
-
-        $sent += $ret;
     }
 
-    my $result = "";
+    my $result = '';
     my $got_result = 0;
 
     while (my $line = decode('UTF-8', <$output>, sub { sprintf '\\\\x%02X', shift })) {
@@ -337,8 +341,8 @@ sub execute {
 
 sub postprocess_output($self) {
     unless($self->{got_run} and $self->{copy_code}) {
-        $self->debug("---- post-processing\n");
-        $self->debug("$self->{output}\n", 0);
+        $self->info("---- post-processing\n");
+        $self->info("$self->{output}\n", 0);
     }
 
     # backspace
@@ -374,7 +378,6 @@ sub postprocess_output($self) {
         # "\n" => '<nl>',
 
         # \t is left alone
-
     );
 
     $self->{output} =~ s/([\e\f])/$escapes{$1}/gs;
@@ -397,9 +400,9 @@ sub show_output($self) {
     my $output = $self->{output};
 
     unless ($self->{got_run} and $self->{copy_code}) {
-        $self->debug("---- show output\n");
-        $self->debug("$output\n", 0);
-        $self->debug("=========================\n", 0);
+        $self->info("---- show output\n");
+        $self->info("$output\n", 0);
+        $self->info("=========================\n", 0);
     }
 
     if (exists $self->{options}->{'-paste'} or (defined $self->{got_run} and $self->{got_run} eq 'paste')) {
@@ -490,6 +493,11 @@ sub show_output($self) {
 }
 
 sub debug($self, $text, $timestamp = 1) {
+    return if not $self->{debug};
+    $self->info($text, $timestamp);
+}
+
+sub info($self, $text, $timestamp = 1) {
     if (not exists $self->{logh}) {
         open $self->{logh}, '>>:encoding(UTF-8)', "$RealBin/../log.txt" or die "Could not open log file: $!";
     }
@@ -498,8 +506,10 @@ sub debug($self, $text, $timestamp = 1) {
         my ($sec, $usec) = gettimeofday;
         my $time = strftime "%a %b %e %Y %H:%M:%S", localtime $sec;
         $time .= sprintf ".%03d", $usec / 1000;
+        print STDERR "$time :: $text";
         print { $self->{logh} } "$time :: $text";
     } else {
+        print STDERR $text;
         print { $self->{logh} } $text;
     }
 }
