@@ -104,13 +104,20 @@ sub initialize($self, %conf) {
             subref => sub { $self->func_maybe_to(@_) }
         }
     );
-
     $self->{pbot}->{functions}->register(
         'maybe-on',
         {
             desc   => 'prepend "on" in front of text depending on the part-of-speech of the first word in text',
             usage  => 'maybe-on <text>',
             subref => sub { $self->func_maybe_on(@_) }
+        }
+    );
+    $self->{pbot}->{functions}->register(
+        'length',
+        {
+            desc   => 'print length of text',
+            usage  => 'length <text>',
+            subref => sub { $self->func_length(@_) }
         }
     );
 
@@ -283,6 +290,13 @@ sub func_maybe_on($self, @rest) {
     }
 
     return $text;
+}
+
+sub func_length($self, @rest) {
+    my $text = "@rest";
+    my $count = 0;
+    while ($text =~ /\X/g) { $count++ }; # count graphemes
+    return $count;
 }
 
 1;
