@@ -22,28 +22,46 @@ use Net::hostent;
 use IPC::Shareable;
 use Time::HiRes qw/gettimeofday/;
 use Encode;
+use POSIX;
+
+use Data::Dumper;
+$Data::Dumper::Useqq = 1;
+$Data::Dumper::Terse = 1;
+$Data::Dumper::Indent = 0;
 
 use constant {
     SERVER_PORT     => $ENV{PBOTVM_PORT}    // 9000,
     COMPILE_TIMEOUT => $ENV{PBOTVM_TIMEOUT} // 10,
 };
 
+sub info($text, $maxlen = 255) {
+    my $rest;
+    ($text, $rest) = $text =~ m/^(.{0,$maxlen})(.*)/ms;
+    $rest = length $rest;
+    $text .= " [... $rest more]" if $rest;
+    $text .= "\n" if $text !~ /\n$/;
+    my ($sec, $usec) = gettimeofday;
+    my $time = strftime "%a %b %e %Y %H:%M:%S", localtime $sec;
+    $time .= sprintf ".%03d", $usec / 1000;
+    print STDERR "[$$] $time :: $text";
+}
+
 sub vm_revert($input) {
     return if $ENV{PBOTVM_NOREVERT};
-    print "Reverting vm...\n";
+    info("Reverting vm...\n");
     execute("perl vm-exec -revert $input", 1000);
-    print "Reverted.\n";
+    info("Reverted.\n");
 }
 
 sub vm_check_health($input) {
-    print "Checking health...\n";
+    info("Checking health...\n");
     my ($ret, $result) = execute("perl vm-exec -health $input", 2);
-    print "$result\n" if length $result;
+    info("$result\n") if length $result;
     return ($ret, $result);
 }
 
 sub execute($command, $timeout = COMPILE_TIMEOUT) {
-    print "execute ($command)\n";
+    info("execute ($command)\n", 1024);
 
     # to get $? from pipe
     local $SIG{CHLD} = 'DEFAULT';
@@ -51,7 +69,7 @@ sub execute($command, $timeout = COMPILE_TIMEOUT) {
     my $pid = open(my $fh, '-|', split / /, encode('UTF-8', $command));
 
     if (not defined $pid) {
-        print "Couldn't fork: $!\n";
+        info("Couldn't fork: $!\n");
         return (-13, "[Fatal error]");
     }
 
@@ -94,27 +112,27 @@ sub server_listen($port) {
         Reuse     => 1,
     );
     die "Can't setup server: $!" unless $server;
-    print "Server $0 accepting clients at :$port\n";
+    info("Server $0 accepting clients at :$port\n");
     return $server;
 }
 
 sub do_server() {
-    print "Starting PBot VM Server on port " . SERVER_PORT . "\n";
+    info("Starting PBot VM Server on port " . SERVER_PORT . "\n");
     my $server = eval { server_listen(SERVER_PORT) };
 
     if ($@) {
-        print STDERR $@;
+        info($@);
         return;
     }
 
     while (my $client = $server->accept) {
-        print '-' x 20, "\n";
+        info('-' x 20 . "\n");
         my $hostinfo = gethostbyaddr($client->peeraddr);
-        print "Connect from ", $client->peerhost, " at ", scalar localtime, "\n";
+        info("Connect from " . $client->peerhost . "\n");
         handle_client($client);
     }
 
-    print "Shutting down server.\n";
+    info("Shutting down server.\n");
 }
 
 sub handle_client($client) {
@@ -123,7 +141,7 @@ sub handle_client($client) {
     my $r = fork;
 
     if (not defined $r) {
-        print "Could not fork to handle client: $!\n";
+        info("Could not fork to handle client: $!\n");
         print $client "Fatal error.\n";
         close $client;
         return;
@@ -151,19 +169,19 @@ sub handle_client($client) {
             # give client 5 more seconds
             alarm 5;
 
-            print "[$$] Read [$input]\n";
+            info("Read [" . Dumper($input) . "]\n");
 
             # check health
             my ($health, $health_message) = vm_check_health($input);
 
             if ($health == 2) {
-                print "[$$] Unable to connect to VM health check, ignoring compile attempt.\n";
+                info("Unable to connect to VM health check, ignoring compile attempt.\n");
                 print $client "Virtual machine is offline.\n";
                 last;
             }
 
             if ($health == 1 || $health == -13) {
-                print "[$$] VM not responding to health check, ignoring compile attempt.\n";
+                info("VM not responding to health check, ignoring compile attempt.\n");
                 print $client "Virtual machine is temporarily unavailable, try again soon.\n";
                 last;
             }
@@ -183,7 +201,7 @@ sub handle_client($client) {
             my ($ret, $result) = execute("perl vm-exec $input");
 
             $result =~ s/\s+$//;
-            print "Ret: $ret; result: [$result]\n";
+            info("Ret: $ret; result: [" . Dumper($result) . "]\n");
 
             if ($result =~ m/\[Killed\]$/) {
                 $killed = 1;
@@ -202,20 +220,20 @@ sub handle_client($client) {
     };
 
     # print client time-out exception
-    print "[$$] $@" if $@;
+    info($@) if $@;
 
     alarm 0;
     close $client;
 
-    print "[$$] timed out: $timed_out; killed: $killed\n";
+    info("timed out: $timed_out; killed: $killed\n");
 
     if ($timed_out || $killed) {
         vm_revert($input);
     }
 
     # child done
-    print "[$$] client exit\n";
-    print "=" x 20, "\n";
+    info("client exit\n");
+    info("=" x 20 . "\n");
     exit;
 }
 

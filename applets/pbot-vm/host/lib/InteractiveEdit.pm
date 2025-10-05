@@ -21,8 +21,6 @@ our @EXPORT = qw(interactive_edit);
 sub interactive_edit($self) {
     my $code = $self->{code};
 
-    print "      code: [$code]\n" if $self->{debug};
-
     my $subcode = $code;
     while ($subcode =~ s/^\s*(-[^ ]+)\s*//) {}
 

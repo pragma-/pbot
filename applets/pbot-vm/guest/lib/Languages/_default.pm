@@ -8,15 +8,34 @@ package _default;
 use warnings;
 use strict;
 
+use feature qw/signatures/;
+no warnings qw/experimental::signatures/;
+
 use IPC::Run qw/run timeout/;
 use Encode;
 
 use SplitLine;
 
+use Time::HiRes qw/gettimeofday/;
+use POSIX;
+
 use Data::Dumper;
 $Data::Dumper::Terse    = 1;
 $Data::Dumper::Sortkeys = 1;
 $Data::Dumper::Useqq    = 1;
+$Data::Dumper::Indent   = 0;
+
+sub info($text, $maxlen = 255) {
+    my $rest;
+    ($text, $rest) = $text =~ m/^(.{0,$maxlen})(.*)/ms;
+    $rest = length $rest;
+    $text .= " [... $rest more]" if $rest;
+    $text .= "\n" if $text !~ /\n$/;
+    my ($sec, $usec) = gettimeofday;
+    my $time = strftime "%a %b %e %Y %H:%M:%S", localtime $sec;
+    $time .= sprintf ".%03d", $usec / 1000;
+    print STDERR "$$ $time :: $text";
+}
 
 sub new {
     my ($class, %conf) = @_;
@@ -82,7 +101,7 @@ sub execute {
     $stdin = encode('UTF-8', $stdin);
     @cmdline = map { encode('UTF-8', $_) } @cmdline;
 
-    print STDERR "execute ($timeout) [$stdin] @cmdline\n";
+    info("execute ($timeout) [$stdin] @cmdline\n");
 
     my ($exitval, $stdout, $stderr) = eval {
         my ($stdout, $stderr);
@@ -96,10 +115,7 @@ sub execute {
         ($exitval, $stdout, $stderr) = (-1, '', $exception);
     }
 
-    $Data::Dumper::Indent = 0;
-    print STDERR "exitval $exitval stderr [", Dumper($stderr), "] stdout [", Dumper($stdout), "]\n";
-    $Data::Dumper::Indent = 1;
-
+    info("exitval $exitval stderr [" . Dumper($stderr) . "] stdout [" . Dumper($stdout) . "]\n");
     return ($exitval, $stdout, $stderr);
 }
 

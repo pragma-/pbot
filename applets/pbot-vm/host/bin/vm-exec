@@ -38,14 +38,34 @@ use File::Basename;
 use JSON::XS;
 use IPC::Open2;
 use IO::Socket;
+use Socket qw/IPPROTO_TCP TCP_NODELAY/;
+use Time::HiRes qw/gettimeofday/;
+use POSIX;
+
+use Data::Dumper;
+$Data::Dumper::Useqq = 1;
+$Data::Dumper::Terse = 1;
+$Data::Dumper::Indent = 0;
 
 use FindBin qw($RealBin);
 use lib "$RealBin/../lib";
 
+sub info($text, $maxlen = 255) {
+    my $rest;
+    ($text, $rest) = $text =~ m/^(.{0,$maxlen})(.*)/ms;
+    $rest = length $rest;
+    $text .= " [... $rest more]" if $rest;
+    $text .= "\n" if $text !~ /\n$/;
+    my ($sec, $usec) = gettimeofday;
+    my $time = strftime "%a %b %e %Y %H:%M:%S", localtime $sec;
+    $time .= sprintf ".%03d", $usec / 1000;
+    print STDERR "[$$] $time :: $text";
+}
+
 sub connect_vsock($context) {
     return undef if not $context->{'vm-cid'};
 
-    print STDERR "Connecting to remote VM socket CID $context->{'vm-cid'} port $context->{'vm-vport'}\n";
+    info("Connecting to remote VM socket CID $context->{'vm-cid'} port $context->{'vm-vport'}\n");
 
     my $command = "socat - VSOCK-CONNECT:$context->{'vm-cid'}:$context->{'vm-vport'}";
 
@@ -55,12 +75,12 @@ sub connect_vsock($context) {
     };
 
     if ($@) {
-        print STDERR "Failed to connect to VM socket: $@\n";
+        info("Failed to connect to VM socket: $@\n");
         return undef;
     }
 
     if (not defined $pid) {
-        print STDERR "Failed to connect to VM socket: $!\n";
+        info("Failed to connect to VM socket: $!\n");
         return undef;
     }
 
@@ -68,7 +88,7 @@ sub connect_vsock($context) {
 }
 
 sub connect_serial($context) {
-    print STDERR "Connecting to remote VM serial port $context->{'vm-serial'}\n";
+    info("Connecting to remote VM serial port $context->{'vm-serial'}\n");
 
     my $vm = IO::Socket::INET->new(
         PeerAddr => $context->{'vm-addr'},
@@ -76,6 +96,9 @@ sub connect_serial($context) {
         Proto => 'tcp',
         Type => SOCK_STREAM
     );
+
+    $vm->autoflush(1);
+    $vm->setsockopt(IPPROTO_TCP, TCP_NODELAY, 1);
 
     # return same $vm handle for ($input, $output)
     return ($vm, $vm);
@@ -96,7 +119,7 @@ sub connect_vm($context) {
         die "Could not create connection to VM: $!";
     }
 
-    print STDERR "Connected to VM.\n";
+    info("Connected to VM.\n");
     return ($input, $output);
 }
 
@@ -123,14 +146,14 @@ sub make_context_from_args(@args_in) {
 
     # set extracted leading options
     foreach my $opt (keys %opts) {
-        print STDERR "Setting option `$opt`.\n";
+        info("Setting option `$opt`.\n");
         $context->{$opt} = 1;
     }
 
     # parse options specific to vm-exec
     while ($context->{code} =~ s/^-(lang|revert|health|vm-domain|vm-health|vm-cid|vm-vport|vm-serial|vm)=([^ ]+)\s*//) {
         my ($option, $value) = ($1, $2);
-        print STDERR "Overriding `$option` to `$value`.\n";
+        info("Overriding `$option` to `$value`.\n");
         $context->{$option} = lc $value;
     }
 
@@ -264,7 +287,7 @@ sub main() {
     configure_context($context, $config);
 
     if ($context->{revert} && $context->{health}) {
-        print STDERR "-health and -revert cannot be used together; aborting.\n";
+        info("-health and -revert cannot be used together; aborting.\n");
         exit 0;
     }
 
@@ -274,7 +297,7 @@ sub main() {
             $context->{'vm-domain'} = $config->{aliases}->{$context->{'vm-domain'}};
         }
 
-        print STDERR "REVERT $context->{'vm-domain'}\n";
+        info("REVERT $context->{'vm-domain'}\n");
 
         if ($context->{'vm-vagrant'}) {
             system("virsh -c qemu:///system snapshot-revert $context->{'vm-domain'} 1");
@@ -295,7 +318,7 @@ sub main() {
         );
 
         if (not defined $health) {
-            print STDERR "Unable to connect to health $context->{'vm-addr'} $context->{'vm-health'}\n";
+            info("Unable to connect to health $context->{'vm-addr'} $context->{'vm-health'}\n");
             exit 2;
         }
 
@@ -313,7 +336,7 @@ sub main() {
         };
 
         if ($@) {
-            print STDERR "Failed to get health: $@\n";
+            info("Failed to get health: $@\n");
             exit 1;
         }
 

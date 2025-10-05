@@ -21,6 +21,7 @@ use POSIX;
 
 use Data::Dumper;
 $Data::Dumper::Useqq = 1;
+$Data::Dumper::Terse = 1;
 
 use FindBin qw($RealBin);
 
@@ -140,7 +141,7 @@ sub preprocess_code($self, %opts) {
 
     unless($self->{got_run} and $self->{copy_code}) {
         $self->info("---- preprocess\n");
-        $self->info("$self->{nick} $self->{channel}: [$self->{arguments}] $self->{cmdline_options}\n$self->{code}\n",0);
+        $self->info("$self->{nick} $self->{channel}: [$self->{arguments}] $self->{cmdline_options}\n$self->{code}\n", 0, 8192);
     }
 
     # replace \n outside of quotes with literal newline
@@ -257,7 +258,7 @@ sub execute {
     }
 
     $self->info("---- executing\n");
-    $self->info("$cmdline\n$stdin\n$pretty_code\n", 0);
+    $self->info("$cmdline\n$stdin\n$pretty_code\n", 0, 8192);
 
     my $compile_in = {
         lang       => $self->{lang},
@@ -283,14 +284,14 @@ sub execute {
     my @lines = unpack("(A$chunk_size)*", $compile_json);
     push @lines, '';
 
-    $self->debug("Lines:\n" . (Dumper(\@lines))) if $self->{debug} > 1;
+    $self->info("Lines:\n" . Dumper(\@lines) . "\n", 1, 8192) if $self->{debug} > 1;
 
     foreach my $line (@lines) {
         $line .= "\n";
         my $length = length $line;
         my $sent = 0;
 
-        $self->debug("writing [$line]\n") if $self->{debug} > 1;
+        $self->debug("writing [" . (Dumper $line) . "]\n") if $self->{debug} > 1;
 
         while ($sent < $length) {
             my $ret = syswrite($input, $line, $chunk_size + 1, $sent);
@@ -333,9 +334,7 @@ sub execute {
     }
 
     close $input;
-
     $self->{output} = $result;
-
     return $result;
 }
 
@@ -492,22 +491,28 @@ sub show_output($self) {
     close $fh;
 }
 
-sub debug($self, $text, $timestamp = 1) {
+sub debug($self, $text, $timestamp = 1, $maxlen = 255) {
     return if not $self->{debug};
-    $self->info($text, $timestamp);
+    $self->info($text, $timestamp, $maxlen);
 }
 
-sub info($self, $text, $timestamp = 1) {
+sub info($self, $text, $timestamp = 1, $maxlen = 255) {
     if (not exists $self->{logh}) {
         open $self->{logh}, '>>:encoding(UTF-8)', "$RealBin/../log.txt" or die "Could not open log file: $!";
     }
+
+    my $rest;
+    ($text, $rest) = $text =~ m/^(.{0,$maxlen})(.*)/ms;
+    $rest = length $rest;
+    $text .= " [... $rest more]" if $rest;
+    $text .= "\n" if $text !~ /\n$/;
 
     if ($timestamp) {
         my ($sec, $usec) = gettimeofday;
         my $time = strftime "%a %b %e %Y %H:%M:%S", localtime $sec;
         $time .= sprintf ".%03d", $usec / 1000;
-        print STDERR "$time :: $text";
-        print { $self->{logh} } "$time :: $text";
+        print STDERR "[$$] $time :: $text";
+        print { $self->{logh} } "[$$] $time :: $text";
     } else {
         print STDERR $text;
         print { $self->{logh} } $text;
