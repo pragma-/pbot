@@ -67,7 +67,10 @@ sub trigger_lag_history_interval($self, $section, $item, $newvalue) {
 sub send_ping($self) {
     return unless defined $self->{pbot}->{conn} && $self->{pbot}->{conn}->connected && $self->{welcomed};
 
-    return if defined $self->{pong_received} && $self->{pong_received} == 0;
+    if (defined $self->{pong_received} && $self->{pong_received} == 0
+        && gettimeofday - $self->{ping_send_time}[0] < 900) {
+        return;
+    }
 
     $self->{ping_send_time} = [gettimeofday];
     $self->{pong_received}  = 0;
