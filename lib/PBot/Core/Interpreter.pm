@@ -870,11 +870,12 @@ sub truncate_result($self, $context, $text, $paste_text) {
         $paste_result //= 'not pasted';
         $self->{pbot}->{logger}->log("Message truncated -- $paste_result\n");
 
-        # make room to append the truncation text to the message text
+        # make room to append the truncation text to the message text and
+        # append a reset code if formatting was used anywhere in the message
         # (third argument to truncate_egc is '' to prevent appending its own ellipsis)
-        my $trunc_len = $text_len < $max_msg_len ? $text_len : $max_msg_len;
-
-        $text = truncate_egc $text, $trunc_len - length $trunc, '';
+        my $has_formatting = $text =~ /[\x02\x03\x11\x16\x1D\x1E\x1F]/;
+        $text = truncate_egc $text, $max_msg_len - $has_formatting - length $trunc, '';
+        $text .= "\x0F" if $has_formatting;
 
         # append the truncation text
         $text .= $trunc;
