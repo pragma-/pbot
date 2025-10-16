@@ -13,6 +13,7 @@ use PBot::Imports;
 
 use Storable qw(dclone);
 use Time::Duration;
+use JSON::XS;
 use utf8;
 
 sub initialize($self, %conf) {
@@ -23,17 +24,20 @@ sub initialize($self, %conf) {
     );
 
     $self->{datadir} = $self->{pbot}->{registry}->get_value('general', 'data_dir');
+
+    $self->{pbot}->{event_queue}->enqueue(sub { $self->check_games }, 60 * 5, 'Check Wordle games');
 }
 
 sub unload($self) {
     $self->{pbot}->{commands}->remove('wordle');
+    $self->{pbot}->{event_queue}->dequeue('Check Wordle games');
 }
 
 use constant {
-    USAGE     => 'Usage: wordle start [length [wordlist [game-id]]] | custom <word> <channel> [wordlist [game-id]] | guess <word> [game-id] | select [game-id] | list | guesses [game-id] | letters [game-id] | show [game-id] | info [game-id] | hard [on|off] [game-id] | giveup [game-id]',
+    USAGE     => 'Usage: wordle start [length [wordlist [game-id]]] | custom <word> <channel> [wordlist [game-id]] | guess <word> [game-id] | select [game-id] | list | guesses [game-id] | letters [game-id] | show [game-id] | info [game-id] | hard [on|off [game-id]] | giveup [game-id]',
 
     NO_WORDLE => 'There is no Wordle yet. Use `wordle start` to begin a game.',
-    NO_GAMEID => 'That game-id does not exist. Use `wordle start <length> <language> <gameid>` to begin a game with that id.',
+    NO_GAMEID => 'That game-id does not exist. Use `wordle start <length> <wordlist> <gameid>` to begin a game with that id.',
 
     DEFAULT_LIST       => 'american',
     DEFAULT_LENGTH     => 5,
@@ -160,7 +164,7 @@ sub wordle($self, $context) {
 
             my $game = $gameid ne 'main' ? "($gameid) " : '';
 
-            if (not defined $self->{$channel}->{$gameid}->{wordle}) {
+            if (!exists $self->{games}->{$channel}->{$gameid} || !defined $self->{games}->{$channel}->{$gameid}->{wordle}) {
                 return $game . NO_WORDLE;
             }
 
@@ -189,14 +193,12 @@ sub wordle($self, $context) {
             }
 
             my @games;
-
-            foreach my $gameid (keys $self->{$channel}->%*) {
-                my $length = $self->{$channel}->{$gameid}->{length};
-                my $wordlist = $self->{$channel}->{$gameid}->{wordlist};
-                my $solved = $self->{$channel}->{$gameid}->{correct} ? ', solved' : '';
-                my $givenup = $self->{$channel}->{$gameid}->{givenup} ? ', given up' : '';
+            foreach my $gameid (keys $self->{games}->{$channel}->%*) {
+                my $length = $self->{games}->{$channel}->{$gameid}->{length};
+                my $wordlist = $self->{games}->{$channel}->{$gameid}->{wordlist};
+                my $solved = $self->{games}->{$channel}->{$gameid}->{solved} ? ', solved' : '';
+                my $givenup = $self->{games}->{$channel}->{$gameid}->{givenup} ? ', given up' : '';
                 push @games, "$gameid ($wordlist:$length$solved$givenup)";
-
             }
 
             if (not @games) {
@@ -204,7 +206,6 @@ sub wordle($self, $context) {
             }
 
             my $games = join ', ', sort @games;
-
             return "Available Wordles: $games";
         }
 
@@ -218,19 +219,25 @@ sub wordle($self, $context) {
             if (not defined $gameid) {
                 $gameid = 'main';
             } else {
-                if (not exists $self->{$channel}->{$gameid}) {
+                if (not exists $self->{games}->{$channel}->{$gameid}) {
                     return "$context->{nick}: " . NO_GAMEID;
                 }
             }
 
             $self->{players}->{$channel}->{$context->{message_account}}->{gameid} = $gameid;
-
             return "$context->{nick} is now playing the $gameid Wordle!";
         }
 
         when ('info') {
-            if (@args > 1) {
+            if (@args > 2) {
                 return "Usage: wordle info [game-id]";
+            }
+
+            my $json = 0;
+
+            if ($args[0] eq '--json') {
+                shift @args;
+                $json = 1;
             }
 
             my $gameid = $self->gameid($args[0], $context);
@@ -241,27 +248,68 @@ sub wordle($self, $context) {
 
             my $game = $gameid ne 'main' ? "($gameid) " : '';
 
-            if (not defined $self->{$channel}->{$gameid}->{wordle}) {
+            if (!exists $self->{games}->{$channel}->{$gameid} || !defined $self->{games}->{$channel}->{$gameid}->{wordle}) {
                 return $game . NO_WORDLE;
             }
 
-            my $started = concise ago time - $self->{$channel}->{$gameid}->{start_time};
-            my $hard = $self->{$channel}->{$gameid}->{hard_mode} ? 'on' : 'off';
-            my $result = "Current wordlist: $self->{$channel}->{$gameid}->{wordlist} ($self->{$channel}->{$gameid}->{length}); started $started by $self->{$channel}->{$gameid}->{start_nick}; hard mode: $hard; guesses: $self->{$channel}->{$gameid}->{guess_count}; nonwords: $self->{$channel}->{$gameid}->{nonword_count}; invalids: $self->{$channel}->{$gameid}->{invalid_count}";
-
-            if ($self->{$channel}->{$gameid}->{correct}) {
-                my $solved_on = concise ago (time - $self->{$channel}->{$gameid}->{solved_on});
-                my $wordle = join '', $self->{$channel}->{$gameid}->{wordle}->@*;
-                my $duration = concise duration $self->{$channel}->{$gameid}->{start_time} - $self->{$channel}->{$gameid}->{solved_on};
-                $result .= "; solved by: $self->{$channel}->{$gameid}->{solved_by} in $duration ($solved_on); word was: $wordle";
-            } elsif ($self->{$channel}->{$gameid}->{givenup}) {
-                my $givenup_on = concise ago (time - $self->{$channel}->{$gameid}->{givenup_on});
-                my $wordle = join '', $self->{$channel}->{$gameid}->{wordle}->@*;
-                $result .= "; given up by: $self->{$channel}->{$gameid}->{givenup_by} ($givenup_on); word was: $wordle";
-            } else {
-                my $guess = $self->{$channel}->{$gameid}->{guesses}->[-1];
+            if ($json) {
+                my $guess = $self->{games}->{$channel}->{$gameid}->{guesses}->[-1];
                 $guess =~ s/[^\pL]//g;
-                $result .= "; last guess: $guess";
+
+                my $h = {
+                    gameid     => $gameid,
+                    channel    => $channel,
+                    hard       => $self->{games}->{$channel}->{$gameid}->{hard_mode} ? JSON::XS::true : JSON::XS::false,
+                    wordlist   => $self->{games}->{$channel}->{$gameid}->{wordlist},
+                    length     => $self->{games}->{$channel}->{$gameid}->{length} + 0,
+                    nonword    => $self->{games}->{$channel}->{$gameid}->{nonword_count} + 0,
+                    invalid    => $self->{games}->{$channel}->{$gameid}->{invalid_count} + 0,
+                    guesses    => $self->{games}->{$channel}->{$gameid}->{guess_count} + 0,
+                    start_nick => $self->{games}->{$channel}->{$gameid}->{start_nick},
+                    start_at   => $self->{games}->{$channel}->{$gameid}->{start_time} + 0,
+                    guess_at   => $self->{games}->{$channel}->{$gameid}->{guess_time} + 0,
+                    guess      => $guess,
+                    solved     => $self->{games}->{$channel}->{$gameid}->{solved} + 0,
+                    gaveup     => $self->{games}->{$channel}->{$gameid}->{givenup} + 0,
+                };
+
+                if ($self->{games}->{$channel}->{$gameid}->{solved}) {
+                    $h->{solved_at} = $self->{games}->{$channel}->{$gameid}->{solved_on} + 0;
+                    $h->{solved_by} = $self->{games}->{$channel}->{$gameid}->{solved_by} ;
+                }
+
+                if ($self->{games}->{$channel}->{$gameid}->{givenup}) {
+                    $h->{gaveup_at} = $self->{games}->{$channel}->{$gameid}->{givenup_on} + 0;
+                    $h->{gaveup_by} = $self->{games}->{$channel}->{$gameid}->{givenup_by};
+                }
+
+                return encode_json $h;
+            }
+
+            my $started = concise ago time - $self->{games}->{$channel}->{$gameid}->{start_time};
+            my $hard = $self->{games}->{$channel}->{$gameid}->{hard_mode} ? 'on' : 'off';
+            my $result = "Current wordlist: $self->{games}->{$channel}->{$gameid}->{wordlist}"
+                . " ($self->{games}->{$channel}->{$gameid}->{length});"
+                . " started $started by $self->{games}->{$channel}->{$gameid}->{start_nick};"
+                . " hard mode: $hard;"
+                . " guesses: $self->{games}->{$channel}->{$gameid}->{guess_count};"
+                . " nonwords: $self->{games}->{$channel}->{$gameid}->{nonword_count};"
+                . " invalids: $self->{games}->{$channel}->{$gameid}->{invalid_count}";
+
+            if ($self->{games}->{$channel}->{$gameid}->{solved}) {
+                my $solved_on = concise ago (time - $self->{games}->{$channel}->{$gameid}->{solved_on});
+                my $wordle = join '', $self->{games}->{$channel}->{$gameid}->{wordle}->@*;
+                my $duration = concise duration $self->{games}->{$channel}->{$gameid}->{start_time} - $self->{games}->{$channel}->{$gameid}->{solved_on};
+                $result .= "; solved by: $self->{games}->{$channel}->{$gameid}->{solved_by} in $duration ($solved_on); word was: $wordle";
+            } elsif ($self->{games}->{$channel}->{$gameid}->{givenup}) {
+                my $givenup_on = concise ago (time - $self->{games}->{$channel}->{$gameid}->{givenup_on});
+                my $wordle = join '', $self->{games}->{$channel}->{$gameid}->{wordle}->@*;
+                $result .= "; given up by: $self->{games}->{$channel}->{$gameid}->{givenup_by} ($givenup_on); word was: $wordle";
+            } else {
+                my $guess = $self->{games}->{$channel}->{$gameid}->{guesses}->[-1];
+                $guess =~ s/[^\pL]//g;
+                my $guessed_on = concise ago(time - $self->{games}->{$channel}->{$gameid}->{guess_time});
+                $result .= "; last guess: $guess ($guessed_on)";
             }
 
             return $game . $result;
@@ -280,25 +328,25 @@ sub wordle($self, $context) {
 
             my $game = $gameid ne 'main' ? "($gameid) " : '';
 
-            if (not defined $self->{$channel}->{$gameid}->{wordle}) {
+            if (!exists $self->{games}->{$channel}->{$gameid} || !defined $self->{games}->{$channel}->{$gameid}->{wordle}) {
                 return $game . NO_WORDLE;
             }
 
-            if ($self->{$channel}->{$gameid}->{correct}) {
-                my $solved_on = concise ago (time - $self->{$channel}->{$gameid}->{solved_on});
-                return "${game}Wordle already solved by $self->{$channel}->{$gameid}->{solved_by} ($solved_on)";
+            if ($self->{games}->{$channel}->{$gameid}->{solved}) {
+                my $solved_on = concise ago (time - $self->{games}->{$channel}->{$gameid}->{solved_on});
+                return "${game}Wordle already solved by $self->{games}->{$channel}->{$gameid}->{solved_by} ($solved_on)";
             }
 
-            if ($self->{$channel}->{$gameid}->{givenup}) {
-                my $givenup_on = concise ago (time - $self->{$channel}->{$gameid}->{givenup_on});
-                my $wordle = join '', $self->{$channel}->{$gameid}->{wordle}->@*;
-                return "${game}The word was $wordle. It was already given up by $self->{$channel}->{$gameid}->{givenup_by} ($givenup_on).";
+            if ($self->{games}->{$channel}->{$gameid}->{givenup}) {
+                my $givenup_on = concise ago (time - $self->{games}->{$channel}->{$gameid}->{givenup_on});
+                my $wordle = join '', $self->{games}->{$channel}->{$gameid}->{wordle}->@*;
+                return "${game}The word was $wordle. It was already given up by $self->{games}->{$channel}->{$gameid}->{givenup_by} ($givenup_on).";
             }
 
-            $self->{$channel}->{$gameid}->{givenup} = 1;
-            $self->{$channel}->{$gameid}->{givenup_by} = $context->{nick};
-            $self->{$channel}->{$gameid}->{givenup_on} = time;
-            my $wordle = join '', $self->{$channel}->{$gameid}->{wordle}->@*;
+            $self->{games}->{$channel}->{$gameid}->{givenup}    = 1;
+            $self->{games}->{$channel}->{$gameid}->{givenup_by} = $context->{nick};
+            $self->{games}->{$channel}->{$gameid}->{givenup_on} = time;
+            my $wordle = join '', $self->{games}->{$channel}->{$gameid}->{wordle}->@*;
             return "${game}The word was $wordle. Better luck next time.";
         }
 
@@ -331,7 +379,9 @@ sub wordle($self, $context) {
 
             $self->{players}->{$channel}->{$context->{message_account}}->{gameid} = $gameid;
 
-            if (defined $self->{$channel}->{$gameid}->{wordle} && $self->{$channel}->{$gameid}->{correct} == 0 && $self->{$channel}->{$gameid}->{givenup} == 0) {
+            if (defined $self->{games}->{$channel}->{$gameid}->{wordle}
+                    && !$self->{games}->{$channel}->{$gameid}->{solved}
+                    && !$self->{games}->{$channel}->{$gameid}->{givenup}) {
                 return "${game}There is already a Wordle underway! Use `wordle show` to see the current progress or `wordle giveup` to end it.";
             }
 
@@ -368,7 +418,9 @@ sub wordle($self, $context) {
             my $gameid = $self->gameid($args[3], $context, 1) // 'main';
             my $game = $gameid ne 'main' ? "($gameid) " : '';
 
-            if (defined $self->{$custom_channel}->{$gameid}->{wordle} && $self->{$custom_channel}->{$gameid}->{correct} == 0 && $self->{$custom_channel}->{$gameid}->{givenup} == 0) {
+            if (defined $self->{games}->{$custom_channel}->{$gameid}->{wordle}
+                    && !$self->{games}->{$custom_channel}->{$gameid}->{solved}
+                    && !$self->{games}->{$custom_channel}->{$gameid}->{givenup}) {
                 return "${game}There is already a Wordle underway! Use `wordle show` to see the current progress or `wordle giveup` to end it.";
             }
 
@@ -393,7 +445,6 @@ sub wordle($self, $context) {
             };
 
             $self->{pbot}->{interpreter}->add_message_to_output_queue($custom_channel, $message, 0);
-
             return "Custom Wordle started!";
         }
 
@@ -410,23 +461,23 @@ sub wordle($self, $context) {
 
             my $game = $gameid ne 'main' ? "($gameid) " : '';
 
-            if (not defined $self->{$channel}->{$gameid}->{wordle}) {
+            if (!exists $self->{games}->{$channel}->{$gameid} || !defined $self->{games}->{$channel}->{$gameid}->{wordle}) {
                 return $game . NO_WORDLE;
             }
 
-            if ($self->{$channel}->{$gameid}->{correct}) {
-                return "${game}Wordle already solved by $self->{$channel}->{$gameid}->{solved_by}. " . $self->show_wordle($channel, $gameid);
+            if ($self->{games}->{$channel}->{$gameid}->{solved}) {
+                return "${game}Wordle already solved by $self->{games}->{$channel}->{$gameid}->{solved_by}. " . $self->show_wordle($channel, $gameid);
             }
 
-            if ($self->{$channel}->{$gameid}->{givenup}) {
-                return "${game}Wordle given up by $self->{$channel}->{$gameid}->{givenup_by}.";
+            if ($self->{games}->{$channel}->{$gameid}->{givenup}) {
+                return "${game}Wordle given up by $self->{games}->{$channel}->{$gameid}->{givenup_by}.";
             }
 
             my $result = $game . $self->guess_wordle($channel, $args[0], $gameid);
 
-            if ($self->{$channel}->{$gameid}->{correct}) {
-                $self->{$channel}->{$gameid}->{solved_by} = $context->{nick};
-                $self->{$channel}->{$gameid}->{solved_on} = time;
+            if ($self->{games}->{$channel}->{$gameid}->{solved}) {
+                $self->{games}->{$channel}->{$gameid}->{solved_by} = $context->{nick};
+                $self->{games}->{$channel}->{$gameid}->{solved_on} = time;
             }
 
             return $result;
@@ -442,16 +493,16 @@ sub wordle($self, $context) {
             my $game = $gameid ne 'main' ? "($gameid) " : '';
 
             if (!@args || @args > 2) {
-                return "${game}Hard mode is " . ($self->{$channel}->{$gameid}->{hard_mode} ? "enabled." : "disabled.");
+                return "${game}Hard mode is " . ($self->{games}->{$channel}->{$gameid}->{hard_mode} ? "enabled." : "disabled.");
             }
 
             if (lc $args[0] eq 'on') {
-                my $mode = $self->{$channel}->{$gameid}->{hard_mode} ? 'already' : 'now';
-                $self->{$channel}->{$gameid}->{hard_mode} = 1;
+                my $mode = $self->{games}->{$channel}->{$gameid}->{hard_mode} ? 'already' : 'now';
+                $self->{games}->{$channel}->{$gameid}->{hard_mode} = 1;
                 return "${game}Hard mode is $mode enabled.";
             } else {
-                my $mode = $self->{$channel}->{$gameid}->{hard_mode} ? 'now' : 'already';
-                $self->{$channel}->{$gameid}->{hard_mode} = 0;
+                my $mode = $self->{games}->{$channel}->{$gameid}->{hard_mode} ? 'now' : 'already';
+                $self->{games}->{$channel}->{$gameid}->{hard_mode} = 0;
                 return "${game}Hard mode is $mode disabled.";
             }
         }
@@ -469,15 +520,15 @@ sub wordle($self, $context) {
 
             my $game = $gameid ne 'main' ? "($gameid) " : '';
 
-            if (not defined $self->{$channel}->{$gameid}->{wordle}) {
+            if (!exists $self->{games}->{$channel}->{$gameid} || !defined $self->{games}->{$channel}->{$gameid}->{wordle}) {
                 return $game . NO_WORDLE;
             }
 
-            if (not $self->{$channel}->{$gameid}->{guesses}->@*) {
+            if (not $self->{games}->{$channel}->{$gameid}->{guesses}->@*) {
                 return $game . 'No guesses yet.';
             }
 
-            return $game . join("$color{reset} ", $self->{$channel}->{$gameid}->{guesses}->@*) . "$color{reset}";
+            return $game . join("$color{reset} ", $self->{games}->{$channel}->{$gameid}->{guesses}->@*) . "$color{reset}";
         }
 
         when ('letters') {
@@ -493,7 +544,7 @@ sub wordle($self, $context) {
 
             my $game = $gameid ne 'main' ? "($gameid) " : '';
 
-            if (not defined $self->{$channel}->{$gameid}->{wordle}) {
+            if (!exists $self->{games}->{$channel}->{$gameid} || !defined $self->{games}->{$channel}->{$gameid}->{wordle}) {
                 return $game . NO_WORDLE;
             }
 
@@ -514,7 +565,7 @@ sub gameid($self, $gameid, $context, $newgame = 0) {
             return $gameid if defined $gameid;
         }
     } else {
-        if (!exists $self->{$channel}->{$gameid} && !$newgame) {
+        if (!exists $self->{games}->{$channel}->{$gameid} && !$newgame) {
             return undef;
         }
     }
@@ -547,12 +598,12 @@ sub load_words($self, $length, $wordlist = DEFAULT_LIST, $words = undef) {
 }
 
 sub make_wordle($self, $nick, $channel, $length, $gameid = 'main', $word = undef, $wordlist = DEFAULT_LIST) {
-    unless ($self->{$channel}->{$gameid}->{wordlist} eq $wordlist
-            && $self->{$channel}->{$gameid}->{length} == $length
-            && exists $self->{$channel}->{$gameid}->{words}) {
+    unless ($self->{games}->{$channel}->{$gameid}->{wordlist} eq $wordlist
+            && $self->{games}->{$channel}->{$gameid}->{length} == $length
+            && exists $self->{games}->{$channel}->{$gameid}->{words}) {
         eval {
-            $self->{$channel}->{$gameid}->{words}     = $self->load_words($length, $wordlist);
-            $self->{$channel}->{$gameid}->{guesslist} = dclone $self->{$channel}->{$gameid}->{words};
+            $self->{games}->{$channel}->{$gameid}->{words}     = $self->load_words($length, $wordlist);
+            $self->{games}->{$channel}->{$gameid}->{guesslist} = dclone $self->{games}->{$channel}->{$gameid}->{words};
         };
 
         if ($@) {
@@ -563,12 +614,12 @@ sub make_wordle($self, $nick, $channel, $length, $gameid = 'main', $word = undef
     my @wordle;
 
     if (defined $word) {
-        if (not exists $self->{$channel}->{$gameid}->{words}->{$word}) {
+        if (not exists $self->{games}->{$channel}->{$gameid}->{words}->{$word}) {
             return "I don't know that word.";
         }
         @wordle = split //, $word;
     } else {
-        my @words = keys $self->{$channel}->{$gameid}->{words}->%*;
+        my @words = keys $self->{games}->{$channel}->{$gameid}->{words}->%*;
         @wordle = split //, $words[rand @words];
     }
 
@@ -576,13 +627,13 @@ sub make_wordle($self, $nick, $channel, $length, $gameid = 'main', $word = undef
         return "Failed to find a suitable word.";
     }
 
-    unless ($self->{$channel}->{$gameid}->{wordlist} eq $wordlist
-            && $self->{$channel}->{$gameid}->{length} == $length
-            && exists $self->{$channel}->{$gameid}->{words}) {
+    unless ($self->{games}->{$channel}->{$gameid}->{wordlist} eq $wordlist
+            && $self->{games}->{$channel}->{$gameid}->{length} == $length
+            && exists $self->{games}->{$channel}->{$gameid}->{words}) {
         if (exists $wordlists{$wordlist}->{glist}) {
             eval {
                 foreach my $list ($wordlists{$wordlist}->{glist}->@*) {
-                    $self->load_words($length, $list, $self->{$channel}->{$gameid}->{guesslist});
+                    $self->load_words($length, $list, $self->{games}->{$channel}->{$gameid}->{guesslist});
                 }
             };
 
@@ -592,39 +643,44 @@ sub make_wordle($self, $nick, $channel, $length, $gameid = 'main', $word = undef
         }
     }
 
-    $self->{$channel}->{$gameid}->{wordlist}      = $wordlist;
-    $self->{$channel}->{$gameid}->{length}        = $length;
-    $self->{$channel}->{$gameid}->{wordle}        = \@wordle;
-    $self->{$channel}->{$gameid}->{greens}        = [];
-    $self->{$channel}->{$gameid}->{oranges}       = [];
-    $self->{$channel}->{$gameid}->{whites}        = [];
-    $self->{$channel}->{$gameid}->{letter_max}    = {};
-    $self->{$channel}->{$gameid}->{guess}         = '';
-    $self->{$channel}->{$gameid}->{guesses}       = [];
-    $self->{$channel}->{$gameid}->{correct}       = 0;
-    $self->{$channel}->{$gameid}->{givenup}       = 0;
-    $self->{$channel}->{$gameid}->{guess_count}   = 0;
-    $self->{$channel}->{$gameid}->{nonword_count} = 0;
-    $self->{$channel}->{$gameid}->{invalid_count} = 0;
-    $self->{$channel}->{$gameid}->{letters}       = {};
-    $self->{$channel}->{$gameid}->{start_time}    = time;
-    $self->{$channel}->{$gameid}->{start_nick}    = $nick;
+    $self->{games}->{$channel}->{$gameid}->{wordlist}      = $wordlist;
+    $self->{games}->{$channel}->{$gameid}->{length}        = $length;
+    $self->{games}->{$channel}->{$gameid}->{wordle}        = \@wordle;
+    $self->{games}->{$channel}->{$gameid}->{greens}        = [];
+    $self->{games}->{$channel}->{$gameid}->{oranges}       = [];
+    $self->{games}->{$channel}->{$gameid}->{whites}        = [];
+    $self->{games}->{$channel}->{$gameid}->{letter_max}    = {};
+    $self->{games}->{$channel}->{$gameid}->{guess}         = '';
+    $self->{games}->{$channel}->{$gameid}->{guesses}       = [];
+    $self->{games}->{$channel}->{$gameid}->{solved}        = 0;
+    $self->{games}->{$channel}->{$gameid}->{givenup}       = 0;
+    $self->{games}->{$channel}->{$gameid}->{guess_count}   = 0;
+    $self->{games}->{$channel}->{$gameid}->{nonword_count} = 0;
+    $self->{games}->{$channel}->{$gameid}->{invalid_count} = 0;
+    $self->{games}->{$channel}->{$gameid}->{letters}       = {};
+    $self->{games}->{$channel}->{$gameid}->{guess_time}    = time;
+    $self->{games}->{$channel}->{$gameid}->{start_time}    = time;
+    $self->{games}->{$channel}->{$gameid}->{start_nick}    = $nick;
+
+    if (not defined $self->{games}->{$channel}->{$gameid}->{hard_mode}) {
+        $self->{games}->{$channel}->{$gameid}->{hard_mode} = 0;
+    }
 
     foreach my $letter ('A'..'Z') {
-        $self->{$channel}->{$gameid}->{letters}->{$letter} = 0;
+        $self->{games}->{$channel}->{$gameid}->{letters}->{$letter} = 0;
     }
 
     if (exists $wordlists{$wordlist}->{accents}) {
         foreach my $letter (split //, $wordlists{$wordlist}->{accents}) {
             $letter =~ s/ß/ẞ/g; # avoid uppercasing to SS in German
             $letter = uc $letter;
-            $self->{$channel}->{$gameid}->{letters}->{$letter} = 0;
+            $self->{games}->{$channel}->{$gameid}->{letters}->{$letter} = 0;
         }
     }
 
-    $self->{$channel}->{$gameid}->{guess}  = $color{invalid};
-    $self->{$channel}->{$gameid}->{guess} .= ' ? ' x $self->{$channel}->{$gameid}->{wordle}->@*;
-    $self->{$channel}->{$gameid}->{guess} .= $color{reset};
+    $self->{games}->{$channel}->{$gameid}->{guess}  = $color{invalid};
+    $self->{games}->{$channel}->{$gameid}->{guess} .= ' ? ' x $self->{games}->{$channel}->{$gameid}->{wordle}->@*;
+    $self->{games}->{$channel}->{$gameid}->{guess} .= $color{reset};
 
     return $self->show_wordle($channel, $gameid) . " $wordlists{$wordlist}->{prompt} Legend: $color{invalid}X $color{reset} not in word; $color{present}X$color{present_a}?$color{reset} wrong position; $color{correct}X$color{correct_a}*$color{reset} correct position";
 }
@@ -632,14 +688,14 @@ sub make_wordle($self, $nick, $channel, $length, $gameid = 'main', $word = undef
 sub show_letters($self, $channel, $gameid = 'main') {
     my $result = 'Letters: ';
 
-    foreach my $letter (sort keys $self->{$channel}->{$gameid}->{letters}->%*) {
-        if ($self->{$channel}->{$gameid}->{letters}->{$letter} == LETTER_CORRECT) {
+    foreach my $letter (sort keys $self->{games}->{$channel}->{$gameid}->{letters}->%*) {
+        if ($self->{games}->{$channel}->{$gameid}->{letters}->{$letter} == LETTER_CORRECT) {
             $result .= "$color{correct}$letter$color{correct_a}*";
             $result .= "$color{reset} ";
-        } elsif ($self->{$channel}->{$gameid}->{letters}->{$letter} == LETTER_PRESENT) {
+        } elsif ($self->{games}->{$channel}->{$gameid}->{letters}->{$letter} == LETTER_PRESENT) {
             $result .= "$color{present}$letter$color{present_a}?";
             $result .= "$color{reset} ";
-        } elsif ($self->{$channel}->{$gameid}->{letters}->{$letter} == 0) {
+        } elsif ($self->{games}->{$channel}->{$gameid}->{letters}->{$letter} == 0) {
             $result .= "$letter ";
         }
     }
@@ -649,9 +705,9 @@ sub show_letters($self, $channel, $gameid = 'main') {
 
 sub show_wordle($self, $channel, $gameid = 'main', $with_letters = 0) {
 	if ($with_letters) {
-		return $self->{$channel}->{$gameid}->{guess} . "$color{reset} " . $self->show_letters($channel, $gameid);
+		return $self->{games}->{$channel}->{$gameid}->{guess} . "$color{reset} " . $self->show_letters($channel, $gameid);
 	} else {
-		return $self->{$channel}->{$gameid}->{guess} . "$color{reset}";
+		return $self->{games}->{$channel}->{$gameid}->{guess} . "$color{reset}";
 	}
 }
 
@@ -659,44 +715,46 @@ sub guess_wordle($self, $channel, $guess, $gameid = 'main') {
     $guess =~ s/ß/ẞ/g; # avoid uppercasing to SS in German
     $guess = uc $guess;
 
-    if (length $guess != $self->{$channel}->{$gameid}->{wordle}->@*) {
+    $self->{games}->{$channel}->{$gameid}->{guess_time} = time;
+
+    if (length $guess != $self->{games}->{$channel}->{$gameid}->{wordle}->@*) {
         my $guess_length  = length $guess;
-        my $wordle_length = $self->{$channel}->{$gameid}->{wordle}->@*;
-        $self->{$channel}->{$gameid}->{invalid_count}++;
+        my $wordle_length = $self->{games}->{$channel}->{$gameid}->{wordle}->@*;
+        $self->{games}->{$channel}->{$gameid}->{invalid_count}++;
         return "Guess length ($guess_length) unequal to Wordle length ($wordle_length). Try again.";
     }
 
     my @guess  = split //, $guess;
-    my @wordle = $self->{$channel}->{$gameid}->{wordle}->@*;
+    my @wordle = $self->{games}->{$channel}->{$gameid}->{wordle}->@*;
 
-    if ($self->{$channel}->{$gameid}->{hard_mode}) {
+    if ($self->{games}->{$channel}->{$gameid}->{hard_mode}) {
         my %greens;
-        my @greens = $self->{$channel}->{$gameid}->{greens}->@*;
+        my @greens = $self->{games}->{$channel}->{$gameid}->{greens}->@*;
 
         for (my $i = 0; $i < @guess; $i++) {
-            if ($self->{$channel}->{$gameid}->{letters}->{$guess[$i]} == LETTER_INVALID) {
-                $self->{$channel}->{$gameid}->{invalid_count}++;
+            if ($self->{games}->{$channel}->{$gameid}->{letters}->{$guess[$i]} == LETTER_INVALID) {
+                $self->{games}->{$channel}->{$gameid}->{invalid_count}++;
                 return "Hard mode is enabled. $guess[$i] is not in the Wordle. Try again.";
             }
 
             if ($greens[$i]) {
                 if ($guess[$i] ne $greens[$i]) {
-                    $self->{$channel}->{$gameid}->{invalid_count}++;
+                    $self->{games}->{$channel}->{$gameid}->{invalid_count}++;
                     return "Hard mode is enabled. Position " . ($i + 1) . " must be $greens[$i]. Try again.";
                 }
                 $greens{$greens[$i]}++;
             }
 
-            foreach my $orange ($self->{$channel}->{$gameid}->{oranges}->@*) {
+            foreach my $orange ($self->{games}->{$channel}->{$gameid}->{oranges}->@*) {
                 if ($guess[$i] eq $orange->[$i]) {
-                    $self->{$channel}->{$gameid}->{invalid_count}++;
+                    $self->{games}->{$channel}->{$gameid}->{invalid_count}++;
                     return "Hard mode is enabled. Position " . ($i + 1) . " can't be $guess[$i]. Try again.";
                 }
             }
         }
 
         my %oranges;
-        my $last_orange = $self->{$channel}->{$gameid}->{oranges}->[$self->{$channel}->{$gameid}->{oranges}->@* - 1];
+        my $last_orange = $self->{games}->{$channel}->{$gameid}->{oranges}->[$self->{games}->{$channel}->{$gameid}->{oranges}->@* - 1];
 
         if ($last_orange) {
             $_ && $oranges{$_}++ foreach @$last_orange;
@@ -705,24 +763,24 @@ sub guess_wordle($self, $channel, $guess, $gameid = 'main') {
                 my $count = 0;
                 $_ eq $o && $count++ foreach @guess;
                 if ($count < $oranges{$o} + $greens{$o}) {
-                    $self->{$channel}->{$gameid}->{invalid_count}++;
+                    $self->{games}->{$channel}->{$gameid}->{invalid_count}++;
                     return "Hard mode is enabled. There must be " . ($oranges{$o} + $greens{$o}) . " $o. Try again.";
                 }
             }
         }
 
-        foreach my $white ($self->{$channel}->{$gameid}->{whites}->@*) {
+        foreach my $white ($self->{games}->{$channel}->{$gameid}->{whites}->@*) {
             for (my $i = 0; $i < @guess; $i++) {
                 if ($guess[$i] eq $white->[$i]) {
-                    $self->{$channel}->{$gameid}->{invalid_count}++;
+                    $self->{games}->{$channel}->{$gameid}->{invalid_count}++;
                     return "Hard mode is enabled. Position " . ($i + 1) . " can't be $guess[$i]. Try again.";
                 }
 
-                if (not $self->{$channel}->{$gameid}->{letter_max}->{$white->[$i]}) {
+                if (not $self->{games}->{$channel}->{$gameid}->{letter_max}->{$white->[$i]}) {
                     my $count = $greens{$white->[$i]} + $oranges{$white->[$i]};
 
                     if ($count) {
-                        $self->{$channel}->{$gameid}->{letter_max}->{$white->[$i]} = $count;
+                        $self->{games}->{$channel}->{$gameid}->{letter_max}->{$white->[$i]} = $count;
                     }
                 }
             }
@@ -732,19 +790,19 @@ sub guess_wordle($self, $channel, $guess, $gameid = 'main') {
         $count{$_}++ foreach @guess;
 
         foreach my $c (keys %count) {
-            if ($self->{$channel}->{$gameid}->{letter_max}->{$c} && $count{$c} > $self->{$channel}->{$gameid}->{letter_max}->{$c}) {
-                $self->{$channel}->{$gameid}->{invalid_count}++;
-                return "Hard mode is enabled. There can't be more than $self->{$channel}->{$gameid}->{letter_max}->{$c} $c. Try again.";
+            if ($self->{games}->{$channel}->{$gameid}->{letter_max}->{$c} && $count{$c} > $self->{games}->{$channel}->{$gameid}->{letter_max}->{$c}) {
+                $self->{games}->{$channel}->{$gameid}->{invalid_count}++;
+                return "Hard mode is enabled. There can't be more than $self->{games}->{$channel}->{$gameid}->{letter_max}->{$c} $c. Try again.";
             }
         }
     }
 
-    if (not exists $self->{$channel}->{$gameid}->{guesslist}->{$guess}) {
-        $self->{$channel}->{$gameid}->{nonword_count}++;
+    if (not exists $self->{games}->{$channel}->{$gameid}->{guesslist}->{$guess}) {
+        $self->{games}->{$channel}->{$gameid}->{nonword_count}++;
         return "I don't know that word. Try again.";
     }
 
-    $self->{$channel}->{$gameid}->{guess_count}++;
+    $self->{games}->{$channel}->{$gameid}->{guess_count}++;
 
     my %count;
     my %seen;
@@ -769,8 +827,8 @@ sub guess_wordle($self, $channel, $guess, $gameid = 'main') {
         if ($guess[$i] eq $wordle[$i]) {
             $correct++;
             $result .= "$color{correct} $guess[$i]$color{correct_a}*";
-            $self->{$channel}->{$gameid}->{letters}->{$guess[$i]} = LETTER_CORRECT;
-            $self->{$channel}->{$gameid}->{greens}->[$i] = $guess[$i];
+            $self->{games}->{$channel}->{$gameid}->{letters}->{$guess[$i]} = LETTER_CORRECT;
+            $self->{games}->{$channel}->{$gameid}->{greens}->[$i] = $guess[$i];
         } else {
             my $present = 0;
 
@@ -787,39 +845,39 @@ sub guess_wordle($self, $channel, $guess, $gameid = 'main') {
 
             if ($present) {
                 $result .= "$color{present} $guess[$i]$color{present_a}?";
-                if ($self->{$channel}->{$gameid}->{letters}->{$guess[$i]} != LETTER_CORRECT) {
-                    $self->{$channel}->{$gameid}->{letters}->{$guess[$i]} = LETTER_PRESENT;
+                if ($self->{games}->{$channel}->{$gameid}->{letters}->{$guess[$i]} != LETTER_CORRECT) {
+                    $self->{games}->{$channel}->{$gameid}->{letters}->{$guess[$i]} = LETTER_PRESENT;
                 }
                 $oranges[$i] = $guess[$i];
             } else {
                 $result .= "$color{invalid} $guess[$i] ";
 
-                if ($self->{$channel}->{$gameid}->{letters}->{$guess[$i]} == 0) {
-                    $self->{$channel}->{$gameid}->{letters}->{$guess[$i]} = LETTER_INVALID;
+                if ($self->{games}->{$channel}->{$gameid}->{letters}->{$guess[$i]} == 0) {
+                    $self->{games}->{$channel}->{$gameid}->{letters}->{$guess[$i]} = LETTER_INVALID;
                 }
                 $whites[$i] = $guess[$i];
             }
         }
     }
 
-    $self->{$channel}->{$gameid}->{guess} = $result;
+    $self->{games}->{$channel}->{$gameid}->{guess} = $result;
 
-    push $self->{$channel}->{$gameid}->{guesses}->@*, $result;
-    push $self->{$channel}->{$gameid}->{oranges}->@*, \@oranges;
-    push $self->{$channel}->{$gameid}->{whites}->@*, \@whites;
+    push $self->{games}->{$channel}->{$gameid}->{guesses}->@*, $result;
+    push $self->{games}->{$channel}->{$gameid}->{oranges}->@*, \@oranges;
+    push $self->{games}->{$channel}->{$gameid}->{whites}->@*, \@whites;
 
     if ($correct == length $guess) {
-        $self->{$channel}->{$gameid}->{correct} = 1;
+        $self->{games}->{$channel}->{$gameid}->{solved} = 1;
 
-        my $guesses = $self->{$channel}->{$gameid}->{guess_count};
+        my $guesses = $self->{games}->{$channel}->{$gameid}->{guess_count};
         $guesses = " Correct in $guesses guess" . ($guesses != 1 ? 'es! ' : '! ');
 
-        my $duration = concise duration $self->{$channel}->{$gameid}->{start_time} - time;
+        my $duration = concise duration $self->{games}->{$channel}->{$gameid}->{start_time} - time;
 
         $guesses .= "($duration) ";
 
-        my $nonwords = $self->{$channel}->{$gameid}->{nonword_count};
-        my $invalids = $self->{$channel}->{$gameid}->{invalid_count};
+        my $nonwords = $self->{games}->{$channel}->{$gameid}->{nonword_count};
+        my $invalids = $self->{games}->{$channel}->{$gameid}->{invalid_count};
 
         if ($nonwords || $invalids) {
             $guesses .= '(plus ';
@@ -838,6 +896,44 @@ sub guess_wordle($self, $channel, $guess, $gameid = 'main') {
         return $self->show_wordle($channel, $gameid) . $guesses;
     } else {
         return $self->show_wordle($channel, $gameid, 1);
+    }
+}
+
+sub check_games($self) {
+    my $now = time;
+    my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
+    foreach my $channel (keys $self->{games}->%*) {
+        foreach my $gameid (keys $self->{games}->{$channel}->%*) {
+            if ($now - $self->{games}->{$channel}->{$gameid}->{guess_time} > 60 * 60 * 24 * 3) {
+                my $wordle = join '', $self->{games}->{$channel}->{$gameid}->{wordle}->@*;
+
+                my $state;
+
+                if ($self->{games}->{$channel}->{$gameid}->{solved}) {
+                    $state = 'Solved';
+                } elsif ($state->{games}->{$channel}->{$gameid}->{givenup}) {
+                    $state = 'Given-up';
+                } else {
+                    $state = 'Abandoned';
+                }
+
+                my $message = {
+                    nick       => $botnick,
+                    user       => 'wordle',
+                    host       => 'localhost',
+                    hostmask   => "$botnick!wordle\@localhost",
+                    command    => 'wordle',
+                    keyword    => 'wordle',
+                    checkflood => 1,
+                    message    => "$state $gameid Wordle removed ($wordle)",
+                };
+
+                $self->{pbot}->{interpreter}->add_message_to_output_queue($channel, $message, 0);
+
+                $self->{pbot}->{logger}->log("Deleted Wordle $channel $gameid\n");
+                delete $self->{games}->{$channel}->{$gameid};
+            }
+        }
     }
 }
 
