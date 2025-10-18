@@ -34,6 +34,7 @@
 * [Channel namespaces](#channel-namespaces)
 * [Adding/removing factoids](#addingremoving-factoids)
   * [factadd](#factadd)
+  * [factcopy](#factcopy)
   * [factrem](#factrem)
   * [forget](#forget)
   * [factalias](#factalias)
@@ -504,6 +505,13 @@ To add a factoid to the global channel, use `global` as the channel parameter.
     <pragma-> !factadd ##c c /say C rocks!
 
 To force overwriting an existing factoid, use the `-f` option.
+
+### factcopy
+To copy a factoid to a different name or channel, use the `factcopy` command:
+
+Usage:  `factcopy <source channel> <source factoid> <target channel/factoid> [target factoid]`
+
+If three arguments are given, the factoid is copied in the source channel.  If four arguments are given, the factoid is copied to the target channel with the target name.
 
 ### factrem
 ### forget
