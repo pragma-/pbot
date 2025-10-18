@@ -206,6 +206,7 @@
   * [Channel namespaces](Factoids.md#channel-namespaces)
   * [Adding/removing factoids](Factoids.md#addingremoving-factoids)
     * [factadd](Factoids.md#factadd)
+    * [factcopy](Factoids.md#factcopy)
     * [factrem](Factoids.md#factrem)
     * [forget](Factoids.md#forget)
     * [factalias](Factoids.md#factalias)
