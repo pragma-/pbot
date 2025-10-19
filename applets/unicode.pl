@@ -43,11 +43,11 @@ if ($args =~ /^(u\+[^.]+)\s*\.\.\s*(.*)$/i) {
 my $result;
 
 if ($args =~ /^u\+/i) {
-    $result = `unicode --max=100 --color=off \Q$args\E`;
+    $result = `unicode --max=100 --color=off -- \Q$args\E`;
 } elsif ($search) {
-    $result = `unicode -r --max=100 --color=off \Q$args\E --format 'U+{ordc:04X} {pchar} {name};\n'`;
+    $result = `unicode -r --max=100 --color=off -format 'U+{ordc:04X} {pchar} {name};\n' -- \Q$args\E`;
 } else {
-    $result = `unicode -s --max=100 --color=off \Q$args\E --format 'U+{ordc:04X} ({utf8}) {pchar} {name} Category: {category} ({category_desc}) {opt_unicode_block}{opt_unicode_block_desc}{mirrored_desc}{opt_combining}{combining_desc}{opt_decomp}{decomp_desc};\n'`;
+    $result = `unicode -s --max=100 --color=off --format 'U+{ordc:04X} ({utf8}) {pchar} {name} Category: {category} ({category_desc}) {opt_unicode_block}{opt_unicode_block_desc}{mirrored_desc}{opt_combining}{combining_desc}{opt_decomp}{decomp_desc};\n' -- \Q$args\E`;
 }
 
 print "$result\n";
