@@ -1,15 +1,21 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
-# SPDX-FileCopyrightText: 2009-2023 Pragmatic Software <pragma78@gmail.com>
+# SPDX-FileCopyrightText: 2009-2025 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
 
 use strict;
-use LWP::Simple;
+use warnings;
 
-$_ = get("http://www.randominsults.net/");
-if (/<strong><i>(.*?)\s*<\/i><\/strong>/) {
-    print "@ARGV", ': ' if @ARGV;
-    print "$1\n";
-} else {
-    print "yo momma!";
+srand;
+
+open my $fh, '<', 'insults.txt' or die $!;
+
+my $line;
+
+while (<$fh>) {
+    $line = $_ if rand($.) < 1;
 }
+
+chomp $line;
+print "@ARGV", ': ' if @ARGV;
+print "$line\n";
