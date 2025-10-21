@@ -24,10 +24,6 @@ use Unicode::Truncate;
 # PBot's limitations for internal strings. This means ensuring the
 # string is not too long, does not have undesired characters, etc.
 #
-# If the given string contains a JSON structure, it will be parsed
-# and each value will be validated. JSON structures must have a depth
-# of one level only.
-#
 # Note that $max_length represents bytes, not characters. The string
 # is encoded to utf8, validated, and then decoded back. Truncation
 # uses Unicode::Truncate to find the longest Unicode string that can
@@ -43,34 +39,38 @@ sub validate_string($string, $max_length = 1024 * 8) {
         return $string;
     }
 
+    return validate_this_string($string, $max_length);
+}
+
+# Validate a JSON structure. JSON structures must have a depth
+# of one level only.
+sub validate_json_string($string, $max_length = 1024 * 8) {
     local $@;
     eval {
         # attempt to decode as a JSON string
         # throws exception if fails
-        my $data = decode_json($string);
-
-        # no exception thrown, must be JSON.
-        # so we validate all of its values.
+        my $json = JSON::XS->new;
+        my $data = $json->decode($string);
 
         if (not defined $data) {
-            # decode_json decodes "null" to undef. so we just
-            # go ahead and return "null" as-is. otherwise, if we allow
+            # JSON::XS decodes "null" to undef. so we just go
+            # ahead and return "null" as-is. otherwise, if we allow
             # encode_json to encode it back to a string, the string
             # will be "{}". bit weird.
             return 'null';
         }
 
-        # validate values
+        # validate values (TODO: recurse more deeply than one level)
         foreach my $key (keys %$data) {
             $data->{$key} = validate_this_string($data->{$key}, $max_length);
         }
 
         # encode back to a JSON string
-        $string = encode_json($data);
+        $string = $json->encode($data);
     };
 
     if ($@) {
-        # not a JSON string, so validate as a normal string.
+        # not a valid JSON structure, so validate as a normal string.
         $string = validate_this_string($string, $max_length);
     }
 
