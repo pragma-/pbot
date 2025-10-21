@@ -283,7 +283,8 @@ sub wordle($self, $context) {
                     $h->{gaveup_by} = $self->{games}->{$channel}->{$gameid}->{givenup_by};
                 }
 
-                return encode_json $h;
+                my $encoder = JSON::XS->new;
+                return $encoder->encode($h);
             }
 
             my $started = concise ago time - $self->{games}->{$channel}->{$gameid}->{start_time};
