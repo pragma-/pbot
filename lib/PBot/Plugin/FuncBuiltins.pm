@@ -15,6 +15,8 @@ use PBot::Core::Utils::Indefinite;
 use Lingua::EN::Tagger;
 use URI::Escape qw/uri_escape_utf8/;
 
+use JSON::XS;
+
 sub initialize($self, %conf) {
     $self->{pbot}->{functions}->register(
         'title',
@@ -54,6 +56,14 @@ sub initialize($self, %conf) {
             desc   => 'removes unescaped surrounding quotes and strips escapes from escaped quotes',
             usage  => 'unquote <text>',
             subref => sub { $self->func_unquote(@_) }
+        }
+    );
+    $self->{pbot}->{functions}->register(
+        'unescape',
+        {
+            desc   => 'removes unescaped escapes',
+            usage  => 'unescape <text>',
+            subref => sub { $self->func_unescape(@_) }
         }
     );
     $self->{pbot}->{functions}->register(
@@ -120,6 +130,14 @@ sub initialize($self, %conf) {
             subref => sub { $self->func_length(@_) }
         }
     );
+    $self->{pbot}->{functions}->register(
+        'jsonval',
+        {
+            desc   => 'extract a JSON value from a JSON structure',
+            usage  => 'jsonval <member> <json>; e.g. jsonval .a.b[1] {"a": {"b": [10, 20, 30]}}',
+            subref => sub { $self->func_jsonval(@_) }
+        }
+    );
 
     $self->{tagger} = Lingua::EN::Tagger->new;
 }
@@ -130,6 +148,7 @@ sub unload($self) {
     $self->{pbot}->{functions}->unregister('uc');
     $self->{pbot}->{functions}->unregister('lc');
     $self->{pbot}->{functions}->unregister('unquote');
+    $self->{pbot}->{functions}->unregister('unescape');
     $self->{pbot}->{functions}->unregister('shquote');
     $self->{pbot}->{functions}->unregister('quotemeta');
     $self->{pbot}->{functions}->unregister('uri_escape');
@@ -137,6 +156,8 @@ sub unload($self) {
     $self->{pbot}->{functions}->unregister('maybe-the');
     $self->{pbot}->{functions}->unregister('maybe-to');
     $self->{pbot}->{functions}->unregister('maybe-on');
+    $self->{pbot}->{functions}->unregister('length');
+    $self->{pbot}->{functions}->unregister('jsonval');
 }
 
 sub func_unquote($self, @rest) {
@@ -144,6 +165,12 @@ sub func_unquote($self, @rest) {
     $text =~ s/^"(.*?)(?<!\\)"$/$1/ || $text =~ s/^'(.*?)(?<!\\)'$/$1/;
     $text =~ s/(?<!\\)\\'/'/g;
     $text =~ s/(?<!\\)\\"/"/g;
+    return $text;
+}
+
+sub func_unescape($self, @rest) {
+    my $text = "@rest";
+    $text =~ s/(?<!\\)\\//g;
     return $text;
 }
 
@@ -297,6 +324,95 @@ sub func_length($self, @rest) {
     my $count = 0;
     while ($text =~ /\X/g) { $count++ }; # count graphemes
     return $count;
+}
+
+sub func_jsonval($self, @rest) {
+    my $member = shift @rest;
+    my $text = "@rest";
+
+    if (!defined $member || !length $member) {
+        return 'Usage: jsonval <member> <json>; e.g. jsonval .a.b[1] {"a": {"b": [10, 20, 30]}}';
+    }
+
+    my $h = eval {
+        my $decoder = JSON::XS->new;
+        return $decoder->decode($text);
+    };
+
+    if (my $exception = $@) {
+        $exception =~ s/(.*) at .*/$1/;
+        return $exception;
+    }
+
+    my ($memb) = $member =~ m/^([^\[.]+)/;
+
+    if (defined $memb && length $memb) {
+        $h = eval {
+            return $h->{$memb};
+        };
+
+        if (my $exception = $@) {
+            $exception =~ s/(.*) at .*/$1/;
+            return $exception;
+        }
+    }
+
+    my $result = eval {
+        while ($member =~ m/
+            (?:
+                  \['(?<key>(?:[^'\\]|\\.)*)'\]
+                | \["(?<key>(?:[^"\\]|\\.)*)"\]
+                | \[(?<index>[^\]]+)\]
+                | \.'(?<key>(?:[^'\\]|\\.)*)'
+                | \."(?<key>(?:[^"\\]|\\.)*)"
+                | \.(?<key>[^\[\.]+)
+                | (?<invalid>.)
+            )
+            /gx)
+        {
+            if (defined $+{invalid}) {
+                return "Unexpected $+{invalid} at position $-[0]";
+            }
+
+            if (defined $+{index}) {
+                my $index = $+{index};
+                if ($index !~ /^\d+$/) {
+                    return "Invalid index $index at position " . ($-[0] + 1);
+                }
+                $h = $h->[$index];
+            }
+
+            if (defined $+{key}) {
+                my $key = $+{key};
+                $key =~ s/(?<!\\)\\//g;
+                $h = $h->{$key};
+            }
+
+            if (not defined $h) {
+                return 'null';
+            }
+        }
+    };
+
+    if (my $exception = $@) {
+        $exception =~ s/(.*) at .*/$1/;
+        return $exception;
+    }
+
+    if (defined $result && length $result) {
+        return $result;
+    }
+
+    if (not defined $h) {
+        return 'null';
+    }
+
+    if (ref $h eq 'HASH' || ref $h eq 'ARRAY') {
+        my $encoder = JSON::XS->new;
+        return $encoder->space_after->encode($h);
+    }
+
+    return $h;
 }
 
 1;
