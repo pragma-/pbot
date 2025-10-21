@@ -264,6 +264,7 @@ sub process_line($self, $from, $nick, $user, $host, $text, $tags = '', $is_comma
         delete $context->{special};
         delete $context->{code};
         delete $context->{lang};
+        delete $context->{arguments_processed};
     }
 
     # return number of commands processed
@@ -274,7 +275,12 @@ sub process_line($self, $from, $nick, $user, $host, $text, $tags = '', $is_comma
 # takes a $context object containing contextual information about the
 # command such as the channel, nick, user, host, command, etc.
 sub interpret($self, $context) {
+    # resume processing new arguments
+    delete $context->{arguments_processed};
+
+    # ensure stack_depth is defined
     $context->{stack_depth} //= 0;
+
     # log command invocation
     $self->{pbot}->{logger}->log("=== [$context->{interpret_depth} ($context->{stack_depth})] Got command: "
         . "($context->{from}) $context->{hostmask}: $context->{command}\n");

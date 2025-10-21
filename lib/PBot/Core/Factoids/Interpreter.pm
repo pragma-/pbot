@@ -338,8 +338,7 @@ sub handle_action($self, $context, $action) {
                 $action = $self->{pbot}->{factoids}->{variables}->expand_action_arguments($context, $action, $context->{arguments}, $context->{nick});
             }
 
-            $context->{arguments}          = '';
-            $context->{original_arguments} = '';
+            $context->{arguments_processed} = 1;
             $context->{nickprefix_disabled} = 1;
         } else {
             # set nickprefix if args is a present nick and factoid action doesn't have $nick or $args
@@ -388,7 +387,7 @@ sub handle_action($self, $context, $action) {
 
         unless ($self->{pbot}->{factoids}->{data}->{storage}->get_data($channel, $keyword, 'require_explicit_args')) {
             my $args = $context->{arguments};
-            $command .= " $args" if length $args and not $context->{special}->{$context->{stack_depth}} eq 'code-factoid';
+            $command .= " $args" if length $args && !$context->{arguments_processed} && $context->{special}->{$context->{stack_depth}} ne 'code-factoid';
             $context->{arguments} = '';
         }
 
