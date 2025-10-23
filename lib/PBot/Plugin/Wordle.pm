@@ -10,6 +10,7 @@ package PBot::Plugin::Wordle;
 use parent 'PBot::Plugin::Base';
 
 use PBot::Imports;
+use PBot::Core::Utils::IsAbbrev;
 
 use Storable qw(dclone);
 use Time::Duration;
@@ -34,7 +35,7 @@ sub unload($self) {
 }
 
 use constant {
-    USAGE     => 'Usage: wordle start [length [wordlist [game-id]]] | custom <word> <channel> [wordlist [game-id]] | guess <word> [game-id] | select [game-id] | list | guesses [game-id] | letters [game-id] | show [game-id] | info [game-id] | hard [on|off [game-id]] | giveup [game-id]',
+    USAGE     => 'Usage: wordle start [length [wordlist [game-id]]] | custom <word> <channel> [wordlist [game-id]] | guess <word> [game-id] | select [game-id] | list | guesses [game-id] | letters [game-id] | show [game-id] | info [game-id] | hard [on|off|status [game-id]] | giveup [game-id]',
 
     NO_WORDLE => 'There is no Wordle yet. Use `wordle start` to begin a game.',
     NO_GAMEID => 'That game-id does not exist. Use `wordle start <length> <wordlist> <gameid>` to begin a game with that id.',
@@ -150,8 +151,8 @@ sub wordle($self, $context) {
 
     my $channel = $context->{from};
 
-    given ($command) {
-        when ('show') {
+    given (lc $command) {
+        when (isabbrev($_, 'show')) {
             if (@args > 1) {
                 return "Usage: wordle show [game-id]";
             }
@@ -171,7 +172,7 @@ sub wordle($self, $context) {
             return $game . $self->show_wordle($channel, $gameid, 1);
         }
 
-        when ('players') {
+        when (isabbrev($_, 'players')) {
             my @players;
             foreach my $id (keys %{$self->{players}->{$channel}}) {
                 my $h = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_id($id);
@@ -187,7 +188,7 @@ sub wordle($self, $context) {
             }
         }
 
-        when ('list') {
+        when (isabbrev($_, 'list')) {
             if (@args != 0) {
                 return "Usage: wordle list";
             }
@@ -209,7 +210,7 @@ sub wordle($self, $context) {
             return "Available Wordles: $games";
         }
 
-        when ('select') {
+        when (isabbrev($_, 'select')) {
             if (@args > 1) {
                 return "Usage: wordle select [game-id]";
             }
@@ -218,17 +219,17 @@ sub wordle($self, $context) {
 
             if (not defined $gameid) {
                 $gameid = 'main';
-            } else {
-                if (not exists $self->{games}->{$channel}->{$gameid}) {
-                    return "$context->{nick}: " . NO_GAMEID;
-                }
+            }
+
+            if (not exists $self->{games}->{$channel}->{$gameid}) {
+                return "$context->{nick}: " . NO_GAMEID;
             }
 
             $self->{players}->{$channel}->{$context->{message_account}}->{gameid} = $gameid;
             return "$context->{nick} is now playing the $gameid Wordle!";
         }
 
-        when ('info') {
+        when (isabbrev($_, 'info')) {
             if (@args > 2) {
                 return "Usage: wordle info [game-id]";
             }
@@ -316,7 +317,7 @@ sub wordle($self, $context) {
             return $game . $result;
          }
 
-        when ('giveup') {
+        when (isabbrev($_, 'giveup')) {
             if (@args > 1) {
                 return "Usage: wordle giveup [game-id]";
             }
@@ -351,7 +352,7 @@ sub wordle($self, $context) {
             return "${game}The word was $wordle. Better luck next time.";
         }
 
-        when ('start') {
+        when (isabbrev($_, 'start')) {
             if (@args > 3) {
                 return "Invalid arguments; Usage: wordle start [word length [wordlist [game-id]]]";
             }
@@ -389,7 +390,7 @@ sub wordle($self, $context) {
             return $game . $self->make_wordle($context->{nick}, $channel, $length, $gameid, undef, $wordlist);
         }
 
-        when ('custom') {
+        when (isabbrev($_, 'custom')) {
             if (@args < 2 || @args > 4) {
                 return "Usage: wordle custom <word> <channel> [wordlist [game-id]]";
             }
@@ -449,7 +450,7 @@ sub wordle($self, $context) {
             return "Custom Wordle started!";
         }
 
-        when ('guess') {
+        when (isabbrev($_, 'guess')) {
             if (!@args || @args > 2) {
                 return "Usage: wordle guess <word> [game-id]";
             }
@@ -484,7 +485,7 @@ sub wordle($self, $context) {
             return $result;
         }
 
-        when ('hard') {
+        when (isabbrev($_, 'hard')) {
             my $gameid = $self->gameid($args[1], $context);
 
             if (not defined $gameid) {
@@ -497,18 +498,22 @@ sub wordle($self, $context) {
                 return "${game}Hard mode is " . ($self->{games}->{$channel}->{$gameid}->{hard_mode} ? "enabled." : "disabled.");
             }
 
-            if (lc $args[0] eq 'on') {
+            if (isabbrev(lc $args[0], 'on')) {
                 my $mode = $self->{games}->{$channel}->{$gameid}->{hard_mode} ? 'already' : 'now';
                 $self->{games}->{$channel}->{$gameid}->{hard_mode} = 1;
                 return "${game}Hard mode is $mode enabled.";
-            } else {
+            } elsif (isabbrev(lc $args[0], 'off')) {
                 my $mode = $self->{games}->{$channel}->{$gameid}->{hard_mode} ? 'now' : 'already';
                 $self->{games}->{$channel}->{$gameid}->{hard_mode} = 0;
                 return "${game}Hard mode is $mode disabled.";
+            } elsif (isabbrev(lc $args[0], 'status')) {
+                return "${game}Hard mode is " . ($self->{games}->{$channel}->{$gameid}->{hard_mode} ? "enabled." : "disabled.");
+            } else {
+                return "Usage: wordle hard [on|off|status [game-id]]";
             }
         }
 
-        when ('guesses') {
+        when (isabbrev($_, 'guesses')) {
             if (@args > 1) {
                 return "Usage: wordle guesses [game-id]";
             }
@@ -532,7 +537,7 @@ sub wordle($self, $context) {
             return $game . join("$color{reset} ", $self->{games}->{$channel}->{$gameid}->{guesses}->@*) . "$color{reset}";
         }
 
-        when ('letters') {
+        when (isabbrev($_, 'letters')) {
             if (@args > 1) {
                 return "Usage: wordle letters [game-id]";
             }
@@ -571,7 +576,6 @@ sub gameid($self, $gameid, $context, $newgame = 0) {
         }
     }
 
-    return 'main' if !defined $gameid && !$newgame;
     return $gameid;
 }
 
