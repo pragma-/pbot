@@ -14,6 +14,7 @@ our @ISA    = qw/Exporter/;
 our @EXPORT = qw/isabbrev/;
 
 sub isabbrev($str1, $str2) {
+    return 0 if !length $str1 || !length $str2;
     return (substr($str1, 0, length $str1) eq substr($str2, 0, length $str1));
 }
 

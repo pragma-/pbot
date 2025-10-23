@@ -10,6 +10,7 @@ use parent 'PBot::Core::Class';
 
 use PBot::Imports;
 
+use PBot::Core::Utils::IsAbbrev;
 use PBot::Core::MessageHistory::Constants ':all';
 
 use Time::HiRes qw/gettimeofday/;
@@ -225,8 +226,8 @@ sub cmd_ban_exempt($self, $context) {
     my $command = $self->{pbot}->{interpreter}->shift_arg($arglist);
     return "Usage: ban-exempt <command>, where commands are: list, add, remove" if not defined $command;
 
-    given ($command) {
-        when ($_ eq 'list') {
+    given (lc $command) {
+        when (isabbrev($_, 'list')) {
             my $text    = "Ban-evasion exemptions:\n";
             my $entries = 0;
             foreach my $channel ($self->{pbot}->{banlist}->{'ban-exemptions'}->get_keys) {
@@ -239,7 +240,7 @@ sub cmd_ban_exempt($self, $context) {
             $text .= "none" if $entries == 0;
             return $text;
         }
-        when ("add") {
+        when (isabbrev($_, 'add')) {
             my ($channel, $mask) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
             return "Usage: ban-exempt add <channel> <mask>" if not defined $channel or not defined $mask;
 
@@ -251,7 +252,7 @@ sub cmd_ban_exempt($self, $context) {
             $self->{pbot}->{banlist}->{'ban-exemptions'}->add($channel, $mask, $data);
             return "/say $mask exempted from ban-evasions in channel $channel";
         }
-        when ("remove") {
+        when (isabbrev($_, 'remove')) {
             my ($channel, $mask) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
             return "Usage: ban-exempt remove <channel> <mask>" if not defined $channel or not defined $mask;
             return $self->{pbot}->{banlist}->{'ban-exemptions'}->remove($channel, $mask);

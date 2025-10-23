@@ -10,6 +10,8 @@ package PBot::Core::Commands::Capabilities;
 use PBot::Imports;
 use parent 'PBot::Core::Class';
 
+use PBot::Core::Utils::IsAbbrev;
+
 sub initialize($self, %conf) {
     $self->{pbot}->{commands}->register(sub { $self->cmd_cap(@_) }, "cap");
 }
@@ -17,13 +19,13 @@ sub initialize($self, %conf) {
 sub cmd_cap($self, $context) {
     my $command = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
 
-    given ($command) {
-        when ('list') {
+    given (lc $command) {
+        when (isabbrev($_, 'list')) {
             my $cap = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
             return $self->{pbot}->{capabilities}->list($cap);
         }
 
-        when ('whohas') {
+        when (isabbrev($_, 'whohas')) {
             my $cap = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
 
             if (not defined $cap) {
@@ -55,7 +57,7 @@ sub cmd_cap($self, $context) {
             return $result;
         }
 
-        when ('userhas') {
+        when (isabbrev($_, 'userhas')) {
             my ($name, $cap) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
             if (not defined $name) {
@@ -90,7 +92,7 @@ sub cmd_cap($self, $context) {
                     next if $key eq '_name';          # skip internal cached metadata
                     next if not $self->{pbot}->{capabilities}->exists($key);  # skip metadata that isn't a capability
 
-                    my $count = $self->{pbot}->{capabilities}->{caps}->get_keys;
+                    my $count = $self->{pbot}->{capabilities}->{caps}->get_keys($key);
 
                     if ($count > 0) {
                         push @groups, "$key ($count cap" . ($count == 1 ? '' : 's') . ")";
@@ -109,7 +111,7 @@ sub cmd_cap($self, $context) {
             }
         }
 
-        when ('group') {
+        when (isabbrev($_, 'group')) {
             my ($cap, $subcaps) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
             if (not defined $cap or not defined $subcaps) {
@@ -147,7 +149,7 @@ sub cmd_cap($self, $context) {
             }
         }
 
-        when ('ungroup') {
+        when (isabbrev($_, 'ungroup')) {
             my ($cap, $subcaps) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
             if (not defined $cap or not defined $subcaps) {

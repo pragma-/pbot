@@ -28,6 +28,7 @@ package PBot::Plugin::Battleship;
 use parent 'PBot::Plugin::Base';
 
 use PBot::Imports;
+use PBot::Core::Utils::IsAbbrev;
 
 use Time::Duration;
 use Time::HiRes qw/time/;
@@ -178,11 +179,11 @@ sub cmd_battleship($self, $context) {
         $self->{channel},
     );
 
-    given ($command) {
+    given (lc $command) {
         # help doesn't do much yet
-        when ('help') {
+        when (isabbrev($_, 'help')) {
             given ($arguments) {
-                when ('help') {
+                when (isabbrev($_, 'help')) {
                     return "Seriously?";
                 }
 
@@ -197,7 +198,7 @@ sub cmd_battleship($self, $context) {
         }
 
         # issue a challenge to begin a game
-        when ('challenge') {
+        when (isabbrev($_, 'challenge')) {
             if ($self->{current_state} ne 'nogame') {
                 return "There is already a game of Battleship underway.";
             }
@@ -223,7 +224,7 @@ sub cmd_battleship($self, $context) {
         }
 
         # accept a challenge
-        when (['accept', 'join']) {
+        when (isabbrev($_, 'accept') || isabbrev($_, 'join')) {
             if ($self->{current_state} ne 'challenge') {
                 return "This is not the time to use `$command`.";
             }
@@ -250,7 +251,7 @@ sub cmd_battleship($self, $context) {
         }
 
         # ready/unready
-        when (['ready', 'unready']) {
+        when (isabbrev($_, 'ready') || isabbrev($_, 'unready')) {
             if ($self->{current_state} ne 'challenge') {
                 return "This is not the time to use `$command`.";
             }
@@ -273,7 +274,7 @@ sub cmd_battleship($self, $context) {
         }
 
         # decline a challenge or forfeit/concede a game
-        when (['decline', 'quit', 'forfeit', 'concede']) {
+        when (isabbrev($_, 'decline') || isabbrev($_, 'quit') || isabbrev($_, 'forfeit') || isabbrev($_, 'concede')) {
             my $id = $self->get_player_id($nick, $user, $host);
 
             for (my $i = 0; $i < @{$self->{state_data}->{players}}; $i++) {
@@ -294,7 +295,7 @@ sub cmd_battleship($self, $context) {
             return "There is nothing to $command.";
         }
 
-        when ('abort') {
+        when (isabbrev($_, 'abort')) {
             if (not $self->{pbot}->{users}->loggedin_admin($channel, $hostmask)) {
                 return "$nick: Only admins may abort the game.";
             }
@@ -310,7 +311,7 @@ sub cmd_battleship($self, $context) {
             return "/msg $channel $nick: The game has been aborted.";
         }
 
-        when (['pause', 'unpause']) {
+        when (isabbrev($_, 'pause') || isabbrev($_, 'unpause')) {
             if ($command eq 'pause') {
                 $self->{state_data}->{paused} = $self->{PAUSED_BY_PLAYER};
             } else {
@@ -320,7 +321,7 @@ sub cmd_battleship($self, $context) {
             return "/msg $channel $nick has " . ($self->{state_data}->{paused} ? 'paused' : 'unpaused') . " the game!";
         }
 
-        when ('score') {
+        when (isabbrev($_, 'score')) {
             if ($self->{current_state} ne 'move' and $self->{current_state} ne 'attack') {
                 return "There is no Battleship score to show right now.";
             }
@@ -329,7 +330,7 @@ sub cmd_battleship($self, $context) {
             return '';
         }
 
-        when ('players') {
+        when (isabbrev($_, 'players')) {
             if (not @{$self->{state_data}->{players}}) {
                 return "There are no players playing Battleship right now. Start a game with the `challenge` command!";
             }
@@ -338,7 +339,7 @@ sub cmd_battleship($self, $context) {
             return '';
         }
 
-        when ('kick') {
+        when (isabbrev($_, 'kick')) {
             if (not $self->{pbot}->{users}->loggedin_admin($channel, $hostmask)) {
                 return "$nick: Only admins may kick players from the game.";
             }
@@ -366,7 +367,7 @@ sub cmd_battleship($self, $context) {
             return "$nick: $arguments isn't even in the game.";
         }
 
-        when ('bomb') {
+        when (isabbrev($_, 'bomb')) {
             if ($self->{current_state} ne 'move' and $self->{current_state} ne 'attack') {
                 return "$nick: It's not time to do that now.";
             }
@@ -427,7 +428,7 @@ sub cmd_battleship($self, $context) {
             return $msg;
         }
 
-        when (['specboard', 'board']) {
+        when (isabbrev($_, 'specboard') || isabbrev($_, 'board')) {
             if (grep { $_ eq $self->{current_state} } qw/nogame challenge genboard gameover/) {
                 return "$nick: There is no board to show right now.";
             }
@@ -459,7 +460,7 @@ sub cmd_battleship($self, $context) {
         }
 
         # this command shows the entire battlefield
-        when ('fullboard') {
+        when (isabbrev($_, 'fullboard')) {
             if (not $self->{pbot}->{users}->loggedin_admin($channel, $hostmask)) {
                 return "$nick: Only admins may see the full board.";
             }

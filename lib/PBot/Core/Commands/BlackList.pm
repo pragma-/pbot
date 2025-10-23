@@ -10,6 +10,7 @@ package PBot::Core::Commands::BlackList;
 use parent 'PBot::Core::Class';
 
 use PBot::Imports;
+use PBot::Core::Utils::IsAbbrev;
 
 sub initialize($self, %conf) {
     $self->{pbot}->{commands}->register(sub { $self->cmd_blacklist(@_) }, "blacklist", 1);
@@ -30,8 +31,8 @@ sub cmd_blacklist($self, $context) {
 
     my $blacklist = $self->{pbot}->{blacklist}->{storage};
 
-    given ($command) {
-        when ($_ eq "list" or $_ eq "show") {
+    given (lc $command) {
+        when (isabbrev($_, 'list') or isabbrev($_, 'show')) {
             my $blacklist = $self->{pbot}->{blacklist}->{storage};
             my $text    = "Blacklist:\n";
             my $entries = 0;
@@ -53,7 +54,7 @@ sub cmd_blacklist($self, $context) {
             return "/msg $context->{nick} $text";
         }
 
-        when ("add") {
+        when (isabbrev($_, 'add')) {
             my ($mask, $channel) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
 
             if (not defined $mask) {
@@ -67,7 +68,7 @@ sub cmd_blacklist($self, $context) {
             return "/say $mask blacklisted in channel $channel";
         }
 
-        when ("remove") {
+        when (isabbrev($_, 'remove')) {
             my ($mask, $channel) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
 
             if (not defined $mask) {

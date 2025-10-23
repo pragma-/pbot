@@ -38,6 +38,7 @@ package PBot::Plugin::ActionTrigger;
 use parent 'PBot::Plugin::Base';
 
 use PBot::Imports;
+use PBot::Core::Utils::IsAbbrev;
 
 use DBI;
 use Time::Duration qw/duration/;
@@ -100,8 +101,8 @@ sub cmd_actiontrigger($self, $context) {
 
     my $command = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
 
-    given ($command) {
-        when ('list') {
+    given (lc $command) {
+        when (isabbrev($_, 'list')) {
             my $channel = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
 
             if (not defined $channel) {
@@ -148,7 +149,7 @@ sub cmd_actiontrigger($self, $context) {
             }
         }
 
-        when ('add') {
+        when (isabbrev($_, 'add')) {
             # TODO: use GetOpt flags instead of positional arguments
 
             my $channel;
@@ -207,7 +208,7 @@ sub cmd_actiontrigger($self, $context) {
             }
         }
 
-        when ('delete') {
+        when (isabbrev($_, 'delete')) {
             my $channel;
 
             if ($context->{from} =~ m/^#/) {

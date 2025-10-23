@@ -10,6 +10,8 @@ package PBot::Core::Commands::EventQueue;
 use PBot::Imports;
 use parent 'PBot::Core::Class';
 
+use PBot::Core::Utils::IsAbbrev;
+
 use Time::Duration;
 
 sub initialize($self, %conf) {
@@ -23,13 +25,13 @@ sub initialize($self, %conf) {
 sub cmd_eventqueue($self, $context) {
     my $usage = "Usage: eventqueue list [filter regex] | add <relative time> <command> [-repeat] | remove <regex>";
 
-    my $command = $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
+    my $command = lc $self->{pbot}->{interpreter}->shift_arg($context->{arglist});
 
     if (not defined $command) {
         return $usage;
     }
 
-    if ($command eq 'list') {
+    if (isabbrev($command, 'list')) {
         return "No events queued." if not $self->{pbot}->{event_queue}->count;
 
         my $result = eval {
@@ -78,7 +80,7 @@ sub cmd_eventqueue($self, $context) {
         return $result;
     }
 
-    if ($command eq 'add') {
+    if (isabbrev($command, 'add')) {
         my ($duration, $command) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 2);
 
         if (not defined $duration or not defined $command) {
@@ -105,7 +107,7 @@ sub cmd_eventqueue($self, $context) {
         return "Command added to event queue.";
     }
 
-    if ($command eq 'remove') {
+    if (isabbrev($command, 'remove') || isabbrev($command, 'delete')) {
         my ($regex) = $self->{pbot}->{interpreter}->split_args($context->{arglist}, 1);
         return "Usage: eventqueue remove <regex>" if not defined $regex;
         $regex =~ s/(?<!\.)\*/.*?/g;

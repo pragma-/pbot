@@ -10,6 +10,7 @@ package PBot::Plugin::WordMorph;
 use parent 'PBot::Plugin::Base';
 
 use PBot::Imports;
+use PBot::Core::Utils::IsAbbrev;
 
 use Storable;
 use Text::Levenshtein::XS 'distance';
@@ -56,7 +57,7 @@ sub wordmorph($self, $context) {
     my $channel = $context->{from};
 
     given ($command) {
-        when ('neighbors') {
+        when (isabbrev($_, 'neighbors')) {
             if (!@args || @args > 1) {
                 return 'Usage: wordmorph neighbors <word>; list the neighbors of a given word';
             }
@@ -72,7 +73,7 @@ sub wordmorph($self, $context) {
             return "`$args[0]` has $count neighbor" . ($count != 1 ? 's' : '') . ": " . join(', ', sort @neighbors);
         }
 
-        when ('check') {
+        when (isabbrev($_, 'check')) {
             if (!@args || @args > 1) {
                 return 'Usage: wordmorph check <word>; check if a word exists in the Word Morph database';
             }
@@ -86,7 +87,7 @@ sub wordmorph($self, $context) {
             return "Yes, `$args[0]` is a word I know.";
         }
 
-        when ('hint') {
+        when (isabbrev($_, 'hint')) {
             if (not defined $self->{$channel}->{morph}) {
                 return NO_MORPH_AVAILABLE;
             }
@@ -149,160 +150,7 @@ sub wordmorph($self, $context) {
             return "Hint: " . join(' > ', @hints);
         }
 
-        when ('show') {
-            if (not defined $self->{$channel}->{morph}) {
-                return NO_MORPH_AVAILABLE;
-            }
-
-            return "Current word morph: " . $self->show_morph_with_blanks($channel) . " (Change the word one letter at a time)";
-        }
-
-        when ('giveup') {
-            if (not defined $self->{$channel}->{morph}) {
-                return NO_MORPH_AVAILABLE;
-            }
-
-            my $solution = join ' > ', @{$self->{$channel}->{morph}};
-            $self->{$channel}->{morph} = undef;
-            return "The solution was $solution. Better luck next time.";
-        }
-
-        when ('start') {
-            if (@args > 2) {
-                return "Invalid arguments; Usage: wordmorph start [steps to solve [word length]]";
-            }
-
-            my $steps = DEFAULT_STEPS;
-            my $length = undef;
-
-            if (defined $args[0]) {
-                if ($args[0] !~ m/^[0-9]+$/ || $args[0] < MIN_STEPS || $args[0] > MAX_STEPS) {
-                    return "Invalid number of steps `$args[0]`; must be integer >= ".MIN_STEPS." and <= ".MAX_STEPS.".";
-                }
-
-                $steps = $args[0];
-            }
-
-            if (defined $args[1]) {
-                if ($args[1] !~ m/^[0-9]+$/ || $args[1] < MIN_WORD_LENGTH || $args[1] > MAX_WORD_LENGTH) {
-                    return "Invalid word length `$args[1]`; must be integer >= ".MIN_WORD_LENGTH." and <= ".MAX_WORD_LENGTH.".";
-                }
-
-                $length = $args[1];
-            }
-
-            return DB_UNAVAILABLE if not $self->{db};
-
-            my $attempts = 1000;
-            my $morph;
-
-            while (--$attempts > 0) {
-                $morph = eval {
-                    $self->make_morph_by_steps($self->{db}, $steps + 2, $length)
-                };
-
-                if (my $err = $@) {
-                    next if $err eq "Too many attempts\n";
-                    return $err;
-                }
-
-                last if @$morph;
-            }
-
-            if (not @$morph) {
-                return "Failed to create Word Morph with given parameters, in reasonable time. Try again.";
-            }
-
-            $self->set_up_new_morph($morph, $channel);
-            return "New word morph: " . $self->show_morph_with_blanks($channel) . " (Change the word one letter at a time)";
-        }
-
-        when ('custom') {
-            return "Usage: wordmorph custom <word1> (<word2> | <integer steps>)" if @args != 2;
-            return DB_UNAVAILABLE if not $self->{db};
-
-            if (my $err = $self->validate_word($args[0], MIN_WORD_LENGTH, MAX_WORD_LENGTH)) {
-                return $err;
-            }
-
-            my $morph;
-
-            if ($args[1] =~ /^\d+$/) {
-                my $steps = DEFAULT_STEPS;
-                my $length = length $args[0];
-
-                if ($args[1] < MIN_STEPS || $args[1] > MAX_STEPS) {
-                    return "Invalid number of steps `$args[1]`; must be integer >= ".MIN_STEPS." and <= ".MAX_STEPS.".";
-                }
-
-                $steps = $args[1];
-
-                return DB_UNAVAILABLE if not $self->{db};
-
-                my $attempts = 100;
-
-                while (--$attempts > 0) {
-                    $morph = eval {
-                        $self->make_morph_by_steps($self->{db}, $steps + 2, $length, $args[0])
-                    };
-
-                    if (my $err = $@) {
-                        next if $err eq "Too many attempts\n";
-                        return $err;
-                    }
-
-                    last if @$morph;
-                }
-
-                if (!$morph || !@$morph) {
-                    return "Failed to create Word Morph with given parameters, in reasonable time. Try again.";
-                }
-            } else {
-                if (my $err = $self->validate_word($args[1], MIN_WORD_LENGTH, MAX_WORD_LENGTH)) {
-                    return $err;
-                }
-
-                $morph = eval { makemorph($self->{db}, $args[0], $args[1]) } or return $@;
-                return "Failed to find a path between `$args[0]` and `$args[1]`." if !$morph || !@$morph;
-            }
-
-            $self->set_up_new_morph($morph, $channel);
-            return "New word morph: " . $self->show_morph_with_blanks($channel) . " (Change the word one letter at a time)";
-        }
-
-        when ('search') {
-            if (not @args) {
-                return "Usage: wordmorph search <regex>";
-            }
-
-            return DB_UNAVAILABLE if not $self->{db};
-
-            my @words;
-
-            eval {
-                foreach my $length (keys $self->{db}->%*) {
-                    foreach my $word (keys $self->{db}->{$length}->%*) {
-
-                        if ($word =~ m/$args[0]/) {
-                            push @words, $word;
-                        }
-                    }
-                }
-            };
-
-            if (my $except = $@) {
-                $except =~ s/ at \/home.*$//;
-                return "Error: $except";
-            }
-
-            if (not @words) {
-                return "No matching words found.";
-            }
-
-            return scalar @words . (@words == 1 ? ' word' : ' words') . ': ' . join(' ', @words);
-        }
-
-        when ('solve') {
+        when (isabbrev($_, 'solve')) {
             if (not @args) {
                 return "Usage: wordmorph solve <solution>";
             }
@@ -357,6 +205,159 @@ sub wordmorph($self, $context) {
 
             # this should never happen ... but just in case
             return "Correct! " . join(' > ', @solution) . " is shorter than the expected solution. Congratulations!";
+        }
+
+        when (isabbrev($_, 'show')) {
+            if (not defined $self->{$channel}->{morph}) {
+                return NO_MORPH_AVAILABLE;
+            }
+
+            return "Current word morph: " . $self->show_morph_with_blanks($channel) . " (Change the word one letter at a time)";
+        }
+
+        when (isabbrev($_, 'giveup')) {
+            if (not defined $self->{$channel}->{morph}) {
+                return NO_MORPH_AVAILABLE;
+            }
+
+            my $solution = join ' > ', @{$self->{$channel}->{morph}};
+            $self->{$channel}->{morph} = undef;
+            return "The solution was $solution. Better luck next time.";
+        }
+
+        when (isabbrev($_, 'start')) {
+            if (@args > 2) {
+                return "Invalid arguments; Usage: wordmorph start [steps to solve [word length]]";
+            }
+
+            my $steps = DEFAULT_STEPS;
+            my $length = undef;
+
+            if (defined $args[0]) {
+                if ($args[0] !~ m/^[0-9]+$/ || $args[0] < MIN_STEPS || $args[0] > MAX_STEPS) {
+                    return "Invalid number of steps `$args[0]`; must be integer >= ".MIN_STEPS." and <= ".MAX_STEPS.".";
+                }
+
+                $steps = $args[0];
+            }
+
+            if (defined $args[1]) {
+                if ($args[1] !~ m/^[0-9]+$/ || $args[1] < MIN_WORD_LENGTH || $args[1] > MAX_WORD_LENGTH) {
+                    return "Invalid word length `$args[1]`; must be integer >= ".MIN_WORD_LENGTH." and <= ".MAX_WORD_LENGTH.".";
+                }
+
+                $length = $args[1];
+            }
+
+            return DB_UNAVAILABLE if not $self->{db};
+
+            my $attempts = 1000;
+            my $morph;
+
+            while (--$attempts > 0) {
+                $morph = eval {
+                    $self->make_morph_by_steps($self->{db}, $steps + 2, $length)
+                };
+
+                if (my $err = $@) {
+                    next if $err eq "Too many attempts\n";
+                    return $err;
+                }
+
+                last if @$morph;
+            }
+
+            if (not @$morph) {
+                return "Failed to create Word Morph with given parameters, in reasonable time. Try again.";
+            }
+
+            $self->set_up_new_morph($morph, $channel);
+            return "New word morph: " . $self->show_morph_with_blanks($channel) . " (Change the word one letter at a time)";
+        }
+
+        when (isabbrev($_, 'custom')) {
+            return "Usage: wordmorph custom <word1> (<word2> | <integer steps>)" if @args != 2;
+            return DB_UNAVAILABLE if not $self->{db};
+
+            if (my $err = $self->validate_word($args[0], MIN_WORD_LENGTH, MAX_WORD_LENGTH)) {
+                return $err;
+            }
+
+            my $morph;
+
+            if ($args[1] =~ /^\d+$/) {
+                my $steps = DEFAULT_STEPS;
+                my $length = length $args[0];
+
+                if ($args[1] < MIN_STEPS || $args[1] > MAX_STEPS) {
+                    return "Invalid number of steps `$args[1]`; must be integer >= ".MIN_STEPS." and <= ".MAX_STEPS.".";
+                }
+
+                $steps = $args[1];
+
+                return DB_UNAVAILABLE if not $self->{db};
+
+                my $attempts = 100;
+
+                while (--$attempts > 0) {
+                    $morph = eval {
+                        $self->make_morph_by_steps($self->{db}, $steps + 2, $length, $args[0])
+                    };
+
+                    if (my $err = $@) {
+                        next if $err eq "Too many attempts\n";
+                        return $err;
+                    }
+
+                    last if @$morph;
+                }
+
+                if (!$morph || !@$morph) {
+                    return "Failed to create Word Morph with given parameters, in reasonable time. Try again.";
+                }
+            } else {
+                if (my $err = $self->validate_word($args[1], MIN_WORD_LENGTH, MAX_WORD_LENGTH)) {
+                    return $err;
+                }
+
+                $morph = eval { makemorph($self->{db}, $args[0], $args[1]) } or return $@;
+                return "Failed to find a path between `$args[0]` and `$args[1]`." if !$morph || !@$morph;
+            }
+
+            $self->set_up_new_morph($morph, $channel);
+            return "New word morph: " . $self->show_morph_with_blanks($channel) . " (Change the word one letter at a time)";
+        }
+
+        when (isabbrev($_, 'search')) {
+            if (not @args) {
+                return "Usage: wordmorph search <regex>";
+            }
+
+            return DB_UNAVAILABLE if not $self->{db};
+
+            my @words;
+
+            eval {
+                foreach my $length (keys $self->{db}->%*) {
+                    foreach my $word (keys $self->{db}->{$length}->%*) {
+
+                        if ($word =~ m/$args[0]/) {
+                            push @words, $word;
+                        }
+                    }
+                }
+            };
+
+            if (my $except = $@) {
+                $except =~ s/ at \/home.*$//;
+                return "Error: $except";
+            }
+
+            if (not @words) {
+                return "No matching words found.";
+            }
+
+            return scalar @words . (@words == 1 ? ' word' : ' words') . ': ' . join(' ', @words);
         }
 
         default {

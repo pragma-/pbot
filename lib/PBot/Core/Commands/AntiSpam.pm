@@ -9,6 +9,7 @@ package PBot::Core::Commands::AntiSpam;
 use parent 'PBot::Core::Class';
 
 use PBot::Imports;
+use PBot::Core::Utils::IsAbbrev;
 
 use Time::HiRes qw/gettimeofday/;
 use POSIX       qw/strftime/;
@@ -31,8 +32,8 @@ sub cmd_antispam($self, $context) {
 
     my $keywords = $self->{pbot}->{antispam}->{keywords};
 
-    given ($command) {
-        when ($_ eq "list" or $_ eq "show") {
+    given (lc $command) {
+        when (isabbrev($_, 'list') or isabbrev($_, 'show')) {
             my $text    = "Spam keywords:\n";
             my $entries = 0;
 
@@ -49,7 +50,7 @@ sub cmd_antispam($self, $context) {
             return $text;
         }
 
-        when ("set") {
+        when (isabbrev($_, 'set')) {
             my ($namespace, $keyword, $flag, $value) = $self->{pbot}->{interpreter}->split_args($arglist, 4);
 
             if (not defined $namespace or not defined $keyword) {
@@ -103,7 +104,7 @@ sub cmd_antispam($self, $context) {
             return "Flag set.";
         }
 
-        when ("unset") {
+        when (isabbrev($_, 'unset')) {
             my ($namespace, $keyword, $flag) = $self->{pbot}->{interpreter}->split_args($arglist, 3);
 
             if (not defined $namespace or not defined $keyword or not defined $flag) {
@@ -125,7 +126,7 @@ sub cmd_antispam($self, $context) {
             return $keywords->remove($namespace, $keyword, $flag);
         }
 
-        when ("add") {
+        when (isabbrev($_, 'add')) {
             my ($namespace, $keyword) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
 
             if (not defined $namespace or not defined $keyword) {
@@ -141,7 +142,7 @@ sub cmd_antispam($self, $context) {
             return "/say Added `$keyword`.";
         }
 
-        when ("remove") {
+        when (isabbrev($_, 'remove')) {
             my ($namespace, $keyword) = $self->{pbot}->{interpreter}->split_args($arglist, 2);
 
             if (not defined $namespace or not defined $keyword) {
