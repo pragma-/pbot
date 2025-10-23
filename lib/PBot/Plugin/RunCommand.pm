@@ -34,10 +34,14 @@ sub initialize($self, %conf) {
         requires_cap => 1,
         subref => sub { $self->cmd_runcmd(@_) },
     );
+
+    # add capability to botowner group
+    $self->{pbot}->{capabilities}->add('botowner', 'can-runcmd', 1);
 }
 
 sub unload($self) {
     $self->{pbot}->{commands}->remove('runcmd');
+    $self->{pbot}->{capabilities}->remove('can-runcmd');
 }
 
 sub cmd_runcmd($self, $context) {
