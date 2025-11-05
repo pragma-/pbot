@@ -13,6 +13,7 @@ use PBot::Imports;
 use PBot::Core::Utils::IsAbbrev;
 
 use Storable qw(dclone);
+use Time::HiRes qw/time/;
 use Time::Duration;
 use JSON::XS;
 use utf8;
@@ -379,6 +380,10 @@ sub wordle($self, $context) {
             my $gameid = $self->gameid($args[2], $context, 1) // 'main';
             my $game = $gameid ne 'main' ? "($gameid) " : '';
 
+            if ($gameid !~ /^[a-zA-Z0-9_]{1,16}$/) {
+                return "Invalid game-id `$gameid`; must be [a-zA-Z0-9_]{1,16}";
+            }
+
             $self->{players}->{$channel}->{$context->{message_account}}->{gameid} = $gameid;
 
             if (defined $self->{games}->{$channel}->{$gameid}->{wordle}
@@ -419,6 +424,10 @@ sub wordle($self, $context) {
 
             my $gameid = $self->gameid($args[3], $context, 1) // 'main';
             my $game = $gameid ne 'main' ? "($gameid) " : '';
+
+            if ($gameid !~ /^[a-zA-Z0-9_]{1,16}$/) {
+                return "Invalid game-id `$gameid`; must be [a-zA-Z0-9_]{1,16}";
+            }
 
             if (defined $self->{games}->{$custom_channel}->{$gameid}->{wordle}
                     && !$self->{games}->{$custom_channel}->{$gameid}->{solved}
@@ -569,6 +578,10 @@ sub gameid($self, $gameid, $context, $newgame = 0) {
         if (exists $self->{players}->{$channel}->{$context->{message_account}}) {
             $gameid = $self->{players}->{$channel}->{$context->{message_account}}->{gameid};
             return $gameid if defined $gameid;
+        }
+
+        if (exists $self->{games}->{$channel}->{main}) {
+            return 'main';
         }
     } else {
         if (!exists $self->{games}->{$channel}->{$gameid} && !$newgame) {
@@ -909,7 +922,7 @@ sub check_games($self) {
     my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
     foreach my $channel (keys $self->{games}->%*) {
         foreach my $gameid (keys $self->{games}->{$channel}->%*) {
-            if ($now - $self->{games}->{$channel}->{$gameid}->{guess_time} > 60 * 60 * 24 * 3) {
+            if ($now - $self->{games}->{$channel}->{$gameid}->{guess_time} > 60 * 60 * 24) {
                 my $wordle = join '', $self->{games}->{$channel}->{$gameid}->{wordle}->@*;
 
                 my $state;
