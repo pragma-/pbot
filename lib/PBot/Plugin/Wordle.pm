@@ -127,6 +127,12 @@ my %wordlists = (
         wlist   => '/wordle/urban',
         glist   => ['insane', 'british'],
     },
+    halloween => {
+        name    => 'Halloween',
+        prompt  => 'Guess the Halloween word!',
+        wlist   => '/wordle/halloween',
+        glist   => ['insane', 'british'],
+    },
 );
 
 my %color = (
@@ -158,10 +164,10 @@ sub wordle($self, $context) {
                 return "Usage: wordle show [game-id]";
             }
 
-            my $gameid = $self->gameid($args[0], $context);
+            my ($gameid, $error) = $self->gameid($args[0], $context);
 
-            if (not defined $gameid) {
-                return NO_GAMEID;
+            if (defined $error) {
+                return $error;
             }
 
             my $game = $gameid ne 'main' ? "($gameid) " : '';
@@ -174,18 +180,30 @@ sub wordle($self, $context) {
         }
 
         when (isabbrev($_, 'players')) {
-            my @players;
+            my %games;
+
             foreach my $id (keys %{$self->{players}->{$channel}}) {
                 my $h = $self->{pbot}->{messagehistory}->{database}->find_message_account_by_id($id);
                 my ($n) = $h =~ m/^([^!]+)/;
                 $n =~ s/(.)/$1\x{feff}/;  # dehighlight
-                push @players, "$n: " . $self->{players}->{$channel}->{$id}->{gameid};
+                my $gameid = $self->{players}->{$channel}->{$id}->{gameid};
+                push $games{$gameid}->@*, $n;
             }
 
-            if (not @players) {
+            my @games = sort keys %games;
+
+            if (not @games) {
                 return "No players yet.";
             } else {
-                return "Players: " . (join ', ', sort @players);
+                my @result;
+
+                foreach my $game (@games) {
+                    my $text = "($game): ";
+                    $text .= join ', ', sort $games{$game}->@*;
+                    push @result, $text;
+                }
+
+                return "Players: " . (join '; ', @result);
             }
         }
 
@@ -216,18 +234,22 @@ sub wordle($self, $context) {
                 return "Usage: wordle select [game-id]";
             }
 
-            my $gameid = $args[0];
+            my ($gameid, $error) = $self->gameid($args[0], $context);
 
-            if (not defined $gameid) {
-                $gameid = 'main';
+            if (defined $error) {
+                return $error;
             }
 
             if (not exists $self->{games}->{$channel}->{$gameid}) {
                 return "$context->{nick}: " . NO_GAMEID;
             }
 
-            $self->{players}->{$channel}->{$context->{message_account}}->{gameid} = $gameid;
-            return "$context->{nick} is now playing the $gameid Wordle!";
+            if (not defined $args[0]) {
+                return "$context->{nick}: You are playing the $gameid Wordle.";
+            } else {
+                $self->{players}->{$channel}->{$context->{message_account}}->{gameid} = $gameid;
+                return "$context->{nick} is now playing the $gameid Wordle!";
+            }
         }
 
         when (isabbrev($_, 'info')) {
@@ -242,10 +264,10 @@ sub wordle($self, $context) {
                 $json = 1;
             }
 
-            my $gameid = $self->gameid($args[0], $context);
+            my ($gameid, $error) = $self->gameid($args[0], $context);
 
-            if (not defined $gameid) {
-                return NO_GAMEID;
+            if (defined $error) {
+                return $error;
             }
 
             my $game = $gameid ne 'main' ? "($gameid) " : '';
@@ -323,10 +345,10 @@ sub wordle($self, $context) {
                 return "Usage: wordle giveup [game-id]";
             }
 
-            my $gameid = $self->gameid($args[0], $context);
+            my ($gameid, $error) = $self->gameid($args[0], $context);
 
-            if (not defined $gameid) {
-                return NO_GAMEID;
+            if (defined $error) {
+                return $error;
             }
 
             my $game = $gameid ne 'main' ? "($gameid) " : '';
@@ -377,11 +399,12 @@ sub wordle($self, $context) {
                 $length = $args[0];
             }
 
-            my $gameid = $self->gameid($args[2], $context, 1) // 'main';
+            my ($gameid) = $self->gameid($args[2], $context, 1);
+            $gameid //= 'main';
             my $game = $gameid ne 'main' ? "($gameid) " : '';
 
             if ($gameid !~ /^[a-zA-Z0-9_]{1,16}$/) {
-                return "Invalid game-id `$gameid`; must be [a-zA-Z0-9_]{1,16}";
+                return "Invalid game-id `$gameid`; must be up to 16 alphanumeric characters";
             }
 
             $self->{players}->{$channel}->{$context->{message_account}}->{gameid} = $gameid;
@@ -422,11 +445,12 @@ sub wordle($self, $context) {
                 return "I'm not on that channel!";
             }
 
-            my $gameid = $self->gameid($args[3], $context, 1) // 'main';
+            my ($gameid) = $self->gameid($args[3], $context, 1);
+            $gameid //= 'main';
             my $game = $gameid ne 'main' ? "($gameid) " : '';
 
             if ($gameid !~ /^[a-zA-Z0-9_]{1,16}$/) {
-                return "Invalid game-id `$gameid`; must be [a-zA-Z0-9_]{1,16}";
+                return "Invalid game-id `$gameid`; must be up to 16 alphanumeric characters";
             }
 
             if (defined $self->{games}->{$custom_channel}->{$gameid}->{wordle}
@@ -464,10 +488,10 @@ sub wordle($self, $context) {
                 return "Usage: wordle guess <word> [game-id]";
             }
 
-            my $gameid = $self->gameid($args[1], $context);
+            my ($gameid, $error) = $self->gameid($args[1], $context);
 
-            if (not defined $gameid) {
-                return NO_GAMEID;
+            if (defined $error) {
+                return $error;
             }
 
             my $game = $gameid ne 'main' ? "($gameid) " : '';
@@ -495,10 +519,10 @@ sub wordle($self, $context) {
         }
 
         when (isabbrev($_, 'hard')) {
-            my $gameid = $self->gameid($args[1], $context);
+            my ($gameid, $error) = $self->gameid($args[1], $context);
 
-            if (not defined $gameid) {
-                return NO_GAMEID;
+            if (defined $error) {
+                return $error;
             }
 
             my $game = $gameid ne 'main' ? "($gameid) " : '';
@@ -527,10 +551,10 @@ sub wordle($self, $context) {
                 return "Usage: wordle guesses [game-id]";
             }
 
-            my $gameid = $self->gameid($args[0], $context);
+            my ($gameid, $error) = $self->gameid($args[0], $context);
 
-            if (not defined $gameid) {
-                return NO_GAMEID;
+            if (defined $error) {
+                return $error;
             }
 
             my $game = $gameid ne 'main' ? "($gameid) " : '';
@@ -551,10 +575,10 @@ sub wordle($self, $context) {
                 return "Usage: wordle letters [game-id]";
             }
 
-            my $gameid = $self->gameid($args[0], $context);
+            my ($gameid, $error) = $self->gameid($args[0], $context);
 
-            if (not defined $gameid) {
-                return NO_GAMEID;
+            if (defined $error) {
+                return $error;
             }
 
             my $game = $gameid ne 'main' ? "($gameid) " : '';
@@ -574,22 +598,42 @@ sub wordle($self, $context) {
 
 sub gameid($self, $gameid, $context, $newgame = 0) {
     my $channel = $context->{from};
+
     if (not defined $gameid) {
         if (exists $self->{players}->{$channel}->{$context->{message_account}}) {
             $gameid = $self->{players}->{$channel}->{$context->{message_account}}->{gameid};
-            return $gameid if defined $gameid;
+            return ($gameid) if defined $gameid;
         }
 
         if (exists $self->{games}->{$channel}->{main}) {
-            return 'main';
+            return ('main');
         }
-    } else {
-        if (!exists $self->{games}->{$channel}->{$gameid} && !$newgame) {
-            return undef;
-        }
-    }
 
-    return $gameid;
+        return (undef, NO_GAMEID);
+    } else {
+        if (exists $self->{games}->{$channel}->{$gameid}) {
+            return ($gameid);
+        }
+
+        my @games = keys $self->{games}->{$channel}->%*;
+
+        my @expansion = deabbrev($gameid, @games);
+
+        if (@expansion > 1) {
+            my $error = "Multiple game-ids found: " . join ', ', sort @expansion;
+            return (undef, $error);
+        }
+
+        if (!@expansion) {
+            if (!$newgame) {
+                return (undef, NO_GAMEID);
+            } else {
+                return ($gameid);
+            }
+        }
+
+        return @expansion;
+    }
 }
 
 sub load_words($self, $length, $wordlist = DEFAULT_LIST, $words = undef) {
