@@ -10,7 +10,7 @@ package PBot::Plugin::Wordle;
 use parent 'PBot::Plugin::Base';
 
 use PBot::Imports;
-use PBot::Core::Utils::IsAbbrev;
+use PBot::Core::Utils::Abbrev;
 
 use Storable qw(dclone);
 use Time::HiRes qw/time/;

@@ -28,7 +28,7 @@ package PBot::Plugin::Battleship;
 use parent 'PBot::Plugin::Base';
 
 use PBot::Imports;
-use PBot::Core::Utils::IsAbbrev;
+use PBot::Core::Utils::Abbrev;
 
 use Time::Duration;
 use Time::HiRes qw/time/;

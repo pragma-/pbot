@@ -10,7 +10,7 @@ package PBot::Plugin::WordMorph;
 use parent 'PBot::Plugin::Base';
 
 use PBot::Imports;
-use PBot::Core::Utils::IsAbbrev;
+use PBot::Core::Utils::Abbrev;
 
 use Storable;
 use Text::Levenshtein::XS 'distance';

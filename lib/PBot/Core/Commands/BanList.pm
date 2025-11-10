@@ -10,7 +10,7 @@ use parent 'PBot::Core::Class';
 
 use PBot::Imports;
 
-use PBot::Core::Utils::IsAbbrev;
+use PBot::Core::Utils::Abbrev;
 use PBot::Core::MessageHistory::Constants ':all';
 
 use Time::HiRes qw/gettimeofday/;

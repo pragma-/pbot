@@ -9,7 +9,7 @@ package PBot::Core::Commands::AntiSpam;
 use parent 'PBot::Core::Class';
 
 use PBot::Imports;
-use PBot::Core::Utils::IsAbbrev;
+use PBot::Core::Utils::Abbrev;
 
 use Time::HiRes qw/gettimeofday/;
 use POSIX       qw/strftime/;

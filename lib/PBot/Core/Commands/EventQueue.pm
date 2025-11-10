@@ -10,7 +10,7 @@ package PBot::Core::Commands::EventQueue;
 use PBot::Imports;
 use parent 'PBot::Core::Class';
 
-use PBot::Core::Utils::IsAbbrev;
+use PBot::Core::Utils::Abbrev;
 
 use Time::Duration;
 

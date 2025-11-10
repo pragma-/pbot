@@ -10,7 +10,7 @@ package PBot::Core::Commands::BlackList;
 use parent 'PBot::Core::Class';
 
 use PBot::Imports;
-use PBot::Core::Utils::IsAbbrev;
+use PBot::Core::Utils::Abbrev;
 
 sub initialize($self, %conf) {
     $self->{pbot}->{commands}->register(sub { $self->cmd_blacklist(@_) }, "blacklist", 1);

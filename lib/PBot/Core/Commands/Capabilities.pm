@@ -10,7 +10,7 @@ package PBot::Core::Commands::Capabilities;
 use PBot::Imports;
 use parent 'PBot::Core::Class';
 
-use PBot::Core::Utils::IsAbbrev;
+use PBot::Core::Utils::Abbrev;
 
 sub initialize($self, %conf) {
     $self->{pbot}->{commands}->register(sub { $self->cmd_cap(@_) }, "cap");

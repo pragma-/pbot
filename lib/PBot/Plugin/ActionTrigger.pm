@@ -38,7 +38,7 @@ package PBot::Plugin::ActionTrigger;
 use parent 'PBot::Plugin::Base';
 
 use PBot::Imports;
-use PBot::Core::Utils::IsAbbrev;
+use PBot::Core::Utils::Abbrev;
 
 use DBI;
 use Time::Duration qw/duration/;
