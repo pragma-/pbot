@@ -240,10 +240,6 @@ sub wordle($self, $context) {
                 return $error;
             }
 
-            if (not exists $self->{games}->{$channel}->{$gameid}) {
-                return "$context->{nick}: " . NO_GAMEID;
-            }
-
             if (not defined $args[0]) {
                 return "$context->{nick}: You are playing the $gameid Wordle.";
             } else {
@@ -498,6 +494,10 @@ sub wordle($self, $context) {
 
             if (!exists $self->{games}->{$channel}->{$gameid} || !defined $self->{games}->{$channel}->{$gameid}->{wordle}) {
                 return $game . NO_WORDLE;
+            }
+
+            if (!exists $self->{players}->{$channel} || !exists $self->{players}->{$channel}->{$context->{message_account}}) {
+                $self->{players}->{$channel}->{$context->{message_account}}->{gameid} = $gameid;
             }
 
             if ($self->{games}->{$channel}->{$gameid}->{solved}) {
