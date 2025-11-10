@@ -1,6 +1,7 @@
 # File: Abbrev.pm
 #
-# Purpose: Utils to check is a string is an abbreviation of another string.
+# Purpose: Check if a string is an abbreviation of another string or list
+# of strings.
 
 # SPDX-FileCopyrightText: 2017-2023 Pragmatic Software <pragma78@gmail.com>
 # SPDX-License-Identifier: MIT
