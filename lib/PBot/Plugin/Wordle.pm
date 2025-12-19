@@ -36,7 +36,7 @@ sub unload($self) {
 }
 
 use constant {
-    USAGE     => 'Usage: wordle start [length [wordlist [game-id]]] | custom <word> <channel> [wordlist [game-id]] | guess <word> [game-id] | select [game-id] | list | guesses [game-id] | letters [game-id] | show [game-id] | info [game-id] | hard [on|off|status [game-id]] | giveup [game-id]',
+    USAGE     => 'Usage: wordle start [length [wordlist [game-id]]] | custom <word> <channel> [wordlist [game-id]] | guess <word> [game-id] | select [game-id] | list | guesses [game-id] | letters [game-id] | show [game-id] | info [game-id] | players | hard [on|off|status [game-id]] | giveup [game-id]',
 
     NO_WORDLE => 'There is no Wordle yet. Use `wordle start` to begin a game.',
     NO_GAMEID => 'That game-id does not exist. Use `wordle start <length> <wordlist> <gameid>` to begin a game with that id.',
@@ -214,11 +214,15 @@ sub wordle($self, $context) {
 
             my @games;
             foreach my $gameid (keys $self->{games}->{$channel}->%*) {
-                my $length = $self->{games}->{$channel}->{$gameid}->{length};
-                my $wordlist = $self->{games}->{$channel}->{$gameid}->{wordlist};
-                my $solved = $self->{games}->{$channel}->{$gameid}->{solved} ? ', solved' : '';
-                my $givenup = $self->{games}->{$channel}->{$gameid}->{givenup} ? ', given up' : '';
-                push @games, "$gameid ($wordlist:$length$solved$givenup)";
+                if (not exists $self->{games}->{$channel}->{$gameid}->{wordle}) {
+                    push @games, "$gameid (none)";
+                } else {
+                    my $length = $self->{games}->{$channel}->{$gameid}->{length};
+                    my $wordlist = $self->{games}->{$channel}->{$gameid}->{wordlist};
+                    my $solved = $self->{games}->{$channel}->{$gameid}->{solved} ? ', solved' : '';
+                    my $givenup = $self->{games}->{$channel}->{$gameid}->{givenup} ? ', given up' : '';
+                    push @games, "$gameid ($wordlist:$length$solved$givenup)";
+                }
             }
 
             if (not @games) {
@@ -234,7 +238,7 @@ sub wordle($self, $context) {
                 return "Usage: wordle select [game-id]";
             }
 
-            my ($gameid, $error) = $self->gameid($args[0], $context);
+            my ($gameid, $error) = $self->gameid($args[0], $context, 1);
 
             if (defined $error) {
                 return $error;
@@ -244,8 +248,31 @@ sub wordle($self, $context) {
                 return "$context->{nick}: You are playing the $gameid Wordle.";
             } else {
                 $self->{players}->{$channel}->{$context->{message_account}}->{gameid} = $gameid;
+                $self->{games}->{$channel}->{$gameid}->{exists} = 1;
                 return "$context->{nick} is now playing the $gameid Wordle!";
             }
+        }
+
+        when (isabbrev($_, 'state')) {
+            if (@args > 1) {
+                return "Usage: wordle state [game-id]";
+            }
+
+            my ($gameid, $error) = $self->gameid($args[0], $context);
+
+            if (defined $error) {
+                return $error;
+            }
+
+            return $self->guesses2state($channel, $gameid);
+        }
+
+        when (isabbrev($_, 's2p')) {
+            if (@args != 1) {
+                return "Usage: wordle s2p <state>";
+            }
+
+            return $self->state2pattern($args[0]);
         }
 
         when (isabbrev($_, 'info')) {
@@ -335,6 +362,45 @@ sub wordle($self, $context) {
 
             return $game . $result;
          }
+
+         when (isabbrev($_, 'guess')) {
+            if (!@args || @args > 2) {
+                return "Usage: wordle guess <word> [game-id]";
+            }
+
+            my ($gameid, $error) = $self->gameid($args[1], $context);
+
+            if (defined $error) {
+                return $error;
+            }
+
+            my $game = $gameid ne 'main' ? "($gameid) " : '';
+
+            if (!exists $self->{games}->{$channel}->{$gameid} || !defined $self->{games}->{$channel}->{$gameid}->{wordle}) {
+                return $game . NO_WORDLE;
+            }
+
+            if (!exists $self->{players}->{$channel} || !exists $self->{players}->{$channel}->{$context->{message_account}}) {
+                $self->{players}->{$channel}->{$context->{message_account}}->{gameid} = $gameid;
+            }
+
+            if ($self->{games}->{$channel}->{$gameid}->{solved}) {
+                return "${game}Wordle already solved by $self->{games}->{$channel}->{$gameid}->{solved_by}. " . $self->show_wordle($channel, $gameid);
+            }
+
+            if ($self->{games}->{$channel}->{$gameid}->{givenup}) {
+                return "${game}Wordle given up by $self->{games}->{$channel}->{$gameid}->{givenup_by}.";
+            }
+
+            my $result = $game . $self->guess_wordle($channel, $args[0], $gameid);
+
+            if ($self->{games}->{$channel}->{$gameid}->{solved}) {
+                $self->{games}->{$channel}->{$gameid}->{solved_by} = $context->{nick};
+                $self->{games}->{$channel}->{$gameid}->{solved_on} = time;
+            }
+
+            return $result;
+        }
 
         when (isabbrev($_, 'giveup')) {
             if (@args > 1) {
@@ -477,45 +543,6 @@ sub wordle($self, $context) {
 
             $self->{pbot}->{interpreter}->add_message_to_output_queue($custom_channel, $message, 0);
             return "Custom Wordle started!";
-        }
-
-        when (isabbrev($_, 'guess')) {
-            if (!@args || @args > 2) {
-                return "Usage: wordle guess <word> [game-id]";
-            }
-
-            my ($gameid, $error) = $self->gameid($args[1], $context);
-
-            if (defined $error) {
-                return $error;
-            }
-
-            my $game = $gameid ne 'main' ? "($gameid) " : '';
-
-            if (!exists $self->{games}->{$channel}->{$gameid} || !defined $self->{games}->{$channel}->{$gameid}->{wordle}) {
-                return $game . NO_WORDLE;
-            }
-
-            if (!exists $self->{players}->{$channel} || !exists $self->{players}->{$channel}->{$context->{message_account}}) {
-                $self->{players}->{$channel}->{$context->{message_account}}->{gameid} = $gameid;
-            }
-
-            if ($self->{games}->{$channel}->{$gameid}->{solved}) {
-                return "${game}Wordle already solved by $self->{games}->{$channel}->{$gameid}->{solved_by}. " . $self->show_wordle($channel, $gameid);
-            }
-
-            if ($self->{games}->{$channel}->{$gameid}->{givenup}) {
-                return "${game}Wordle given up by $self->{games}->{$channel}->{$gameid}->{givenup_by}.";
-            }
-
-            my $result = $game . $self->guess_wordle($channel, $args[0], $gameid);
-
-            if ($self->{games}->{$channel}->{$gameid}->{solved}) {
-                $self->{games}->{$channel}->{$gameid}->{solved_by} = $context->{nick};
-                $self->{games}->{$channel}->{$gameid}->{solved_on} = time;
-            }
-
-            return $result;
         }
 
         when (isabbrev($_, 'hard')) {
@@ -725,7 +752,7 @@ sub make_wordle($self, $nick, $channel, $length, $gameid = 'main', $word = undef
     $self->{games}->{$channel}->{$gameid}->{start_nick}    = $nick;
 
     if (not defined $self->{games}->{$channel}->{$gameid}->{hard_mode}) {
-        $self->{games}->{$channel}->{$gameid}->{hard_mode} = 0;
+        $self->{games}->{$channel}->{$gameid}->{hard_mode} = 1;
     }
 
     foreach my $letter ('A'..'Z') {
@@ -766,11 +793,27 @@ sub show_letters($self, $channel, $gameid = 'main') {
 }
 
 sub show_wordle($self, $channel, $gameid = 'main', $with_letters = 0) {
-	if ($with_letters) {
-		return $self->{games}->{$channel}->{$gameid}->{guess} . "$color{reset} " . $self->show_letters($channel, $gameid);
-	} else {
-		return $self->{games}->{$channel}->{$gameid}->{guess} . "$color{reset}";
-	}
+    if ($with_letters) {
+        my $state = $self->guesses2state($channel, $gameid);
+        my $pattern = $self->state2pattern($state);
+
+        my @words;
+        if (defined $pattern) {
+            @words = $self->pattern2words($channel, $gameid, $pattern);
+        }
+
+        my $count = @words;
+
+        if ($count) {
+            $count = "($count word" . ($count == 1 ? '' : 's') . ')';
+        } else {
+            $count = '';
+        }
+
+        return $self->{games}->{$channel}->{$gameid}->{guess} . "$color{reset} " . $self->show_letters($channel, $gameid) . $count;
+    } else {
+        return $self->{games}->{$channel}->{$gameid}->{guess} . "$color{reset}";
+    }
 }
 
 sub guess_wordle($self, $channel, $guess, $gameid = 'main') {
@@ -808,7 +851,7 @@ sub guess_wordle($self, $channel, $guess, $gameid = 'main') {
             }
 
             foreach my $orange ($self->{games}->{$channel}->{$gameid}->{oranges}->@*) {
-                if ($guess[$i] eq $orange->[$i]) {
+                if (defined $orange->[$i] && $guess[$i] eq $orange->[$i]) {
                     $self->{games}->{$channel}->{$gameid}->{invalid_count}++;
                     return "Hard mode is enabled. Position " . ($i + 1) . " can't be $guess[$i]. Try again.";
                 }
@@ -824,7 +867,7 @@ sub guess_wordle($self, $channel, $guess, $gameid = 'main') {
             foreach my $o (keys %oranges) {
                 my $count = 0;
                 $_ eq $o && $count++ foreach @guess;
-                if ($count < $oranges{$o} + $greens{$o}) {
+                if ($count < ($oranges{$o} // 0) + ($greens{$o} // 0)) {
                     $self->{games}->{$channel}->{$gameid}->{invalid_count}++;
                     return "Hard mode is enabled. There must be " . ($oranges{$o} + $greens{$o}) . " $o. Try again.";
                 }
@@ -833,13 +876,13 @@ sub guess_wordle($self, $channel, $guess, $gameid = 'main') {
 
         foreach my $white ($self->{games}->{$channel}->{$gameid}->{whites}->@*) {
             for (my $i = 0; $i < @guess; $i++) {
-                if ($guess[$i] eq $white->[$i]) {
+                if (defined $white->[$i] && $guess[$i] eq $white->[$i]) {
                     $self->{games}->{$channel}->{$gameid}->{invalid_count}++;
                     return "Hard mode is enabled. Position " . ($i + 1) . " can't be $guess[$i]. Try again.";
                 }
 
-                if (not $self->{games}->{$channel}->{$gameid}->{letter_max}->{$white->[$i]}) {
-                    my $count = $greens{$white->[$i]} + $oranges{$white->[$i]};
+                if (defined $white->[$i] && !$self->{games}->{$channel}->{$gameid}->{letter_max}->{$white->[$i]}) {
+                    my $count = ($greens{$white->[$i]} // 0) + ($oranges{$white->[$i]} // 0);
 
                     if ($count) {
                         $self->{games}->{$channel}->{$gameid}->{letter_max}->{$white->[$i]} = $count;
@@ -961,11 +1004,143 @@ sub guess_wordle($self, $channel, $guess, $gameid = 'main') {
     }
 }
 
+# inspired by Just Another Archivist's jaa-guesses2state factoid
+sub guesses2state($self, $channel, $gameid) {
+    my %modifier = ('*' => 'G', '?' => 'Y', ' ' => 'B');
+
+    my @results;
+
+    foreach my $guess ($self->{games}->{$channel}->{$gameid}->{guesses}->@*) {
+        my $word = $guess;
+        $word =~ s/[^\pL]//g;
+
+        my $result = lc "$word.";
+
+        my $g = $guess;
+        $g =~ s/\x02|\x0F|\x11|\x1D|\x1E|\x1F|\x03([0-9][0-9]?(,[0-9][0-9]?)?)?//g;
+
+        my @states = ($g =~ /..(.)/g);
+        foreach my $state (@states) {
+            $result .= $modifier{$state};
+        }
+
+        push @results, $result;
+    }
+
+    return join '.', @results;
+}
+
+# ported from Just Another Archivist's jaasolve-state2pattern factoid
+sub state2pattern($self, $state) {
+    my ($guess, $result, %min, %exact, %missing, %letters, @pospattern, $char, $rchar);
+
+    ($result) = $state =~ m/([^\.]+)/;
+    my $length = length $result;
+
+    while ($state) {
+        ($guess, $result, $state) = split /\./, $state, 3;
+
+        if (length $guess != length $result || length $guess != $length) {
+            return undef;
+        }
+
+        %letters = ();
+
+        for (my $i = 0; $i < $length; ++$i) {
+            $char = substr($guess, $i, 1);
+            $rchar = substr($result, $i, 1);
+
+            if ($rchar eq 'G') {
+                $pospattern[$i] = $char;
+                $letters{$char}++;
+            }
+
+            elsif ($rchar eq 'Y') {
+                if ($pospattern[$i] !~ /^[^^]/) {
+                    $pospattern[$i] = ($pospattern[$i] ? $pospattern[$i] : '^') . $char;
+                }
+                $letters{$char}++;
+            }
+
+            elsif ($rchar eq 'B') {
+                if ($pospattern[$i] !~ /^[^^]/) {
+                    $pospattern[$i] = ($pospattern[$i] ? $pospattern[$i] : '^') . $char;
+                }
+                $missing{$char} = 1;
+            }
+        }
+
+        foreach $char (keys %letters) {
+            if ($letters{$char} > ($min{$char} // 0)) {
+                $min{$char} = $letters{$char};
+            }
+        }
+
+        foreach $char (keys %missing) {
+            if ($min{$char}) {
+                $exact{$char} = $min{$char};
+            }
+        }
+
+        foreach $char (keys %missing) {
+            if ($min{$char}) {
+                delete $missing{$char};
+            }
+        }
+    }
+
+    my $pattern = '^';
+
+    if (%missing) {
+        $pattern .= '(?!.*[' . (join '', keys %missing) . '])';
+    }
+
+    if (%min) {
+        foreach $char (keys %min) {
+            $pattern .= '(?=';
+            for (my $i = 0; $i < $min{$char}; ++$i) {
+                $pattern .= ".*$char";
+            }
+            $pattern .= ')';
+        }
+    }
+
+    if (%exact) {
+        foreach $char (keys %exact) {
+            $pattern .= '(?!';
+            for (my $i = 0; $i < $exact{$char} + 1; ++$i) {
+                $pattern .= ".*$char";
+            }
+            $pattern .= ')';
+        }
+    }
+
+    my $subpattern;
+    for (my $i = 0; $i < $length; ++$i) {
+        $subpattern = $pospattern[$i];
+
+        if (defined $subpattern && $subpattern =~ /^\^/) {
+            $pattern .= "[$subpattern]";
+        } else {
+            $pattern .= (length $subpattern ? $subpattern : '.');
+        }
+    }
+
+    $pattern .= '$';
+    return $pattern;
+}
+
+sub pattern2words($self, $channel, $gameid, $pattern) {
+    my @keys = keys $self->{games}->{$channel}->{$gameid}->{words}->%*;
+    return grep { /$pattern/i } @keys;
+}
+
 sub check_games($self) {
     my $now = time;
     my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
     foreach my $channel (keys $self->{games}->%*) {
         foreach my $gameid (keys $self->{games}->{$channel}->%*) {
+            next if not exists $self->{games}->{$channel}->{$gameid}->{wordle};
             if ($now - $self->{games}->{$channel}->{$gameid}->{guess_time} > 60 * 60 * 24) {
                 my $wordle = join '', $self->{games}->{$channel}->{$gameid}->{wordle}->@*;
 
