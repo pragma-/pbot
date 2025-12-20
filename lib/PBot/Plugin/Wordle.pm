@@ -81,6 +81,11 @@ my %wordlists = (
         wlist   => '/wordle/canadian',
         glist   => ['insane', 'british', 'urban'],
     },
+    dutch => {
+        name    => 'Dutch',
+        prompt  => 'Raad het Nederlandse woord!',
+        wlist   => '/wordle/dutch',
+    },
     finnish => {
         name    => 'Finnish',
         prompt  => 'Arvaa suomenkielinen sana!',

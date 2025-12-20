@@ -1,0 +1,1 @@
+cat ngerman | perl -CIO -Mutf8 -ne 'use feature "unicode_strings"; $x = $_; chomp $x; next if not $x =~ /^[A-Z]?[a-zäÄöÖüÜßẞ]+$/; print "$x\n" if length $x >= 3 && length $x <= 22' > filtered/german

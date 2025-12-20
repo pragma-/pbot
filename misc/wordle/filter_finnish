@@ -1,0 +1,2 @@
+cat finnish | perl -CIO -Mutf8 -ne 'use feature "unicode_strings"; $x = $_; chomp $x; next if not $x =~ /^[a-zåäöšž]+$/; print "$x\n" if length $x >= 5 && length $x <= 8' > filtered/finnish
+

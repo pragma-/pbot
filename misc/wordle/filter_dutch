@@ -1,0 +1,1 @@
+cat dutch | perl -CIO -Mutf8 -ne 'use feature "unicode_strings"; $x = $_; chomp $x; next if not $x =~ /^[a-z]+$/; print "$x\n" if length $x >= 3 && length $x <= 22' > filtered/dutch

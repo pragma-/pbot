@@ -1,0 +1,1 @@
+for f in *; do cat $f | perl -ne '$x = $_; chomp $x; next if not $x =~ /^[a-z]+$/; print "$x\n" if length $x >= 3 && length $x <= 22' > filtered/$f; done

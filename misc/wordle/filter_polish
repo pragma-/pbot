@@ -1,0 +1,2 @@
+cat polish | perl -CIO -Mutf8 -ne 'use feature "unicode_strings"; $x = $_; chomp $x; next if not $x =~ /^[a-zćńóśźżąęł]+$/; print "$x\n" if length $x >= 3 && length $x <= 8' > filtered/polish
+
