@@ -52,7 +52,7 @@ sub load_modules() {
 sub vsock_server() {
     print "Starting VSOCK server on PID $$\n";
 
-    system("socat VSOCK-LISTEN:".VPORT.",reuseaddr,fork EXEC:accept-vsock-client");
+    system("socat VSOCK-LISTEN:".VPORT.",reuseaddr,fork,max-children=0 EXEC:accept-vsock-client");
 
     print "VSOCK server shutdown.\n";
     exit; # exit child process

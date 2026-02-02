@@ -39,7 +39,7 @@ sub info($text, $maxlen = 255) {
     my ($sec, $usec) = gettimeofday;
     my $time = strftime "%a %b %e %Y %H:%M:%S", localtime $sec;
     $time .= sprintf ".%03d", $usec / 1000;
-    print STDERR "$$ $time :: $text";
+    print STDERR "[$$] $time :: $text";
 }
 
 sub read_input($input, $buffer, $tag) {
@@ -78,7 +78,7 @@ sub read_input($input, $buffer, $tag) {
     my $command = eval { decode_json($line) };
 
     if ($@) {
-        info("Failed to decode JSON: $@\n", 1024);
+        info("Failed to decode JSON: $@\n");
         return {
             arguments  => '',
             cmdline    => 'sh prog.sh',

@@ -34,7 +34,7 @@ sub info($text, $maxlen = 255) {
     my ($sec, $usec) = gettimeofday;
     my $time = strftime "%a %b %e %Y %H:%M:%S", localtime $sec;
     $time .= sprintf ".%03d", $usec / 1000;
-    print STDERR "$$ $time :: $text";
+    print STDERR "[$$] $time :: $text";
 }
 
 sub new {
