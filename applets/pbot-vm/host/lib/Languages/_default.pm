@@ -281,7 +281,7 @@ sub execute {
 
     $self->debug("compile_json: ", Dumper($compile_json), "\n") if $self->{debug} > 5;
 
-    my @lines = unpack("(A$chunk_size)*", $compile_json);
+    my @lines = unpack("(a$chunk_size)*", $compile_json);
     push @lines, '';
 
     $self->info("Lines:\n" . Dumper(\@lines) . "\n", 1, 8192) if $self->{debug} > 1;
@@ -514,7 +514,7 @@ sub info($self, $text, $timestamp = 1, $maxlen = 255) {
         print STDERR "[$$] $time :: $text";
         print { $self->{logh} } "[$$] $time :: $text";
     } else {
-        print STDERR $text;
+        print STDERR encode('UTF-8', $text);
         print { $self->{logh} } $text;
     }
 }
