@@ -100,7 +100,7 @@ sub initialize($self, %conf) {
     $self->{TILE_SHIP}  = ['A' .. chr ord('A') + $self->{MAX_PLAYERS} - 1];
 
     # default board dimensions
-    $self->{BOARD_X}         = 12;
+    $self->{BOARD_X}         = 10;
     $self->{BOARD_Y}         = 8;
 
     # number of ships per player
@@ -563,7 +563,7 @@ sub init_game($self, $state) {
     $self->{N_Y}   = $self->{BOARD_Y};
 
     # increase board width by player count
-    $self->{N_X} += @{$state->{players}} * 2;
+    $self->{N_X} += (@{$state->{players}} - 2) * 4;
 
     # default count of ships per player
     $self->{SHIPS} = $self->{SHIP_COUNT};
