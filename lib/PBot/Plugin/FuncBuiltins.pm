@@ -35,6 +35,14 @@ sub initialize($self, %conf) {
         }
     );
     $self->{pbot}->{functions}->register(
+        'maybe-ucfirst',
+        {
+            desc   => 'Uppercases first character unless nick',
+            usage  => 'maybe-ucfirst <text>',
+            subref => sub { $self->func_maybe_ucfirst(@_) }
+        }
+    );
+    $self->{pbot}->{functions}->register(
         'uc',
         {
             desc   => 'Uppercases all characters',
@@ -144,6 +152,7 @@ sub initialize($self, %conf) {
 
 sub unload($self) {
     $self->{pbot}->{functions}->unregister('title');
+    $self->{pbot}->{functions}->unregister('maybe-ucfirst');
     $self->{pbot}->{functions}->unregister('ucfirst');
     $self->{pbot}->{functions}->unregister('uc');
     $self->{pbot}->{functions}->unregister('lc');
@@ -182,6 +191,10 @@ sub func_title($self, @rest) {
 }
 
 sub func_ucfirst($self, @rest) {
+    return ucfirst "@rest";
+}
+
+sub func_maybe_ucfirst($self, @rest) {
     my $text = "@rest";
 
     my ($word) = $text =~ m/^\s*([^',.;: ]+)/;
