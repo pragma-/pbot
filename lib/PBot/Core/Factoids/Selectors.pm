@@ -41,6 +41,10 @@ sub make_list($self, $context, $extracted, $settings, %opts) {
             $item = ucfirst $item;
         }
 
+        if ($settings->{'quotemeta'}) {
+            $item = quotemeta $item;
+        }
+
         if ($settings->{'title'}) {
             $item = ucfirst lc $item;
             $item =~ s/ (\w)/' ' . uc $1/ge;
@@ -49,6 +53,7 @@ sub make_list($self, $context, $extracted, $settings, %opts) {
         if ($settings->{'json'}) {
             $item = $self->{pbot}->{factoids}->{variables}->escape_json($item);
         }
+
 
         push @list, $item;
     }

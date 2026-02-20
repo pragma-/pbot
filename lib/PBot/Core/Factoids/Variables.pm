@@ -217,7 +217,11 @@ sub expand_factoid_vars($self, $context, $action, %opts) {
                         $fixed_article = ucfirst $fixed_article;
                     }
 
-                    $replacement = $fixed_article . $trailing . $replacement;
+                    if (not length $replacement) {
+                        $replacement = $fixed_article;
+                    } else {
+                        $replacement = $fixed_article . $trailing . $replacement;
+                    }
                 }
 
                 # prevent double-spaces when joining replacement to result
@@ -238,6 +242,27 @@ sub expand_factoid_vars($self, $context, $action, %opts) {
         if (not length $rest) {
             $rest = $result;
             $result = '';
+        }
+    }
+
+    if ($result =~ s/\b(a|an)(\s*)$//i) {
+        my ($article, $trailing) = ($1, $2);
+
+        my $word = $rest;
+        $word =~ s/^\s+//;
+
+        my $fixed_article = select_indefinite_article $word;
+
+        if ($article eq 'AN') {
+            $fixed_article = uc $fixed_article;
+        } elsif ($article eq 'An' or $article eq 'A') {
+            $fixed_article = ucfirst $fixed_article;
+        }
+
+        if (not length $rest) {
+            $rest = $fixed_article;
+        } else {
+            $rest = $fixed_article . $trailing . $rest;
         }
     }
 
@@ -424,6 +449,10 @@ sub expand_action_arguments($self, $context, $action, $input = '', $nick = '') {
                 if ($settings{'title'}) {
                     $change = ucfirst lc $change;
                     $change =~ s/ (\w)/' ' . uc $1/ge;
+                }
+
+                if ($settings{'quotemeta'}) {
+                    $change = quotemeta $change;
                 }
 
                 if ($settings{'json'}) {

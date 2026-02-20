@@ -22,11 +22,23 @@ sub initialize($self, %conf) {
 sub on_self_join($self, $event_type, $event) {
     my $channel = $event->{channel};
 
+    $self->{pbot}->{logger}->log("self join to $channel\n");
+
     delete $self->{pbot}->{chanops}->{is_opped}->{$channel};
     delete $self->{pbot}->{chanops}->{op_requested}->{$channel};
 
-    if ($self->{pbot}->{channels}->{storage}->get_data($channel, 'permop')) {
-        $self->{pbot}->{chanops}->gain_ops($channel);
+    my $nick = $self->{pbot}->{conn}->nick;
+
+    if ($self->{pbot}->{chanops}->can_gain_ops($channel)) {
+        if ($self->{pbot}->{channels}->{storage}->get_data($channel, 'autovoice')) {
+            $self->{pbot}->{logger}->log("$nick autovoice in $channel\n");
+            $self->{pbot}->{chanops}->add_op_command($channel, "mode $channel +v $nick");
+            $self->{pbot}->{chanops}->gain_ops($channel);
+        } elsif ($self->{pbot}->{channels}->{storage}->get_data($channel, 'permop')
+            || $self->{pbot}->{channels}->{storage}->get_data($channel, 'autoop')) {
+            $self->{pbot}->{logger}->log("$nick autoop in $channel\n");
+            $self->{pbot}->{chanops}->gain_ops($channel);
+        }
     }
 
     return 1;

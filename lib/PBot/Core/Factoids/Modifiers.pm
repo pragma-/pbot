@@ -108,7 +108,7 @@ sub parse($self, $modifier, $bracketed = 0) {
             next;
         }
 
-        if ($$modifier =~ s/^(enumerate|comma|ucfirst|lcfirst|title|uc|lc|json)//) {
+        if ($$modifier =~ s/^(enumerate|comma|ucfirst|lcfirst|title|uc|lc|json|quotemeta)//) {
             $modifiers{$1} = 1;
             next;
         }

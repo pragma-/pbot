@@ -206,10 +206,8 @@ sub interpreter($self, $context) {
         $context->{add_nick} = 1;
     }
 
-    unless ($context->{'dont-replace-pronouns'}) {
-        $context->{arguments} = $self->{pbot}->{factoids}->{variables}->expand_factoid_vars($context, $context->{arguments});
-        $context->{arglist}   = $self->{pbot}->{interpreter}->make_args($context->{arguments});
-    }
+    $context->{arguments} = $self->{pbot}->{factoids}->{variables}->expand_factoid_vars($context, $context->{arguments});
+    $context->{arglist}   = $self->{pbot}->{interpreter}->make_args($context->{arguments});
 
     # execute this command as a backgrounded process?
     if ($self->get_meta($keyword, 'background-process')) {
