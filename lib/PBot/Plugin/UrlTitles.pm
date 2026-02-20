@@ -116,6 +116,7 @@ sub is_ignored_url($self, $url) {
 }
 
 sub is_ignored_title($self, $title) {
+    return 1 if $title =~ m/making sure you're not a bot/i;
     return 1 if $title =~ m{reddit - dive into anything}i;
     return 1 if $title =~ m{dive into reddit}i;
     return 1 if $title =~ m{^Loading}i;
