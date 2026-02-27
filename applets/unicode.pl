@@ -45,7 +45,17 @@ my $result;
 if ($args =~ /^u\+/i) {
     $result = `unicode --max=100 --color=off -- \Q$args\E`;
 } elsif ($search) {
-    $result = `unicode -r --max=100 --color=off -format 'U+{ordc:04X} {pchar} {name};\n' -- \Q$args\E`;
+    my @out = ();
+    if (open(CMD, "-|")) {
+        while (<CMD>) {
+            chomp;
+            push(@out, $_);
+        }
+        close CMD;
+    } else {
+        exec 'unicode', '-r', '--max=100', '--color=off', '--format', 'U+{ordc:04X} {pchar} {name};\n', '--', "\\b$args\\b";
+    }
+    $result = join "\n", @out;
 } else {
     $result = `unicode -s --max=100 --color=off --format 'U+{ordc:04X} ({utf8}) {pchar} {name} Category: {category} ({category_desc}) {opt_unicode_block}{opt_unicode_block_desc}{mirrored_desc}{opt_combining}{combining_desc}{opt_decomp}{decomp_desc};\n' -- \Q$args\E`;
 }
