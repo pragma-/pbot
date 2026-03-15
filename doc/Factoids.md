@@ -675,9 +675,9 @@ To search the database for a factoid, use the 'factfind` command.  You may optio
 
 If there is only one match for the query, it will display that factoid and its text, otherwise it will list all matching keywords.
 
-Usage: `factfind [-channel channel] [-owner nick] [-by nick] [-regex] [text]`
+Usage: `factfind [-channel channel] [-owner regex] [-editby regex] [-refby regex] [-keywords] [-contents] [-regex] [text]`
 
-If you specify the `-regex` flag, the `text` argument will be treated as a regex.
+If you specify the `-regex` flag, the `text` argument will be treated as a regex. Use `-keywords` or `-contents` to limit the search respectively.
 
     <pragma-> !factfind cast
        <PBot> 3 factoids match: [##c] NULL casting dontcastmalloc

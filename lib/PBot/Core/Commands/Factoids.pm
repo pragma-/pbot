@@ -892,6 +892,12 @@ sub cmd_factadd($self, $context) {
 
     $from_chan = '.*' if $from_chan !~ /^#/;
 
+    $keyword =~ s/^\s+|\s+$//g;
+
+    if (!length $keyword) {
+        return "/say $context->{nick}: Specify a factoid name.";
+    }
+
     if (length $keyword > $self->{pbot}->{registry}->get_value('factoids', 'max_name_length')) {
         return "/say $context->{nick}: I don't think the factoid name needs to be that long.";
     }
@@ -1239,16 +1245,23 @@ sub quotemeta2($text) {
 sub cmd_factfind($self, $context) {
     my $arguments = $context->{arguments};
 
-    my $usage = "Usage: factfind [-channel channel] [-owner regex] [-editby regex] [-refby regex] [-regex] [text]";
+    my $usage = "Usage: factfind [-channel channel] [-owner regex] [-editby regex] [-refby regex] [-keywords] [-contents] [-regex] [text]";
     return $usage if not length $arguments;
 
     my $factoids = $self->{pbot}->{factoids}->{data}->{storage};
-    my ($channel, $owner, $refby, $editby, $use_regex);
+    my ($channel, $owner, $refby, $editby, $use_regex, $keywords, $contents);
     $channel   = $1 if $arguments =~ s/\s*-channel\s+([^\b\s]+)//i;
     $owner     = $1 if $arguments =~ s/\s*-owner\s+([^\b\s]+)//i;
     $refby     = $1 if $arguments =~ s/\s*-refby\s+([^\b\s]+)//i;
     $editby    = $1 if $arguments =~ s/\s*-editby\s+([^\b\s]+)//i;
     $use_regex = 1  if $arguments =~ s/\s*-regex\b//i;
+    $keywords  = 1  if $arguments =~ s/\s*-keywords\b//i;
+    $contents  = 1  if $arguments =~ s/\s*-contents\b//i;
+
+    if (!$keywords && !$contents) {
+        $keywords = 1;
+        $contents = 1;
+    }
 
     $arguments =~ s/^\s+//;
     $arguments =~ s/\s+$//;
@@ -1271,14 +1284,10 @@ sub cmd_factfind($self, $context) {
     }
 
     if ($arguments ne "") {
-        my $unquoted_args = $arguments;
-        $unquoted_args =~ s/(?:\\(?!\\))//g;
-        $unquoted_args =~ s/(?:\\\\)/\\/g;
-
         if (not defined $argtype) {
-            $argtype = "containing '$unquoted_args'";
+            $argtype = "containing '$arguments'";
         } else {
-            $argtype .= " and containing '$unquoted_args'";
+            $argtype .= " and containing '$arguments'";
         }
     }
 
@@ -1320,8 +1329,14 @@ sub cmd_factfind($self, $context) {
                     $match = 1 if $factoid->{edited_by} =~ /^$editby/i;
                 }
 
-                if ($arguments ne "" && ($factoid->{action} =~ /$regex/i || $factoid->{index2} =~ /$regex/i)) {
-                    $match = 1;
+                if ($arguments ne "") {
+                    if ($keywords && $factoid->{index2} =~ /$regex/i) {
+                        $match = 1;
+                    }
+
+                    if ($contents && $factoid->{action} =~ /$regex/i) {
+                        $match = 1;
+                    }
                 }
 
                 if ($match) {
