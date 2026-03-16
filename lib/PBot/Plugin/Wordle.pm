@@ -252,6 +252,10 @@ sub wordle($self, $context) {
             if (not defined $args[0]) {
                 return "$context->{nick}: You are playing the $gameid Wordle.";
             } else {
+                if ($gameid !~ /^[a-zA-Z0-9_]{1,16}$/) {
+                    return "Invalid game-id `$gameid`; must be up to 16 alphanumeric characters";
+                }
+
                 $self->{players}->{$channel}->{$context->{message_account}}->{gameid} = $gameid;
                 $self->{games}->{$channel}->{$gameid}->{exists} = 1;
                 return "$context->{nick} is now playing the $gameid Wordle!";
@@ -1023,6 +1027,7 @@ sub guesses2state($self, $channel, $gameid) {
 
         my $g = $guess;
         $g =~ s/\x02|\x0F|\x11|\x1D|\x1E|\x1F|\x03([0-9][0-9]?(,[0-9][0-9]?)?)?//g;
+        $g =~ s/ß/ẞ/g; # avoid uppercasing to SS in German
 
         my @states = ($g =~ /..(.)/g);
         foreach my $state (@states) {
@@ -1136,8 +1141,8 @@ sub state2pattern($self, $state) {
 }
 
 sub pattern2words($self, $channel, $gameid, $pattern) {
-    my @keys = keys $self->{games}->{$channel}->{$gameid}->{words}->%*;
-    return grep { /$pattern/i } @keys;
+    my @keys = map { lc } keys $self->{games}->{$channel}->{$gameid}->{words}->%*;
+    return grep { /$pattern/ } @keys;
 }
 
 sub check_games($self) {
@@ -1145,6 +1150,7 @@ sub check_games($self) {
     my $botnick = $self->{pbot}->{registry}->get_value('irc', 'botnick');
     foreach my $channel (keys $self->{games}->%*) {
         foreach my $gameid (keys $self->{games}->{$channel}->%*) {
+            next if $gameid eq 'main';
             next if not exists $self->{games}->{$channel}->{$gameid}->{wordle};
             if ($now - $self->{games}->{$channel}->{$gameid}->{guess_time} > 60 * 60 * 24) {
                 my $wordle = join '', $self->{games}->{$channel}->{$gameid}->{wordle}->@*;
