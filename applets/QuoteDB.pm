@@ -13,8 +13,6 @@ no warnings 'experimental::signatures';
 
 use DBI;
 
-my $debug = 10;
-
 sub new($class, %conf) {
   my $self = bless {}, $class;
   $self->initialize(%conf);
@@ -26,8 +24,6 @@ sub initialize($self, %conf) {
 }
 
 sub begin($self) {
-  print STDERR "Opening quotes SQLite database: $self->{filename}\n" if $debug;
-
   $self->{dbh} = DBI->connect("dbi:SQLite:dbname=$self->{filename}", undef, undef,
       { AutoCommit => 0, AutoInactiveDestroy => 1, RaiseError => 1, PrintError => 0, sqlite_unicode => 1 }) or die $DBI::errstr;
 
@@ -52,8 +48,6 @@ SQL
 }
 
 sub end($self) {
-  print STDERR "Closing quotes SQLite database\n" if $debug;
-
   if(exists $self->{dbh} and defined $self->{dbh}) {
     $self->{dbh}->commit();
     $self->{dbh}->disconnect();
