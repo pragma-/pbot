@@ -60,19 +60,19 @@ $db->begin();
 
 my $quote = $db->get_random_quote($channel, $text, $author);
 
-if ($show_count) {
-    my ($total, $remaining) = $db->count_random_quote($channel, $text, $author);
-
-    if (defined $total && $total > 0) {
-        $total = $total->{'COUNT(*)'};
-        $remaining = $total - $remaining->{'COUNT(*)'};
-        print "$remaining/$total ";
-    }
-}
-
 if (!defined $quote) {
     print "No quote found.\n";
 } else {
+    if ($show_count) {
+        my ($total, $remaining) = $db->count_random_quote($channel, $text, $author);
+
+        if (defined $total && $total > 0) {
+            $total = $total->{'COUNT(*)'};
+            $remaining = $total - $remaining->{'COUNT(*)'};
+            print "$remaining/$total ";
+        }
+    }
+
     if ($show_id) {
         print "$quote->{id}: ";
     }
